@@ -17,6 +17,19 @@ Essa organização atende ao escopo do ClinicalStudyPB e permite que a equipe de
 
 O backend valida as requisições, aplica as regras de negócio, controla as permissões dos perfis e realiza as operações de persistência. As alterações do esquema do banco serão mantidas em migrações Flyway dentro do backend.
 
+### Stack e versões acordadas
+
+| Componente | Tecnologia e versão |
+| --- | --- |
+| Backend | Java 21 e Spring Boot 3.5.16 |
+| Build do backend | Maven 3.9.9, fixado pelo Maven Wrapper (`mvnw` e `mvnw.cmd`) |
+| Banco de dados | PostgreSQL 18 |
+| Documentação da API | OpenAPI com springdoc-openapi 2.8.17 e Swagger UI |
+| Web | React com TypeScript; versões das dependências serão registradas quando a aplicação for criada |
+| Mobile | React Native com Expo; versões das dependências serão registradas quando a aplicação for criada |
+
+O `backend/pom.xml` declara Java, Spring Boot e springdoc. As versões das demais dependências Java são gerenciadas pelo `spring-boot-starter-parent`. O ambiente de desenvolvimento da equipe será reproduzido com Docker Compose; os arquivos de execução ainda serão adicionados.
+
 ### Módulos e camadas do backend
 
 Os módulos são organizados por área de negócio. Nesta etapa, a estrutura inicial inclui `users` e `studies`, correspondentes às funcionalidades de usuários, autenticação e gestão de estudos previstas para a Sprint 1. Recrutamento, acompanhamento e monitoramento poderão ser adicionados como módulos quando essas áreas forem implementadas.
@@ -61,4 +74,4 @@ As pastas `web/` e `mobile/` permanecem na raiz como aplicações independentes 
 
 ### Estado atual
 
-As pastas do backend acima foram criadas como estrutura inicial e contêm arquivos `.gitkeep` para que sejam versionadas. O código Java, a configuração Maven, a API, a conexão com PostgreSQL e as migrações ainda serão implementados nas tarefas correspondentes da Sprint 1. O pacote Java `clinicalstudypb` é provisório e poderá ser alinhado ao `groupId` definido na configuração Maven.
+As pastas do backend acima foram criadas como estrutura inicial e contêm arquivos `.gitkeep` para que sejam versionadas. O `backend/pom.xml` declara as dependências iniciais, o Maven Wrapper está disponível para Linux e Windows, e a classe principal da aplicação já foi criada. A configuração lê `DB_URL`, `DB_USER` e `DB_PASSWORD` do ambiente. Os endpoints da API, as migrações e a execução com Docker Compose ainda serão implementados nas tarefas correspondentes da Sprint 1. O pacote Java `clinicalstudypb` será mantido como raiz dos módulos nesta etapa.
