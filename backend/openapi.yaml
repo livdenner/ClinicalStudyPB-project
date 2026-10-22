@@ -1,0 +1,523 @@
+openapi: 3.0.3
+info:
+  title: ClinicalStudyPB API
+  version: 1.0.0
+  description: |
+    Contrato OpenAPI para as RF01 a RF04 da Sprint 1.
+
+    Convenções acordadas:
+    - Os nomes JSON usam camelCase; os nomes do banco permanecem em snake_case.
+    - Os perfis são RESEARCHER, COORDINATOR, ADMINISTRATOR e PARTICIPANT.
+    - As operações de estudos são restritas ao perfil RESEARCHER.
+    - O responsável por um estudo deve ser um usuário pesquisador ativo.
+    - O JWT é stateless; no logout o cliente descarta o token, sem revogação no servidor.
+    - O prefixo base da API é /api/v1.
+servers:
+  - url: /api/v1
+    description: Prefixo base acordado para a API versão 1
+tags:
+  - name: Autenticação
+  - name: Usuários
+  - name: Estudos
+paths:
+  /auth/login:
+    post:
+      tags: [Autenticação]
+      summary: Autentica um usuário
+      description: Público. Retorna um JWT para uso nas operações protegidas.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Autenticação realizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: E-mail ou senha inválidos, ou usuário inativo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /auth/logout:
+    post:
+      tags: [Autenticação]
+      summary: Encerra a sessão no cliente
+      description: |
+        Requer autenticação. O JWT é stateless: o cliente descarta o token recebido
+        no login. Este endpoint confirma o encerramento da sessão no cliente e não
+        revoga tokens já emitidos no servidor.
+      responses:
+        '204':
+          description: Logout concluído pelo cliente
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users:
+    get:
+      tags: [Usuários]
+      summary: Lista usuários
+      description: Restrito ao perfil ADMINISTRATOR.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de usuários
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Usuários]
+      summary: Cadastra um usuário
+      description: Restrito ao perfil ADMINISTRATOR. A senha é recebida em texto pela API e deve ser armazenada somente como hash BCrypt.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+      responses:
+        '201':
+          description: Usuário cadastrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: E-mail já cadastrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /users/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    get:
+      tags: [Usuários]
+      summary: Consulta um usuário
+      description: Restrito ao perfil ADMINISTRATOR.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Usuário encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Usuários]
+      summary: Atualiza os dados de um usuário
+      description: Restrito ao perfil ADMINISTRATOR. O e-mail deve continuar único.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+      responses:
+        '200':
+          description: Usuário atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: E-mail já pertence a outro usuário
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /users/{userId}/status:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    patch:
+      tags: [Usuários]
+      summary: Ativa ou desativa um usuário
+      description: Restrito ao perfil ADMINISTRATOR.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserStatusRequest'
+      responses:
+        '200':
+          description: Situação do usuário atualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /studies:
+    get:
+      tags: [Estudos]
+      summary: Lista estudos
+      description: Restrito ao perfil RESEARCHER.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de estudos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Study'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Estudos]
+      summary: Cadastra um estudo
+      description: |
+        Restrito ao perfil RESEARCHER. O responsável indicado deve existir e estar ativo.
+        O responsável também deve ter perfil RESEARCHER.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudyWriteRequest'
+      responses:
+        '201':
+          description: Estudo cadastrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Study'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: Usuário responsável não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+
+  /studies/{studyId}:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+    get:
+      tags: [Estudos]
+      summary: Consulta um estudo
+      description: Restrito ao perfil RESEARCHER.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Estudo encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Study'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Estudos]
+      summary: Atualiza um estudo
+      description: Restrito ao perfil RESEARCHER. Datas devem respeitar startDate <= endDate.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudyWriteRequest'
+      responses:
+        '200':
+          description: Estudo atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Study'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    UserId:
+      name: userId
+      in: path
+      required: true
+      description: Identificador BIGINT do usuário
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    StudyId:
+      name: studyId
+      in: path
+      required: true
+      description: Identificador BIGINT do estudo
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+  schemas:
+    UserRole:
+      type: string
+      description: Perfil de acesso do usuário
+      enum: [RESEARCHER, COORDINATOR, ADMINISTRATOR, PARTICIPANT]
+    UserCreateRequest:
+      type: object
+      required: [name, email, password, role]
+      properties:
+        name:
+          type: string
+          maxLength: 120
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          description: Deve ser único
+        password:
+          type: string
+          writeOnly: true
+          description: Senha de entrada; o backend deve armazenar somente o hash BCrypt
+        role:
+          $ref: '#/components/schemas/UserRole'
+        active:
+          type: boolean
+          default: true
+          description: Se omitido, inicia como true
+    UserUpdateRequest:
+      type: object
+      required: [name, email, role]
+      properties:
+        name:
+          type: string
+          maxLength: 120
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          description: Deve permanecer único
+        role:
+          $ref: '#/components/schemas/UserRole'
+    UserStatusRequest:
+      type: object
+      required: [active]
+      properties:
+        active:
+          type: boolean
+    User:
+      type: object
+      required: [id, name, email, role, active]
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        role:
+          $ref: '#/components/schemas/UserRole'
+        active:
+          type: boolean
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          writeOnly: true
+    LoginResponse:
+      type: object
+      required: [accessToken, tokenType, expiresIn, user]
+      properties:
+        accessToken:
+          type: string
+          description: JWT para as chamadas autenticadas
+        tokenType:
+          type: string
+          enum: [Bearer]
+        expiresIn:
+          type: integer
+          format: int64
+          description: Validade do token em segundos
+        user:
+          $ref: '#/components/schemas/User'
+    StudyWriteRequest:
+      type: object
+      required: [title, objective, responsibleUserId, startDate, endDate, participantLimit]
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        objective:
+          type: string
+        responsibleUserId:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Referência a um usuário responsável existente e ativo
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+          description: Deve ser igual ou posterior a startDate
+        participantLimit:
+          type: integer
+          format: int32
+          minimum: 1
+    Study:
+      type: object
+      required: [id, title, objective, responsibleUserId, startDate, endDate, participantLimit]
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        title:
+          type: string
+          maxLength: 200
+        objective:
+          type: string
+        responsibleUserId:
+          type: integer
+          format: int64
+          minimum: 1
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        participantLimit:
+          type: integer
+          format: int32
+          minimum: 1
+    ApiError:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: Código estável para identificar o tipo de erro
+        message:
+          type: string
+          description: Mensagem legível para pessoas
+        fieldErrors:
+          type: array
+          items:
+            $ref: '#/components/schemas/FieldError'
+    FieldError:
+      type: object
+      required: [field, message]
+      properties:
+        field:
+          type: string
+        message:
+          type: string
+  responses:
+    BadRequest:
+      description: Requisição inválida ou regra de validação não atendida
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    Unauthorized:
+      description: Token ausente ou inválido
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    Forbidden:
+      description: Perfil sem permissão para a operação
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    NotFound:
+      description: Recurso não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'

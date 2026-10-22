@@ -12,7 +12,7 @@ Essa organização atende ao escopo do ClinicalStudyPB e permite que a equipe de
 
 - **Web:** aplicação React com TypeScript, destinada aos perfis de pesquisador, coordenador do estudo e administrador.
 - **Mobile:** aplicação React Native com Expo, destinada ao participante.
-- **Backend:** aplicação Spring Boot que disponibiliza uma API HTTP REST compartilhada pelas aplicações web e mobile. A API será documentada com OpenAPI.
+- **Backend:** aplicação Spring Boot que disponibiliza uma API HTTP REST compartilhada pelas aplicações web e mobile. O contrato OpenAPI inicial está em [backend/openapi.yaml](backend/openapi.yaml).
 - **Banco de dados:** PostgreSQL, acessado somente pelo backend. As aplicações web e mobile não se conectam diretamente ao banco.
 
 O backend valida as requisições, aplica as regras de negócio, controla as permissões dos perfis e realiza as operações de persistência. As alterações do esquema do banco serão mantidas em migrações Flyway dentro do backend.
