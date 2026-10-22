@@ -1,6 +1,8 @@
 package clinicalstudypb.users;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -8,6 +10,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import clinicalstudypb.shared.ResourceNotFoundException;
 import clinicalstudypb.users.application.UserService;
 import clinicalstudypb.users.domain.EmailAlreadyInUseException;
 import clinicalstudypb.users.domain.User;
@@ -91,5 +94,54 @@ class UserServiceTest {
         assertEquals("Nome original", user.getName());
         assertEquals("original@example.com", user.getEmail());
         assertEquals(UserRole.RESEARCHER, user.getRole());
+    }
+
+    @Test
+    void updateUserAllowsSameEmailAndChangesDetailsAndRole() {
+        User user = new User("Nome original", "original@example.com", "{bcrypt}hash", UserRole.RESEARCHER);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        User updated = userService.updateUser(1L, "  Novo nome  ", "  ORIGINAL@EXAMPLE.COM  ", UserRole.COORDINATOR);
+
+        assertSame(user, updated);
+        assertEquals("Novo nome", updated.getName());
+        assertEquals("original@example.com", updated.getEmail());
+        assertEquals(UserRole.COORDINATOR, updated.getRole());
+        verify(userRepository, never()).existsByEmailIgnoreCase(any());
+    }
+
+    @Test
+    void deactivateAndReactivateUserWithoutDeletingIt() {
+        User user = new User("Pesquisador", "pesquisador@example.com", "{bcrypt}hash", UserRole.RESEARCHER);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        assertFalse(userService.deactivateUser(1L).isActive());
+        assertTrue(userService.activateUser(1L).isActive());
+        verify(userRepository, never()).delete(any(User.class));
+    }
+
+    @Test
+    void getUserRejectsUnknownId() {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> userService.getUser(99L));
+    }
+
+    @Test
+    void deleteUserRemovesExistingRecord() {
+        User user = new User("Pesquisador", "pesquisador@example.com", "{bcrypt}hash", UserRole.RESEARCHER);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+
+        userService.deleteUser(1L);
+
+        verify(userRepository).delete(user);
+    }
+
+    @Test
+    void deleteUserDoesNotRemoveUnknownRecord() {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> userService.deleteUser(99L));
+        verify(userRepository, never()).delete(any(User.class));
     }
 }
