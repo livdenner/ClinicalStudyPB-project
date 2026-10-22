@@ -49,6 +49,8 @@ Como regra de dependência, um módulo não deve acessar diretamente as classes 
 
 ```text
 backend/
+├── dev/
+│   └── seed_demo_users.sql
 └── src/
     ├── main/
     │   ├── java/clinicalstudypb/
@@ -72,6 +74,23 @@ backend/
 
 As pastas `web/` e `mobile/` permanecem na raiz como aplicações independentes que consomem a API. A pasta `releases/` guarda a documentação de cada entrega.
 
+### Banco e usuários de demonstração
+
+O backend recebe a conexão com o PostgreSQL pelas variáveis de ambiente `DB_URL`, `DB_USER` e `DB_PASSWORD`. Cada integrante configura esses valores para seu próprio ambiente. A senha de acesso ao banco não deve ser colocada no repositório.
+
+Ao iniciar o backend com um banco vazio, o Flyway aplica `backend/src/main/resources/db/migration/V1__create_users.sql`, que cria a tabela `users`. O Hibernate está configurado para validar a correspondência entre a tabela e a entidade JPA, sem criar ou alterar tabelas automaticamente.
+
+Para carregar as contas fictícias no ambiente local ou de demonstração, execute **manualmente** `backend/dev/seed_demo_users.sql` no banco `clinicalstudypb`, esquema `public`, depois da migração V1. O script pode ser executado novamente sem duplicar as contas. Ele não é uma migração Flyway e não roda na inicialização do backend.
+
+| Perfil | E-mail | Senha de demonstração |
+| --- | --- | --- |
+| Pesquisador | `pesquisador@clinicalstudypb.test` | `Demo@Clinical2026` |
+| Coordenador | `coordenador@clinicalstudypb.test` | `Demo@Clinical2026` |
+| Administrador | `administrador@clinicalstudypb.test` | `Demo@Clinical2026` |
+| Participante | `participante@clinicalstudypb.test` | `Demo@Clinical2026` |
+
+Essas credenciais são apenas para demonstração. O login com elas poderá ser testado quando a autenticação da Sprint 1 estiver implementada.
+
 ### Estado atual
 
-As pastas do backend acima foram criadas como estrutura inicial e contêm arquivos `.gitkeep` para que sejam versionadas. O `backend/pom.xml` declara as dependências iniciais, o Maven Wrapper está disponível para Linux e Windows, e a classe principal da aplicação já foi criada. A configuração lê `DB_URL`, `DB_USER` e `DB_PASSWORD` do ambiente. Os endpoints da API, as migrações e a execução com Docker Compose ainda serão implementados nas tarefas correspondentes da Sprint 1. O pacote Java `clinicalstudypb` será mantido como raiz dos módulos nesta etapa.
+As pastas do backend acima foram criadas como estrutura inicial e contêm arquivos `.gitkeep` para que sejam versionadas. O `backend/pom.xml` declara as dependências iniciais, o Maven Wrapper está disponível para Linux e Windows, e a classe principal da aplicação já foi criada. A entidade JPA de usuário, os perfis e a migração Flyway V1 foram implementados; há um script separado para carregar contas fictícias. Os endpoints da API e a execução com Docker Compose ainda serão implementados nas tarefas correspondentes da Sprint 1. O pacote Java `clinicalstudypb` será mantido como raiz dos módulos nesta etapa.
