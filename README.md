@@ -91,6 +91,45 @@ Para carregar as contas fictícias no ambiente local ou de demonstração, execu
 
 Essas credenciais são apenas para demonstração. O login com elas poderá ser testado quando a autenticação da Sprint 1 estiver implementada.
 
+### API de usuários (T3.2)
+
+A API usa a base `/api/users`. As rotas abaixo implementam a gestão de usuários; a gerente ainda poderá ajustar seus nomes no contrato OpenAPI da T2.1.
+
+| Método e rota | Operação | Resposta de sucesso |
+| --- | --- | --- |
+| `GET /api/users` | Listar usuários | `200` |
+| `GET /api/users/{id}` | Consultar usuário | `200` |
+| `POST /api/users` | Cadastrar usuário | `201`, com `Location: /api/users/{id}` |
+| `PUT /api/users/{id}` | Atualizar nome, e-mail e perfil | `200` |
+| `PATCH /api/users/{id}/activate` | Ativar usuário | `200` |
+| `PATCH /api/users/{id}/deactivate` | Desativar usuário | `200` |
+| `DELETE /api/users/{id}` | Excluir o registro do usuário | `204` |
+
+O cadastro recebe `name`, `email`, `password` e `role`. A atualização recebe `name`, `email` e `role`. `role` aceita `RESEARCHER`, `COORDINATOR`, `ADMINISTRATOR` ou `PARTICIPANT`. Por exemplo, o corpo de um cadastro é:
+
+```json
+{
+  "name": "Pesquisador Demo",
+  "email": "pesquisador@example.com",
+  "password": "senha-de-exemplo",
+  "role": "RESEARCHER"
+}
+```
+
+O backend remove espaços nas pontas do nome e do e-mail, guarda o e-mail em minúsculas e verifica duplicidade sem diferenciar maiúsculas de minúsculas. A senha é codificada com `DelegatingPasswordEncoder` no formato `{bcrypt}` antes de ser persistida. Nenhuma resposta da API contém a senha ou o hash. Requisições inválidas recebem `400`, usuários inexistentes recebem `404` e conflitos de e-mail recebem `409`.
+
+As rotas de gestão de usuários ainda não têm controle de acesso: autenticação e autorização por perfil serão integradas nas tarefas RF02 e RF03. O `DELETE` atual exclui o registro; se a regra de negócio aprovada pela equipe exigir somente desativação, o contrato e a implementação deverão ser ajustados juntos.
+
+### Documentação Javadoc
+
+As classes Java do backend, incluindo os testes, registram autor, data de introdução (`@since`) e versão (`@version`). Para gerar a documentação das classes de produção, execute na pasta `backend/`:
+
+```bash
+./mvnw javadoc:javadoc
+```
+
+No Windows, use `mvnw.cmd javadoc:javadoc`. O resultado fica em `backend/target/reports/apidocs/index.html`. O plugin Maven Javadoc 3.12.0 valida a documentação e falha se houver avisos.
+
 ### Estado atual
 
-As pastas do backend acima foram criadas como estrutura inicial e contêm arquivos `.gitkeep` para que sejam versionadas. O `backend/pom.xml` declara as dependências iniciais, o Maven Wrapper está disponível para Linux e Windows, e a classe principal da aplicação já foi criada. A entidade JPA de usuário, os perfis e a migração Flyway V1 foram implementados; há um script separado para carregar contas fictícias. Os endpoints da API e a execução com Docker Compose ainda serão implementados nas tarefas correspondentes da Sprint 1. O pacote Java `clinicalstudypb` será mantido como raiz dos módulos nesta etapa.
+As pastas do backend acima foram criadas como estrutura inicial e contêm arquivos `.gitkeep` para que sejam versionadas. O `backend/pom.xml` declara as dependências iniciais, o Maven Wrapper está disponível para Linux e Windows, e a classe principal da aplicação já foi criada. A entidade JPA de usuário, os perfis e a migração Flyway V1 foram implementados; há um script separado para carregar contas fictícias. A API REST de usuários está implementada, mas sua autenticação e autorização ainda dependem das tarefas de RF02 e RF03. A execução com Docker Compose ainda será adicionada na tarefa correspondente da Sprint 1. O pacote Java `clinicalstudypb` será mantido como raiz dos módulos nesta etapa.
