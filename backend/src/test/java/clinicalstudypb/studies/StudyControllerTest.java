@@ -19,6 +19,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -32,6 +33,7 @@ import org.springframework.test.web.servlet.MockMvc;
  * @version 0.0.1
  */
 @WebMvcTest(StudyController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class StudyControllerTest {
 
     private static final String VALID_REQUEST = """
