@@ -7,6 +7,7 @@ import clinicalstudypb.users.domain.UserRole;
 import clinicalstudypb.users.infrastructure.UserRepository;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,6 +57,17 @@ public class UserService {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Usuário não encontrado: " + id));
+    }
+
+    /**
+     * Localiza uma conta pelo e-mail para integração com outros módulos.
+     *
+     * @param email e-mail já normalizado
+     * @return conta encontrada ou {@link Optional#empty()} se não existir
+     */
+    @Transactional(readOnly = true)
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 
     /**

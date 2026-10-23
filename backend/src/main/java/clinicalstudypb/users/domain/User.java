@@ -88,6 +88,16 @@ public class User {
     }
 
     /**
+     * Consulta o hash interno para validar a senha durante a autenticação.
+     * O hash não deve ser incluído em respostas da API.
+     *
+     * @return hash codificado da senha
+     */
+    public String getPasswordHash() {
+        return this.passwordHash;
+    }
+
+    /**
      * Consulta o perfil de acesso do usuário.
      *
      * @return perfil de acesso do usuário
