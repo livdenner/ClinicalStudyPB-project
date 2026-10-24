@@ -23,7 +23,7 @@ Entregar a primeira versão operacional do ClinicalStudyPB para a aplicação we
 | Gestão de usuários (RF01) | Em andamento | A registrar ao término da Sprint 1. |
 | Autenticação web (RF02) | Pendente | A registrar após integração de login/logout. |
 | Controle de acesso web/API (RF03) | Pendente | A registrar após definição da matriz de permissões. |
-| Gestão de estudos (RF04) | Pendente | A registrar ao término da Sprint 1. |
+| Gestão de estudos (RF04) | Em andamento | Interface web com listagem, busca, filtro por status, indicadores, cadastro e edição usando dados mock locais. Build validada com `npm --prefix web run build`; integração REST pendente. |
 | Recrutamento e inclusão (RF05 a RF11) | Pendente | Planejado para a Sprint 2. |
 
 ## Como executar a web
