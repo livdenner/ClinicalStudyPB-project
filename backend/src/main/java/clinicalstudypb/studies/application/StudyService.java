@@ -5,6 +5,7 @@ import clinicalstudypb.studies.domain.InvalidStudyException;
 import clinicalstudypb.studies.domain.Study;
 import clinicalstudypb.studies.infrastructure.StudyRepository;
 import clinicalstudypb.users.application.UserService;
+import clinicalstudypb.users.domain.User;
 import clinicalstudypb.users.domain.UserRole;
 import java.time.LocalDate;
 import java.util.List;
@@ -13,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Coordena o cadastro, a edição e a consulta de estudos clínicos.
- * Confere os dados do estudo e o perfil do pesquisador responsável.
+ * Confere os dados do estudo e o perfil e estado do pesquisador responsável.
  *
  * @author Lucas N. de Araújo
  * @since 2026-10-22
@@ -123,8 +124,12 @@ public class StudyService {
         if (responsibleUserId == null || responsibleUserId <= 0) {
             throw new InvalidStudyException("Informe um usuário responsável válido.");
         }
-        if (userService.getUser(responsibleUserId).getRole() != UserRole.RESEARCHER) {
+        User responsible = userService.getUser(responsibleUserId);
+        if (responsible.getRole() != UserRole.RESEARCHER) {
             throw new InvalidStudyException("O responsável pelo estudo deve ser um pesquisador.");
+        }
+        if (!responsible.isActive()) {
+            throw new InvalidStudyException("O pesquisador responsável pelo estudo deve estar ativo.");
         }
     }
 }

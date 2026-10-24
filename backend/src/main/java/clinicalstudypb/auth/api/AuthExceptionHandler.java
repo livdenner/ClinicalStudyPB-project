@@ -2,6 +2,8 @@ package clinicalstudypb.auth.api;
 
 import clinicalstudypb.auth.domain.InvalidCredentialsException;
 import java.util.List;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -15,8 +17,13 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  * @since 2026-10-23
  * @version 0.0.1
  */
+@Order(Ordered.HIGHEST_PRECEDENCE)
 @RestControllerAdvice(assignableTypes = AuthController.class)
 public class AuthExceptionHandler {
+
+    /** Cria o tratador de erros das requisições de autenticação. */
+    public AuthExceptionHandler() {
+    }
 
     /**
      * Retorna um erro genérico para credenciais inválidas ou conta inativa.

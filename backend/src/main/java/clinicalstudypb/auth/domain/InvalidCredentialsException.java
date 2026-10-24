@@ -8,6 +8,7 @@ package clinicalstudypb.auth.domain;
  */
 public class InvalidCredentialsException extends RuntimeException {
 
+    /** Cria a exceção com uma mensagem genérica para não revelar o motivo da falha. */
     public InvalidCredentialsException() {
         super("E-mail ou senha inválidos.");
     }

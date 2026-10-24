@@ -30,6 +30,10 @@ public class JwtConfiguration {
     private static final String ISSUER = "clinicalstudypb";
     private static final String KEY_ID = "clinicalstudypb-hs256";
 
+    /** Cria a configuração dos componentes de assinatura e validação de JWT. */
+    public JwtConfiguration() {
+    }
+
     /**
      * Constrói uma chave HS256 a partir de uma variável de ambiente Base64.
      *
