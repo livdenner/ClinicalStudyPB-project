@@ -28,7 +28,7 @@ O backend valida as requisições, aplica as regras de negócio, controla as per
 | Web | React com TypeScript; versões das dependências serão registradas quando a aplicação for criada |
 | Mobile | React Native com Expo; versões das dependências serão registradas quando a aplicação for criada |
 
-O `backend/pom.xml` declara Java, Spring Boot e springdoc. As versões das demais dependências Java são gerenciadas pelo `spring-boot-starter-parent`. O ambiente de desenvolvimento da equipe será reproduzido com Docker Compose; os arquivos de execução ainda serão adicionados.
+O `backend/pom.xml` declara Java, Spring Boot e springdoc. As versões das demais dependências Java são gerenciadas pelo `spring-boot-starter-parent`. O ambiente de desenvolvimento da equipe é reproduzido com Docker Compose; veja [Executando com Docker Compose](#executando-com-docker-compose).
 
 ### Módulos e camadas do backend
 
@@ -73,6 +73,60 @@ backend/
 ```
 
 As pastas `web/` e `mobile/` permanecem na raiz como aplicações independentes que consomem a API. A pasta `releases/` guarda a documentação de cada entrega.
+
+### Executando com Docker Compose
+
+O arquivo `compose.yaml` sobe o PostgreSQL 18 e o backend. O banco só é acessível pela máquina local (`127.0.0.1`), e o backend fica disponível em `http://localhost:8080`. O `compose.yaml` já informa ao backend a conexão com o banco (`DB_URL`), por isso essa variável não faz parte do `.env`.
+
+**Pré-requisito:** Docker com o Docker Compose instalado.
+
+**1. Crie o arquivo `.env`** na raiz do repositório a partir do modelo (ele não é versionado):
+
+```bash
+cp .env.example .env
+```
+
+No Windows (PowerShell): `Copy-Item .env.example .env`.
+
+**2. Preencha as variáveis** no `.env`:
+
+| Variável | Obrigatória | Descrição |
+| --- | --- | --- |
+| `DB_USER` | Não | Usuário do banco. Padrão: `clinicalstudypb`. |
+| `DB_PASSWORD` | Sim | Senha do banco. Escolha um valor só seu; não coloque no Git. |
+| `DB_HOST_PORT` | Não | Porta do banco na máquina local. Padrão: `15432`. |
+| `JWT_SECRET_BASE64` | Sim | Chave de assinatura dos JWTs: Base64 de pelo menos 32 bytes aleatórios. Gere com `openssl rand -base64 32`. Mantenha fora do Git. |
+| `JWT_EXPIRATION_SECONDS` | Não | Validade do token em segundos. Padrão: `3600`. |
+
+Sem `openssl`, é possível gerar a chave no PowerShell: `[Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))`. Se `DB_PASSWORD` ou `JWT_SECRET_BASE64` não estiverem definidos, o Docker Compose interrompe a execução e informa qual variável falta.
+
+**3. Suba a stack** (a primeira execução constrói a imagem do backend):
+
+```bash
+docker compose up -d --build
+docker compose ps
+docker compose logs -f backend
+```
+
+O backend só inicia depois que o banco estiver saudável, e o Flyway aplica as migrações na primeira inicialização.
+
+**4. (Opcional) Carregue as contas de demonstração**, depois que o backend tiver iniciado e aplicado as migrações:
+
+```bash
+docker compose exec -T db psql -U clinicalstudypb -d clinicalstudypb < backend/dev/seed_demo_users.sql
+```
+
+Se você alterou `DB_USER`, use o seu valor no lugar de `clinicalstudypb` após `-U`.
+
+**5. Pare a stack:**
+
+```bash
+docker compose stop     # para os contêineres e preserva os dados
+docker compose down     # remove os contêineres e preserva os dados
+docker compose down -v  # remove também o volume e APAGA o banco
+```
+
+Para iniciar novamente sem reconstruir a imagem, use `docker compose up -d`. Depois de alterar o código do backend, use `docker compose up -d --build`.
 
 ### Banco e usuários de demonstração
 
@@ -162,4 +216,4 @@ Ambos devem retornar `200`. Se a conexão for recusada, confira se o backend con
 
 ### Estado atual
 
-O backend já inclui a base Spring Boot, Dockerfile, migrações Flyway V1 e V2, entidades JPA, API de usuários e API de estudos. As duas migrações foram validadas no PostgreSQL local, e a suíte atual passou com 31 testes em Java 21. A autenticação, a autorização e a execução conjunta com Docker Compose permanecem nas tarefas correspondentes. O pacote Java `clinicalstudypb` é a raiz dos módulos nesta etapa.
+As pastas do backend acima foram criadas como estrutura inicial e contêm arquivos `.gitkeep` para que sejam versionadas. O `backend/pom.xml` declara as dependências iniciais, o Maven Wrapper está disponível para Linux e Windows, e a classe principal da aplicação já foi criada. A entidade JPA de usuário, os perfis e a migração Flyway V1 foram implementados; há um script separado para carregar contas fictícias. A API REST de usuários está implementada, mas sua autenticação e autorização ainda dependem das tarefas de RF02 e RF03. A execução local do banco e do backend com Docker Compose está descrita em [Executando com Docker Compose](#executando-com-docker-compose). O pacote Java `clinicalstudypb` será mantido como raiz dos módulos nesta etapa.
