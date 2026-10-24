@@ -28,7 +28,7 @@ O backend valida as requisições, aplica as regras de negócio, controla as per
 | Web | React com TypeScript; versões das dependências serão registradas quando a aplicação for criada |
 | Mobile | React Native com Expo; versões das dependências serão registradas quando a aplicação for criada |
 
-O `backend/pom.xml` declara Java, Spring Boot e springdoc. As versões das demais dependências Java são gerenciadas pelo `spring-boot-starter-parent`. O ambiente de desenvolvimento da equipe será reproduzido com Docker Compose; os arquivos de execução ainda serão adicionados.
+O `backend/pom.xml` declara Java, Spring Boot e springdoc. As versões das demais dependências Java são gerenciadas pelo `spring-boot-starter-parent`. O ambiente de desenvolvimento da equipe é reproduzido com Docker Compose; veja [Executando com Docker Compose](#executando-com-docker-compose).
 
 ### Módulos e camadas do backend
 
@@ -78,6 +78,60 @@ backend/
 ```
 
 As pastas `web/` e `mobile/` permanecem na raiz como aplicações independentes que consomem a API. A pasta `releases/` guarda a documentação de cada entrega.
+
+### Executando com Docker Compose
+
+O arquivo `compose.yaml` sobe o PostgreSQL 18 e o backend. O banco só é acessível pela máquina local (`127.0.0.1`), e o backend fica disponível em `http://localhost:8080`. O `compose.yaml` já informa ao backend a conexão com o banco (`DB_URL`), por isso essa variável não faz parte do `.env`.
+
+**Pré-requisito:** Docker com o Docker Compose instalado.
+
+**1. Crie o arquivo `.env`** na raiz do repositório a partir do modelo (ele não é versionado):
+
+```bash
+cp .env.example .env
+```
+
+No Windows (PowerShell): `Copy-Item .env.example .env`.
+
+**2. Preencha as variáveis** no `.env`:
+
+| Variável | Obrigatória | Descrição |
+| --- | --- | --- |
+| `DB_USER` | Não | Usuário do banco. Padrão: `clinicalstudypb`. |
+| `DB_PASSWORD` | Sim | Senha do banco. Escolha um valor só seu; não coloque no Git. |
+| `DB_HOST_PORT` | Não | Porta do banco na máquina local. Padrão: `15432`. |
+| `JWT_SECRET_BASE64` | Sim | Chave de assinatura dos JWTs: Base64 de pelo menos 32 bytes aleatórios. Gere com `openssl rand -base64 32`. Mantenha fora do Git. |
+| `JWT_EXPIRATION_SECONDS` | Não | Validade do token em segundos. Padrão: `3600`. |
+
+Sem `openssl`, é possível gerar a chave no PowerShell: `[Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))`. Se `DB_PASSWORD` ou `JWT_SECRET_BASE64` não estiverem definidos, o Docker Compose interrompe a execução e informa qual variável falta.
+
+**3. Suba a stack** (a primeira execução constrói a imagem do backend):
+
+```bash
+docker compose up -d --build
+docker compose ps
+docker compose logs -f backend
+```
+
+O backend só inicia depois que o banco estiver saudável, e o Flyway aplica as migrações na primeira inicialização.
+
+**4. (Opcional) Carregue as contas de demonstração**, depois que o backend tiver iniciado e aplicado as migrações:
+
+```bash
+docker compose exec -T db psql -U clinicalstudypb -d clinicalstudypb < backend/dev/seed_demo_users.sql
+```
+
+Se você alterou `DB_USER`, use o seu valor no lugar de `clinicalstudypb` após `-U`.
+
+**5. Pare a stack:**
+
+```bash
+docker compose stop     # para os contêineres e preserva os dados
+docker compose down     # remove os contêineres e preserva os dados
+docker compose down -v  # remove também o volume e APAGA o banco
+```
+
+Para iniciar novamente sem reconstruir a imagem, use `docker compose up -d`. Depois de alterar o código do backend, use `docker compose up -d --build`.
 
 ### Banco e usuários de demonstração
 
@@ -153,6 +207,23 @@ O backend remove espaços nas pontas do nome e do e-mail, guarda o e-mail em min
 
 O login e o logout usam JWT stateless: o cliente descarta o token no logout, sem revogação do lado do servidor. As rotas de gestão de usuários exigem autenticação, mas as permissões específicas por perfil pertencem à tarefa RF03. O `DELETE` atual exclui o registro; se a regra de negócio aprovada pela equipe exigir somente desativação, o contrato e a implementação deverão ser ajustados juntos.
 
+### API de estudos (T6.2)
+
+A API usa a base `/api/studies`. O contrato OpenAPI da T2.1 ainda pode ajustar os nomes das rotas e dos campos.
+
+| Método e rota | Operação | Resposta de sucesso |
+| --- | --- | --- |
+| `GET /api/studies` | Listar estudos | `200` |
+| `GET /api/studies/{id}` | Consultar estudo | `200` |
+| `POST /api/studies` | Cadastrar estudo | `201`, com `Location: /api/studies/{id}` |
+| `PUT /api/studies/{id}` | Atualizar estudo | `200` |
+
+Cadastro e atualização recebem `title`, `objective`, `responsibleUserId`, `startDate`, `endDate` e `participantLimit`. As datas usam o formato `AAAA-MM-DD`. O título é obrigatório e tem até 200 caracteres; o objetivo é obrigatório; o limite deve ser maior que zero; a data de término não pode anteceder a de início. O responsável deve existir e ter o perfil `RESEARCHER`, conforme a regra confirmada para a Sprint 1. O serviço consulta o módulo de usuários por `UserService`, sem acessar o repositório interno desse módulo.
+
+O banco mantém a chave estrangeira para `users`, a restrição de datas e a restrição do limite. O serviço valida as regras antes de persistir. Corpos inválidos ou regras violadas recebem `400`; recursos inexistentes recebem `404`. Na atualização, a entidade JPA é alterada dentro de uma transação e o Hibernate grava as mudanças. A API ainda não implementa autenticação ou autorização de acesso.
+
+Há 15 testes automatizados de estudos: nove verificam as regras do serviço e seis verificam as respostas HTTP. Com os 16 testes de usuários, `./mvnw test` executou 31 testes com Java 21, sem falhas. A API também foi iniciada com PostgreSQL 18 local: listagem `200`, cadastro `201`, atualização `200` e rejeição de datas invertidas `400`, sem alterar os dados já gravados.
+
 ### Documentação Javadoc
 
 As classes Java do backend, incluindo os testes, registram autor, data de introdução (`@since`) e versão (`@version`). Para gerar a documentação das classes de produção, execute na pasta `backend/`:
@@ -162,6 +233,19 @@ As classes Java do backend, incluindo os testes, registram autor, data de introd
 ```
 
 No Windows, use `mvnw.cmd javadoc:javadoc`. O resultado fica em `backend/target/reports/apidocs/index.html`. O plugin Maven Javadoc 3.12.0 valida a documentação e falha se houver avisos.
+
+### Swagger UI e OpenAPI
+
+Com o PostgreSQL ativo e o backend em execução na porta 8080, abra `http://localhost:8080/swagger-ui/index.html` no navegador. No Linux com ambiente gráfico, também é possível executar `xdg-open http://localhost:8080/swagger-ui/index.html`. A interface mostra as operações de `users` e `studies` e permite inspecionar os corpos e as respostas HTTP. O JSON OpenAPI fica em `http://localhost:8080/v3/api-docs`.
+
+Para verificar os dois endereços pelo terminal:
+
+```bash
+curl -s -o /dev/null -w 'Swagger UI: %{http_code}\n' http://localhost:8080/swagger-ui/index.html
+curl -s -o /dev/null -w 'OpenAPI: %{http_code}\n' http://localhost:8080/v3/api-docs
+```
+
+Ambos devem retornar `200`. Se a conexão for recusada, confira se o backend continua em execução; o terminal de `./mvnw spring-boot:run` deve permanecer aberto.
 
 ### Estado atual
 

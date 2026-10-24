@@ -58,6 +58,7 @@ ios/build/
 .DS_Store
 Thumbs.db
 Desktop.ini
+.$*.bkp
 
 .ide_shared/
 /tatus

@@ -1,5 +1,6 @@
 package clinicalstudypb.shared;
 
+import clinicalstudypb.studies.domain.InvalidStudyException;
 import clinicalstudypb.users.domain.EmailAlreadyInUseException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -19,7 +20,6 @@ public class GlobalExceptionHandler {
     /** Cria o componente que trata exceções compartilhadas pela API. */
     public GlobalExceptionHandler() {
     }
-
 
     /**
      * Responde com 404 quando o recurso solicitado não existe.
@@ -52,5 +52,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ProblemDetail handleDataConflict(DataIntegrityViolationException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Dados em conflito com um registro existente.");
+    }
+
+    /**
+     * Responde com 400 quando os dados de um estudo violam uma regra.
+     *
+     * @param exception erro de validação do estudo
+     * @return detalhe HTTP da regra violada
+     */
+    @ExceptionHandler(InvalidStudyException.class)
+    public ProblemDetail handleInvalidStudy(InvalidStudyException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
     }
 }
