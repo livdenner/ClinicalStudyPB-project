@@ -61,9 +61,18 @@ body {
     cursor: pointer;
 }
 
-.btn-primary { background: #0f4c81; color: white; }
-.btn-secondary { background: #64748b; color: white; }
-.btn-danger { background: #b91c1c; color: white; }
+.btn-primary {
+    background: #0f4c81;
+    color: white;
+}
+.btn-secondary {
+    background: #64748b;
+    color: white;
+}
+.btn-danger {
+    background: #b91c1c;
+    color: white;
+}
 
 .btn:disabled {
     cursor: not-allowed;

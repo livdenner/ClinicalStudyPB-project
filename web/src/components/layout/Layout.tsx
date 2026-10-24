@@ -7,7 +7,9 @@ export function Layout({ menu }: { menu?: ReactNode }) {
             <header className="layout-header">ClinicalStudyPB</header>
             <div className="layout-body">
                 {menu && <nav className="layout-menu">{menu}</nav>}
-                <main className="layout-content"><Outlet /></main>
+                <main className="layout-content">
+                    <Outlet />
+                </main>
             </div>
         </div>
     );
