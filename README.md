@@ -26,7 +26,7 @@ O backend valida as requisições, aplica as regras de negócio, controla as per
 | Banco de dados | PostgreSQL 18 |
 | Documentação da API | OpenAPI com springdoc-openapi 2.8.17 e Swagger UI |
 | Web | React 19.3.1, TypeScript 7.0.2 e Vite 8.3.5; Tailwind CSS 4.3.3, HeroUI 3.2.6 e Lucide React 1.61.0 |
-| Mobile | React Native com Expo; versões das dependências serão registradas quando a aplicação for criada |
+| Mobile | React Native 0.88.0, Expo SDK 58 (`expo ~58.0.19`) e TypeScript ~6.0.3; detalhes de instalação e handoff em [mobile/README.md](mobile/README.md) |
 
 O `backend/pom.xml` declara Java, Spring Boot e springdoc. As versões das demais dependências Java são gerenciadas pelo `spring-boot-starter-parent`. O ambiente de desenvolvimento da equipe é reproduzido com Docker Compose; veja [Executando com Docker Compose](#executando-com-docker-compose).
 
