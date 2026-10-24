@@ -67,6 +67,27 @@ public class Study {
     }
 
     /**
+     * Altera os dados de um estudo já cadastrado.
+     * As regras dos novos valores são conferidas pelo serviço antes da chamada.
+     *
+     * @param title novo título
+     * @param objective novo objetivo
+     * @param responsibleUserId identificador do pesquisador responsável
+     * @param startDate nova data de início
+     * @param endDate nova data de término
+     * @param participantLimit novo limite de participantes
+     */
+    public void updateDetails(String title, String objective, Long responsibleUserId,
+                              LocalDate startDate, LocalDate endDate, Integer participantLimit) {
+        this.title = title;
+        this.objective = objective;
+        this.responsibleUserId = responsibleUserId;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.participantLimit = participantLimit;
+    }
+
+    /**
      * Consulta o identificador do estudo.
      *
      * @return identificador gerado pelo banco
