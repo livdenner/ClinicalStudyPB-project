@@ -32,7 +32,7 @@ O `backend/pom.xml` declara Java, Spring Boot e springdoc. As versões das demai
 
 ### Módulos e camadas do backend
 
-Os módulos são organizados por área de negócio. Nesta etapa, a estrutura inicial inclui `users` e `studies`, correspondentes às funcionalidades de usuários, autenticação e gestão de estudos previstas para a Sprint 1. Recrutamento, acompanhamento e monitoramento poderão ser adicionados como módulos quando essas áreas forem implementadas.
+Os módulos são organizados por área de negócio. Nesta etapa, a estrutura inclui `auth`, `users` e `studies`, correspondentes às funcionalidades de autenticação, gestão de usuários e gestão de estudos previstas para a Sprint 1. Recrutamento, acompanhamento e monitoramento poderão ser adicionados como módulos quando essas áreas forem implementadas.
 
 Dentro de cada módulo, as pastas representam estas responsabilidades:
 
@@ -54,6 +54,11 @@ backend/
 └── src/
     ├── main/
     │   ├── java/clinicalstudypb/
+    │   │   ├── auth/
+    │   │   │   ├── api/
+    │   │   │   ├── application/
+    │   │   │   ├── domain/
+    │   │   │   └── infrastructure/
     │   │   ├── shared/
     │   │   ├── users/
     │   │   │   ├── api/
@@ -132,7 +137,9 @@ Para iniciar novamente sem reconstruir a imagem, use `docker compose up -d`. Dep
 
 O backend recebe a conexão com o PostgreSQL pelas variáveis de ambiente `DB_URL`, `DB_USER` e `DB_PASSWORD`. Cada integrante configura esses valores para seu próprio ambiente. A senha de acesso ao banco não deve ser colocada no repositório.
 
-Ao iniciar o backend com um banco vazio, o Flyway aplica `backend/src/main/resources/db/migration/V1__create_users.sql` e `V2__create_studies.sql`, que criam as tabelas `users` e `studies`. O Hibernate está configurado para validar a correspondência entre as tabelas e as entidades JPA, sem criar ou alterar tabelas automaticamente.
+A assinatura e a validação dos JWTs usam a variável `JWT_SECRET_BASE64`, que deve conter uma chave aleatória codificada em Base64 com pelo menos 32 bytes. Defina a mesma chave em cada instância do backend e mantenha-a fora do Git. A validade padrão é de 3600 segundos e pode ser alterada com `JWT_EXPIRATION_SECONDS`.
+
+Ao iniciar o backend com um banco vazio, o Flyway aplica `backend/src/main/resources/db/migration/V1__create_users.sql`, que cria a tabela `users`. O Hibernate está configurado para validar a correspondência entre a tabela e a entidade JPA, sem criar ou alterar tabelas automaticamente.
 
 Para carregar as contas fictícias no ambiente local ou de demonstração, execute **manualmente** `backend/dev/seed_demo_users.sql` no banco `clinicalstudypb`, esquema `public`, depois da migração V1. O script pode ser executado novamente sem duplicar as contas. Ele não é uma migração Flyway e não roda na inicialização do backend.
 
@@ -143,7 +150,33 @@ Para carregar as contas fictícias no ambiente local ou de demonstração, execu
 | Administrador | `administrador@clinicalstudypb.test` | `Demo@Clinical2026` |
 | Participante | `participante@clinicalstudypb.test` | `Demo@Clinical2026` |
 
-Essas credenciais são apenas para demonstração. O login com elas poderá ser testado quando a autenticação da Sprint 1 estiver implementada.
+Essas credenciais são apenas para demonstração e podem ser usadas para obter um token de acesso pelo endpoint de login.
+
+### Autenticação (T4.1)
+
+A autenticação é fornecida pelo módulo `backend/src/main/java/clinicalstudypb/auth/`. O backend usa Spring Security em modo stateless: não cria sessão HTTP e valida os JWTs enviados nas chamadas protegidas. O `DelegatingPasswordEncoder` compartilhado com o módulo de usuários verifica a senha usando o identificador `{bcrypt}` do hash persistido; a senha recebida no login não é armazenada nem devolvida pela API.
+
+| Método e rota | Acesso | Resultado |
+| --- | --- | --- |
+| `POST /api/v1/auth/login` | Público | `200` com JWT e dados públicos do usuário |
+| `POST /api/v1/auth/logout` | Exige JWT válido | `204` sem conteúdo; o cliente descarta o token |
+
+O login recebe e-mail e senha em JSON:
+
+```json
+{
+  "email": "pesquisador@example.com",
+  "password": "senha-de-exemplo"
+}
+```
+
+Em caso de sucesso, a resposta contém `accessToken`, `tokenType` (`Bearer`), `expiresIn` (segundos) e `user` (id, nome, e-mail, perfil e situação da conta). Para acessar uma rota protegida, o cliente envia o token no cabeçalho `Authorization: Bearer <accessToken>`.
+
+O token é assinado com HS256 e inclui emissor, e-mail no campo `sub`, id do usuário, perfil, instante de emissão e expiração. Sua validade padrão é de 3600 segundos, configurável por `JWT_EXPIRATION_SECONDS`. `JWT_SECRET_BASE64` precisa conter uma chave aleatória codificada em Base64 com pelo menos 32 bytes; a mesma chave deve ser configurada nas instâncias que precisam validar os tokens. A chave deve permanecer fora do Git.
+
+Credenciais inválidas ou conta inativa recebem `401` com código `INVALID_CREDENTIALS`; dados de login ausentes ou inválidos recebem `400` com código `INVALID_REQUEST` e erros por campo. Uma chamada protegida sem token ou com token inválido recebe `401` com código `UNAUTHORIZED`.
+
+O logout não mantém lista de revogação no servidor: por ser stateless, ele apenas confirma o encerramento no cliente, que deve apagar o token. Um token já emitido continua válido até expirar. A autorização específica por perfil ainda pertence à tarefa RF03.
 
 ### API de usuários (T3.2)
 
@@ -172,7 +205,7 @@ O cadastro recebe `name`, `email`, `password` e `role`. A atualização recebe `
 
 O backend remove espaços nas pontas do nome e do e-mail, guarda o e-mail em minúsculas e verifica duplicidade sem diferenciar maiúsculas de minúsculas. A senha é codificada com `DelegatingPasswordEncoder` no formato `{bcrypt}` antes de ser persistida. Nenhuma resposta da API contém a senha ou o hash. Requisições inválidas recebem `400`, usuários inexistentes recebem `404` e conflitos de e-mail recebem `409`.
 
-As rotas de gestão de usuários ainda não têm controle de acesso: autenticação e autorização por perfil serão integradas nas tarefas RF02 e RF03. O `DELETE` atual exclui o registro; se a regra de negócio aprovada pela equipe exigir somente desativação, o contrato e a implementação deverão ser ajustados juntos.
+O login e o logout usam JWT stateless: o cliente descarta o token no logout, sem revogação do lado do servidor. As rotas de gestão de usuários exigem autenticação, mas as permissões específicas por perfil pertencem à tarefa RF03. O `DELETE` atual exclui o registro; se a regra de negócio aprovada pela equipe exigir somente desativação, o contrato e a implementação deverão ser ajustados juntos.
 
 ### API de estudos (T6.2)
 
@@ -216,4 +249,4 @@ Ambos devem retornar `200`. Se a conexão for recusada, confira se o backend con
 
 ### Estado atual
 
-As pastas do backend acima foram criadas como estrutura inicial e contêm arquivos `.gitkeep` para que sejam versionadas. O `backend/pom.xml` declara as dependências iniciais, o Maven Wrapper está disponível para Linux e Windows, e a classe principal da aplicação já foi criada. A entidade JPA de usuário, os perfis e a migração Flyway V1 foram implementados; há um script separado para carregar contas fictícias. A API REST de usuários está implementada, mas sua autenticação e autorização ainda dependem das tarefas de RF02 e RF03. A execução local do banco e do backend com Docker Compose está descrita em [Executando com Docker Compose](#executando-com-docker-compose). O pacote Java `clinicalstudypb` será mantido como raiz dos módulos nesta etapa.
+O backend contém a classe principal, o módulo de usuários com persistência Flyway e contas fictícias, os módulos de autenticação e estudos e o contrato OpenAPI. Login e logout usam JWT stateless; a autorização por perfil permanece para a tarefa RF03. O pacote Java `clinicalstudypb` será mantido como raiz dos módulos nesta etapa.
