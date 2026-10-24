@@ -12,7 +12,7 @@ Essa organização atende ao escopo do ClinicalStudyPB e permite que a equipe de
 
 - **Web:** aplicação React com TypeScript, destinada aos perfis de pesquisador, coordenador do estudo e administrador.
 - **Mobile:** aplicação React Native com Expo, destinada ao participante.
-- **Backend:** aplicação Spring Boot que disponibiliza uma API HTTP REST compartilhada pelas aplicações web e mobile. A API será documentada com OpenAPI.
+- **Backend:** aplicação Spring Boot que disponibiliza uma API HTTP REST compartilhada pelas aplicações web e mobile. O contrato OpenAPI inicial está em [backend/openapi.yaml](backend/openapi.yaml).
 - **Banco de dados:** PostgreSQL, acessado somente pelo backend. As aplicações web e mobile não se conectam diretamente ao banco.
 
 O backend valida as requisições, aplica as regras de negócio, controla as permissões dos perfis e realiza as operações de persistência. As alterações do esquema do banco serão mantidas em migrações Flyway dentro do backend.
@@ -132,7 +132,7 @@ Para iniciar novamente sem reconstruir a imagem, use `docker compose up -d`. Dep
 
 O backend recebe a conexão com o PostgreSQL pelas variáveis de ambiente `DB_URL`, `DB_USER` e `DB_PASSWORD`. Cada integrante configura esses valores para seu próprio ambiente. A senha de acesso ao banco não deve ser colocada no repositório.
 
-Ao iniciar o backend com um banco vazio, o Flyway aplica `backend/src/main/resources/db/migration/V1__create_users.sql`, que cria a tabela `users`. O Hibernate está configurado para validar a correspondência entre a tabela e a entidade JPA, sem criar ou alterar tabelas automaticamente.
+Ao iniciar o backend com um banco vazio, o Flyway aplica `backend/src/main/resources/db/migration/V1__create_users.sql` e `V2__create_studies.sql`, que criam as tabelas `users` e `studies`. O Hibernate está configurado para validar a correspondência entre as tabelas e as entidades JPA, sem criar ou alterar tabelas automaticamente.
 
 Para carregar as contas fictícias no ambiente local ou de demonstração, execute **manualmente** `backend/dev/seed_demo_users.sql` no banco `clinicalstudypb`, esquema `public`, depois da migração V1. O script pode ser executado novamente sem duplicar as contas. Ele não é uma migração Flyway e não roda na inicialização do backend.
 
@@ -174,6 +174,23 @@ O backend remove espaços nas pontas do nome e do e-mail, guarda o e-mail em min
 
 As rotas de gestão de usuários ainda não têm controle de acesso: autenticação e autorização por perfil serão integradas nas tarefas RF02 e RF03. O `DELETE` atual exclui o registro; se a regra de negócio aprovada pela equipe exigir somente desativação, o contrato e a implementação deverão ser ajustados juntos.
 
+### API de estudos (T6.2)
+
+A API usa a base `/api/studies`. O contrato OpenAPI da T2.1 ainda pode ajustar os nomes das rotas e dos campos.
+
+| Método e rota | Operação | Resposta de sucesso |
+| --- | --- | --- |
+| `GET /api/studies` | Listar estudos | `200` |
+| `GET /api/studies/{id}` | Consultar estudo | `200` |
+| `POST /api/studies` | Cadastrar estudo | `201`, com `Location: /api/studies/{id}` |
+| `PUT /api/studies/{id}` | Atualizar estudo | `200` |
+
+Cadastro e atualização recebem `title`, `objective`, `responsibleUserId`, `startDate`, `endDate` e `participantLimit`. As datas usam o formato `AAAA-MM-DD`. O título é obrigatório e tem até 200 caracteres; o objetivo é obrigatório; o limite deve ser maior que zero; a data de término não pode anteceder a de início. O responsável deve existir e ter o perfil `RESEARCHER`, conforme a regra confirmada para a Sprint 1. O serviço consulta o módulo de usuários por `UserService`, sem acessar o repositório interno desse módulo.
+
+O banco mantém a chave estrangeira para `users`, a restrição de datas e a restrição do limite. O serviço valida as regras antes de persistir. Corpos inválidos ou regras violadas recebem `400`; recursos inexistentes recebem `404`. Na atualização, a entidade JPA é alterada dentro de uma transação e o Hibernate grava as mudanças. A API ainda não implementa autenticação ou autorização de acesso.
+
+Há 15 testes automatizados de estudos: nove verificam as regras do serviço e seis verificam as respostas HTTP. Com os 16 testes de usuários, `./mvnw test` executou 31 testes com Java 21, sem falhas. A API também foi iniciada com PostgreSQL 18 local: listagem `200`, cadastro `201`, atualização `200` e rejeição de datas invertidas `400`, sem alterar os dados já gravados.
+
 ### Documentação Javadoc
 
 As classes Java do backend, incluindo os testes, registram autor, data de introdução (`@since`) e versão (`@version`). Para gerar a documentação das classes de produção, execute na pasta `backend/`:
@@ -183,6 +200,19 @@ As classes Java do backend, incluindo os testes, registram autor, data de introd
 ```
 
 No Windows, use `mvnw.cmd javadoc:javadoc`. O resultado fica em `backend/target/reports/apidocs/index.html`. O plugin Maven Javadoc 3.12.0 valida a documentação e falha se houver avisos.
+
+### Swagger UI e OpenAPI
+
+Com o PostgreSQL ativo e o backend em execução na porta 8080, abra `http://localhost:8080/swagger-ui/index.html` no navegador. No Linux com ambiente gráfico, também é possível executar `xdg-open http://localhost:8080/swagger-ui/index.html`. A interface mostra as operações de `users` e `studies` e permite inspecionar os corpos e as respostas HTTP. O JSON OpenAPI fica em `http://localhost:8080/v3/api-docs`.
+
+Para verificar os dois endereços pelo terminal:
+
+```bash
+curl -s -o /dev/null -w 'Swagger UI: %{http_code}\n' http://localhost:8080/swagger-ui/index.html
+curl -s -o /dev/null -w 'OpenAPI: %{http_code}\n' http://localhost:8080/v3/api-docs
+```
+
+Ambos devem retornar `200`. Se a conexão for recusada, confira se o backend continua em execução; o terminal de `./mvnw spring-boot:run` deve permanecer aberto.
 
 ### Estado atual
 
