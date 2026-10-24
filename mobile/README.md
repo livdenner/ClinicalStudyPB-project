@@ -23,7 +23,7 @@ Confira as versões atuais em `package.json` antes de atualizar ferramentas: Exp
 
 ## Instalação inicial
 
-Na raiz do repositório, atualize para a base definida pela equipe e abra a pasta mobile: 
+Na raiz do repositório, atualize para a base definida pela equipe e abra a pasta mobile:
 
 ```powershell
 git switch development
@@ -78,6 +78,12 @@ npx.cmd expo install --check
 ```
 
 O teste Jest cobre a navegação inicial. `tsc` verifica o TypeScript e `expo install --check` compara as dependências com o SDK do Expo. Não há script de lint mobile configurado nesta base; a configuração do ESLint e a execução no CI estão planejadas na tarefa de qualidade/DevOps da equipe.
+
+### Auditoria de dependências
+
+Na auditoria de 24/10/2026, `npm audit` reportou cinco ocorrências de severidade alta associadas a dois pacotes transitivos: `node-forge@1.4.0` e `zod@3.25.76`, dentro da cadeia `expo@58.0.19` → `@expo/cli@58.1.15`. A mesma auditoria com `--omit=dev` manteve os avisos porque o Expo está declarado como dependência de produção. Esses pacotes pertencem ao caminho de ferramentas do Expo/CLI e não são importados diretamente pelas telas ou serviços do app; o risco identificado é na cadeia de desenvolvimento/build.
+
+Os avisos são [GHSA-86w9-cpqp-85rv](https://github.com/advisories/GHSA-86w9-cpqp-85rv) para node-forge e [GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5) para Zod. Na data da verificação, o advisory de node-forge não indicava versão corrigida; o fix de Zod requer versão 4.6.6 ou superior. `npm audit fix --force` propõe trocar Expo SDK 58 por Expo 54.0.38, uma atualização incompatível com a stack atual, então não foi aplicado. Encaminhamento: acompanhar uma atualização compatível do Expo CLI/dependências no SDK usado pelo projeto e reexecutar `npm audit`; não forçar downgrade nem override de major sem validar compatibilidade.
 
 ## Cliente HTTP
 

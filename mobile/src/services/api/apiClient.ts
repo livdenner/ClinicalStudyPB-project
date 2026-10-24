@@ -8,6 +8,7 @@ export interface ApiFieldError {
 interface ApiErrorResponse {
   code?: string;
   message?: string;
+  detail?: string;
   fieldErrors?: ApiFieldError[];
 }
 
@@ -57,7 +58,8 @@ async function readResponseBody(response: Response): Promise<unknown> {
   }
 
   const contentType = response.headers.get('content-type') ?? '';
-  if (contentType.includes('application/json')) {
+  const mediaType = contentType.split(';', 1)[0].trim().toLowerCase();
+  if (mediaType === 'application/json' || mediaType.endsWith('+json')) {
     return response.json();
   }
 
@@ -111,7 +113,9 @@ export async function apiRequest<T>(
     ) as ApiErrorResponse;
 
     throw new ApiError(
-      error.message ?? 'A API respondeu com status ' + response.status + '.',
+      error.message ||
+        error.detail ||
+        'A API respondeu com status ' + response.status + '.',
       response.status,
       error.code,
       error.fieldErrors ?? [],
