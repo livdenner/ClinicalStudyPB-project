@@ -25,10 +25,26 @@ O backend valida as requisições, aplica as regras de negócio, controla as per
 | Build do backend | Maven 3.9.9, fixado pelo Maven Wrapper (`mvnw` e `mvnw.cmd`) |
 | Banco de dados | PostgreSQL 18 |
 | Documentação da API | OpenAPI com springdoc-openapi 2.8.17 e Swagger UI |
-| Web | React com TypeScript; versões das dependências serão registradas quando a aplicação for criada |
+| Web | React 19.3.1, TypeScript 7.0.2 e Vite 8.3.5; Tailwind CSS 4.3.3, HeroUI 3.2.6 e Lucide React 1.61.0 |
 | Mobile | React Native com Expo; versões das dependências serão registradas quando a aplicação for criada |
 
 O `backend/pom.xml` declara Java, Spring Boot e springdoc. As versões das demais dependências Java são gerenciadas pelo `spring-boot-starter-parent`. O ambiente de desenvolvimento da equipe é reproduzido com Docker Compose; veja [Executando com Docker Compose](#executando-com-docker-compose).
+
+### Aplicação web
+
+A aplicação web fica em `web/` e usa React com TypeScript, Vite, Tailwind CSS, HeroUI e Lucide React. Para executá-la localmente, use:
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+O build de produção pode ser validado com `npm run build` e os testes com `npm test`.
+
+#### Gestão de estudos clínicos (Tarefa 3146)
+
+A rota `/estudos` disponibiliza a listagem de estudos clínicos, busca por título, filtro por status, indicadores resumidos e modais para cadastro e edição. Nesta etapa, os dados são mantidos somente em memória a partir de `web/src/data/estudos-mock.ts`; portanto, inclusões e alterações são perdidas ao recarregar a página. A integração com a API de estudos será realizada quando o contrato e os endpoints do backend estiverem disponíveis.
 
 ### Módulos e camadas do backend
 
