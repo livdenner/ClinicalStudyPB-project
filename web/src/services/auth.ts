@@ -1,16 +1,11 @@
 import type {
-  ApiErrorResponse,
   AuthSession,
   LoginRequest,
   LoginResponse,
 } from "../types/auth";
+import { ApiClientError, apiRequest } from "./api/apiClient";
 
 export const AUTH_STORAGE_KEY = "clinicalstudypb.auth.session";
-
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "/api/v1").replace(
-  /\/$/,
-  "",
-);
 
 export class AuthApiError extends Error {
   readonly status: number;
@@ -105,60 +100,51 @@ export function getAuthorizationHeader(
 export async function loginRequest(
   credentials: LoginRequest,
 ): Promise<LoginResponse> {
-  let response: Response;
+  let data: LoginResponse;
 
   try {
-    response = await fetch(`${API_BASE_URL}/auth/login`, {
+    data = await apiRequest<LoginResponse>("/api/v1/auth/login", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+      body: {
         email: credentials.email.trim(),
         password: credentials.password,
-      }),
+      },
     });
-  } catch {
-    throw new AuthApiError(
-      "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.",
-      0,
-      "NETWORK_ERROR",
-    );
-  }
-
-  if (!response.ok) {
-    let errorBody: ApiErrorResponse | null = null;
-    try {
-      errorBody = (await response.json()) as ApiErrorResponse;
-    } catch {
-      errorBody = null;
+  } catch (error) {
+    if (!(error instanceof ApiClientError)) {
+      throw error;
     }
-
-    if (response.status === 401) {
+    if (error.status === null) {
       throw new AuthApiError(
-        errorBody?.message || "E-mail ou senha inválidos, ou conta inativa.",
+        "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.",
+        0,
+        "NETWORK_ERROR",
+      );
+    }
+    if (error.status === 401) {
+      throw new AuthApiError(
+        error.message,
         401,
-        errorBody?.code || "INVALID_CREDENTIALS",
+        error.code || "INVALID_CREDENTIALS",
       );
     }
 
-    if (response.status === 400) {
-      const fieldMsg = errorBody?.fieldErrors?.[0]?.message;
+    if (error.status === 400) {
+      const fieldMsg = error.fieldErrors[0]?.message;
       throw new AuthApiError(
-        fieldMsg || errorBody?.message || "Dados de login inválidos.",
+        fieldMsg || error.message,
         400,
-        errorBody?.code || "INVALID_REQUEST",
+        error.code || "INVALID_REQUEST",
       );
     }
 
     throw new AuthApiError(
-      errorBody?.message || "Ocorreu um erro ao realizar o login.",
-      response.status,
-      errorBody?.code,
+      error.message,
+      error.status,
+      error.code,
     );
   }
 
-  const data = (await response.json()) as LoginResponse;
   if (!data.user?.active) {
     throw new AuthApiError(
       "Esta conta está inativa. Entre em contato com o administrador.",
@@ -176,11 +162,9 @@ export async function logoutRequest(accessToken?: string): Promise<void> {
   }
 
   try {
-    await fetch(`${API_BASE_URL}/auth/logout`, {
+    await apiRequest<void>("/api/v1/auth/logout", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+      token: accessToken,
     });
   } catch {
     // O JWT é stateless: mesmo sem resposta de rede, o cliente descarta a sessão local.
