@@ -1,5 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { Toast } from "@heroui/react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Layout } from "./components";
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -8,6 +9,7 @@ import "./styles.css";
 import { NotFoundPage } from "./pages/not-found";
 import { ListagemEstudosPage } from "./pages/estudos/listagem";
 import { LoginPage } from "./pages/login/login";
+import { ListagemUsuariosPage } from "./pages/usuarios/listagem";
 
 function RootRedirect() {
   const { isAuthenticated } = useAuth();
@@ -21,6 +23,7 @@ export function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route element={<Layout />}>
         <Route path="/estudos" element={<ListagemEstudosPage />} />
+        <Route path="/usuarios" element={<ListagemUsuariosPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
@@ -34,6 +37,7 @@ if (rootElement) {
       <AuthProvider>
         <BrowserRouter>
           <App />
+          <Toast.Provider placement="top end" aria-label="Notificações" />
         </BrowserRouter>
       </AuthProvider>
     </StrictMode>,
