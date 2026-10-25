@@ -25,14 +25,34 @@ O backend valida as requisições, aplica as regras de negócio, controla as per
 | Build do backend | Maven 3.9.9, fixado pelo Maven Wrapper (`mvnw` e `mvnw.cmd`) |
 | Banco de dados | PostgreSQL 18 |
 | Documentação da API | OpenAPI com springdoc-openapi 2.8.17 e Swagger UI |
-| Web | React com TypeScript; versões das dependências serão registradas quando a aplicação for criada |
-| Mobile | React Native com Expo; versões das dependências serão registradas quando a aplicação for criada |
+| Web | React 19.3.1, TypeScript 7.0.2 e Vite 8.3.5; Tailwind CSS 4.3.3, HeroUI 3.2.6 e Lucide React 1.61.0 |
+| Mobile | React Native 0.88.0, Expo SDK 58 (`expo ~58.0.19`) e TypeScript ~6.0.3; detalhes de instalação e handoff em [mobile/README.md](mobile/README.md) |
 
-O `backend/pom.xml` declara Java, Spring Boot e springdoc. As versões das demais dependências Java são gerenciadas pelo `spring-boot-starter-parent`. O ambiente de desenvolvimento da equipe será reproduzido com Docker Compose; os arquivos de execução ainda serão adicionados.
+O `backend/pom.xml` declara Java, Spring Boot e springdoc. As versões das demais dependências Java são gerenciadas pelo `spring-boot-starter-parent`. O ambiente de desenvolvimento da equipe é reproduzido com Docker Compose; veja [Executando com Docker Compose](#executando-com-docker-compose).
+
+### Aplicação web
+
+A aplicação web fica em `web/` e usa React com TypeScript, Vite, Tailwind CSS, HeroUI e Lucide React. Para executá-la localmente, use:
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+O build de produção pode ser validado com `npm run build` e os testes com `npm test`.
+
+#### Autenticação e gestão de sessão web (T4.2)
+
+A rota `/login` disponibiliza o formulário de autenticação integrado ao endpoint `POST /api/v1/auth/login`. A sessão autenticada (`accessToken`, `expiresAt` e dados públicos do usuário) é mantida no armazenamento local do navegador com verificação de expiração, exibição do usuário e perfil na barra lateral (`Sidebar`) e encerramento de sessão integrado ao endpoint `POST /api/v1/auth/logout`.
+
+#### Gestão de estudos clínicos (Tarefa 3146)
+
+A rota `/estudos` disponibiliza a listagem de estudos clínicos, busca por título, filtro por status, indicadores resumidos e modais para cadastro e edição. Nesta etapa, os dados são mantidos somente em memória a partir de `web/src/data/estudos-mock.ts`; portanto, inclusões e alterações são perdidas ao recarregar a página. A integração com a API de estudos será realizada quando o contrato e os endpoints do backend estiverem disponíveis.
 
 ### Módulos e camadas do backend
 
-Os módulos são organizados por área de negócio. Nesta etapa, a estrutura inicial inclui `users` e `studies`, correspondentes às funcionalidades de usuários, autenticação e gestão de estudos previstas para a Sprint 1. Recrutamento, acompanhamento e monitoramento poderão ser adicionados como módulos quando essas áreas forem implementadas.
+Os módulos são organizados por área de negócio. Nesta etapa, a estrutura inclui `auth`, `users` e `studies`, correspondentes às funcionalidades de autenticação, gestão de usuários e gestão de estudos previstas para a Sprint 1. Recrutamento, acompanhamento e monitoramento poderão ser adicionados como módulos quando essas áreas forem implementadas.
 
 Dentro de cada módulo, as pastas representam estas responsabilidades:
 
@@ -54,6 +74,11 @@ backend/
 └── src/
     ├── main/
     │   ├── java/clinicalstudypb/
+    │   │   ├── auth/
+    │   │   │   ├── api/
+    │   │   │   ├── application/
+    │   │   │   ├── domain/
+    │   │   │   └── infrastructure/
     │   │   ├── shared/
     │   │   ├── users/
     │   │   │   ├── api/
@@ -74,11 +99,67 @@ backend/
 
 As pastas `web/` e `mobile/` permanecem na raiz como aplicações independentes que consomem a API. A pasta `releases/` guarda a documentação de cada entrega.
 
+### Executando com Docker Compose
+
+O arquivo `compose.yaml` sobe o PostgreSQL 18 e o backend. O banco só é acessível pela máquina local (`127.0.0.1`), e o backend fica disponível em `http://localhost:8080`. O `compose.yaml` já informa ao backend a conexão com o banco (`DB_URL`), por isso essa variável não faz parte do `.env`.
+
+**Pré-requisito:** Docker com o Docker Compose instalado.
+
+**1. Crie o arquivo `.env`** na raiz do repositório a partir do modelo (ele não é versionado):
+
+```bash
+cp .env.example .env
+```
+
+No Windows (PowerShell): `Copy-Item .env.example .env`.
+
+**2. Preencha as variáveis** no `.env`:
+
+| Variável | Obrigatória | Descrição |
+| --- | --- | --- |
+| `DB_USER` | Não | Usuário do banco. Padrão: `clinicalstudypb`. |
+| `DB_PASSWORD` | Sim | Senha do banco. Escolha um valor só seu; não coloque no Git. |
+| `DB_HOST_PORT` | Não | Porta do banco na máquina local. Padrão: `15432`. |
+| `JWT_SECRET_BASE64` | Sim | Chave de assinatura dos JWTs: Base64 de pelo menos 32 bytes aleatórios. Gere com `openssl rand -base64 32`. Mantenha fora do Git. |
+| `JWT_EXPIRATION_SECONDS` | Não | Validade do token em segundos. Padrão: `3600`. |
+
+Sem `openssl`, é possível gerar a chave no PowerShell: `[Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))`. Se `DB_PASSWORD` ou `JWT_SECRET_BASE64` não estiverem definidos, o Docker Compose interrompe a execução e informa qual variável falta.
+
+**3. Suba a stack** (a primeira execução constrói a imagem do backend):
+
+```bash
+docker compose up -d --build
+docker compose ps
+docker compose logs -f backend
+```
+
+O backend só inicia depois que o banco estiver saudável, e o Flyway aplica as migrações na primeira inicialização.
+
+**4. (Opcional) Carregue as contas de demonstração**, depois que o backend tiver iniciado e aplicado as migrações:
+
+```bash
+docker compose exec -T db psql -U clinicalstudypb -d clinicalstudypb < backend/dev/seed_demo_users.sql
+```
+
+Se você alterou `DB_USER`, use o seu valor no lugar de `clinicalstudypb` após `-U`.
+
+**5. Pare a stack:**
+
+```bash
+docker compose stop     # para os contêineres e preserva os dados
+docker compose down     # remove os contêineres e preserva os dados
+docker compose down -v  # remove também o volume e APAGA o banco
+```
+
+Para iniciar novamente sem reconstruir a imagem, use `docker compose up -d`. Depois de alterar o código do backend, use `docker compose up -d --build`.
+
 ### Banco e usuários de demonstração
 
 O backend recebe a conexão com o PostgreSQL pelas variáveis de ambiente `DB_URL`, `DB_USER` e `DB_PASSWORD`. Cada integrante configura esses valores para seu próprio ambiente. A senha de acesso ao banco não deve ser colocada no repositório.
 
-Ao iniciar o backend com um banco vazio, o Flyway aplica `backend/src/main/resources/db/migration/V1__create_users.sql` e `V2__create_studies.sql`, que criam as tabelas `users` e `studies`. O Hibernate está configurado para validar a correspondência entre as tabelas e as entidades JPA, sem criar ou alterar tabelas automaticamente.
+A assinatura e a validação dos JWTs usam a variável `JWT_SECRET_BASE64`, que deve conter uma chave aleatória codificada em Base64 com pelo menos 32 bytes. Defina a mesma chave em cada instância do backend e mantenha-a fora do Git. A validade padrão é de 3600 segundos e pode ser alterada com `JWT_EXPIRATION_SECONDS`.
+
+Ao iniciar o backend com um banco vazio, o Flyway aplica `backend/src/main/resources/db/migration/V1__create_users.sql`, que cria a tabela `users`. O Hibernate está configurado para validar a correspondência entre a tabela e a entidade JPA, sem criar ou alterar tabelas automaticamente.
 
 Para carregar as contas fictícias no ambiente local ou de demonstração, execute **manualmente** `backend/dev/seed_demo_users.sql` no banco `clinicalstudypb`, esquema `public`, depois da migração V1. O script pode ser executado novamente sem duplicar as contas. Ele não é uma migração Flyway e não roda na inicialização do backend.
 
@@ -89,7 +170,33 @@ Para carregar as contas fictícias no ambiente local ou de demonstração, execu
 | Administrador | `administrador@clinicalstudypb.test` | `Demo@Clinical2026` |
 | Participante | `participante@clinicalstudypb.test` | `Demo@Clinical2026` |
 
-Essas credenciais são apenas para demonstração. O login com elas poderá ser testado quando a autenticação da Sprint 1 estiver implementada.
+Essas credenciais são apenas para demonstração e podem ser usadas para obter um token de acesso pelo endpoint de login.
+
+### Autenticação (T4.1)
+
+A autenticação é fornecida pelo módulo `backend/src/main/java/clinicalstudypb/auth/`. O backend usa Spring Security em modo stateless: não cria sessão HTTP e valida os JWTs enviados nas chamadas protegidas. O `DelegatingPasswordEncoder` compartilhado com o módulo de usuários verifica a senha usando o identificador `{bcrypt}` do hash persistido; a senha recebida no login não é armazenada nem devolvida pela API.
+
+| Método e rota | Acesso | Resultado |
+| --- | --- | --- |
+| `POST /api/v1/auth/login` | Público | `200` com JWT e dados públicos do usuário |
+| `POST /api/v1/auth/logout` | Exige JWT válido | `204` sem conteúdo; o cliente descarta o token |
+
+O login recebe e-mail e senha em JSON:
+
+```json
+{
+  "email": "pesquisador@example.com",
+  "password": "senha-de-exemplo"
+}
+```
+
+Em caso de sucesso, a resposta contém `accessToken`, `tokenType` (`Bearer`), `expiresIn` (segundos) e `user` (id, nome, e-mail, perfil e situação da conta). Para acessar uma rota protegida, o cliente envia o token no cabeçalho `Authorization: Bearer <accessToken>`.
+
+O token é assinado com HS256 e inclui emissor, e-mail no campo `sub`, id do usuário, perfil, instante de emissão e expiração. Sua validade padrão é de 3600 segundos, configurável por `JWT_EXPIRATION_SECONDS`. `JWT_SECRET_BASE64` precisa conter uma chave aleatória codificada em Base64 com pelo menos 32 bytes; a mesma chave deve ser configurada nas instâncias que precisam validar os tokens. A chave deve permanecer fora do Git.
+
+Credenciais inválidas ou conta inativa recebem `401` com código `INVALID_CREDENTIALS`; dados de login ausentes ou inválidos recebem `400` com código `INVALID_REQUEST` e erros por campo. Uma chamada protegida sem token ou com token inválido recebe `401` com código `UNAUTHORIZED`.
+
+O logout não mantém lista de revogação no servidor: por ser stateless, ele apenas confirma o encerramento no cliente, que deve apagar o token. Um token já emitido continua válido até expirar. A autorização específica por perfil ainda pertence à tarefa RF03.
 
 ### API de usuários (T3.2)
 
@@ -118,7 +225,7 @@ O cadastro recebe `name`, `email`, `password` e `role`. A atualização recebe `
 
 O backend remove espaços nas pontas do nome e do e-mail, guarda o e-mail em minúsculas e verifica duplicidade sem diferenciar maiúsculas de minúsculas. A senha é codificada com `DelegatingPasswordEncoder` no formato `{bcrypt}` antes de ser persistida. Nenhuma resposta da API contém a senha ou o hash. Requisições inválidas recebem `400`, usuários inexistentes recebem `404` e conflitos de e-mail recebem `409`.
 
-As rotas de gestão de usuários ainda não têm controle de acesso: autenticação e autorização por perfil serão integradas nas tarefas RF02 e RF03. O `DELETE` atual exclui o registro; se a regra de negócio aprovada pela equipe exigir somente desativação, o contrato e a implementação deverão ser ajustados juntos.
+O login e o logout usam JWT stateless: o cliente descarta o token no logout, sem revogação do lado do servidor. As rotas de gestão de usuários exigem autenticação, mas as permissões específicas por perfil pertencem à tarefa RF03. O `DELETE` atual exclui o registro; se a regra de negócio aprovada pela equipe exigir somente desativação, o contrato e a implementação deverão ser ajustados juntos.
 
 ### API de estudos (T6.2)
 
@@ -162,4 +269,4 @@ Ambos devem retornar `200`. Se a conexão for recusada, confira se o backend con
 
 ### Estado atual
 
-O backend já inclui a base Spring Boot, Dockerfile, migrações Flyway V1 e V2, entidades JPA, API de usuários e API de estudos. As duas migrações foram validadas no PostgreSQL local, e a suíte atual passou com 31 testes em Java 21. A autenticação, a autorização e a execução conjunta com Docker Compose permanecem nas tarefas correspondentes. O pacote Java `clinicalstudypb` é a raiz dos módulos nesta etapa.
+O backend contém a classe principal, o módulo de usuários com persistência Flyway e contas fictícias, os módulos de autenticação e estudos e o contrato OpenAPI. Login e logout usam JWT stateless; a autorização por perfil permanece para a tarefa RF03. O pacote Java `clinicalstudypb` será mantido como raiz dos módulos nesta etapa.

@@ -82,6 +82,19 @@ class StudyServiceTest {
     }
 
     @Test
+    void createStudyRejectsInactiveResearcher() {
+        User researcher = userWithRole(UserRole.RESEARCHER);
+        researcher.deactivate();
+        when(userService.getUser(7L)).thenReturn(researcher);
+
+        InvalidStudyException exception = assertThrows(InvalidStudyException.class,
+                () -> studyService.createStudy("Estudo", "Objetivo", 7L, START_DATE, END_DATE, 30));
+
+        assertEquals("O pesquisador responsável pelo estudo deve estar ativo.", exception.getMessage());
+        verify(studyRepository, never()).save(any(Study.class));
+    }
+
+    @Test
     void createStudyRejectsUnknownResponsibleUser() {
         when(userService.getUser(99L)).thenThrow(new ResourceNotFoundException("Usuário não encontrado: 99"));
 

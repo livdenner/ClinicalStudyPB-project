@@ -1,0 +1,4 @@
+# Scripts executados em contêineres Linux precisam de LF
+backend/mvnw text eol=lf
+*.sh text eol=lf
+backend/mvnw.cmd text eol=crlf
