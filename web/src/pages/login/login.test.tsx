@@ -64,6 +64,30 @@ describe("Login e gestão de sessão (T4.2)", () => {
     expect(loadStoredSession()).toBeNull();
   });
 
+  it("exibe erro de conexão e não salva sessão quando a API está indisponível", async () => {
+    vi.spyOn(globalThis, "fetch").mockRejectedValueOnce(
+      new TypeError("Failed to fetch"),
+    );
+
+    renderApp("/login");
+
+    fireEvent.change(screen.getByLabelText("E-mail"), {
+      target: { value: "pesquisador@clinicalstudypb.test" },
+    });
+    fireEvent.change(screen.getByLabelText("Senha"), {
+      target: { value: "Demo@Clinical2026" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: /entrar/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.",
+    );
+    expect(loadStoredSession()).toBeNull();
+    expect(
+      screen.queryByRole("heading", { name: /estudos clínicos/i }),
+    ).not.toBeInTheDocument();
+  });
+
   it("autentica usuário ativo, persiste a sessão, exibe perfil na Sidebar e encerra a sessão no logout", async () => {
     const fetchMock = vi
       .spyOn(globalThis, "fetch")

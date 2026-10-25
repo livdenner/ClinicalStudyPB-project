@@ -1,6 +1,5 @@
 import type {
   ApiErrorResponse,
-  AuthenticatedUser,
   AuthSession,
   LoginRequest,
   LoginResponse,
@@ -12,63 +11,6 @@ const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "/api/v1").replace(
   /\/$/,
   "",
 );
-
-const DEMO_PASSWORD = "Demo@Clinical2026";
-
-const DEMO_USERS: AuthenticatedUser[] = [
-  {
-    id: 1,
-    name: "Pesquisador Demo",
-    email: "pesquisador@clinicalstudypb.test",
-    role: "RESEARCHER",
-    active: true,
-  },
-  {
-    id: 2,
-    name: "Coordenador Demo",
-    email: "coordenador@clinicalstudypb.test",
-    role: "COORDINATOR",
-    active: true,
-  },
-  {
-    id: 3,
-    name: "Administrador Demo",
-    email: "administrador@clinicalstudypb.test",
-    role: "ADMINISTRATOR",
-    active: true,
-  },
-  {
-    id: 4,
-    name: "Participante Demo",
-    email: "participante@clinicalstudypb.test",
-    role: "PARTICIPANT",
-    active: true,
-  },
-];
-
-function authenticateWithDemoFallback(
-  credentials: LoginRequest,
-): LoginResponse {
-  const emailNormalizado = credentials.email.trim().toLowerCase();
-  const user = DEMO_USERS.find(
-    (candidato) => candidato.email.toLowerCase() === emailNormalizado,
-  );
-
-  if (!user || credentials.password !== DEMO_PASSWORD || !user.active) {
-    throw new AuthApiError(
-      "E-mail ou senha inválidos, ou conta inativa.",
-      401,
-      "INVALID_CREDENTIALS",
-    );
-  }
-
-  return {
-    accessToken: `demo-jwt-${user.id}-${Date.now()}`,
-    tokenType: "Bearer",
-    expiresIn: 3600,
-    user,
-  };
-}
 
 export class AuthApiError extends Error {
   readonly status: number;
@@ -177,9 +119,6 @@ export async function loginRequest(
       }),
     });
   } catch {
-    if (import.meta.env.DEV && !import.meta.env.VITEST) {
-      return authenticateWithDemoFallback(credentials);
-    }
     throw new AuthApiError(
       "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.",
       0,
@@ -193,15 +132,6 @@ export async function loginRequest(
       errorBody = (await response.json()) as ApiErrorResponse;
     } catch {
       errorBody = null;
-    }
-
-    if (
-      import.meta.env.DEV &&
-      !import.meta.env.VITEST &&
-      !errorBody &&
-      response.status >= 500
-    ) {
-      return authenticateWithDemoFallback(credentials);
     }
 
     if (response.status === 401) {
