@@ -4,6 +4,7 @@ import { parseDate } from "@internationalized/date";
 import type { CalendarDate } from "@internationalized/date";
 import { X } from "lucide-react";
 import { CampoData } from "./CampoData";
+import { ErrorMessage } from "../ui/ErrorMessage";
 import type { Estudo, StatusEstudo } from "../../types/estudo";
 import { statusDisponiveis } from "../../utils/estudos";
 
@@ -34,6 +35,7 @@ export function ModalEditarEstudo({
     parseDate(estudo.dataFim),
   );
   const [erro, setErro] = useState("");
+  const [erroLimite, setErroLimite] = useState("");
 
   function salvar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
@@ -49,8 +51,17 @@ export function ModalEditarEstudo({
       return;
     }
 
-    if (Number(limite) <= 0 || !Number.isFinite(Number(limite))) {
-      setErro("O limite de participantes deve ser maior que zero.");
+    const limiteParticipantes = Number(limite);
+
+    if (limiteParticipantes <= 0 || !Number.isFinite(limiteParticipantes)) {
+      setErroLimite("O limite de participantes deve ser maior que zero.");
+      return;
+    }
+
+    if (limiteParticipantes < estudo.participantes) {
+      setErroLimite(
+        `O limite não pode ser menor que os ${estudo.participantes} participantes já alocados.`,
+      );
       return;
     }
 
@@ -65,7 +76,7 @@ export function ModalEditarEstudo({
       ...estudo,
       titulo: titulo.trim(),
       responsavel: responsavel.trim(),
-      limiteParticipantes: Number(limite),
+      limiteParticipantes,
       dataInicio: dataInicio.toString(),
       dataFim: dataFim.toString(),
       status,
@@ -185,9 +196,14 @@ export function ModalEditarEstudo({
                 min={1}
                 placeholder="Ex.: 100"
                 value={limite}
-                onChange={(e) => setLimite(e.target.value)}
+                onChange={(e) => {
+                  setLimite(e.target.value);
+                  setErroLimite("");
+                }}
                 className="h-10 text-sm text-[var(--color-text)] focus-within:ring-1 focus-within:ring-[var(--color-primary)] focus-within:border-[var(--color-primary)]"
               />
+
+              <ErrorMessage message={erroLimite} />
             </div>
 
             <div className="col-span-2 flex flex-col gap-1 max-[520px]:col-span-1">
