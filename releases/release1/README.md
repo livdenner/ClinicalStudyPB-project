@@ -26,6 +26,12 @@ Entregar a primeira versão operacional do ClinicalStudyPB para a aplicação we
 | Gestão de estudos (RF04) | Em andamento | Interface web com listagem, busca, filtro por status, indicadores, cadastro e edição usando dados mock locais. Build validada com `npm --prefix web run build`; integração REST pendente. |
 | Recrutamento e inclusão (RF05 a RF11) | Pendente | Planejado para a Sprint 2. |
 
+## Cliente HTTP da web
+
+A base web possui rotas com React Router, layout compartilhado e um cliente HTTP em `web/src/services/api/apiClient.ts`. Em desenvolvimento, o proxy do Vite encaminha chamadas `/api` para o backend em `http://localhost:8080`; se necessário, configure `VITE_API_BASE_URL` em `web/.env.local` para apontar para outro servidor. Por exemplo, a listagem atual do backend pode ser chamada com `apiRequest('/api/studies', { token })`; operações protegidas exigem JWT. A tela de estudos continua usando dados mock e ainda não está conectada à API.
+
+O login e o logout utilizam o mesmo cliente HTTP compartilhado, preservando a gestão de sessão existente. `VITE_API_BASE_URL` representa somente a origem do servidor, sem `/api` ou `/api/v1` (por exemplo, `https://api.exemplo.com`). Os caminhos são informados nas chamadas: autenticação em `/api/v1/auth` e estudos em `/api/studies`, conforme os controllers atuais. O proxy do Vite funciona apenas no desenvolvimento; na implantação, o servidor web precisa encaminhar `/api` ao backend, ou a API em outra origem precisa permitir CORS.
+
 ## Como executar a web
 
 Pré-requisitos: Git e Node.js 22 LTS.
