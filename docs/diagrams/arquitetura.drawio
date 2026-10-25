@@ -1,0 +1,111 @@
+<mxfile host="Electron">
+  <diagram name="Página-1" id="VaiXkv3c9DSrVsIhJqNs">
+    <mxGraphModel dx="1178" dy="2361" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2336" pageHeight="1654" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="trmDubi-KgfYGreIzYSV-33" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;verticalAlign=top;" value="&lt;b&gt;Usuários&lt;/b&gt;" vertex="1">
+          <mxGeometry height="400" width="250" x="143" y="-1027" as="geometry" />
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-34" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Administrador" vertex="1">
+          <mxGeometry height="60" width="30" x="253" y="-977" as="geometry" />
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-35" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Pesquisador" vertex="1">
+          <mxGeometry height="60" width="30" x="253" y="-857" as="geometry" />
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-36" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Coordenador do Estudo" vertex="1">
+          <mxGeometry height="60" width="30" x="253" y="-737" as="geometry" />
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-38" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;verticalAlign=top;align=left;spacingLeft=10;spacingTop=5;" value="&lt;b&gt;Sistema&lt;/b&gt;" vertex="1">
+          <mxGeometry height="690" width="1560" x="633" y="-1172" as="geometry" />
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-39" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="&lt;b&gt;Aplicação Web&lt;/b&gt;" vertex="1">
+          <mxGeometry height="80" width="210" x="663" y="-1042" as="geometry" />
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-40" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;verticalAlign=top;align=left;spacingLeft=10;spacingTop=5;" value="&lt;b&gt;Contêiner API&lt;/b&gt;" vertex="1">
+          <mxGeometry height="240" width="1180" x="973" y="-1122" as="geometry" />
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-41" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;" value="&lt;b&gt;Banco de Dados&lt;/b&gt;" vertex="1">
+          <mxGeometry height="120" width="230" x="1448" y="-642" as="geometry" />
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-42" parent="1" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;" value="&lt;b&gt;Aplicativo Mobile&lt;/b&gt;" vertex="1">
+          <mxGeometry height="80" width="210" x="663" y="-691" as="geometry" />
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-55" edge="1" parent="1" source="trmDubi-KgfYGreIzYSV-34" style="rounded=0;html=1;endArrow=open;endFill=0;entryX=-0.001;entryY=0.327;entryDx=0;entryDy=0;entryPerimeter=0;" target="trmDubi-KgfYGreIzYSV-38" value="administra acesso">
+          <mxGeometry relative="1" x="-0.0091" y="11" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-56" edge="1" parent="1" source="trmDubi-KgfYGreIzYSV-35" style="rounded=0;html=1;endArrow=open;endFill=0;" target="trmDubi-KgfYGreIzYSV-38" value="configura estudos">
+          <mxGeometry relative="1" x="-0.0095" y="11" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-57" edge="1" parent="1" source="trmDubi-KgfYGreIzYSV-36" style="rounded=0;html=1;endArrow=open;endFill=0;entryX=-0.001;entryY=0.675;entryDx=0;entryDy=0;entryPerimeter=0;" target="trmDubi-KgfYGreIzYSV-38" value="conduz recrutamento">
+          <mxGeometry relative="1" x="0.0067" y="10" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-59" edge="1" parent="1" source="trmDubi-KgfYGreIzYSV-39" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=0;" target="trmDubi-KgfYGreIzYSV-40" value="HTTP/JSON&lt;br&gt;REST">
+          <mxGeometry relative="1" y="20" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-60" edge="1" parent="1" source="trmDubi-KgfYGreIzYSV-40" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;endFill=0;" target="trmDubi-KgfYGreIzYSV-41" value="SQL/JDBC&lt;br&gt;JPA/Hibernate → JDBC">
+          <mxGeometry relative="1" x="0.0032" as="geometry" />
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-65" edge="1" parent="1" source="trmDubi-KgfYGreIzYSV-43" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endFill=0;" target="trmDubi-KgfYGreIzYSV-45" value="consulta conta">
+          <mxGeometry relative="1" y="10" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-66" edge="1" parent="1" source="trmDubi-KgfYGreIzYSV-47" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;endFill=0;" target="trmDubi-KgfYGreIzYSV-45" value="valida responsável">
+          <mxGeometry relative="1" y="-10" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-67" edge="1" parent="1" source="trmDubi-KgfYGreIzYSV-49" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;endFill=0;" target="trmDubi-KgfYGreIzYSV-47" value="consulta estudo">
+          <mxGeometry relative="1" y="-10" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-82" connectable="0" parent="1" style="group" value="" vertex="1">
+          <mxGeometry height="80" width="190" x="1313" y="-1042" as="geometry" />
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-45" parent="trmDubi-KgfYGreIzYSV-82" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;" value="&lt;b&gt;Users&lt;/b&gt;" vertex="1">
+          <mxGeometry height="80" width="190" as="geometry" />
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-46" parent="trmDubi-KgfYGreIzYSV-82" style="rounded=0;whiteSpace=wrap;html=1;fontSize=9;" value="api → aplicação → domínio → infra" vertex="1">
+          <mxGeometry height="30" width="170" x="10" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-83" connectable="0" parent="1" style="group" value="" vertex="1">
+          <mxGeometry height="80" width="190" x="1003" y="-1042" as="geometry" />
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-43" parent="trmDubi-KgfYGreIzYSV-83" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;" value="&lt;b&gt;Auth&lt;/b&gt;" vertex="1">
+          <mxGeometry height="80" width="190" as="geometry" />
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-44" parent="trmDubi-KgfYGreIzYSV-83" style="rounded=0;whiteSpace=wrap;html=1;fontSize=9;" value="api → aplicação → domínio → infra" vertex="1">
+          <mxGeometry height="30" width="170" x="10" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-84" connectable="0" parent="1" style="group" value="" vertex="1">
+          <mxGeometry height="80" width="190" x="1623" y="-1042" as="geometry" />
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-47" parent="trmDubi-KgfYGreIzYSV-84" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;" value="&lt;b&gt;Studies&lt;/b&gt;" vertex="1">
+          <mxGeometry height="80" width="190" as="geometry" />
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-48" parent="trmDubi-KgfYGreIzYSV-84" style="rounded=0;whiteSpace=wrap;html=1;fontSize=9;" value="api → aplicação → domínio → infra" vertex="1">
+          <mxGeometry height="30" width="170" x="10" y="35" as="geometry" />
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-85" connectable="0" parent="1" style="group" value="" vertex="1">
+          <mxGeometry height="80" width="190" x="1933" y="-1042" as="geometry" />
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-49" parent="trmDubi-KgfYGreIzYSV-85" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;" value="&lt;b&gt;Recruitment&lt;/b&gt;" vertex="1">
+          <mxGeometry height="80" width="190" as="geometry" />
+        </mxCell>
+        <mxCell id="trmDubi-KgfYGreIzYSV-50" parent="trmDubi-KgfYGreIzYSV-85" style="rounded=0;whiteSpace=wrap;html=1;fontSize=9;" value="api → aplicação → domínio → infra" vertex="1">
+          <mxGeometry height="30" width="170" x="10" y="35" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
