@@ -140,12 +140,19 @@ describe("Login e gestão de sessão (T4.2)", () => {
         });
 
         expect(fetchMock).toHaveBeenCalledTimes(2);
-        expect(fetchMock).toHaveBeenLastCalledWith("/api/v1/auth/logout", {
-            method: "POST",
-            headers: {
-                Authorization: "Bearer jwt-token-teste",
-            },
-        });
+        expect(fetchMock).toHaveBeenNthCalledWith(
+            1,
+            "/api/v1/auth/login",
+            expect.objectContaining({ method: "POST" })
+        );
+        expect(fetchMock).toHaveBeenLastCalledWith(
+            "/api/v1/auth/logout",
+            expect.objectContaining({ method: "POST" })
+        );
+
+        const logoutOptions = fetchMock.mock.lastCall?.[1];
+        const logoutHeaders = new Headers(logoutOptions?.headers);
+        expect(logoutHeaders.get("Authorization")).toBe("Bearer jwt-token-teste");
     });
 
     it("descarta automaticamente sessão já expirada no armazenamento local", () => {

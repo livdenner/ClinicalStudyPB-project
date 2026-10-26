@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.svg";
-import { navigationItems, type NavigationIcon } from "../../config/navigation";
+import { getNavigationItemsForRole, type NavigationIcon } from "../../config/navigation";
 import { useAuth } from "../../context/AuthContext";
 import { ROLE_LABELS } from "../../types/auth";
 
@@ -27,6 +27,7 @@ const navigationIcons: Record<NavigationIcon, LucideIcon> = {
 export function Sidebar() {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const visibleNavigationItems = getNavigationItemsForRole(user?.role);
 
     async function handleLogout() {
         await logout();
@@ -43,8 +44,8 @@ export function Sidebar() {
                 />
             </div>
 
-            <nav className="mt-[52px] flex flex-col gap-[5px]">
-                {navigationItems.map((item) => {
+            <nav aria-label="Navegação principal" className="mt-[52px] flex flex-col gap-[5px]">
+                {visibleNavigationItems.map((item) => {
                     const Icon = navigationIcons[item.icon];
 
                     return (

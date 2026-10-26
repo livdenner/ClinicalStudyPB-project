@@ -20,11 +20,17 @@ Entregar a primeira versão operacional do ClinicalStudyPB para a aplicação we
 | Item | Situação | Evidência |
 | --- | --- | --- |
 | Componentes base da web | Em andamento | Formulários, mensagens de erro e layout compartilhado em `web/src/components`. |
-| Gestão de usuários (RF01) | Em andamento | A registrar ao término da Sprint 1. |
+| Gestão de usuários (RF01) | Em andamento | Task 3192: rota `/usuarios` com listagem, busca por nome/e-mail, filtros por perfil e situação, cadastro e edição integrados a `/api/users` pelo cliente HTTP compartilhado. Requer sessão de administrador. Senha informada somente no cadastro; edição atualiza nome, e-mail e perfil. O modal de edição possui um interruptor Ativo/Inativo local: a situação só é enviada após salvar e confirmar. Dados são atualizados por `PUT` e situação por `PATCH`; falhas parciais são informadas e permitem tentar novamente. Sessões já emitidas não são revogadas por essa operação. |
 | Autenticação web (RF02) | Em andamento | Tela `/login` e gestão de sessão (`AuthContext` e `web/src/services/auth.ts`) integradas a `/api/v1/auth/login` e `/api/v1/auth/logout`, com testes em `web/src/pages/login/login.test.tsx`. |
-| Controle de acesso web/API (RF03) | Pendente | A registrar após definição da matriz de permissões. |
+| Controle de acesso web/API (RF03) | Em andamento | Autorização por perfil no backend (`@PreAuthorize` em `StudyController` e `UserController`) e proteção de rotas/menu por perfil na web (`ProtectedRoute`, `ForbiddenPage` e filtro de navegação em `web/src/config/navigation.tsx`). |
 | Gestão de estudos (RF04) | Em andamento | Interface web com listagem, busca, filtro por status, indicadores, cadastro e edição usando dados mock locais. Build validada com `npm --prefix web run build`; integração REST pendente. |
 | Recrutamento e inclusão (RF05 a RF11) | Pendente | Planejado para a Sprint 2. |
+
+## Cliente HTTP da web
+
+A base web possui rotas com React Router, layout compartilhado e um cliente HTTP em `web/src/services/api/apiClient.ts`. Em desenvolvimento, o proxy do Vite encaminha chamadas `/api` para o backend em `http://localhost:8080`; se necessário, configure `VITE_API_BASE_URL` em `web/.env.local` para apontar para outro servidor. Por exemplo, a listagem atual do backend pode ser chamada com `apiRequest('/api/studies', { token })`; operações protegidas exigem JWT. A tela de estudos continua usando dados mock e ainda não está conectada à API.
+
+O login e o logout utilizam o mesmo cliente HTTP compartilhado, preservando a gestão de sessão existente. `VITE_API_BASE_URL` representa somente a origem do servidor, sem `/api` ou `/api/v1` (por exemplo, `https://api.exemplo.com`). Os caminhos são informados nas chamadas: autenticação em `/api/v1/auth` e estudos em `/api/studies`, conforme os controllers atuais. O proxy do Vite funciona apenas no desenvolvimento; na implantação, o servidor web precisa encaminhar `/api` ao backend, ou a API em outra origem precisa permitir CORS.
 
 ## Como executar a web
 
