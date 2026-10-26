@@ -46,6 +46,10 @@ O build de produção pode ser validado com `npm run build` e os testes com `npm
 
 A rota `/login` disponibiliza o formulário de autenticação integrado ao endpoint `POST /api/v1/auth/login`. A sessão autenticada (`accessToken`, `expiresAt` e dados públicos do usuário) é mantida no armazenamento local do navegador com verificação de expiração, exibição do usuário e perfil na barra lateral (`Sidebar`) e encerramento de sessão integrado ao endpoint `POST /api/v1/auth/logout`.
 
+#### Rotas protegidas e menu por perfil (T5.2)
+
+As rotas internas da aplicação web são protegidas por `ProtectedRoute` (`web/src/components/auth/ProtectedRoute.tsx`), redirecionando usuários não autenticados para `/login` e apresentando a página `403 — Acesso negado` (`web/src/pages/forbidden.tsx`) quando o perfil autenticado não possui permissão para a rota acessada (como `/estudos` restrito a `RESEARCHER` e `/usuarios` restrito a `ADMINISTRATOR`). A barra lateral (`Sidebar`) filtra automaticamente os itens de menu exibidos de acordo com o perfil do usuário autenticado.
+
 #### Gestão de estudos clínicos (Tarefa 3146)
 
 A rota `/estudos` disponibiliza a listagem de estudos clínicos, busca por título, filtro por status, indicadores resumidos e modais para cadastro e edição. Nesta etapa, os dados são mantidos somente em memória a partir de `web/src/data/estudos-mock.ts`; portanto, inclusões e alterações são perdidas ao recarregar a página. A integração com a API de estudos será realizada quando o contrato e os endpoints do backend estiverem disponíveis.

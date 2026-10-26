@@ -22,7 +22,7 @@ Entregar a primeira versão operacional do ClinicalStudyPB para a aplicação we
 | Componentes base da web | Em andamento | Formulários, mensagens de erro e layout compartilhado em `web/src/components`. |
 | Gestão de usuários (RF01) | Em andamento | A registrar ao término da Sprint 1. |
 | Autenticação web (RF02) | Em andamento | Tela `/login` e gestão de sessão (`AuthContext` e `web/src/services/auth.ts`) integradas a `/api/v1/auth/login` e `/api/v1/auth/logout`, com testes em `web/src/pages/login/login.test.tsx`. |
-| Controle de acesso web/API (RF03) | Pendente | A registrar após definição da matriz de permissões. |
+| Controle de acesso web/API (RF03) | Em andamento | Autorização por perfil no backend (`@PreAuthorize` em `StudyController` e `UserController`) e proteção de rotas/menu por perfil na web (`ProtectedRoute`, `ForbiddenPage` e filtro de navegação em `web/src/config/navigation.tsx`). |
 | Gestão de estudos (RF04) | Em andamento | Interface web com listagem, busca, filtro por status, indicadores, cadastro e edição usando dados mock locais. Build validada com `npm --prefix web run build`; integração REST pendente. |
 | Recrutamento e inclusão (RF05 a RF11) | Pendente | Planejado para a Sprint 2. |
 
