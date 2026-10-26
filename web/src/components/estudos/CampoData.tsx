@@ -1,4 +1,4 @@
-import { DatePicker, DateField, Calendar, Label } from "@heroui/react";
+import { DatePicker, DateField, Calendar, FieldError, Label } from "@heroui/react";
 
 import type { CalendarDate } from "@internationalized/date";
 
@@ -7,6 +7,8 @@ type CampoDataProps = {
   value: CalendarDate | null;
   onChange: (data: CalendarDate | null) => void;
   minValue?: CalendarDate;
+  isDisabled?: boolean;
+  errorMessage?: string;
 };
 
 export function CampoData({
@@ -14,12 +16,18 @@ export function CampoData({
   value,
   onChange,
   minValue,
+  isDisabled,
+  errorMessage,
 }: CampoDataProps) {
   return (
     <DatePicker
       value={value}
       onChange={onChange}
       minValue={minValue}
+      isDisabled={isDisabled}
+      isRequired
+      isInvalid={Boolean(errorMessage)}
+      validationBehavior="aria"
       className="w-full"
     >
       <Label className="text-sm font-medium text-[var(--color-text)]">
@@ -45,6 +53,8 @@ export function CampoData({
           </DatePicker.Trigger>
         </DateField.Suffix>
       </DateField.Group>
+
+      <FieldError>{errorMessage}</FieldError>
 
       <DatePicker.Popover className="rounded-lg border border-[var(--color-border)] bg-white p-2 shadow-lg">
         <Calendar aria-label={label}>
