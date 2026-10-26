@@ -68,7 +68,7 @@ describe("TabelaUsuarios", () => {
     const onEditar = vi.fn();
     render(<TabelaUsuarios usuarios={usuarios} onEditar={onEditar} />);
     fireEvent.click(
-      screen.getByRole("button", { name: "Editar usuário: Carla" }),
+      screen.getByRole("button", { name: "Editar usuário: Julio" }),
     );
     expect(onEditar).toHaveBeenCalledTimes(1);
     expect(onEditar).toHaveBeenCalledWith(usuarios[2]);
