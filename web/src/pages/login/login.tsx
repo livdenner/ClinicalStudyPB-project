@@ -3,6 +3,10 @@ import { Button, Input } from "@heroui/react";
 import { AlertCircle, LogIn } from "lucide-react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import logo from "../../assets/logo.svg";
+import {
+  canRoleAccessPath,
+  getDefaultRouteForRole,
+} from "../../config/navigation";
 import { useAuth } from "../../context/AuthContext";
 import { AuthApiError } from "../../services/auth";
 
@@ -13,6 +17,7 @@ type LocationState = {
 export function LoginPage() {
   const {
     isAuthenticated,
+    user,
     login,
     sessionExpiredMessage,
     clearSessionExpiredMessage,
@@ -25,10 +30,14 @@ export function LoginPage() {
   const [erro, setErro] = useState("");
   const [enviando, setEnviando] = useState(false);
 
-  const destino = (location.state as LocationState | null)?.from || "/estudos";
+  const rotaOrigem = (location.state as LocationState | null)?.from;
 
-  if (isAuthenticated) {
-    return <Navigate to={destino} replace />;
+  if (isAuthenticated && user) {
+    const destinoAutenticado =
+      rotaOrigem && canRoleAccessPath(user.role, rotaOrigem)
+        ? rotaOrigem
+        : getDefaultRouteForRole(user.role);
+    return <Navigate to={destinoAutenticado} replace />;
   }
 
   async function handleSubmit(evento: FormEvent<HTMLFormElement>) {
@@ -50,7 +59,11 @@ export function LoginPage() {
     setEnviando(true);
 
     try {
-      await login(emailLimpo, password);
+      const usuarioAutenticado = await login(emailLimpo, password);
+      const destino =
+        rotaOrigem && canRoleAccessPath(usuarioAutenticado.role, rotaOrigem)
+          ? rotaOrigem
+          : getDefaultRouteForRole(usuarioAutenticado.role);
       navigate(destino, { replace: true });
     } catch (error) {
       if (error instanceof AuthApiError) {

@@ -42,10 +42,6 @@ npm run dev
 
 O build de produção pode ser validado com `npm run build` e os testes com `npm test`.
 
-#### Autenticação e gestão de sessão web (T4.2)
-
-A rota `/login` disponibiliza o formulário de autenticação integrado ao endpoint `POST /api/v1/auth/login`. A sessão autenticada (`accessToken`, `expiresAt` e dados públicos do usuário) é mantida no armazenamento local do navegador com verificação de expiração, exibição do usuário e perfil na barra lateral (`Sidebar`) e encerramento de sessão integrado ao endpoint `POST /api/v1/auth/logout`.
-
 #### Gestão de estudos clínicos (Tarefa 3146)
 
 A rota `/estudos` disponibiliza a listagem de estudos clínicos, busca por título, filtro por status, indicadores resumidos e modais para cadastro e edição. Nesta etapa, os dados são mantidos somente em memória a partir de `web/src/data/estudos-mock.ts`; portanto, inclusões e alterações são perdidas ao recarregar a página. A integração com a API de estudos será realizada quando o contrato e os endpoints do backend estiverem disponíveis.
