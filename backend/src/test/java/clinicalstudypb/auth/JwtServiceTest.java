@@ -12,7 +12,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import javax.crypto.SecretKey;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -44,8 +43,7 @@ class JwtServiceTest {
     }
 
     @Test
-    @DisplayName("CA-02.1: issuedTokenCarriesIssuerSubjectUserIdAndRole")
-    void issuedTokenCarriesIssuerSubjectUserIdAndRole() {
+    void issuedTokenCarriesIssuerSubjectUserIdAndRole_CA02_1() {
         JwtToken token = jwtService.issue(coordinator());
 
         Jwt jwt = jwtDecoder.decode(token.value());
@@ -68,8 +66,7 @@ class JwtServiceTest {
     }
 
     @Test
-    @DisplayName("CA-02.5: tamperedPayloadIsRejectedByDecoder")
-    void tamperedPayloadIsRejectedByDecoder() {
+    void tamperedPayloadIsRejectedByDecoder_CA02_5() {
         String[] parts = jwtService.issue(coordinator()).value().split("\\.");
         String forgedPayload = Base64.getUrlEncoder().withoutPadding().encodeToString(
                 "{\"iss\":\"clinicalstudypb\",\"sub\":\"coordenador@clinicalstudypb.test\",\"role\":\"ADMINISTRATOR\"}"
@@ -80,8 +77,7 @@ class JwtServiceTest {
     }
 
     @Test
-    @DisplayName("CA-02.5: tokenSignedWithAnotherSecretIsRejected")
-    void tokenSignedWithAnotherSecretIsRejected() {
+    void tokenSignedWithAnotherSecretIsRejected_CA02_5() {
         SecretKey otherKey = configuration.jwtSecretKey(encodedSecret("fedcba9876543210fedcba9876543210"));
         JwtService otherService = new JwtService(configuration.jwtEncoder(otherKey), EXPIRATION_SECONDS);
 

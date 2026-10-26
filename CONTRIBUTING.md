@@ -23,6 +23,7 @@ npm run lint
 ### Backend (Java 21 / Spring Boot) — Checkstyle
 Regras em [backend/checkstyle.xml](backend/checkstyle.xml), executadas na fase `validate` do Maven; qualquer violação falha o build.
 - Nomes: pacotes em minúsculas, classes em `PascalCase`, métodos/variáveis em `camelCase`, constantes em `UPPER_SNAKE_CASE`.
+- Métodos de teste podem terminar com o ID do critério de aceite separado por `_`, como no plano de testes: `deveRetornar409QuandoEmailDuplicado_CA01_2`.
 - Linhas de até 120 colunas, chaves obrigatórias em `if`/`for`/`while`, sem `import *`, sem imports não usados, sem tabs.
 - Classes e interfaces públicas devem ter Javadoc (em português, como no restante do projeto).
 - Organização em pacotes por módulo e camada: `<modulo>/{api,application,domain,infrastructure}`.

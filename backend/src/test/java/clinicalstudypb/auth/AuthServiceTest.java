@@ -18,7 +18,6 @@ import clinicalstudypb.users.domain.UserRole;
 import clinicalstudypb.users.infrastructure.PasswordEncodingConfig;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -54,8 +53,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("CA-02.1: loginWithValidCredentialsReturnsTokenAndUser")
-    void loginWithValidCredentialsReturnsTokenAndUser() {
+    void loginWithValidCredentialsReturnsTokenAndUser_CA02_1() {
         User user = activeResearcher();
         JwtToken token = new JwtToken("jwt-assinado", 3600);
         when(userService.findByEmail(EMAIL)).thenReturn(Optional.of(user));
@@ -79,8 +77,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("CA-02.2: loginWithUnknownEmailIsRejectedWithoutIssuingToken")
-    void loginWithUnknownEmailIsRejectedWithoutIssuingToken() {
+    void loginWithUnknownEmailIsRejectedWithoutIssuingToken_CA02_2() {
         when(userService.findByEmail(EMAIL)).thenReturn(Optional.empty());
 
         assertThrows(InvalidCredentialsException.class, () -> authService.login(EMAIL, PASSWORD));
@@ -89,8 +86,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("CA-02.2: loginWithWrongPasswordIsRejectedWithoutIssuingToken")
-    void loginWithWrongPasswordIsRejectedWithoutIssuingToken() {
+    void loginWithWrongPasswordIsRejectedWithoutIssuingToken_CA02_2() {
         when(userService.findByEmail(EMAIL)).thenReturn(Optional.of(activeResearcher()));
 
         assertThrows(InvalidCredentialsException.class, () -> authService.login(EMAIL, "senha-errada"));
@@ -99,8 +95,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("CA-02.2: unknownEmailAndWrongPasswordProduceTheSameMessage")
-    void unknownEmailAndWrongPasswordProduceTheSameMessage() {
+    void unknownEmailAndWrongPasswordProduceTheSameMessage_CA02_2() {
         when(userService.findByEmail("inexistente@clinicalstudypb.test")).thenReturn(Optional.empty());
         when(userService.findByEmail(EMAIL)).thenReturn(Optional.of(activeResearcher()));
 
@@ -113,8 +108,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("CA-02.3: inactiveUserWithCorrectPasswordIsRejected")
-    void inactiveUserWithCorrectPasswordIsRejected() {
+    void inactiveUserWithCorrectPasswordIsRejected_CA02_3() {
         User user = activeResearcher();
         user.deactivate();
         when(userService.findByEmail(EMAIL)).thenReturn(Optional.of(user));

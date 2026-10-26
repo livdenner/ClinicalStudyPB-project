@@ -15,6 +15,16 @@
         <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://"/>
     </module>
 
+    <!-- Cada regra de nome de método vale só no seu diretório (ver MethodName abaixo) -->
+    <module name="SuppressionSingleFilter">
+        <property name="id" value="methodNameMain"/>
+        <property name="files" value="[\\/]src[\\/]test[\\/]"/>
+    </module>
+    <module name="SuppressionSingleFilter">
+        <property name="id" value="methodNameTest"/>
+        <property name="files" value="[\\/]src[\\/]main[\\/]"/>
+    </module>
+
     <module name="TreeWalker">
         <!-- Imports -->
         <module name="AvoidStarImport"/>
@@ -24,7 +34,14 @@
         <!-- Nomenclatura -->
         <module name="PackageName"/>
         <module name="TypeName"/>
-        <module name="MethodName"/>
+        <module name="MethodName">
+            <property name="id" value="methodNameMain"/>
+        </module>
+        <!-- Testes aceitam sufixos com _, ex.: deveRetornar409QuandoEmailDuplicado_CA01_2 -->
+        <module name="MethodName">
+            <property name="id" value="methodNameTest"/>
+            <property name="format" value="^[a-z][a-zA-Z0-9]*(_[a-zA-Z0-9]+)*$"/>
+        </module>
         <module name="ParameterName"/>
         <module name="LocalVariableName"/>
         <module name="MemberName"/>
