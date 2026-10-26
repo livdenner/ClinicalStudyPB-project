@@ -27,7 +27,7 @@ describe("Protótipos web de Visão geral, Recrutamento, Visitas e Relatórios (
     renderWithProviders(<VisaoGeralPage />);
 
     expect(
-      screen.getByRole("heading", { name: "Visão geral" }),
+      screen.getByRole("heading", { name: "Visão geral (Protótipo)" }),
     ).toBeInTheDocument();
     expect(screen.getByText("Progresso dos estudos")).toBeInTheDocument();
     expect(
@@ -40,7 +40,7 @@ describe("Protótipos web de Visão geral, Recrutamento, Visitas e Relatórios (
     renderWithProviders(<RecrutamentoPage />);
 
     expect(
-      screen.getByRole("heading", { name: "Recrutamento" }),
+      screen.getByRole("heading", { name: "Recrutamento (Protótipo)" }),
     ).toBeInTheDocument();
 
     fireEvent.click(screen.getByText("Candidato 014"));
@@ -76,7 +76,7 @@ describe("Protótipos web de Visão geral, Recrutamento, Visitas e Relatórios (
     renderWithProviders(<VisitasPage />);
 
     expect(
-      screen.getByRole("heading", { name: "Visitas" }),
+      screen.getByRole("heading", { name: "Visitas (Protótipo)" }),
     ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /Agendar visita/i }));
@@ -107,7 +107,7 @@ describe("Protótipos web de Visão geral, Recrutamento, Visitas e Relatórios (
     renderWithProviders(<RelatoriosPage />);
 
     expect(
-      screen.getByRole("heading", { name: "Relatórios" }),
+      screen.getByRole("heading", { name: "Relatórios (Protótipo)" }),
     ).toBeInTheDocument();
     expect(screen.getByText("Funil de recrutamento")).toBeInTheDocument();
     expect(screen.getByText("Situação das visitas")).toBeInTheDocument();
