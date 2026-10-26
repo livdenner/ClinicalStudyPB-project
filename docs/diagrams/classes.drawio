@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="Electron" modified="2026-10-25T23:40:00.000Z" agent="Codex" version="24.7.17">
+  <diagram name="Diagrama de Classes" id="ClinicalStudyPBClasses">
+    <mxGraphModel dx="1654" dy="1169" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="User" value="&lt;div style=&quot;text-align:center&quot;&gt;&lt;b&gt;User&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div&gt;&lt;div&gt;- id: Long&lt;/div&gt;&lt;div&gt;- name: String&lt;/div&gt;&lt;div&gt;- email: String&lt;/div&gt;&lt;div&gt;- passwordHash: String&lt;/div&gt;&lt;div&gt;- role: UserRole&lt;/div&gt;&lt;div&gt;- active: boolean&lt;/div&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div&gt;&lt;div&gt;+ activate(): void&lt;/div&gt;&lt;div&gt;+ deactivate(): void&lt;/div&gt;&lt;div&gt;+ updateDetails(name, email): void&lt;/div&gt;&lt;div&gt;+ changeRole(role): void&lt;/div&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontColor=#000000;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="100" y="300" width="480" height="540" as="geometry" />
+        </mxCell>
+        <mxCell id="Study" value="&lt;div style=&quot;text-align:center&quot;&gt;&lt;b&gt;Study&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div&gt;&lt;div&gt;- id: Long&lt;/div&gt;&lt;div&gt;- title: String&lt;/div&gt;&lt;div&gt;- objective: String&lt;/div&gt;&lt;div&gt;- responsibleUserId: Long {FK}&lt;/div&gt;&lt;div&gt;- startDate: LocalDate&lt;/div&gt;&lt;div&gt;- endDate: LocalDate&lt;/div&gt;&lt;div&gt;- participantLimit: Integer&lt;/div&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div&gt;&lt;div&gt;+ updateDetails(...): void&lt;/div&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontColor=#000000;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1074" y="300" width="480" height="540" as="geometry" />
+        </mxCell>
+        <mxCell id="UserRole" value="&lt;div style=&quot;text-align:center&quot;&gt;&lt;b&gt;UserRole&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div style=&quot;text-align:center&quot;&gt;&lt;i&gt;&amp;lt;&amp;lt;enumeration&amp;gt;&amp;gt;&lt;/i&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div style=&quot;text-align:center&quot;&gt;RESEARCHER&lt;/div&gt;&lt;div style=&quot;text-align:center&quot;&gt;COORDINATOR&lt;/div&gt;&lt;div style=&quot;text-align:center&quot;&gt;ADMINISTRATOR&lt;/div&gt;&lt;div style=&quot;text-align:center&quot;&gt;PARTICIPANT&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontColor=#000000;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="662" y="940" width="330" height="205" as="geometry" />
+        </mxCell>
+        <mxCell id="User_role" value="role" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;strokeColor=#000000;strokeWidth=1;fontSize=13;" edge="1" parent="1" source="User" target="UserRole">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Study_responsible" value="responsável" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;strokeColor=#000000;strokeWidth=1;fontSize=13;" edge="1" parent="1" source="Study" target="User">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="MultiplicityUser" value="1" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;fontSize=14;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="600" y="545" width="24" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="MultiplicityStudy" value="0..*" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;fontSize=14;fontColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="545" width="36" height="24" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
