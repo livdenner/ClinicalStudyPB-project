@@ -108,6 +108,7 @@ describe("Login e gestão de sessão (T4.2)", () => {
           { status: 200, headers: { "Content-Type": "application/json" } },
         ),
       )
+      .mockResolvedValueOnce(new Response(JSON.stringify([]), { status: 200 }))
       .mockResolvedValueOnce(new Response(null, { status: 204 }));
 
     renderApp("/login");
@@ -126,6 +127,7 @@ describe("Login e gestão de sessão (T4.2)", () => {
 
     expect(screen.getByText("Pesquisador Demo")).toBeInTheDocument();
     expect(screen.getByText("Pesquisador")).toBeInTheDocument();
+    await screen.findByText("Nenhum estudo encontrado");
 
     const sessaoSalva = loadStoredSession();
     expect(sessaoSalva?.accessToken).toBe("jwt-token-teste");
@@ -141,11 +143,16 @@ describe("Login e gestão de sessão (T4.2)", () => {
       expect(loadStoredSession()).toBeNull();
     });
 
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
       "/api/v1/auth/login",
       expect.objectContaining({ method: "POST" }),
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/api/studies",
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
     );
     expect(fetchMock).toHaveBeenLastCalledWith(
       "/api/v1/auth/logout",

@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import "./styles.css";
 import { NotFoundPage } from "./pages/not-found";
 import { ListagemEstudosPage } from "./pages/estudos/listagem";
+import { VisualizarEstudoPage } from "./pages/estudos/visualizar";
 import { LoginPage } from "./pages/login/login";
 import { ListagemUsuariosPage } from "./pages/usuarios/listagem";
 
@@ -23,6 +24,7 @@ export function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route element={<Layout />}>
         <Route path="/estudos" element={<ListagemEstudosPage />} />
+        <Route path="/estudos/:id" element={<VisualizarEstudoPage />} />
         <Route path="/usuarios" element={<ListagemUsuariosPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
