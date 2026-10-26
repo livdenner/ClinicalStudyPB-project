@@ -42,6 +42,29 @@ A ação Visualizar da tabela abre `/estudos/{id}`, que consulta `GET /api/studi
 
 Status e quantidade atual de participantes ainda não fazem parte dessa resposta. Por isso, os indicadores, o filtro e a coluna de status estão ocultos, e a tabela mostra somente o limite de participantes, sem calcular ocupação nem assumir uma contagem igual a zero. A validação do limite contra participantes já alocados depende de suporte do backend. O formulário só fecha e a tabela só é atualizada após sucesso da API; erros mantêm os dados digitados disponíveis para correção.
 
+## Testes de componentes de estudos (Task 3148)
+
+Os testes usam Vitest, React Testing Library e jsdom, com requisições HTTP e notificações de sucesso simuladas. Os componentes de busca, tabela, modal e calendário do HeroUI são exercitados diretamente.
+
+| Arquivo | Cenários cobertos |
+| --- | --- |
+| `web/src/components/estudos/BuscaFiltroEstudos.test.tsx` | Busca controlada, digitação e limpeza pelo callback. |
+| `web/src/components/estudos/TabelaEstudos.test.tsx` | Responsáveis, limites e períodos, inclusive entre anos diferentes, callback de edição e estado vazio. |
+| `web/src/components/estudos/CampoData.test.tsx` | Segmentos acessíveis, alteração pelo teclado, bloqueio durante salvamento e erro de validação. |
+| `web/src/components/estudos/ModalEstudo.test.tsx` | Campos obrigatórios, normalização dos dados, limites válidos e inválidos, datas iguais, preservação do responsável, cancelamento, bloqueio de envios repetidos, foco nos erros e respostas 401/403. |
+| `web/src/pages/estudos/listagem.test.tsx` | Carregamento, estado vazio, busca, cadastro e edição via API com JWT, responsável logado no cadastro, preservação do responsável na edição, cancelamento, falhas de conexão, validações e restrições de acesso. |
+| `web/src/pages/estudos/visualizar.test.tsx` | Navegação da tabela para os detalhes, consulta por ID, retorno à listagem, edição, cancelamento de consultas pendentes, identificadores inválidos, respostas 401/403/404 e novas tentativas. |
+
+O teste de listagem substitui o campo de data por um campo ISO simples para concentrar os cenários no fluxo da página. O calendário real é verificado nos testes de `CampoData`, `ModalEstudo` e visualização. A execução depende apenas das dependências da web, sem precisar iniciar Docker ou o backend.
+
+Para executar os 52 testes de telas e componentes de estudos:
+
+```powershell
+npm --prefix web test -- src/components/estudos src/pages/estudos
+```
+
+Os testes do serviço HTTP em `web/src/services/estudos.test.ts` acompanham a integração da task 3146.
+
 ## Como executar a web
 
 Pré-requisitos: Git e Node.js 22 LTS.
