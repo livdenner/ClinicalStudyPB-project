@@ -6,13 +6,18 @@ import { Layout } from "./components";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { getDefaultRouteForRole } from "./config/navigation";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { PrototiposProvider } from "./context/PrototiposContext";
 
 import "./styles.css";
 import { ForbiddenPage } from "./pages/forbidden";
 import { NotFoundPage } from "./pages/not-found";
+import { VisaoGeralPage } from "./pages/dashboard/visao-geral";
 import { ListagemEstudosPage } from "./pages/estudos/listagem";
 import { VisualizarEstudoPage } from "./pages/estudos/visualizar";
 import { LoginPage } from "./pages/login/login";
+import { RecrutamentoPage } from "./pages/recrutamento/recrutamento";
+import { RelatoriosPage } from "./pages/relatorios/relatorios";
+import { VisitasPage } from "./pages/visitas/visitas";
 import { ListagemUsuariosPage } from "./pages/usuarios/listagem";
 
 function RootRedirect() {
@@ -27,7 +32,8 @@ function RootRedirect() {
 
 export function App() {
   return (
-    <Routes>
+    <PrototiposProvider>
+      <Routes>
       <Route path="/" element={<RootRedirect />} />
       <Route path="/login" element={<LoginPage />} />
 
@@ -66,7 +72,7 @@ export function App() {
             path="/recrutamento"
             element={
               <ProtectedRoute allowedRoles={["COORDINATOR", "RESEARCHER"]}>
-                <NotFoundPage />
+                <RecrutamentoPage />
               </ProtectedRoute>
             }
           />
@@ -75,7 +81,7 @@ export function App() {
             path="/visitas"
             element={
               <ProtectedRoute allowedRoles={["RESEARCHER", "COORDINATOR"]}>
-                <NotFoundPage />
+                <VisitasPage />
               </ProtectedRoute>
             }
           />
@@ -86,7 +92,7 @@ export function App() {
               <ProtectedRoute
                 allowedRoles={["ADMINISTRATOR", "RESEARCHER", "COORDINATOR"]}
               >
-                <NotFoundPage />
+                <VisaoGeralPage />
               </ProtectedRoute>
             }
           />
@@ -97,7 +103,7 @@ export function App() {
               <ProtectedRoute
                 allowedRoles={["ADMINISTRATOR", "RESEARCHER", "COORDINATOR"]}
               >
-                <NotFoundPage />
+                <RelatoriosPage />
               </ProtectedRoute>
             }
           />
@@ -115,6 +121,7 @@ export function App() {
         </Route>
       </Route>
     </Routes>
+    </PrototiposProvider>
   );
 }
 
