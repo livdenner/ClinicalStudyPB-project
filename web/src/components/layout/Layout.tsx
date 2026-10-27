@@ -1,16 +1,16 @@
-import type { ReactNode } from "react";
 import { Outlet } from "react-router-dom";
+import { Sidebar } from "../shared/Sidebar";
 
-export function Layout({ menu }: { menu?: ReactNode }) {
+export function Layout() {
     return (
-        <div className="layout">
-            <header className="layout-header">ClinicalStudyPB</header>
-            <div className="layout-body">
-                {menu && <nav className="layout-menu">{menu}</nav>}
-                <main className="layout-content">
+        <div className="min-h-screen">
+            <Sidebar />
+
+            <main className="ml-[var(--sidebar-width)] min-h-screen max-[760px]:ml-0">
+                <div className="mx-auto min-h-screen w-full max-w-[1600px] px-7 pt-16 pb-10 min-[1600px]:px-9 max-[760px]:px-[18px] max-[760px]:pt-[82px] max-[760px]:pb-7">
                     <Outlet />
-                </main>
-            </div>
+                </div>
+            </main>
         </div>
     );
 }

@@ -1,21 +1,141 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Toast } from "@heroui/react";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Layout } from "./components";
-import "./styles.css";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { getDefaultRouteForRole } from "./config/navigation";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import { PrototiposProvider } from "./context/PrototiposContext";
 
-function Home() {
-    return <h1>Início</h1>;
+import "./styles.css";
+import { ForbiddenPage } from "./pages/forbidden";
+import { NotFoundPage } from "./pages/not-found";
+import { VisaoGeralPage } from "./pages/dashboard/visao-geral";
+import { ListagemEstudosPage } from "./pages/estudos/listagem";
+import { VisualizarEstudoPage } from "./pages/estudos/visualizar";
+import { LoginPage } from "./pages/login/login";
+import { RecrutamentoPage } from "./pages/recrutamento/recrutamento";
+import { RelatoriosPage } from "./pages/relatorios/relatorios";
+import { VisitasPage } from "./pages/visitas/visitas";
+import { ListagemUsuariosPage } from "./pages/usuarios/listagem";
+
+function RootRedirect() {
+    const { isAuthenticated, user } = useAuth();
+
+    if (!isAuthenticated || !user) {
+        return <Navigate to="/login" replace />;
+    }
+
+    return <Navigate to={getDefaultRouteForRole(user.role)} replace />;
 }
 
-createRoot(document.getElementById("root")!).render(
-    <StrictMode>
-        <BrowserRouter>
+export function App() {
+    return (
+        <PrototiposProvider>
             <Routes>
-                <Route element={<Layout />}>
-                    <Route path="/" element={<Home />} />
+                <Route path="/" element={<RootRedirect />} />
+                <Route path="/login" element={<LoginPage />} />
+
+                <Route element={<ProtectedRoute />}>
+                    <Route element={<Layout />}>
+                        <Route path="/acesso-negado" element={<ForbiddenPage />} />
+
+                        <Route
+                            path="/estudos"
+                            element={
+                                <ProtectedRoute allowedRoles={["RESEARCHER"]}>
+                                    <ListagemEstudosPage />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="/estudos/:id"
+                            element={
+                                <ProtectedRoute allowedRoles={["RESEARCHER"]}>
+                                    <VisualizarEstudoPage />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="/usuarios"
+                            element={
+                                <ProtectedRoute allowedRoles={["ADMINISTRATOR"]}>
+                                    <ListagemUsuariosPage />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="/recrutamento"
+                            element={
+                                <ProtectedRoute allowedRoles={["COORDINATOR", "RESEARCHER"]}>
+                                    <RecrutamentoPage />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="/visitas"
+                            element={
+                                <ProtectedRoute allowedRoles={["RESEARCHER", "COORDINATOR"]}>
+                                    <VisitasPage />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="/dashboard"
+                            element={
+                                <ProtectedRoute
+                                    allowedRoles={["ADMINISTRATOR", "RESEARCHER", "COORDINATOR"]}
+                                >
+                                    <VisaoGeralPage />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="/relatorios"
+                            element={
+                                <ProtectedRoute
+                                    allowedRoles={["ADMINISTRATOR", "RESEARCHER", "COORDINATOR"]}
+                                >
+                                    <RelatoriosPage />
+                                </ProtectedRoute>
+                            }
+                        />
+
+                        <Route
+                            path="*"
+                            element={
+                                <ProtectedRoute
+                                    allowedRoles={["ADMINISTRATOR", "RESEARCHER", "COORDINATOR"]}
+                                >
+                                    <NotFoundPage />
+                                </ProtectedRoute>
+                            }
+                        />
+                    </Route>
                 </Route>
             </Routes>
-        </BrowserRouter>
-    </StrictMode>
-);
+        </PrototiposProvider>
+    );
+}
+
+const rootElement = document.getElementById("root");
+
+if (rootElement) {
+    createRoot(rootElement).render(
+        <StrictMode>
+            <AuthProvider>
+                <BrowserRouter>
+                    <App />
+                    <Toast.Provider placement="top end" aria-label="Notificações" />
+                </BrowserRouter>
+            </AuthProvider>
+        </StrictMode>
+    );
+}

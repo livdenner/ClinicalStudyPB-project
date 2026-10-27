@@ -12,3 +12,8 @@ spring:
   mvc:
     problemdetails:
       enabled: true
+app:
+  security:
+    jwt:
+      secret-base64: ${JWT_SECRET_BASE64}
+      expiration-seconds: ${JWT_EXPIRATION_SECONDS:3600}
