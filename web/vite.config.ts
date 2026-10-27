@@ -8,7 +8,8 @@ export default defineConfig({
     server: {
         proxy: {
             "/api": {
-                target: "http://localhost:8080",
+                // O E2E aponta para a stack de teste (compose.e2e.yaml) com API_PROXY_TARGET.
+                target: process.env.API_PROXY_TARGET ?? "http://localhost:8080",
                 changeOrigin: true,
             },
         },

@@ -65,6 +65,8 @@ jobs:
 
   e2e:
     name: E2E Web (Playwright)
+    # Conforme o plano de testes, o E2E roda nos PRs e pushes para a main.
+    if: github.base_ref == 'main' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -78,14 +80,24 @@ jobs:
           cache-dependency-path: web/package-lock.json
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      - name: Subir backend e banco de teste (compose.e2e.yaml)
+        run: npm run e2e:stack:up
       - run: npm run test:e2e
+      - name: Logs do backend
+        if: failure()
+        run: docker compose -f ../compose.e2e.yaml logs backend
       - name: Relatório do Playwright
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: web/playwright-report
+          path: |
+            web/playwright-report
+            web/test-results
           if-no-files-found: ignore
+      - name: Derrubar a stack de teste
+        if: always()
+        run: npm run e2e:stack:down
 
   mobile:
     name: Mobile (Jest)

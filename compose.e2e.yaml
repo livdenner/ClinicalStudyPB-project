@@ -1,0 +1,62 @@
+# Stack descartável para os testes E2E (Playwright).
+# Isolada do ambiente de desenvolvimento: outro nome de projeto, banco em memória
+# (recriado a cada `up`) e backend na porta 18080. As credenciais abaixo são
+# fictícias e só existem dentro desta stack.
+#
+#   docker compose -f compose.e2e.yaml up -d --build --wait db backend
+#   docker compose -f compose.e2e.yaml run --rm seed
+#   docker compose -f compose.e2e.yaml down
+#
+# Ou, a partir de web/: npm run e2e:stack:up / npm run e2e:stack:down
+name: clinicalstudypb-e2e
+
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: clinicalstudypb
+      POSTGRES_USER: clinicalstudypb
+      POSTGRES_PASSWORD: e2e-somente-teste
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U clinicalstudypb -d clinicalstudypb"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/clinicalstudypb
+      DB_USER: clinicalstudypb
+      DB_PASSWORD: e2e-somente-teste
+      # Base64 de 32 bytes fixos, usado apenas nesta stack de teste.
+      JWT_SECRET_BASE64: ZTJlLXNvbWVudGUtdGVzdGUtY2hhdmUtMzItYnl0ZXM=
+      JWT_EXPIRATION_SECONDS: 3600
+    ports:
+      - "127.0.0.1:18080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      # A porta só abre depois que o Flyway aplica as migrações.
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/localhost/8080'"]
+      interval: 3s
+      timeout: 3s
+      retries: 60
+      start_period: 10s
+
+  # Carrega as contas de demonstração (senha Demo@Clinical2026) depois das migrações.
+  seed:
+    image: postgres:18
+    profiles: [seed]
+    environment:
+      PGPASSWORD: e2e-somente-teste
+    volumes:
+      - ./backend/dev/seed_demo_users.sql:/seed.sql:ro
+    command: ["psql", "-h", "db", "-U", "clinicalstudypb", "-d", "clinicalstudypb", "-v", "ON_ERROR_STOP=1", "-f", "/seed.sql"]
+    depends_on:
+      backend:
+        condition: service_healthy

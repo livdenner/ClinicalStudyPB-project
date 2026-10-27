@@ -20,6 +20,17 @@ npm run format:check  # só verifica (usado no CI)
 npm run lint
 ```
 
+#### Testes E2E (Playwright)
+Ficam em [web/e2e](web/e2e) e rodam no navegador contra backend e PostgreSQL reais, numa stack descartável ([compose.e2e.yaml](compose.e2e.yaml)) separada do ambiente de desenvolvimento: outro projeto Docker, banco em memória recriado a cada `up` e backend na porta 18080. Os testes usam as contas de demonstração do seed e criam os próprios dados. No CI, o job E2E roda nos PRs e pushes para a `main`.
+
+```bash
+cd web
+npx playwright install chromium   # só na primeira vez
+npm run e2e:stack:up              # sobe banco + backend de teste e carrega as contas de demonstração
+npm run test:e2e                  # compila a web e roda os testes (relatório: npm run test:e2e:report)
+npm run e2e:stack:down            # remove a stack (e os dados de teste)
+```
+
 ### Backend (Java 21 / Spring Boot) — Checkstyle
 Regras em [backend/checkstyle.xml](backend/checkstyle.xml), executadas na fase `validate` do Maven; qualquer violação falha o build.
 - Nomes: pacotes em minúsculas, classes em `PascalCase`, métodos/variáveis em `camelCase`, constantes em `UPPER_SNAKE_CASE`.
