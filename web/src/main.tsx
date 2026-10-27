@@ -11,6 +11,7 @@ import "./styles.css";
 import { ForbiddenPage } from "./pages/forbidden";
 import { NotFoundPage } from "./pages/not-found";
 import { ListagemEstudosPage } from "./pages/estudos/listagem";
+import { VisualizarEstudoPage } from "./pages/estudos/visualizar";
 import { LoginPage } from "./pages/login/login";
 import { ListagemUsuariosPage } from "./pages/usuarios/listagem";
 
@@ -39,6 +40,15 @@ export function App() {
                         element={
                             <ProtectedRoute allowedRoles={["RESEARCHER"]}>
                                 <ListagemEstudosPage />
+                            </ProtectedRoute>
+                        }
+                    />
+
+                    <Route
+                        path="/estudos/:id"
+                        element={
+                            <ProtectedRoute allowedRoles={["RESEARCHER"]}>
+                                <VisualizarEstudoPage />
                             </ProtectedRoute>
                         }
                     />
