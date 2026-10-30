@@ -11,11 +11,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import clinicalstudypb.auth.application.JwtService;
 import clinicalstudypb.auth.infrastructure.JwtConfiguration;
-import clinicalstudypb.studies.infrastructure.StudyRepository;
+import clinicalstudypb.support.IntegrationTestSupport;
 import clinicalstudypb.users.domain.User;
 import clinicalstudypb.users.domain.UserRole;
-import clinicalstudypb.users.infrastructure.UserRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -24,23 +22,13 @@ import javax.crypto.SecretKey;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwsHeader;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
  * Verifica login, logout e a proteção dos endpoints com a aplicação completa:
@@ -50,17 +38,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  * @since 2026-10-27
  * @version 0.0.1
  */
-@SpringBootTest
-@AutoConfigureMockMvc
-@Testcontainers
-class AuthIntegrationTest {
+class AuthIntegrationTest extends IntegrationTestSupport {
 
-    @Container
-    static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:18");
-
-    private static final String JWT_SECRET = base64("chave-de-teste-integracao-32-byt");
     private static final String OTHER_SECRET = base64("outra-chave-que-nao-e-do-backend");
-    private static final String PASSWORD = "Senha@Teste2026";
     private static final String RESEARCHER_EMAIL = "pesquisador@clinicalstudypb.test";
     private static final String ADMIN_EMAIL = "administrador@clinicalstudypb.test";
     private static final String LOGIN_URL = "/api/v1/auth/login";
@@ -68,42 +48,14 @@ class AuthIntegrationTest {
     private static final String PROTECTED_URL = "/api/studies";
 
     @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private StudyRepository studyRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
-    @Autowired
     private JwtEncoder jwtEncoder;
 
     private User researcher;
 
-    @DynamicPropertySource
-    static void properties(DynamicPropertyRegistry registry) {
-        registry.add("DB_URL", POSTGRES::getJdbcUrl);
-        registry.add("DB_USER", POSTGRES::getUsername);
-        registry.add("DB_PASSWORD", POSTGRES::getPassword);
-        registry.add("JWT_SECRET_BASE64", () -> JWT_SECRET);
-        registry.add("JWT_EXPIRATION_SECONDS", () -> "3600");
-    }
-
     @BeforeEach
     void setUp() {
-        studyRepository.deleteAll();
-        userRepository.deleteAll();
-        researcher = userRepository.save(new User(
-                "Pesquisador Teste", RESEARCHER_EMAIL, passwordEncoder.encode(PASSWORD), UserRole.RESEARCHER));
-        userRepository.save(new User(
-                "Administrador Teste", ADMIN_EMAIL, passwordEncoder.encode(PASSWORD), UserRole.ADMINISTRATOR));
+        researcher = saveUser("Pesquisador Teste", RESEARCHER_EMAIL, UserRole.RESEARCHER);
+        saveUser("Administrador Teste", ADMIN_EMAIL, UserRole.ADMINISTRATOR);
     }
 
     @Test
@@ -251,24 +203,5 @@ class AuthIntegrationTest {
     @Test
     void logoutWithoutTokenIsUnauthorized() throws Exception {
         mockMvc.perform(post(LOGOUT_URL)).andExpect(status().isUnauthorized());
-    }
-
-    private ResultActions login(String email, String password) throws Exception {
-        String body = objectMapper.writeValueAsString(new LoginBody(email, password));
-        return mockMvc.perform(post(LOGIN_URL).contentType(MediaType.APPLICATION_JSON).content(body));
-    }
-
-    private String tokenFor(String email) throws Exception {
-        String response = login(email, PASSWORD)
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        return objectMapper.readTree(response).get("accessToken").asText();
-    }
-
-    private static String base64(String rawSecret) {
-        return Base64.getEncoder().encodeToString(rawSecret.getBytes(StandardCharsets.UTF_8));
-    }
-
-    private record LoginBody(String email, String password) {
     }
 }
