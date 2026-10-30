@@ -3,6 +3,8 @@ package clinicalstudypb.auth;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.request;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import clinicalstudypb.studies.domain.Study;
@@ -143,7 +145,10 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
         List<String> before = databaseSnapshot();
 
         mockMvc.perform(endpoint.toRequest(tokenFor(emailOf(role)), targetId, researcher.getId()))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.code").value("FORBIDDEN"))
+                .andExpect(jsonPath("$.message").value("Perfil sem permissão para a operação."));
 
         assertEquals(before, databaseSnapshot());
     }
