@@ -21,121 +21,121 @@ import { VisitasPage } from "./pages/visitas/visitas";
 import { ListagemUsuariosPage } from "./pages/usuarios/listagem";
 
 function RootRedirect() {
-  const { isAuthenticated, user } = useAuth();
+    const { isAuthenticated, user } = useAuth();
 
-  if (!isAuthenticated || !user) {
-    return <Navigate to="/login" replace />;
-  }
+    if (!isAuthenticated || !user) {
+        return <Navigate to="/login" replace />;
+    }
 
-  return <Navigate to={getDefaultRouteForRole(user.role)} replace />;
+    return <Navigate to={getDefaultRouteForRole(user.role)} replace />;
 }
 
 export function App() {
-  return (
-    <PrototiposProvider>
-      <Routes>
-      <Route path="/" element={<RootRedirect />} />
-      <Route path="/login" element={<LoginPage />} />
+    return (
+        <PrototiposProvider>
+            <Routes>
+                <Route path="/" element={<RootRedirect />} />
+                <Route path="/login" element={<LoginPage />} />
 
-      <Route element={<ProtectedRoute />}>
-        <Route element={<Layout />}>
-          <Route path="/acesso-negado" element={<ForbiddenPage />} />
+                <Route element={<ProtectedRoute />}>
+                    <Route element={<Layout />}>
+                        <Route path="/acesso-negado" element={<ForbiddenPage />} />
 
-          <Route
-            path="/estudos"
-            element={
-              <ProtectedRoute allowedRoles={["RESEARCHER"]}>
-                <ListagemEstudosPage />
-              </ProtectedRoute>
-            }
-          />
+                        <Route
+                            path="/estudos"
+                            element={
+                                <ProtectedRoute allowedRoles={["RESEARCHER"]}>
+                                    <ListagemEstudosPage />
+                                </ProtectedRoute>
+                            }
+                        />
 
-          <Route
-            path="/estudos/:id"
-            element={
-              <ProtectedRoute allowedRoles={["RESEARCHER"]}>
-                <VisualizarEstudoPage />
-              </ProtectedRoute>
-            }
-          />
+                        <Route
+                            path="/estudos/:id"
+                            element={
+                                <ProtectedRoute allowedRoles={["RESEARCHER"]}>
+                                    <VisualizarEstudoPage />
+                                </ProtectedRoute>
+                            }
+                        />
 
-          <Route
-            path="/usuarios"
-            element={
-              <ProtectedRoute allowedRoles={["ADMINISTRATOR"]}>
-                <ListagemUsuariosPage />
-              </ProtectedRoute>
-            }
-          />
+                        <Route
+                            path="/usuarios"
+                            element={
+                                <ProtectedRoute allowedRoles={["ADMINISTRATOR"]}>
+                                    <ListagemUsuariosPage />
+                                </ProtectedRoute>
+                            }
+                        />
 
-          <Route
-            path="/recrutamento"
-            element={
-              <ProtectedRoute allowedRoles={["COORDINATOR", "RESEARCHER"]}>
-                <RecrutamentoPage />
-              </ProtectedRoute>
-            }
-          />
+                        <Route
+                            path="/recrutamento"
+                            element={
+                                <ProtectedRoute allowedRoles={["COORDINATOR", "RESEARCHER"]}>
+                                    <RecrutamentoPage />
+                                </ProtectedRoute>
+                            }
+                        />
 
-          <Route
-            path="/visitas"
-            element={
-              <ProtectedRoute allowedRoles={["RESEARCHER", "COORDINATOR"]}>
-                <VisitasPage />
-              </ProtectedRoute>
-            }
-          />
+                        <Route
+                            path="/visitas"
+                            element={
+                                <ProtectedRoute allowedRoles={["RESEARCHER", "COORDINATOR"]}>
+                                    <VisitasPage />
+                                </ProtectedRoute>
+                            }
+                        />
 
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute
-                allowedRoles={["ADMINISTRATOR", "RESEARCHER", "COORDINATOR"]}
-              >
-                <VisaoGeralPage />
-              </ProtectedRoute>
-            }
-          />
+                        <Route
+                            path="/dashboard"
+                            element={
+                                <ProtectedRoute
+                                    allowedRoles={["ADMINISTRATOR", "RESEARCHER", "COORDINATOR"]}
+                                >
+                                    <VisaoGeralPage />
+                                </ProtectedRoute>
+                            }
+                        />
 
-          <Route
-            path="/relatorios"
-            element={
-              <ProtectedRoute
-                allowedRoles={["ADMINISTRATOR", "RESEARCHER", "COORDINATOR"]}
-              >
-                <RelatoriosPage />
-              </ProtectedRoute>
-            }
-          />
+                        <Route
+                            path="/relatorios"
+                            element={
+                                <ProtectedRoute
+                                    allowedRoles={["ADMINISTRATOR", "RESEARCHER", "COORDINATOR"]}
+                                >
+                                    <RelatoriosPage />
+                                </ProtectedRoute>
+                            }
+                        />
 
-          <Route
-            path="*"
-            element={
-              <ProtectedRoute
-                allowedRoles={["ADMINISTRATOR", "RESEARCHER", "COORDINATOR"]}
-              >
-                <NotFoundPage />
-              </ProtectedRoute>
-            }
-          />
-        </Route>
-      </Route>
-    </Routes>
-    </PrototiposProvider>
-  );
+                        <Route
+                            path="*"
+                            element={
+                                <ProtectedRoute
+                                    allowedRoles={["ADMINISTRATOR", "RESEARCHER", "COORDINATOR"]}
+                                >
+                                    <NotFoundPage />
+                                </ProtectedRoute>
+                            }
+                        />
+                    </Route>
+                </Route>
+            </Routes>
+        </PrototiposProvider>
+    );
 }
 
 const rootElement = document.getElementById("root");
 
 if (rootElement) {
-  createRoot(rootElement).render(
-    <StrictMode>
-      <AuthProvider>
-        <BrowserRouter>
-          <App />
-          <Toast.Provider placement="top end" aria-label="Notificações" />
-        </BrowserRouter>
-      </AuthProvider>
-    </StrictMode>,
-  );
+    createRoot(rootElement).render(
+        <StrictMode>
+            <AuthProvider>
+                <BrowserRouter>
+                    <App />
+                    <Toast.Provider placement="top end" aria-label="Notificações" />
+                </BrowserRouter>
+            </AuthProvider>
+        </StrictMode>
+    );
 }
