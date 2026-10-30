@@ -44,7 +44,11 @@ O build de produção pode ser validado com `npm run build` e os testes com `npm
 
 #### Gestão de estudos clínicos (Tarefa 3146)
 
-A rota `/estudos` disponibiliza a listagem de estudos clínicos, busca por título, filtro por status, indicadores resumidos e modais para cadastro e edição. Nesta etapa, os dados são mantidos somente em memória a partir de `web/src/data/estudos-mock.ts`; portanto, inclusões e alterações são perdidas ao recarregar a página. A integração com a API de estudos será realizada quando o contrato e os endpoints do backend estiverem disponíveis.
+A rota `/estudos` disponibiliza listagem, busca por título, cadastro e edição para pesquisadores. A ação Visualizar abre `/estudos/{id}`. Os dados são consultados e persistidos pela API `/api/studies`, com JWT, e permanecem disponíveis ao recarregar a página. O contrato atual contém título, objetivo, responsável, datas e limite de participantes; ainda não contém estado do estudo ou quantidade de participantes alocados.
+
+A rota `/usuarios` permite ao administrador listar, filtrar, cadastrar, editar, ativar e desativar usuários pela API `/api/users`. Administradores não têm acesso à gestão de estudos; pesquisadores não têm acesso à gestão de usuários; coordenadores não têm acesso a essas duas áreas, conforme as permissões atuais do backend. O login e o logout utilizam `/api/v1/auth`. Os mocks dos protótipos de outras seções não são usados para persistir usuários ou estudos.
+
+O roteiro e os resultados de regressão de RF01 a RF04 estão no [README da Release 1](releases/release1/README.md#regressão-de-usuários-e-estudos-task-3479).
 
 ### Módulos e camadas do backend
 
