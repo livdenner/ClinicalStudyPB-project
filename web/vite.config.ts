@@ -16,5 +16,7 @@ export default defineConfig({
         environment: "jsdom",
         setupFiles: "./src/setupTests.ts",
         globals: true,
+        // Testes de tela com popovers do HeroUI passam de 5 s quando a suíte roda em paralelo.
+        testTimeout: 15_000,
     },
 });

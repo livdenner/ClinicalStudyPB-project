@@ -18,7 +18,10 @@ export default tseslint.config(
             "no-var": "error",
             "no-console": ["warn", { allow: ["warn", "error"] }],
             "@typescript-eslint/consistent-type-imports": "error",
-            "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+            "@typescript-eslint/no-unused-vars": [
+                "error",
+                { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+            ],
         },
     },
     // Deve ser o último: desativa regras de estilo que conflitam com o Prettier.

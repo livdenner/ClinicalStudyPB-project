@@ -10,10 +10,10 @@ Entregar a primeira versão operacional do ClinicalStudyPB para a aplicação we
 
 ## Escopo planejado
 
-| Sprint | Requisitos e entregas planejadas |
-| --- | --- |
+| Sprint   | Requisitos e entregas planejadas                                                                                                                 |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Sprint 1 | Base técnica; protótipos; RF01 (usuários); recorte web/API de RF02 (autenticação) e RF03 (permissões); RF04 (estudos); estrutura inicial mobile. |
-| Sprint 2 | RF05 a RF11: critérios, visitas previstas, estados, candidatos, elegibilidade, consentimento e inclusão de participantes. |
+| Sprint 2 | RF05 a RF11: critérios, visitas previstas, estados, candidatos, elegibilidade, consentimento e inclusão de participantes.                        |
 
 ## Funcionalidades e situação
 
@@ -33,6 +33,22 @@ A base web possui rotas com React Router, layout compartilhado e um cliente HTTP
 
 O login e o logout utilizam o mesmo cliente HTTP compartilhado, preservando a gestão de sessão existente. `VITE_API_BASE_URL` representa somente a origem do servidor, sem `/api` ou `/api/v1` (por exemplo, `https://api.exemplo.com`). Os caminhos são informados nas chamadas: autenticação em `/api/v1/auth` e estudos em `/api/studies`, conforme os controllers atuais. O proxy do Vite funciona apenas no desenvolvimento; na implantação, o servidor web precisa encaminhar `/api` ao backend, ou a API em outra origem precisa permitir CORS.
 
+## Testes de componentes de usuários (Task 3191)
+
+Nos testes foram usados Vitest, React Testing Library e jsdom. Os componentes do HeroUI são renderizados de verdade; as requisições HTTP e as notificações de sucesso são simuladas. A execução local depende apenas das dependências da web, sem precisar iniciar Docker ou o backend.
+
+| Arquivo                                                    | Cenários cobertos                                                                                                                                                                                                                                  |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `web/src/components/usuarios/BuscaFiltroUsuarios.test.tsx` | Busca, seleção dos quatro perfis, situações Ativo/Inativo e limpeza dos filtros.                                                                                                                                                                   |
+| `web/src/components/usuarios/TabelaUsuarios.test.tsx`      | Dados, perfis e situações nas linhas, usuário correto no callback de edição e estado vazio.                                                                                                                                                        |
+| `web/src/components/usuarios/ModalUsuario.test.tsx`        | Campos obrigatórios, rejeição de espaços em branco, mostrar/ocultar senha, perfil no cadastro, senha somente no cadastro, cancelamento, bloqueio durante salvamento e sessão expirada.                                                             |
+| `web/src/pages/usuarios/listagem.test.tsx`                 | Carregamento, lista vazia, filtros combinados, cadastro e edição com JWT, validações e erros por campo, ativação/desativação com confirmação, falha parcial com nova tentativa, falha de conexão, respostas 401/403 e restrição por perfil/sessão. |
+
+Para executar somente os testes de usuários:
+
+```powershell
+npm --prefix web test -- src/components/usuarios src/pages/usuarios/listagem.test.tsx
+```
 ## Integração de estudos
 
 O contrato implementado pelo backend recebe e devolve `title`, `objective`, `responsibleUserId`, `startDate`, `endDate` e `participantLimit`; a resposta também inclui o `id` gerado pelo banco. O nome aceita até 200 caracteres, o objetivo é obrigatório, o limite deve ser um inteiro positivo e o término não pode ser anterior ao início. O backend verifica se o responsável existe, está ativo e possui perfil pesquisador.
@@ -42,6 +58,29 @@ A interface usa o pesquisador logado como responsável por novos estudos. Ao edi
 A ação Visualizar da tabela abre `/estudos/{id}`, que consulta `GET /api/studies/{id}` com JWT. O endereço também pode ser acessado diretamente e mostra nome, objetivo, responsável, período e limite de participantes. A página permite editar pelo mesmo modal e atualiza os detalhes com a resposta do backend. Identificadores inválidos e respostas 404 exibem estudo não encontrado; falhas de conexão permitem tentar novamente.
 
 Status e quantidade atual de participantes ainda não fazem parte dessa resposta. Por isso, os indicadores, o filtro e a coluna de status estão ocultos, e a tabela mostra somente o limite de participantes, sem calcular ocupação nem assumir uma contagem igual a zero. A validação do limite contra participantes já alocados depende de suporte do backend. O formulário só fecha e a tabela só é atualizada após sucesso da API; erros mantêm os dados digitados disponíveis para correção.
+
+## Testes de componentes de estudos (Task 3148)
+
+Os testes usam Vitest, React Testing Library e jsdom, com requisições HTTP e notificações de sucesso simuladas. Os componentes de busca, tabela, modal e calendário do HeroUI são exercitados diretamente.
+
+| Arquivo | Cenários cobertos |
+| --- | --- |
+| `web/src/components/estudos/BuscaFiltroEstudos.test.tsx` | Busca controlada, digitação e limpeza pelo callback. |
+| `web/src/components/estudos/TabelaEstudos.test.tsx` | Responsáveis, limites e períodos, inclusive entre anos diferentes, callback de edição e estado vazio. |
+| `web/src/components/estudos/CampoData.test.tsx` | Segmentos acessíveis, alteração pelo teclado, bloqueio durante salvamento e erro de validação. |
+| `web/src/components/estudos/ModalEstudo.test.tsx` | Campos obrigatórios, normalização dos dados, limites válidos e inválidos, datas iguais, preservação do responsável, cancelamento, bloqueio de envios repetidos, foco nos erros e respostas 401/403. |
+| `web/src/pages/estudos/listagem.test.tsx` | Carregamento, estado vazio, busca, cadastro e edição via API com JWT, responsável logado no cadastro, preservação do responsável na edição, cancelamento, falhas de conexão, validações e restrições de acesso. |
+| `web/src/pages/estudos/visualizar.test.tsx` | Navegação da tabela para os detalhes, consulta por ID, retorno à listagem, edição, cancelamento de consultas pendentes, identificadores inválidos, respostas 401/403/404 e novas tentativas. |
+
+O teste de listagem substitui o campo de data por um campo ISO simples para concentrar os cenários no fluxo da página. O calendário real é verificado nos testes de `CampoData`, `ModalEstudo` e visualização. A execução depende apenas das dependências da web, sem precisar iniciar Docker ou o backend.
+
+Para executar os 52 testes de telas e componentes de estudos:
+
+```powershell
+npm --prefix web test -- src/components/estudos src/pages/estudos
+```
+
+Os testes do serviço HTTP em `web/src/services/estudos.test.ts` acompanham a integração da task 3146.
 
 ## Como executar a web
 
