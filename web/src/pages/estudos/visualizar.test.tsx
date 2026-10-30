@@ -149,7 +149,8 @@ describe("visualização de estudos", () => {
   it.each<UserRole>(["ADMINISTRATOR", "COORDINATOR", "PARTICIPANT"])("não consulta o estudo para o perfil %s", (role) => {
     const fetchMock = vi.spyOn(globalThis, "fetch");
     renderPage("/estudos/3", role);
-    expect(screen.getByRole("heading", { name: "Acesso restrito" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Acesso negado" })).toBeInTheDocument();
+    expect(screen.getByText("403")).toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
