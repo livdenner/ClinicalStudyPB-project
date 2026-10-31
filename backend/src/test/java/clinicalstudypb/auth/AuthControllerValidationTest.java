@@ -33,7 +33,7 @@ class AuthControllerValidationTest {
 
     @Test
     void invalidEmailReturnsFieldError() throws Exception {
-        mockMvc.perform(post("/api/v1/auth/login")
+        mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"email":"invalido","password":"teste"}
