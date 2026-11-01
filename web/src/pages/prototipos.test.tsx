@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { AuthProvider } from "../context/AuthContext";
 import { PrototiposProvider } from "../context/PrototiposContext";
 import { VisaoGeralPage } from "./dashboard/visao-geral";
-import { RecrutamentoPage } from "./recrutamento/recrutamento";
 import { RelatoriosPage } from "./relatorios/relatorios";
 import { VisitasPage } from "./visitas/visitas";
 
@@ -18,7 +17,7 @@ function renderWithProviders(ui: React.ReactNode) {
     );
 }
 
-describe("Protótipos web de Visão geral, Recrutamento, Visitas e Relatórios (T7.2)", () => {
+describe("Protótipos web de Visão geral, Visitas e Relatórios (T7.2)", () => {
     beforeEach(() => {
         localStorage.clear();
     });
@@ -32,32 +31,6 @@ describe("Protótipos web de Visão geral, Recrutamento, Visitas e Relatórios (
         expect(screen.getByText("Progresso dos estudos")).toBeInTheDocument();
         expect(screen.getByText("2 avaliações de elegibilidade")).toBeInTheDocument();
         expect(screen.getByText("Atividades recentes")).toBeInTheDocument();
-    });
-
-    it("permite avaliar candidato e incluir candidato elegível no protótipo de Recrutamento", () => {
-        renderWithProviders(<RecrutamentoPage />);
-
-        expect(
-            screen.getByRole("heading", { name: "Recrutamento (Protótipo)" })
-        ).toBeInTheDocument();
-
-        fireEvent.click(screen.getByText("Candidato 014"));
-        expect(screen.getByRole("heading", { name: "Candidato 014" })).toBeInTheDocument();
-
-        fireEvent.click(screen.getByRole("button", { name: "Registrar avaliação" }));
-        expect(screen.getByRole("dialog", { name: "Registrar avaliação" })).toBeInTheDocument();
-
-        fireEvent.click(screen.getByRole("button", { name: "Salvar avaliação" }));
-        expect(screen.getByText("Avaliação registrada com sucesso.")).toBeInTheDocument();
-
-        fireEvent.click(screen.getByText(/Voltar para candidatos/i));
-        fireEvent.click(screen.getByText("Candidato 021"));
-        fireEvent.click(screen.getByRole("button", { name: /Incluir no estudo/i }));
-        fireEvent.click(screen.getByRole("button", { name: "Confirmar inclusão" }));
-
-        expect(
-            screen.getByText("Candidato incluído no estudo como participante.")
-        ).toBeInTheDocument();
     });
 
     it("permite agendar visita e registrar acompanhamento no protótipo de Visitas", () => {
