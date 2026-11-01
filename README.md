@@ -12,7 +12,7 @@ Essa organização atende ao escopo do ClinicalStudyPB e permite que a equipe de
 
 - **Web:** aplicação React com TypeScript, destinada aos perfis de pesquisador, coordenador do estudo e administrador.
 - **Mobile:** aplicação React Native com Expo, destinada ao participante.
-- **Backend:** aplicação Spring Boot que disponibiliza uma API HTTP REST compartilhada pelas aplicações web e mobile. O contrato OpenAPI inicial está em [backend/openapi.yaml](backend/openapi.yaml).
+- **Backend:** aplicação Spring Boot que disponibiliza uma API HTTP REST compartilhada pelas aplicações web e mobile. O [contrato OpenAPI da Release 1](backend/openapi.yaml) inclui os endpoints planejados dos RF05 a RF11; a API em execução expõe apenas o que já foi implementado.
 - **Banco de dados:** PostgreSQL, acessado somente pelo backend. As aplicações web e mobile não se conectam diretamente ao banco.
 
 O backend valida as requisições, aplica as regras de negócio, controla as permissões dos perfis e realiza as operações de persistência. As alterações do esquema do banco serão mantidas em migrações Flyway dentro do backend.
@@ -174,8 +174,8 @@ A autenticação é fornecida pelo módulo `backend/src/main/java/clinicalstudyp
 
 | Método e rota | Acesso | Resultado |
 | --- | --- | --- |
-| `POST /api/v1/auth/login` | Público | `200` com JWT e dados públicos do usuário |
-| `POST /api/v1/auth/logout` | Exige JWT válido | `204` sem conteúdo; o cliente descarta o token |
+| `POST /api/auth/login` | Público | `200` com JWT e dados públicos do usuário |
+| `POST /api/auth/logout` | Exige JWT válido | `204` sem conteúdo; o cliente descarta o token |
 
 O login recebe e-mail e senha em JSON:
 
@@ -252,7 +252,7 @@ No Windows, use `mvnw.cmd javadoc:javadoc`. O resultado fica em `backend/target/
 
 ### Swagger UI e OpenAPI
 
-Com o PostgreSQL ativo e o backend em execução na porta 8080, abra `http://localhost:8080/swagger-ui/index.html` no navegador. No Linux com ambiente gráfico, também é possível executar `xdg-open http://localhost:8080/swagger-ui/index.html`. A interface mostra as operações de `users` e `studies` e permite inspecionar os corpos e as respostas HTTP. O JSON OpenAPI fica em `http://localhost:8080/v3/api-docs`.
+Com o PostgreSQL ativo e o backend em execução na porta 8080, abra `http://localhost:8080/swagger-ui/index.html` no navegador. No Linux com ambiente gráfico, também é possível executar `xdg-open http://localhost:8080/swagger-ui/index.html`. A interface mostra as operações já implementadas e permite inspecionar os corpos e as respostas HTTP. O JSON gerado a partir da aplicação fica em `http://localhost:8080/v3/api-docs`; ele é diferente do contrato estático em `backend/openapi.yaml`, que também descreve as entregas planejadas para a Sprint 2.
 
 Para verificar os dois endereços pelo terminal:
 
