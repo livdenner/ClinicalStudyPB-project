@@ -10,7 +10,13 @@
         "lint": "eslint .",
         "test:coverage": "vitest run --coverage",
         "format": "prettier --write .",
-        "format:check": "prettier --check ."
+        "format:check": "prettier --check .",
+        "test:e2e": "playwright test",
+        "test:e2e:ui": "playwright test --ui",
+        "test:e2e:report": "playwright show-report",
+        "preview": "vite preview",
+        "e2e:stack:up": "docker compose -f ../compose.e2e.yaml up -d --build --wait db backend && docker compose -f ../compose.e2e.yaml run --rm seed",
+        "e2e:stack:down": "docker compose -f ../compose.e2e.yaml down"
     },
     "dependencies": {
         "@heroui/react": "^3.2.6",
@@ -25,8 +31,10 @@
     },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
+        "@playwright/test": "^1.64.1",
         "@testing-library/jest-dom": "^7.0.1",
         "@testing-library/react": "^16.3.3",
+        "@types/node": "^26.6.5",
         "@types/react": "^19.3.0",
         "@types/react-dom": "^19.3.0",
         "@vitejs/plugin-react": "^6.1.2",

@@ -63,3 +63,8 @@ Desktop.ini
 .ide_shared/
 /tatus
 /web/sandbox-web/
+
+# Playwright
+playwright-report/
+test-results/
+blob-report/
