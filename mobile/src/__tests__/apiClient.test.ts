@@ -13,7 +13,7 @@ describe('apiRequest', () => {
   });
 
   it('uses detail from application/problem+json error responses', async () => {
-    process.env.EXPO_PUBLIC_API_BASE_URL = 'http://localhost:8080/api/v1';
+    process.env.EXPO_PUBLIC_API_BASE_URL = 'http://localhost:8080/api';
 
     const problem = {
       type: 'about:blank',
@@ -23,7 +23,7 @@ describe('apiRequest', () => {
     };
     const json = jest.fn().mockResolvedValue(problem);
     const text = jest.fn();
-    jest.spyOn(globalThis, 'fetch').mockResolvedValue({
+    const fetchSpy = jest.spyOn(globalThis, 'fetch').mockResolvedValue({
       ok: false,
       status: 400,
       headers: {
@@ -38,6 +38,10 @@ describe('apiRequest', () => {
       message: problem.detail,
       status: 400,
     } satisfies Partial<ApiError>);
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'http://localhost:8080/api/users',
+      expect.anything(),
+    );
     expect(json).toHaveBeenCalledTimes(1);
     expect(text).not.toHaveBeenCalled();
   });

@@ -91,7 +91,7 @@ export async function loginRequest(credentials: LoginRequest): Promise<LoginResp
     let data: LoginResponse;
 
     try {
-        data = await apiRequest<LoginResponse>("/api/v1/auth/login", {
+        data = await apiRequest<LoginResponse>("/api/auth/login", {
             method: "POST",
             body: {
                 email: credentials.email.trim(),
@@ -138,7 +138,7 @@ export async function logoutRequest(accessToken?: string): Promise<void> {
     }
 
     try {
-        await apiRequest<void>("/api/v1/auth/logout", {
+        await apiRequest<void>("/api/auth/logout", {
             method: "POST",
             token: accessToken,
         });

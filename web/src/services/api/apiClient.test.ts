@@ -20,14 +20,14 @@ describe("cliente HTTP compartilhado", () => {
                 );
 
             await expect(
-                apiRequest("/api/v1/auth/login", {
+                apiRequest("/api/auth/login", {
                     method: "POST",
                     body: { email: "teste@example.test", password: "senha" },
                 })
             ).resolves.toEqual({ accessToken: "token" });
 
             const [url, options] = fetchMock.mock.calls[0];
-            expect(url).toBe(`${baseUrl.replace(/\/+$/, "")}/api/v1/auth/login`);
+            expect(url).toBe(`${baseUrl.replace(/\/+$/, "")}/api/auth/login`);
             expect(options?.body).toBe(
                 JSON.stringify({ email: "teste@example.test", password: "senha" })
             );
@@ -42,7 +42,7 @@ describe("cliente HTTP compartilhado", () => {
             .mockResolvedValueOnce(new Response(null, { status: 204 }));
 
         await expect(
-            apiRequest<void>("/api/v1/auth/logout", { method: "POST", token: "jwt" })
+            apiRequest<void>("/api/auth/logout", { method: "POST", token: "jwt" })
         ).resolves.toBeUndefined();
         expect(new Headers(fetchMock.mock.calls[0][1]?.headers).get("Authorization")).toBe(
             "Bearer jwt"

@@ -144,7 +144,7 @@ describe("Login e gestão de sessão (T4.2)", () => {
         expect(fetchMock).toHaveBeenCalledTimes(3);
         expect(fetchMock).toHaveBeenNthCalledWith(
             1,
-            "/api/v1/auth/login",
+            "/api/auth/login",
             expect.objectContaining({ method: "POST" })
         );
         expect(fetchMock).toHaveBeenNthCalledWith(
@@ -153,7 +153,7 @@ describe("Login e gestão de sessão (T4.2)", () => {
             expect.objectContaining({ signal: expect.any(AbortSignal) })
         );
         expect(fetchMock).toHaveBeenLastCalledWith(
-            "/api/v1/auth/logout",
+            "/api/auth/logout",
             expect.objectContaining({ method: "POST" })
         );
 

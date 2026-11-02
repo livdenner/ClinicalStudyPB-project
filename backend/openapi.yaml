@@ -1,26 +1,38 @@
 openapi: 3.0.3
 info:
   title: ClinicalStudyPB API
-  version: 1.0.0
+  version: 1.1.0
   description: |
-    Contrato OpenAPI para as RF01 a RF04 da Sprint 1.
+    Contrato da Release 1 (RF01 a RF11). As rotas dos RF05 a RF11 são o alvo
+    acordado para a Sprint 2; sua presença aqui não indica implementação pronta.
 
     Convenções acordadas:
     - Os nomes JSON usam camelCase; os nomes do banco permanecem em snake_case.
     - Os perfis são RESEARCHER, COORDINATOR, ADMINISTRATOR e PARTICIPANT.
-    - As operações de estudos são restritas ao perfil RESEARCHER.
+    - RESEARCHER altera estudos; a leitura por COORDINATOR é prevista na T16.2.
     - O responsável por um estudo deve ser um usuário pesquisador ativo.
     - O JWT é stateless; no logout o cliente descarta o token, sem revogação no servidor.
-    - O prefixo base da API é /api/v1.
+    - Todas as rotas da API usam /api, inclusive autenticação em /api/auth.
+    - Códigos de enumeração são estáveis em inglês; a interface traduz os rótulos.
+    - RESEARCHER define critérios e visitas previstas e avança o estado do estudo.
+    - COORDINATOR cadastra candidatos, avalia elegibilidade, registra o
+      consentimento simulado e inclui participantes.
+    - A ampliação da leitura de estudos ao COORDINATOR integra a T16.2.
 servers:
-  - url: /api/v1
-    description: Prefixo base acordado para a API versão 1
+  - url: /
+    description: Caminhos completos da API com prefixo /api
 tags:
   - name: Autenticação
   - name: Usuários
   - name: Estudos
+  - name: Critérios
+  - name: Visitas previstas
+  - name: Candidatos
+  - name: Elegibilidade
+  - name: Consentimento
+  - name: Participantes
 paths:
-  /auth/login:
+  /api/auth/login:
     post:
       tags: [Autenticação]
       summary: Autentica um usuário
@@ -48,7 +60,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ApiError'
 
-  /auth/logout:
+  /api/auth/logout:
     post:
       tags: [Autenticação]
       summary: Encerra a sessão no cliente
@@ -56,13 +68,15 @@ paths:
         Requer autenticação. O JWT é stateless: o cliente descarta o token recebido
         no login. Este endpoint confirma o encerramento da sessão no cliente e não
         revoga tokens já emitidos no servidor.
+      security:
+        - bearerAuth: []
       responses:
         '204':
           description: Logout concluído pelo cliente
         '401':
           $ref: '#/components/responses/Unauthorized'
 
-  /users:
+  /api/users:
     get:
       tags: [Usuários]
       summary: Lista usuários
@@ -85,7 +99,7 @@ paths:
     post:
       tags: [Usuários]
       summary: Cadastra um usuário
-      description: Restrito ao perfil ADMINISTRATOR. A senha é recebida em texto pela API e deve ser armazenada somente como hash BCrypt.
+      description: Restrito ao perfil ADMINISTRATOR. A senha é armazenada como hash BCrypt e o usuário inicia ativo.
       security:
         - bearerAuth: []
       requestBody:
@@ -108,13 +122,9 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
         '409':
-          description: E-mail já cadastrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
+          $ref: '#/components/responses/Conflict'
 
-  /users/{userId}:
+  /api/users/{userId}:
     parameters:
       - $ref: '#/components/parameters/UserId'
     get:
@@ -164,36 +174,41 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
-          description: E-mail já pertence a outro usuário
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags: [Usuários]
+      summary: Exclui um usuário
+      description: Restrito a ADMINISTRATOR; vínculo com estudo impede a exclusão.
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Usuário excluído
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
 
-  /users/{userId}/status:
+  /api/users/{userId}/activate:
     parameters:
       - $ref: '#/components/parameters/UserId'
     patch:
       tags: [Usuários]
-      summary: Ativa ou desativa um usuário
+      summary: Reativa um usuário
       description: Restrito ao perfil ADMINISTRATOR.
       security:
         - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserStatusRequest'
       responses:
         '200':
-          description: Situação do usuário atualizada
+          description: Usuário reativado
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
-        '400':
-          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -201,11 +216,34 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
-  /studies:
+  /api/users/{userId}/deactivate:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    patch:
+      tags: [Usuários]
+      summary: Desativa um usuário
+      description: Restrito ao perfil ADMINISTRATOR.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Usuário desativado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/studies:
     get:
       tags: [Estudos]
       summary: Lista estudos
-      description: Restrito ao perfil RESEARCHER.
+      description: Leitura por RESEARCHER ou COORDINATOR (ampliação planejada na T16.2).
       security:
         - bearerAuth: []
       responses:
@@ -226,7 +264,8 @@ paths:
       summary: Cadastra um estudo
       description: |
         Restrito ao perfil RESEARCHER. O responsável indicado deve existir e estar ativo.
-        O responsável também deve ter perfil RESEARCHER.
+        O responsável também deve ter perfil RESEARCHER. O estado inicial é PLANNING;
+        status não é aceito no corpo de cadastro.
       security:
         - bearerAuth: []
       requestBody:
@@ -249,19 +288,15 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
         '404':
-          description: Usuário responsável não encontrado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiError'
+          $ref: '#/components/responses/NotFound'
 
-  /studies/{studyId}:
+  /api/studies/{studyId}:
     parameters:
       - $ref: '#/components/parameters/StudyId'
     get:
       tags: [Estudos]
       summary: Consulta um estudo
-      description: Restrito ao perfil RESEARCHER.
+      description: Leitura por RESEARCHER ou COORDINATOR (ampliação planejada na T16.2).
       security:
         - bearerAuth: []
       responses:
@@ -280,7 +315,11 @@ paths:
     put:
       tags: [Estudos]
       summary: Atualiza um estudo
-      description: Restrito ao perfil RESEARCHER. Datas devem respeitar startDate <= endDate.
+      description: |
+        Restrito a RESEARCHER. Datas devem respeitar startDate <= endDate e a
+        edição preserva status. Quando existirem visitas previstas, o novo
+        período deve continuar incluindo suas datas. participantLimit não pode
+        ficar abaixo da quantidade de participantes já incluídos (409).
       security:
         - bearerAuth: []
       requestBody:
@@ -298,6 +337,541 @@ paths:
                 $ref: '#/components/schemas/Study'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/studies/{studyId}/status:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+    patch:
+      tags: [Estudos]
+      summary: Avança o estado do estudo (RF07, T11.1)
+      description: |
+        Somente RESEARCHER. O cadastro inicia em PLANNING. As transições permitidas
+        são PLANNING -> RECRUITMENT -> EXECUTION -> CLOSED; não é permitido saltar,
+        retroceder ou sair de CLOSED. A edição por PUT /api/studies/{studyId}
+        preserva o estado atual. Uma transição incompatível responde 409.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudyStatusChangeRequest'
+            example:
+              status: RECRUITMENT
+      responses:
+        '200':
+          description: Estudo com o novo estado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Study'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/studies/{studyId}/criteria:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+    get:
+      tags: [Critérios]
+      summary: Lista critérios de inclusão e exclusão (RF05, T9.1)
+      description: RESEARCHER ou COORDINATOR. Lista vazia quando não há critérios.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Critérios do estudo
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StudyCriterion'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Critérios]
+      summary: Define um critério do estudo (RF05, T9.1)
+      description: |
+        Somente RESEARCHER. Um critério INCLUSION deve ser satisfeito; um critério
+        EXCLUSION não deve ser satisfeito para a elegibilidade final. Na Release 1,
+        critérios cadastrados são preservados para manter avaliações rastreáveis.
+        Após a primeira resposta de elegibilidade de qualquer candidato do estudo,
+        novos critérios não podem ser adicionados (409), evitando invalidar avaliações.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudyCriterionWriteRequest'
+            example:
+              type: INCLUSION
+              description: Idade mínima de 18 anos
+      responses:
+        '201':
+          description: Critério criado
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Caminho do critério criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudyCriterion'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/studies/{studyId}/criteria/{criterionId}:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+      - $ref: '#/components/parameters/CriterionId'
+    get:
+      tags: [Critérios]
+      summary: Consulta um critério do estudo
+      description: RESEARCHER ou COORDINATOR. O critério deve pertencer ao estudo da rota.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Critério encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudyCriterion'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/studies/{studyId}/planned-visits:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+    get:
+      tags: [Visitas previstas]
+      summary: Lista visitas previstas com suas atividades (RF06, T10.1)
+      description: |
+        RESEARCHER ou COORDINATOR. São definições do protocolo; não representam
+        visitas agendadas para um participante (RF12, fora desta release).
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Visitas previstas do estudo; [] quando não há registros
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlannedVisit'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Visitas previstas]
+      summary: Define uma visita prevista e suas atividades (RF06, T10.1)
+      description: |
+        Somente RESEARCHER. A data prevista deve estar entre startDate e endDate
+        do estudo, inclusive. Deve haver pelo menos uma atividade. A criação da
+        visita e de todas as atividades é atômica.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlannedVisitWriteRequest'
+            example:
+              name: Avaliação inicial
+              plannedDate: '2027-02-10'
+              activities:
+                - description: Entrevista inicial
+                - description: Aferição de pressão arterial
+      responses:
+        '201':
+          description: Visita prevista criada
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Caminho da visita prevista criada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlannedVisit'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/studies/{studyId}/planned-visits/{plannedVisitId}:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+      - $ref: '#/components/parameters/PlannedVisitId'
+    get:
+      tags: [Visitas previstas]
+      summary: Consulta uma visita prevista com suas atividades
+      description: RESEARCHER ou COORDINATOR. A visita deve pertencer ao estudo da rota.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Visita prevista encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlannedVisit'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/studies/{studyId}/candidates:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+    get:
+      tags: [Candidatos]
+      summary: Lista candidatos vinculados ao estudo (RF08, T12.1)
+      description: |
+        Somente COORDINATOR. A filtragem é feita pelo studyId da rota; não mistura
+        candidatos de estudos diferentes. Retorna [] quando o estudo não tem candidatos.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Candidatos do estudo
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Candidate'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Candidatos]
+      summary: Cadastra um candidato no estudo (RF08, T12.1)
+      description: |
+        Somente COORDINATOR. studyId vem da rota, não do JSON. name e age são
+        obrigatórios; age é inteiro não negativo. O cadastro inicia com
+        eligibilityStatus=PENDING. Idade mínima de participação depende dos
+        critérios de cada estudo, não de uma restrição fixa do cadastro.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CandidateCreateRequest'
+            example:
+              name: Candidato 014
+              age: 42
+      responses:
+        '201':
+          description: Candidato cadastrado
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Caminho do candidato criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Candidate'
+              example:
+                id: 14
+                studyId: 2
+                name: Candidato 014
+                age: 42
+                eligibilityStatus: PENDING
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/studies/{studyId}/candidates/{candidateId}:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+      - $ref: '#/components/parameters/CandidateId'
+    get:
+      tags: [Candidatos]
+      summary: Consulta um candidato do estudo
+      description: Somente COORDINATOR. O candidato deve pertencer ao estudo da rota.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Candidato encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Candidate'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/studies/{studyId}/candidates/{candidateId}/eligibility:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+      - $ref: '#/components/parameters/CandidateId'
+    get:
+      tags: [Elegibilidade]
+      summary: Consulta respostas e resultado da elegibilidade (RF09, T13.1)
+      description: |
+        Somente COORDINATOR. Antes da avaliação, retorna status PENDING e answers=[].
+        O candidato deve pertencer ao estudo da rota.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Avaliação atual
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EligibilityEvaluation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Elegibilidade]
+      summary: Registra ou substitui as respostas dos critérios (RF09, T13.1)
+      description: |
+        Somente COORDINATOR. O corpo contém o conjunto completo das respostas
+        registradas até agora; cada criterionId deve pertencer ao estudo e aparecer
+        uma vez. Respostas ausentes mantêm o resultado PENDING. Sem critérios no
+        estudo não há conclusão de elegibilidade. Com todos respondidos, o
+        candidato é ELIGIBLE se todos os INCLUSION tiverem matches=true e todos
+        os EXCLUSION tiverem matches=false; caso contrário é INELIGIBLE. Após
+        inclusão do candidato, novas avaliações respondem 409. Avaliar estudo
+        sem critérios também responde 409.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EligibilityEvaluationWriteRequest'
+            example:
+              answers:
+                - criterionId: 1
+                  matches: true
+                - criterionId: 2
+                  matches: false
+      responses:
+        '200':
+          description: Respostas e resultado recalculado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EligibilityEvaluation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/studies/{studyId}/candidates/{candidateId}/consent:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+      - $ref: '#/components/parameters/CandidateId'
+    get:
+      tags: [Consentimento]
+      summary: Consulta o consentimento simulado (RF10, T14.1)
+      description: |
+        Somente COORDINATOR. Antes do registro, retorna status PENDING sem recordedAt.
+        Não representa assinatura ou documento de consentimento real.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Situação do consentimento simulado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulatedConsent'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Consentimento]
+      summary: Registra a decisão simulada do candidato (RF10, T14.1)
+      description: |
+        Somente COORDINATOR. GRANTED ou DECLINED substitui a decisão anterior
+        enquanto o candidato não foi incluído. A decisão é registrada pelo
+        backend com horário; após inclusão não pode ser alterada (409).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulatedConsentWriteRequest'
+            example:
+              status: GRANTED
+      responses:
+        '200':
+          description: Consentimento simulado atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulatedConsent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/studies/{studyId}/candidates/{candidateId}/inclusion:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+      - $ref: '#/components/parameters/CandidateId'
+    post:
+      tags: [Participantes]
+      summary: Inclui candidato como participante (RF11, T15.1)
+      description: |
+        Somente COORDINATOR. Exige estudo em RECRUITMENT, candidato do estudo
+        com eligibilityStatus=ELIGIBLE e consentimento simulado GRANTED. O
+        candidato só pode ser incluído uma vez no estudo. A inclusão verifica
+        participantLimit de forma atômica: duas requisições pela última vaga
+        não podem criar dois participantes. Condição não atendida retorna 409
+        sem gravação parcial.
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Participante incluído
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Caminho do participante criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Participant'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/studies/{studyId}/participants:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+    get:
+      tags: [Participantes]
+      summary: Lista participantes incluídos no estudo (RF11, T15.1)
+      description: RESEARCHER ou COORDINATOR. Retorna [] quando não há participantes.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Participantes do estudo
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Participant'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/studies/{studyId}/participants/{participantId}:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+      - $ref: '#/components/parameters/ParticipantId'
+    get:
+      tags: [Participantes]
+      summary: Consulta um participante do estudo
+      description: RESEARCHER ou COORDINATOR. O participante deve pertencer ao estudo.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Participante encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Participant'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -330,6 +904,42 @@ components:
         type: integer
         format: int64
         minimum: 1
+    CriterionId:
+      name: criterionId
+      in: path
+      required: true
+      description: Identificador BIGINT do critério
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    PlannedVisitId:
+      name: plannedVisitId
+      in: path
+      required: true
+      description: Identificador BIGINT da visita prevista
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    CandidateId:
+      name: candidateId
+      in: path
+      required: true
+      description: Identificador BIGINT do candidato
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    ParticipantId:
+      name: participantId
+      in: path
+      required: true
+      description: Identificador BIGINT do participante
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
   schemas:
     UserRole:
       type: string
@@ -353,10 +963,6 @@ components:
           description: Senha de entrada; o backend deve armazenar somente o hash BCrypt
         role:
           $ref: '#/components/schemas/UserRole'
-        active:
-          type: boolean
-          default: true
-          description: Se omitido, inicia como true
     UserUpdateRequest:
       type: object
       required: [name, email, role]
@@ -371,12 +977,6 @@ components:
           description: Deve permanecer único
         role:
           $ref: '#/components/schemas/UserRole'
-    UserStatusRequest:
-      type: object
-      required: [active]
-      properties:
-        active:
-          type: boolean
     User:
       type: object
       required: [id, name, email, role, active]
@@ -449,7 +1049,7 @@ components:
           minimum: 1
     Study:
       type: object
-      required: [id, title, objective, responsibleUserId, startDate, endDate, participantLimit]
+      required: [id, title, objective, responsibleUserId, startDate, endDate, participantLimit, status]
       properties:
         id:
           type: integer
@@ -474,6 +1074,252 @@ components:
           type: integer
           format: int32
           minimum: 1
+        status:
+          $ref: '#/components/schemas/StudyStatus'
+    StudyStatus:
+      type: string
+      description: |
+        PLANNING=Planejamento; RECRUITMENT=Recrutamento;
+        EXECUTION=Em execução; CLOSED=Encerrado.
+      enum: [PLANNING, RECRUITMENT, EXECUTION, CLOSED]
+      default: PLANNING
+    StudyStatusChangeRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          $ref: '#/components/schemas/StudyStatus'
+    CriterionType:
+      type: string
+      description: Critério de inclusão ou exclusão
+      enum: [INCLUSION, EXCLUSION]
+    StudyCriterionWriteRequest:
+      type: object
+      required: [type, description]
+      properties:
+        type:
+          $ref: '#/components/schemas/CriterionType'
+        description:
+          type: string
+          minLength: 1
+          maxLength: 500
+    StudyCriterion:
+      type: object
+      required: [id, studyId, type, description]
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        studyId:
+          type: integer
+          format: int64
+          readOnly: true
+        type:
+          $ref: '#/components/schemas/CriterionType'
+        description:
+          type: string
+          maxLength: 500
+    PlannedActivityWriteRequest:
+      type: object
+      required: [description]
+      properties:
+        description:
+          type: string
+          minLength: 1
+          maxLength: 500
+    PlannedActivity:
+      type: object
+      required: [id, description]
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        description:
+          type: string
+          maxLength: 500
+    PlannedVisitWriteRequest:
+      type: object
+      required: [name, plannedDate, activities]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        plannedDate:
+          type: string
+          format: date
+          description: Data prevista dentro do período do estudo
+        activities:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/PlannedActivityWriteRequest'
+    PlannedVisit:
+      type: object
+      required: [id, studyId, name, plannedDate, activities]
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        studyId:
+          type: integer
+          format: int64
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+        plannedDate:
+          type: string
+          format: date
+        activities:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlannedActivity'
+    CandidateCreateRequest:
+      type: object
+      required: [name, age]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        age:
+          type: integer
+          format: int32
+          minimum: 0
+          description: Idade informada no cadastro; elegibilidade depende dos critérios do estudo
+    Candidate:
+      type: object
+      required: [id, studyId, name, age, eligibilityStatus]
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        studyId:
+          type: integer
+          format: int64
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+        age:
+          type: integer
+          format: int32
+          minimum: 0
+        eligibilityStatus:
+          $ref: '#/components/schemas/EligibilityStatus'
+    EligibilityStatus:
+      type: string
+      description: PENDING=Pendente; ELIGIBLE=Elegível; INELIGIBLE=Não elegível
+      enum: [PENDING, ELIGIBLE, INELIGIBLE]
+      default: PENDING
+    EligibilityAnswerWriteRequest:
+      type: object
+      required: [criterionId, matches]
+      properties:
+        criterionId:
+          type: integer
+          format: int64
+          minimum: 1
+        matches:
+          type: boolean
+          description: Indica se a condição descrita no critério se aplica ao candidato
+    EligibilityAnswer:
+      type: object
+      required: [criterionId, matches]
+      properties:
+        criterionId:
+          type: integer
+          format: int64
+        matches:
+          type: boolean
+    EligibilityEvaluationWriteRequest:
+      type: object
+      required: [answers]
+      properties:
+        answers:
+          type: array
+          minItems: 1
+          description: Conjunto completo das respostas atualmente registradas; criterionId único
+          items:
+            $ref: '#/components/schemas/EligibilityAnswerWriteRequest'
+    EligibilityEvaluation:
+      type: object
+      required: [studyId, candidateId, status, answers]
+      properties:
+        studyId:
+          type: integer
+          format: int64
+        candidateId:
+          type: integer
+          format: int64
+        status:
+          $ref: '#/components/schemas/EligibilityStatus'
+        answers:
+          type: array
+          items:
+            $ref: '#/components/schemas/EligibilityAnswer'
+        evaluatedAt:
+          type: string
+          format: date-time
+          description: Horário da última avaliação; ausente antes da primeira resposta
+    ConsentDecision:
+      type: string
+      enum: [GRANTED, DECLINED]
+    ConsentStatus:
+      type: string
+      description: PENDING=Não registrado; GRANTED=Concedido; DECLINED=Recusado
+      enum: [PENDING, GRANTED, DECLINED]
+      default: PENDING
+    SimulatedConsentWriteRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          $ref: '#/components/schemas/ConsentDecision'
+    SimulatedConsent:
+      type: object
+      required: [studyId, candidateId, status]
+      properties:
+        studyId:
+          type: integer
+          format: int64
+        candidateId:
+          type: integer
+          format: int64
+        status:
+          $ref: '#/components/schemas/ConsentStatus'
+        recordedAt:
+          type: string
+          format: date-time
+          description: Horário da decisão; ausente quando status=PENDING
+    Participant:
+      type: object
+      required: [id, studyId, candidateId, candidateName, includedAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        studyId:
+          type: integer
+          format: int64
+          readOnly: true
+        candidateId:
+          type: integer
+          format: int64
+          readOnly: true
+        candidateName:
+          type: string
+          readOnly: true
+        includedAt:
+          type: string
+          format: date-time
+          readOnly: true
     ApiError:
       type: object
       required: [code, message]
@@ -496,13 +1342,32 @@ components:
           type: string
         message:
           type: string
+    ProblemDetail:
+      type: object
+      description: Erro de validação, recurso ausente ou conflito retornado pelo Spring
+      required: [title, status]
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          example: about:blank
+        title:
+          type: string
+          example: Conflict
+        status:
+          type: integer
+          example: 409
+        detail:
+          type: string
+        instance:
+          type: string
   responses:
     BadRequest:
       description: Requisição inválida ou regra de validação não atendida
       content:
-        application/json:
+        application/problem+json:
           schema:
-            $ref: '#/components/schemas/ApiError'
+            $ref: '#/components/schemas/ProblemDetail'
     Unauthorized:
       description: Token ausente ou inválido
       content:
@@ -518,6 +1383,12 @@ components:
     NotFound:
       description: Recurso não encontrado
       content:
-        application/json:
+        application/problem+json:
           schema:
-            $ref: '#/components/schemas/ApiError'
+            $ref: '#/components/schemas/ProblemDetail'
+    Conflict:
+      description: Estado atual ou restrição de negócio impede a operação
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetail'
