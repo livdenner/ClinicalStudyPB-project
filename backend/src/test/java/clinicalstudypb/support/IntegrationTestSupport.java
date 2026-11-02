@@ -41,7 +41,7 @@ public abstract class IntegrationTestSupport {
     protected static final String PASSWORD = "Senha@Teste2026";
 
     private static final String JWT_SECRET = base64("chave-de-teste-integracao-32-byt");
-    private static final String LOGIN_URL = "/api/v1/auth/login";
+    private static final String LOGIN_URL = "/api/auth/login";
 
     private static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:18");
 

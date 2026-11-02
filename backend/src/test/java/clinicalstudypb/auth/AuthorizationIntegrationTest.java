@@ -135,7 +135,7 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
     @ParameterizedTest
     @EnumSource(UserRole.class)
     void everyRoleCanLogout(UserRole role) throws Exception {
-        mockMvc.perform(post("/api/v1/auth/logout")
+        mockMvc.perform(post("/api/auth/logout")
                         .header(HttpHeaders.AUTHORIZATION, bearer(tokenFor(emailOf(role)))))
                 .andExpect(status().isNoContent());
     }

@@ -43,8 +43,8 @@ class AuthIntegrationTest extends IntegrationTestSupport {
     private static final String OTHER_SECRET = base64("outra-chave-que-nao-e-do-backend");
     private static final String RESEARCHER_EMAIL = "pesquisador@clinicalstudypb.test";
     private static final String ADMIN_EMAIL = "administrador@clinicalstudypb.test";
-    private static final String LOGIN_URL = "/api/v1/auth/login";
-    private static final String LOGOUT_URL = "/api/v1/auth/logout";
+    private static final String LOGIN_URL = "/api/auth/login";
+    private static final String LOGOUT_URL = "/api/auth/logout";
     private static final String PROTECTED_URL = "/api/studies";
 
     @Autowired
