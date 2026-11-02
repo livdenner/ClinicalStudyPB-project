@@ -9,7 +9,6 @@ import { useAuth } from "../../context/AuthContext";
 import { ApiClientError } from "../../services/api/apiClient";
 import { cadastrarCandidato, listarCandidatosPorEstudo } from "../../services/candidatos";
 import { listarEstudos } from "../../services/estudos";
-import type { UserRole } from "../../types/auth";
 import {
     STATUS_ESTUDO_LABELS,
     type CandidatoApi,
@@ -17,8 +16,6 @@ import {
     type EstudoComStatusApi,
     type StatusEstudoCandidato,
 } from "../../types/candidato";
-
-const PERFIS_PERMITIDOS: UserRole[] = ["COORDINATOR", "RESEARCHER"];
 
 const STATUS_ESTUDO_CLASSES: Record<StatusEstudoCandidato, string> = {
     PLANNING: "bg-[#FEF3C7] text-[#92400E]",
@@ -35,14 +32,18 @@ export function RecrutamentoPage() {
         return <Navigate to="/login" replace />;
     }
 
-    if (!PERFIS_PERMITIDOS.includes(session.user.role)) {
+    if (session.user.role !== "COORDINATOR") {
         return (
             <section className="py-12 text-center">
                 <h1 className="text-2xl font-bold text-[var(--color-title)]">Acesso restrito</h1>
                 <p className="my-4">
-                    A gestão de candidatos está disponível apenas para coordenadores e
-                    pesquisadores.
+                    A gestão de candidatos está disponível apenas para coordenadores.
                 </p>
+                {session.user.role === "RESEARCHER" && (
+                    <Link className="text-[var(--color-primary)] underline" to="/estudos">
+                        Ir para estudos clínicos
+                    </Link>
+                )}
                 {session.user.role === "ADMINISTRATOR" && (
                     <Link className="text-[var(--color-primary)] underline" to="/usuarios">
                         Ir para usuários e acessos
@@ -61,7 +62,6 @@ export function RecrutamentoPage() {
         <GestaoCandidatos
             key={session.accessToken}
             token={session.accessToken}
-            role={session.user.role}
             onIrParaLogin={handleIrParaLogin}
         />
     );
@@ -69,11 +69,9 @@ export function RecrutamentoPage() {
 
 function GestaoCandidatos({
     token,
-    role,
     onIrParaLogin,
 }: {
     token: string;
-    role: UserRole;
     onIrParaLogin: () => Promise<void>;
 }) {
     const [estudos, setEstudos] = useState<EstudoComStatusApi[]>([]);
@@ -174,13 +172,8 @@ function GestaoCandidatos({
 
     const statusEstudo: StatusEstudoCandidato = estudoSelecionado?.status ?? "PLANNING";
     const estudoEmRecrutamento = statusEstudo === "RECRUITMENT";
-    const podeCadastrar = role === "COORDINATOR";
     const botaoCadastroHabilitado =
-        podeCadastrar &&
-        Boolean(estudoSelecionado) &&
-        estudoEmRecrutamento &&
-        !carregandoEstudos &&
-        !erroEstudos;
+        Boolean(estudoSelecionado) && estudoEmRecrutamento && !carregandoEstudos && !erroEstudos;
 
     async function handleCadastrar(dados: DadosCandidatoApi) {
         if (!estudoSelecionado) return;
@@ -206,26 +199,24 @@ function GestaoCandidatos({
                         Candidatos e recrutamento
                     </h1>
                     <p className="mt-2 text-sm text-[var(--color-muted)]">
-                        Filtre por estudo, acompanhe a situação de elegibilidade e consentimento e
-                        cadastre novos candidatos.
+                        Filtre por estudo, acompanhe a situação de elegibilidade e cadastre novos
+                        candidatos.
                     </p>
                 </div>
 
-                {podeCadastrar && (
-                    <Button
-                        type="button"
-                        variant="primary"
-                        disabled={!botaoCadastroHabilitado}
-                        onClick={() => {
-                            setMensagemSucesso("");
-                            setModalAberto(true);
-                        }}
-                        className="inline-flex items-center gap-2 font-semibold"
-                    >
-                        <Plus aria-hidden="true" size={18} />
-                        Novo candidato
-                    </Button>
-                )}
+                <Button
+                    type="button"
+                    variant="primary"
+                    disabled={!botaoCadastroHabilitado}
+                    onClick={() => {
+                        setMensagemSucesso("");
+                        setModalAberto(true);
+                    }}
+                    className="inline-flex items-center gap-2 font-semibold"
+                >
+                    <Plus aria-hidden="true" size={18} />
+                    Novo candidato
+                </Button>
             </header>
 
             {mensagemSucesso && (
@@ -313,7 +304,7 @@ function GestaoCandidatos({
                     </div>
                 </div>
 
-                {estudoSelecionado && !estudoEmRecrutamento && podeCadastrar && (
+                {estudoSelecionado && !estudoEmRecrutamento && (
                     <p
                         role="note"
                         className="rounded-lg border border-[#FDE68A] bg-[#FFFBEB] px-3.5 py-2.5 text-xs font-medium text-[#92400E]"

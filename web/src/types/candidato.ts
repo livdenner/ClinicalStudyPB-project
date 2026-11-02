@@ -8,8 +8,6 @@ export type EstudoComStatusApi = EstudoApi & {
 
 export type StatusElegibilidadeApi = "PENDING" | "ELIGIBLE" | "INELIGIBLE";
 
-export type StatusConsentimentoApi = "PENDING" | "ACCEPTED" | "REFUSED";
-
 export type DadosCandidatoApi = {
     name: string;
     age: number;
@@ -21,7 +19,6 @@ export type CandidatoApi = {
     name: string;
     age: number;
     eligibilityStatus: StatusElegibilidadeApi;
-    consentStatus?: StatusConsentimentoApi | null;
 };
 
 export const STATUS_ESTUDO_LABELS: Record<StatusEstudoCandidato, string> = {
@@ -35,10 +32,4 @@ export const ELEGIBILIDADE_LABELS: Record<StatusElegibilidadeApi, string> = {
     PENDING: "Pendente",
     ELIGIBLE: "Elegível",
     INELIGIBLE: "Inelegível",
-};
-
-export const CONSENTIMENTO_LABELS: Record<StatusConsentimentoApi, string> = {
-    PENDING: "Pendente",
-    ACCEPTED: "Aceito",
-    REFUSED: "Recusado",
 };

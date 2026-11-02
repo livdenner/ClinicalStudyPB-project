@@ -33,7 +33,7 @@ export const navigationItems: NavigationItem[] = [
         label: "Recrutamento",
         path: "/recrutamento",
         icon: "recruitment",
-        allowedRoles: ["COORDINATOR", "RESEARCHER"],
+        allowedRoles: ["COORDINATOR"],
     },
     {
         label: "Visitas",

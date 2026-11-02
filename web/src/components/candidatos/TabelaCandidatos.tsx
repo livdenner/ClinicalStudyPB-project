@@ -1,9 +1,7 @@
 import { Chip, Table } from "@heroui/react";
 import {
-    CONSENTIMENTO_LABELS,
     ELEGIBILIDADE_LABELS,
     type CandidatoApi,
-    type StatusConsentimentoApi,
     type StatusElegibilidadeApi,
 } from "../../types/candidato";
 
@@ -15,12 +13,6 @@ const ELEGIBILIDADE_CLASSES: Record<StatusElegibilidadeApi, string> = {
     PENDING: "bg-[#FEF3C7] text-[#92400E]",
     ELIGIBLE: "bg-[#E4F4E9] text-[#16804B]",
     INELIGIBLE: "bg-[#FDEAEA] text-[#B42318]",
-};
-
-const CONSENTIMENTO_CLASSES: Record<StatusConsentimentoApi, string> = {
-    PENDING: "bg-[#FEF3C7] text-[#92400E]",
-    ACCEPTED: "bg-[#E4F4E9] text-[#16804B]",
-    REFUSED: "bg-[#FDEAEA] text-[#B42318]",
 };
 
 export function TabelaCandidatos({ candidatos }: Props) {
@@ -42,28 +34,24 @@ export function TabelaCandidatos({ candidatos }: Props) {
             <Table.ScrollContainer className="overflow-x-auto">
                 <Table.Content
                     aria-label="Lista de candidatos"
-                    className="w-full min-w-[650px] text-left text-sm"
+                    className="w-full min-w-[520px] text-left text-sm"
                 >
                     <Table.Header>
-                        {["Identificação", "Idade", "Elegibilidade", "Consentimento"].map(
-                            (titulo) => (
-                                <Table.Column
-                                    key={titulo}
-                                    id={titulo}
-                                    isRowHeader={titulo === "Identificação"}
-                                    className="rounded-none bg-[var(--color-primary)] px-5 py-3.5 text-xs font-semibold text-white after:hidden"
-                                >
-                                    {titulo}
-                                </Table.Column>
-                            )
-                        )}
+                        {["Identificação", "Idade", "Elegibilidade"].map((titulo) => (
+                            <Table.Column
+                                key={titulo}
+                                id={titulo}
+                                isRowHeader={titulo === "Identificação"}
+                                className="rounded-none bg-[var(--color-primary)] px-5 py-3.5 text-xs font-semibold text-white after:hidden"
+                            >
+                                {titulo}
+                            </Table.Column>
+                        ))}
                     </Table.Header>
                     <Table.Body items={candidatos}>
                         {(candidato) => {
                             const elegibilidade: StatusElegibilidadeApi =
                                 candidato.eligibilityStatus ?? "PENDING";
-                            const consentimento: StatusConsentimentoApi =
-                                candidato.consentStatus ?? "PENDING";
 
                             return (
                                 <Table.Row
@@ -85,17 +73,6 @@ export function TabelaCandidatos({ candidatos }: Props) {
                                         >
                                             <Chip.Label>
                                                 {ELEGIBILIDADE_LABELS[elegibilidade]}
-                                            </Chip.Label>
-                                        </Chip>
-                                    </Table.Cell>
-                                    <Table.Cell className="border-[var(--color-border)] px-5 py-4 group-hover:bg-slate-50">
-                                        <Chip
-                                            size="sm"
-                                            variant="soft"
-                                            className={`font-semibold ${CONSENTIMENTO_CLASSES[consentimento]}`}
-                                        >
-                                            <Chip.Label>
-                                                {CONSENTIMENTO_LABELS[consentimento]}
                                             </Chip.Label>
                                         </Chip>
                                     </Table.Cell>
