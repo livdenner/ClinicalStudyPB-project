@@ -93,20 +93,18 @@ function GestaoCandidatos({
 
     useEffect(() => {
         const controller = new AbortController();
-        setCarregandoEstudos(true);
-        setErroEstudos("");
 
         listarEstudos(token, controller.signal)
             .then((dados) => {
                 if (controller.signal.aborted) return;
                 const lista = dados as EstudoComStatusApi[];
                 setEstudos(lista);
-                setEstudoSelecionadoId((atual) => {
-                    if (atual !== null && lista.some((e) => e.id === atual)) {
-                        return atual;
-                    }
-                    return lista[0]?.id ?? null;
-                });
+                const primeiroId = lista[0]?.id ?? null;
+                setEstudoSelecionadoId(primeiroId);
+                if (primeiroId !== null) {
+                    setCarregandoCandidatos(true);
+                    setErroCandidatos("");
+                }
             })
             .catch((error: unknown) => {
                 if (controller.signal.aborted) return;
@@ -131,15 +129,10 @@ function GestaoCandidatos({
 
     useEffect(() => {
         if (estudoSelecionadoId === null) {
-            setCandidatos([]);
-            setCarregandoCandidatos(false);
-            setErroCandidatos("");
             return;
         }
 
         const controller = new AbortController();
-        setCarregandoCandidatos(true);
-        setErroCandidatos("");
 
         listarCandidatosPorEstudo(estudoSelecionadoId, token, controller.signal)
             .then((dados) => {
@@ -263,8 +256,17 @@ function GestaoCandidatos({
                             disabled={carregandoEstudos || estudos.length === 0}
                             onChange={(event) => {
                                 const valor = Number(event.target.value);
+                                const novoId = Number.isNaN(valor) ? null : valor;
                                 setMensagemSucesso("");
-                                setEstudoSelecionadoId(Number.isNaN(valor) ? null : valor);
+                                setEstudoSelecionadoId(novoId);
+                                if (novoId !== null) {
+                                    setCarregandoCandidatos(true);
+                                    setErroCandidatos("");
+                                } else {
+                                    setCandidatos([]);
+                                    setCarregandoCandidatos(false);
+                                    setErroCandidatos("");
+                                }
                             }}
                             className="h-10 rounded-lg border border-[var(--color-border)] bg-white px-3 text-sm text-[var(--color-text)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] disabled:opacity-60"
                         >
@@ -353,7 +355,11 @@ function GestaoCandidatos({
                         <Button
                             type="button"
                             variant="secondary"
-                            onClick={() => setTentativaEstudos((atual) => atual + 1)}
+                            onClick={() => {
+                                setCarregandoEstudos(true);
+                                setErroEstudos("");
+                                setTentativaEstudos((atual) => atual + 1);
+                            }}
                         >
                             Tentar novamente
                         </Button>
@@ -384,7 +390,11 @@ function GestaoCandidatos({
                         <Button
                             type="button"
                             variant="secondary"
-                            onClick={() => setTentativaCandidatos((atual) => atual + 1)}
+                            onClick={() => {
+                                setCarregandoCandidatos(true);
+                                setErroCandidatos("");
+                                setTentativaCandidatos((atual) => atual + 1);
+                            }}
                         >
                             Tentar novamente
                         </Button>
