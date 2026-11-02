@@ -161,11 +161,7 @@ export function ModalNovoCandidato({ estudoTitulo, onFechar, onCadastrar }: Prop
                         />
                     </FormField>
 
-                    <FormField
-                        label="Idade"
-                        htmlFor="candidato-idade"
-                        error={errosCampos.age}
-                    >
+                    <FormField label="Idade" htmlFor="candidato-idade" error={errosCampos.age}>
                         <Input
                             ref={idadeRef}
                             id="candidato-idade"

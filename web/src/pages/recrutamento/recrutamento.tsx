@@ -199,8 +199,7 @@ function GestaoCandidatos({
 
     const termoBusca = busca.trim().toLocaleLowerCase("pt-BR");
     const candidatosFiltrados = candidatos.filter(
-        (candidato) =>
-            !termoBusca || candidato.name.toLocaleLowerCase("pt-BR").includes(termoBusca)
+        (candidato) => !termoBusca || candidato.name.toLocaleLowerCase("pt-BR").includes(termoBusca)
     );
 
     return (
