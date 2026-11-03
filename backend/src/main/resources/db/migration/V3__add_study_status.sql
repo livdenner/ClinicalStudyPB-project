@@ -1,0 +1,6 @@
+ALTER TABLE studies
+    ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'PLANNING';
+
+ALTER TABLE studies
+    ADD CONSTRAINT ck_studies_status
+        CHECK (status IN ('PLANNING', 'RECRUITMENT', 'EXECUTION', 'CLOSED'));

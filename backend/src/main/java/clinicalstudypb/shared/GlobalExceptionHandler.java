@@ -1,6 +1,7 @@
 package clinicalstudypb.shared;
 
 import clinicalstudypb.studies.domain.InvalidStudyException;
+import clinicalstudypb.studies.domain.StudyStatusConflictException;
 import clinicalstudypb.users.domain.EmailAlreadyInUseException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -63,5 +64,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidStudyException.class)
     public ProblemDetail handleInvalidStudy(InvalidStudyException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+    }
+
+    /**
+     * Responde com 409 quando o estudo não pode avançar para o estado solicitado.
+     *
+     * @param exception transição recusada
+     * @return detalhe HTTP do conflito de estado
+     */
+    @ExceptionHandler(StudyStatusConflictException.class)
+    public ProblemDetail handleStudyStatusConflict(StudyStatusConflictException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
     }
 }

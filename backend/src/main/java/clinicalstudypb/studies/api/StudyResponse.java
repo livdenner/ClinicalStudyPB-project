@@ -1,6 +1,7 @@
 package clinicalstudypb.studies.api;
 
 import clinicalstudypb.studies.domain.Study;
+import clinicalstudypb.studies.domain.StudyStatus;
 import java.time.LocalDate;
 
 /**
@@ -13,6 +14,7 @@ import java.time.LocalDate;
  * @param startDate data de início
  * @param endDate data de término
  * @param participantLimit número máximo de participantes
+ * @param status estado atual do estudo
  *
  * @author Lucas N. de Araújo
  * @since 2026-10-22
@@ -25,7 +27,8 @@ public record StudyResponse(
         Long responsibleUserId,
         LocalDate startDate,
         LocalDate endDate,
-        Integer participantLimit
+        Integer participantLimit,
+        StudyStatus status
 ) {
     /**
      * Converte a entidade JPA em dados para a resposta HTTP.
@@ -41,7 +44,8 @@ public record StudyResponse(
                 study.getResponsibleUserId(),
                 study.getStartDate(),
                 study.getEndDate(),
-                study.getParticipantLimit()
+                study.getParticipantLimit(),
+                study.getStatus()
         );
     }
 }

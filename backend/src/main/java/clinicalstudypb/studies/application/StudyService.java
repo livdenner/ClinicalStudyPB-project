@@ -3,6 +3,7 @@ package clinicalstudypb.studies.application;
 import clinicalstudypb.shared.ResourceNotFoundException;
 import clinicalstudypb.studies.domain.InvalidStudyException;
 import clinicalstudypb.studies.domain.Study;
+import clinicalstudypb.studies.domain.StudyStatus;
 import clinicalstudypb.studies.infrastructure.StudyRepository;
 import clinicalstudypb.users.application.UserService;
 import clinicalstudypb.users.domain.User;
@@ -13,7 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Coordena o cadastro, a edição e a consulta de estudos clínicos.
+ * Coordena o cadastro, a edição, a consulta e a transição de estudos clínicos.
  * Confere os dados do estudo e o perfil e estado do pesquisador responsável.
  *
  * @author Lucas N. de Araújo
@@ -85,6 +86,7 @@ public class StudyService {
     /**
      * Atualiza os dados de um estudo existente.
      * A transação grava as mudanças feitas na entidade gerenciada pela JPA.
+     * O bloqueio da linha impede que a edição sobrescreva uma transição simultânea.
      *
      * @param id identificador do estudo
      * @param title novo título
@@ -100,11 +102,34 @@ public class StudyService {
     @Transactional
     public Study updateStudy(Long id, String title, String objective, Long responsibleUserId,
                              LocalDate startDate, LocalDate endDate, Integer participantLimit) {
-        Study study = getStudy(id);
+        Study study = getStudyForUpdate(id);
         validateStudy(title, objective, responsibleUserId, startDate, endDate, participantLimit);
         study.updateDetails(title.strip(), objective.strip(), responsibleUserId,
                 startDate, endDate, participantLimit);
         return study;
+    }
+
+    /**
+     * Avança o estado de um estudo em uma transação com bloqueio da linha.
+     * A JPA persiste a alteração na entidade gerenciada ao encerrar a transação.
+     *
+     * @param id identificador do estudo
+     * @param nextStatus estado solicitado
+     * @return estudo com o novo estado
+     * @throws ResourceNotFoundException se o estudo não existir
+     * @throws clinicalstudypb.studies.domain.InvalidStudyException se o estado não for informado
+     * @throws clinicalstudypb.studies.domain.StudyStatusConflictException se a transição não for permitida
+     */
+    @Transactional
+    public Study advanceStatus(Long id, StudyStatus nextStatus) {
+        Study study = getStudyForUpdate(id);
+        study.advanceStatus(nextStatus);
+        return study;
+    }
+
+    private Study getStudyForUpdate(Long id) {
+        return studyRepository.findByIdForUpdate(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Estudo não encontrado: " + id));
     }
 
     private void validateStudy(String title, String objective, Long responsibleUserId,

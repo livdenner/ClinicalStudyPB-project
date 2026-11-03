@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Expõe as operações HTTP de cadastro, consulta e edição de estudos.
+ * Expõe as operações HTTP de cadastro, consulta, edição e transição de estudos.
  *
  * @author Lucas N. de Araújo
  * @since 2026-10-22
@@ -98,5 +99,18 @@ public class StudyController {
                 request.endDate(),
                 request.participantLimit()
         ));
+    }
+
+    /**
+     * Avança o estudo para o próximo estado permitido.
+     *
+     * @param id identificador do estudo
+     * @param request estado solicitado
+     * @return estudo com o novo estado
+     */
+    @PatchMapping("/{id}/status")
+    public StudyResponse advanceStatus(@PathVariable Long id,
+                                       @Valid @RequestBody StudyStatusChangeRequest request) {
+        return StudyResponse.from(studyService.advanceStatus(id, request.status()));
     }
 }
