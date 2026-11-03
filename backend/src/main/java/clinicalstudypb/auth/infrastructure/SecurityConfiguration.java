@@ -43,7 +43,7 @@ public class SecurityConfiguration {
      * Permite o login e a documentação, exige JWT nas demais rotas e não cria sessão HTTP.
      *
      * @param http configuração HTTP do Spring Security
-     * @param jwtAuthenticationConverter conversor do perfil do JWT em autoridade
+     * @param jwtAuthenticationConverter converte o perfil do JWT em autoridade de acesso
      * @return cadeia de filtros da API
      * @throws Exception se a configuração de segurança falhar
      */
