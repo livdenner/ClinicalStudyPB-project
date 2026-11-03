@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+<module name="Checker">
+    <property name="charset" value="UTF-8"/>
+    <property name="severity" value="warning"/>
+
+    <module name="FileTabCharacter"/>
+    <module name="NewlineAtEndOfFile">
+        <property name="lineSeparator" value="lf_cr_crlf"/>
+    </module>
+    <module name="LineLength">
+        <property name="max" value="120"/>
+        <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://"/>
+    </module>
+
+    <!-- Cada regra de nome de método vale só no seu diretório (ver MethodName abaixo) -->
+    <module name="SuppressionSingleFilter">
+        <property name="id" value="methodNameMain"/>
+        <property name="files" value="[\\/]src[\\/]test[\\/]"/>
+    </module>
+    <module name="SuppressionSingleFilter">
+        <property name="id" value="methodNameTest"/>
+        <property name="files" value="[\\/]src[\\/]main[\\/]"/>
+    </module>
+
+    <module name="TreeWalker">
+        <!-- Imports -->
+        <module name="AvoidStarImport"/>
+        <module name="UnusedImports"/>
+        <module name="RedundantImport"/>
+
+        <!-- Nomenclatura -->
+        <module name="PackageName"/>
+        <module name="TypeName"/>
+        <module name="MethodName">
+            <property name="id" value="methodNameMain"/>
+        </module>
+        <!-- Testes aceitam sufixos com _, ex.: deveRetornar409QuandoEmailDuplicado_CA01_2 -->
+        <module name="MethodName">
+            <property name="id" value="methodNameTest"/>
+            <property name="format" value="^[a-z][a-zA-Z0-9]*(_[a-zA-Z0-9]+)*$"/>
+        </module>
+        <module name="ParameterName"/>
+        <module name="LocalVariableName"/>
+        <module name="MemberName"/>
+        <module name="ConstantName"/>
+
+        <!-- Estilo e boas práticas -->
+        <module name="NeedBraces"/>
+        <module name="LeftCurly"/>
+        <module name="RightCurly"/>
+        <module name="EmptyStatement"/>
+        <module name="EqualsHashCode"/>
+        <module name="ModifierOrder"/>
+        <module name="RedundantModifier"/>
+        <module name="UpperEll"/>
+        <module name="MissingSwitchDefault"/>
+        <module name="SimplifyBooleanExpression"/>
+        <module name="SimplifyBooleanReturn"/>
+        <module name="OneStatementPerLine"/>
+        <module name="ArrayTypeStyle"/>
+
+        <!-- Documentação: tipos públicos precisam de Javadoc -->
+        <module name="MissingJavadocType">
+            <property name="scope" value="public"/>
+        </module>
+    </module>
+</module>

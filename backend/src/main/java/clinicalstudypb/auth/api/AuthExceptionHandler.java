@@ -57,6 +57,7 @@ public class AuthExceptionHandler {
     }
 
     private AuthValidationErrorResponse.FieldErrorResponse toFieldError(FieldError fieldError) {
-        return new AuthValidationErrorResponse.FieldErrorResponse(fieldError.getField(), fieldError.getDefaultMessage());
+        return new AuthValidationErrorResponse.FieldErrorResponse(
+                fieldError.getField(), fieldError.getDefaultMessage());
     }
 }

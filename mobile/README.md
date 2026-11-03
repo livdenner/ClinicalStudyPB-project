@@ -59,13 +59,13 @@ Se a rede bloquear a conexão local, use `npm.cmd start -- --tunnel`; a conexão
 
 Copie `.env.example` para `.env` na pasta `mobile/` somente se for desenvolver chamadas à API. O arquivo `.env` é local e ignorado pelo Git. A variável pública `EXPO_PUBLIC_API_BASE_URL` deve apontar para o backend acessível a partir do dispositivo:
 
-- Android Emulator do Android Studio: `http://10.0.2.2:8080/api/v1` (o endereço especial `10.0.2.2` alcança o computador host).
-- Telefone físico: use o IPv4 da máquina na rede local, por exemplo `http://192.168.x.x:8080/api/v1`; não use `10.0.2.2` no telefone.
-- iOS Simulator: normalmente `http://localhost:8080/api/v1`.
+- Android Emulator do Android Studio: `http://10.0.2.2:8080/api` (o endereço especial `10.0.2.2` alcança o computador host).
+- Telefone físico: use o IPv4 da máquina na rede local, por exemplo `http://192.168.x.x:8080/api`; não use `10.0.2.2` no telefone.
+- iOS Simulator: normalmente `http://localhost:8080/api`.
 
 O Expo injeta variáveis `EXPO_PUBLIC_*` no bundle do app; nunca coloque senhas, chaves privadas ou tokens nesse prefixo nem versione segredos. Reinicie o Expo depois de alterar `.env`.
 
-A integração está deliberadamente pendente: o contrato [OpenAPI](../backend/openapi.yaml) define estudos sob `/api/v1/studies`, enquanto o controller/testes do backend ainda expõem `/api/studies`; autenticação está sob `/api/v1/auth`. Até a equipe alinhar a rota de estudos e os modelos, o esqueleto não deve chamar esses endpoints.
+A integração do mobile ainda está pendente. O cliente HTTP usa `EXPO_PUBLIC_API_BASE_URL` com a base `/api`; os caminhos relativos serão `auth/login`, `studies` e os demais recursos. O [contrato OpenAPI](../backend/openapi.yaml) inclui também rotas planejadas para a Sprint 2, que só devem ser chamadas após sua implementação.
 
 ## Verificações locais
 
