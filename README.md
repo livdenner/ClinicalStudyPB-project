@@ -241,7 +241,19 @@ O banco mantém a chave estrangeira para `users`, a restrição de datas e a res
 
 O estudo inicia em `PLANNING`. O corpo da transição é, por exemplo, `{"status":"RECRUITMENT"}`. A sequência permitida é `PLANNING → RECRUITMENT → EXECUTION → CLOSED`; saltos, repetições, retrocessos e transições após `CLOSED` recebem `409`. O `PUT` preserva o estado atual. As transições usam uma transação com bloqueio da linha do estudo para impedir que duas requisições simultâneas avancem a partir do mesmo estado. Todas as respostas de estudo incluem `status`.
 
-Na pasta `backend/`, `./mvnw test` executa os testes automatizados com Java 21. Para conferir a V3 no PostgreSQL, consulte `flyway_schema_history` e a coluna `studies.status` após iniciar a aplicação.
+Os testes automatizados de estudos verificam as regras do serviço, as respostas HTTP e o fluxo completo com PostgreSQL. A API também foi iniciada com PostgreSQL 18 local: listagem `200`, cadastro `201`, atualização `200` e rejeição de datas invertidas `400`, sem alterar os dados já gravados.
+
+Para conferir a V3 no PostgreSQL, consulte `flyway_schema_history` e a coluna `studies.status` após iniciar a aplicação.
+
+### Testes do backend
+
+Na pasta `backend/`, com Java 21 e o Docker em execução:
+
+```bash
+./mvnw test
+```
+
+No Windows, use `mvnw.cmd test`. O Docker é necessário porque os testes de integração usam Testcontainers para subir um PostgreSQL descartável, removido ao final da execução. Sem ele, esses testes falham e o comando termina com erro. O mesmo vale para `./mvnw verify`, que também executa os testes.
 
 ### Documentação Javadoc
 
