@@ -15,6 +15,7 @@ import java.time.LocalDate;
  * @param endDate data de término
  * @param participantLimit número máximo de participantes
  * @param status estado atual do estudo
+ * @param version versão para controle de concorrência
  *
  * @author Lucas N. de Araújo
  * @since 2026-10-22
@@ -28,7 +29,8 @@ public record StudyResponse(
         LocalDate startDate,
         LocalDate endDate,
         Integer participantLimit,
-        StudyStatus status
+        StudyStatus status,
+        Long version
 ) {
     /**
      * Converte a entidade JPA em dados para a resposta HTTP.
@@ -45,7 +47,8 @@ public record StudyResponse(
                 study.getStartDate(),
                 study.getEndDate(),
                 study.getParticipantLimit(),
-                study.getStatus()
+                study.getStatus(),
+                study.getVersion()
         );
     }
 }

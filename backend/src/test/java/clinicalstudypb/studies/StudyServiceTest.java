@@ -10,18 +10,26 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import clinicalstudypb.shared.ResourceNotFoundException;
+import clinicalstudypb.shared.CurrentActor;
 import clinicalstudypb.studies.application.StudyService;
+import clinicalstudypb.studies.application.StudyReadiness;
 import clinicalstudypb.studies.domain.InvalidStudyException;
 import clinicalstudypb.studies.domain.Study;
 import clinicalstudypb.studies.domain.StudyStatus;
 import clinicalstudypb.studies.domain.StudyStatusConflictException;
+import clinicalstudypb.studies.domain.StudyStatusHistory;
 import clinicalstudypb.studies.infrastructure.StudyRepository;
+import clinicalstudypb.studies.infrastructure.StudyStatusHistoryRepository;
 import clinicalstudypb.users.application.UserService;
 import clinicalstudypb.users.domain.User;
 import clinicalstudypb.users.domain.UserRole;
+import clinicalstudypb.visits.domain.ProtocolConflictException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.beans.factory.ObjectProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -48,11 +56,28 @@ class StudyServiceTest {
     @Mock
     private UserService userService;
 
+    @Mock
+    private StudyStatusHistoryRepository historyRepository;
+
+    @Mock
+    private CurrentActor currentActor;
+
+    @Mock
+    private JdbcTemplate jdbc;
+
+    @Mock
+    private ObjectProvider<StudyReadiness> readinessProvider;
+
+    @Mock
+    private StudyReadiness readiness;
+
     private StudyService studyService;
 
     @BeforeEach
     void setUp() {
-        studyService = new StudyService(studyRepository, userService);
+        studyService = new StudyService(studyRepository, userService, historyRepository,
+                currentActor, jdbc, readinessProvider);
+        org.mockito.Mockito.lenient().when(currentActor.userId()).thenReturn(7L);
     }
 
     @Test
@@ -145,10 +170,19 @@ class StudyServiceTest {
     void advanceStatusAllowsOnlyTheNextState() {
         Study study = study("Estudo", 10);
         when(studyRepository.findByIdForUpdate(3L)).thenReturn(Optional.of(study));
+        when(jdbc.queryForObject(org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.eq(Integer.class), org.mockito.ArgumentMatchers.eq(3L)))
+                .thenReturn(1);
+        when(readinessProvider.getIfAvailable()).thenReturn(readiness);
+        when(readiness.hasInclusionAndExclusionCriteria(3L)).thenReturn(true);
+        when(readiness.hasIncludedParticipant(3L)).thenReturn(true);
 
-        assertSame(study, studyService.advanceStatus(3L, StudyStatus.RECRUITMENT));
-        assertSame(study, studyService.advanceStatus(3L, StudyStatus.EXECUTION));
-        assertSame(study, studyService.advanceStatus(3L, StudyStatus.CLOSED));
+        assertSame(study, studyService.advanceStatus(
+                3L, StudyStatus.RECRUITMENT, StudyStatus.PLANNING, null));
+        assertSame(study, studyService.advanceStatus(
+                3L, StudyStatus.EXECUTION, StudyStatus.RECRUITMENT, null));
+        assertSame(study, studyService.advanceStatus(
+                3L, StudyStatus.CLOSED, StudyStatus.EXECUTION, null));
         assertEquals(StudyStatus.CLOSED, study.getStatus());
         verify(studyRepository, never()).save(any(Study.class));
     }
@@ -159,9 +193,9 @@ class StudyServiceTest {
         when(studyRepository.findByIdForUpdate(3L)).thenReturn(Optional.of(study));
 
         assertThrows(StudyStatusConflictException.class,
-                () -> studyService.advanceStatus(3L, StudyStatus.EXECUTION));
+                () -> studyService.advanceStatus(3L, StudyStatus.EXECUTION, StudyStatus.PLANNING, null));
         assertThrows(StudyStatusConflictException.class,
-                () -> studyService.advanceStatus(3L, StudyStatus.PLANNING));
+                () -> studyService.advanceStatus(3L, StudyStatus.PLANNING, StudyStatus.PLANNING, null));
         assertEquals(StudyStatus.PLANNING, study.getStatus());
     }
 
@@ -170,7 +204,104 @@ class StudyServiceTest {
         when(studyRepository.findByIdForUpdate(99L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class,
-                () -> studyService.advanceStatus(99L, StudyStatus.RECRUITMENT));
+                () -> studyService.advanceStatus(99L, StudyStatus.RECRUITMENT, StudyStatus.PLANNING, null));
+    }
+
+    @Test
+    void cancelledRecruitmentCanReturnOnlyToRecruitment() {
+        Study study = study("Estudo", 10);
+        study.advanceStatus(StudyStatus.RECRUITMENT);
+        when(studyRepository.findByIdForUpdate(3L)).thenReturn(Optional.of(study));
+
+        studyService.advanceStatus(3L, StudyStatus.CANCELLED, StudyStatus.RECRUITMENT, "  Sem financiamento  ");
+        when(historyRepository.findFirstByStudyIdOrderByIdDesc(3L)).thenReturn(Optional.of(
+                new StudyStatusHistory(3L, 7L, java.time.Instant.now(),
+                        StudyStatus.RECRUITMENT, StudyStatus.CANCELLED, "Sem financiamento")));
+        assertThrows(StudyStatusConflictException.class,
+                () -> studyService.advanceStatus(3L, StudyStatus.PLANNING, StudyStatus.CANCELLED, null));
+        studyService.advanceStatus(3L, StudyStatus.RECRUITMENT, StudyStatus.CANCELLED, null);
+        assertEquals(StudyStatus.RECRUITMENT, study.getStatus());
+    }
+
+    @Test
+    void cancellationRequiresReasonAndStaleStatusIsRejected() {
+        Study study = study("Estudo", 10);
+        when(studyRepository.findByIdForUpdate(3L)).thenReturn(Optional.of(study));
+
+        assertThrows(InvalidStudyException.class,
+                () -> studyService.advanceStatus(3L, StudyStatus.CANCELLED, StudyStatus.PLANNING, " "));
+        assertThrows(StudyStatusConflictException.class,
+                () -> studyService.advanceStatus(3L, StudyStatus.RECRUITMENT, StudyStatus.EXECUTION, null));
+        assertEquals(StudyStatus.PLANNING, study.getStatus());
+        verifyNoInteractions(historyRepository);
+    }
+
+    @Test
+    void cancellationDuringExecutionCannotBeRestored() {
+        Study study = study("Estudo", 10);
+        study.advanceStatus(StudyStatus.RECRUITMENT);
+        study.advanceStatus(StudyStatus.EXECUTION);
+        when(studyRepository.findByIdForUpdate(3L)).thenReturn(Optional.of(study));
+
+        studyService.advanceStatus(3L, StudyStatus.CANCELLED, StudyStatus.EXECUTION, "Interrompido");
+        when(historyRepository.findFirstByStudyIdOrderByIdDesc(3L)).thenReturn(Optional.of(
+                new StudyStatusHistory(3L, 7L, java.time.Instant.now(),
+                        StudyStatus.EXECUTION, StudyStatus.CANCELLED, "Interrompido")));
+
+        assertThrows(StudyStatusConflictException.class,
+                () -> studyService.advanceStatus(3L, StudyStatus.EXECUTION, StudyStatus.CANCELLED, null));
+        assertEquals(StudyStatus.CANCELLED, study.getStatus());
+    }
+
+    @Test
+    void recruitmentCanReturnToPlanning() {
+        Study study = study("Estudo", 10);
+        study.advanceStatus(StudyStatus.RECRUITMENT);
+        when(studyRepository.findByIdForUpdate(3L)).thenReturn(Optional.of(study));
+
+        studyService.advanceStatus(3L, StudyStatus.PLANNING, StudyStatus.RECRUITMENT, null);
+        assertEquals(StudyStatus.PLANNING, study.getStatus());
+    }
+
+    @Test
+    void recruitmentIsBlockedUntilCriteriaModuleProvidesReadiness() {
+        Study study = study("Estudo", 10);
+        when(studyRepository.findByIdForUpdate(3L)).thenReturn(Optional.of(study));
+        when(jdbc.queryForObject(org.mockito.ArgumentMatchers.anyString(),
+                org.mockito.ArgumentMatchers.eq(Integer.class), org.mockito.ArgumentMatchers.eq(3L)))
+                .thenReturn(1);
+
+        assertThrows(ProtocolConflictException.class,
+                () -> studyService.advanceStatus(3L, StudyStatus.RECRUITMENT, StudyStatus.PLANNING, null));
+        assertEquals(StudyStatus.PLANNING, study.getStatus());
+        verifyNoInteractions(historyRepository);
+    }
+
+    @Test
+    void executionIsBlockedUntilParticipantModuleProvidesReadiness() {
+        Study study = study("Estudo", 10);
+        study.advanceStatus(StudyStatus.RECRUITMENT);
+        when(studyRepository.findByIdForUpdate(3L)).thenReturn(Optional.of(study));
+
+        assertThrows(ProtocolConflictException.class,
+                () -> studyService.advanceStatus(3L, StudyStatus.EXECUTION, StudyStatus.RECRUITMENT, null));
+        assertEquals(StudyStatus.RECRUITMENT, study.getStatus());
+        verifyNoInteractions(historyRepository);
+    }
+
+    @Test
+    void otherResearcherCannotUpdateOrChangeStatus() {
+        Study study = study("Estudo", 10);
+        when(studyRepository.findByIdForUpdate(3L)).thenReturn(Optional.of(study));
+        when(currentActor.userId()).thenReturn(8L);
+
+        assertThrows(AccessDeniedException.class,
+                () -> studyService.updateStudy(3L, "Outro", "Objetivo", 7L,
+                        START_DATE, END_DATE, 10));
+        assertThrows(AccessDeniedException.class,
+                () -> studyService.advanceStatus(3L, StudyStatus.RECRUITMENT, StudyStatus.PLANNING, null));
+        assertEquals("Estudo", study.getTitle());
+        verifyNoInteractions(historyRepository);
     }
 
     @Test
