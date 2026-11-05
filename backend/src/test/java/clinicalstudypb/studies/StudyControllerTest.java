@@ -3,6 +3,7 @@ package clinicalstudypb.studies;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -14,6 +15,8 @@ import clinicalstudypb.studies.api.StudyController;
 import clinicalstudypb.studies.application.StudyService;
 import clinicalstudypb.studies.domain.InvalidStudyException;
 import clinicalstudypb.studies.domain.Study;
+import clinicalstudypb.studies.domain.StudyStatus;
+import clinicalstudypb.studies.domain.StudyStatusConflictException;
 import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -60,7 +63,8 @@ class StudyControllerTest {
                 .andExpect(header().string("Location", "/api/studies/3"))
                 .andExpect(jsonPath("$.id").value(3))
                 .andExpect(jsonPath("$.responsibleUserId").value(7))
-                .andExpect(jsonPath("$.startDate").value("2026-11-01"));
+                .andExpect(jsonPath("$.startDate").value("2026-11-01"))
+                .andExpect(jsonPath("$.status").value("PLANNING"));
     }
 
     @Test
@@ -125,6 +129,43 @@ class StudyControllerTest {
                         .content(VALID_REQUEST))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Estudo atualizado"));
+    }
+
+    @Test
+    void advanceStatusReturnsUpdatedStudy() throws Exception {
+        Study study = study();
+        study.advanceStatus(StudyStatus.RECRUITMENT);
+        when(studyService.advanceStatus(3L, StudyStatus.RECRUITMENT)).thenReturn(study);
+
+        mockMvc.perform(patch("/api/studies/3/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"RECRUITMENT\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(3))
+                .andExpect(jsonPath("$.status").value("RECRUITMENT"));
+    }
+
+    @Test
+    void advanceStatusRejectsMissingStatusBeforeCallingService() throws Exception {
+        mockMvc.perform(patch("/api/studies/3/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(studyService);
+    }
+
+    @Test
+    void advanceStatusReturnsConflictForForbiddenTransition() throws Exception {
+        when(studyService.advanceStatus(3L, StudyStatus.CLOSED))
+                .thenThrow(new StudyStatusConflictException(StudyStatus.PLANNING, StudyStatus.CLOSED));
+
+        mockMvc.perform(patch("/api/studies/3/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"CLOSED\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail").value(
+                        "Transição de estado não permitida: PLANNING -> CLOSED."));
     }
 
     private Study study() {

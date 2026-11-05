@@ -13,6 +13,8 @@ import clinicalstudypb.shared.ResourceNotFoundException;
 import clinicalstudypb.studies.application.StudyService;
 import clinicalstudypb.studies.domain.InvalidStudyException;
 import clinicalstudypb.studies.domain.Study;
+import clinicalstudypb.studies.domain.StudyStatus;
+import clinicalstudypb.studies.domain.StudyStatusConflictException;
 import clinicalstudypb.studies.infrastructure.StudyRepository;
 import clinicalstudypb.users.application.UserService;
 import clinicalstudypb.users.domain.User;
@@ -68,6 +70,7 @@ class StudyServiceTest {
         assertEquals("Avaliar hábitos", created.getObjective());
         assertEquals(7L, created.getResponsibleUserId());
         assertEquals(30, created.getParticipantLimit());
+        assertEquals(StudyStatus.PLANNING, created.getStatus());
     }
 
     @Test
@@ -123,7 +126,8 @@ class StudyServiceTest {
     @Test
     void updateStudyChangesManagedEntityAfterValidation() {
         Study study = study("Título antigo", 10);
-        when(studyRepository.findById(3L)).thenReturn(Optional.of(study));
+        study.advanceStatus(StudyStatus.RECRUITMENT);
+        when(studyRepository.findByIdForUpdate(3L)).thenReturn(Optional.of(study));
         when(userService.getUser(7L)).thenReturn(userWithRole(UserRole.RESEARCHER));
 
         Study updated = studyService.updateStudy(3L, "  Novo título  ", "  Novo objetivo  ", 7L,
@@ -133,13 +137,46 @@ class StudyServiceTest {
         assertEquals("Novo título", study.getTitle());
         assertEquals("Novo objetivo", study.getObjective());
         assertEquals(40, study.getParticipantLimit());
+        assertEquals(StudyStatus.RECRUITMENT, study.getStatus());
         verify(studyRepository, never()).save(any(Study.class));
+    }
+
+    @Test
+    void advanceStatusAllowsOnlyTheNextState() {
+        Study study = study("Estudo", 10);
+        when(studyRepository.findByIdForUpdate(3L)).thenReturn(Optional.of(study));
+
+        assertSame(study, studyService.advanceStatus(3L, StudyStatus.RECRUITMENT));
+        assertSame(study, studyService.advanceStatus(3L, StudyStatus.EXECUTION));
+        assertSame(study, studyService.advanceStatus(3L, StudyStatus.CLOSED));
+        assertEquals(StudyStatus.CLOSED, study.getStatus());
+        verify(studyRepository, never()).save(any(Study.class));
+    }
+
+    @Test
+    void advanceStatusRejectsSkippedAndRepeatedTransitionsWithoutChangingState() {
+        Study study = study("Estudo", 10);
+        when(studyRepository.findByIdForUpdate(3L)).thenReturn(Optional.of(study));
+
+        assertThrows(StudyStatusConflictException.class,
+                () -> studyService.advanceStatus(3L, StudyStatus.EXECUTION));
+        assertThrows(StudyStatusConflictException.class,
+                () -> studyService.advanceStatus(3L, StudyStatus.PLANNING));
+        assertEquals(StudyStatus.PLANNING, study.getStatus());
+    }
+
+    @Test
+    void advanceStatusRejectsUnknownStudy() {
+        when(studyRepository.findByIdForUpdate(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> studyService.advanceStatus(99L, StudyStatus.RECRUITMENT));
     }
 
     @Test
     void updateStudyKeepsOriginalDataWhenValidationFails() {
         Study study = study("Título antigo", 10);
-        when(studyRepository.findById(3L)).thenReturn(Optional.of(study));
+        when(studyRepository.findByIdForUpdate(3L)).thenReturn(Optional.of(study));
 
         assertThrows(InvalidStudyException.class,
                 () -> studyService.updateStudy(3L, "Novo título", "Novo objetivo", 7L,

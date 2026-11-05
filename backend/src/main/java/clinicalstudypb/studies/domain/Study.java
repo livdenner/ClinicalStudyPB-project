@@ -2,6 +2,8 @@ package clinicalstudypb.studies.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -41,6 +43,10 @@ public class Study {
 
     @Column(name = "participant_limit", nullable = false)
     private Integer participantLimit;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private StudyStatus status = StudyStatus.PLANNING;
 
     /** Construtor exigido pela JPA para reconstruir a entidade do banco. */
     protected Study() {
@@ -85,6 +91,23 @@ public class Study {
         this.startDate = startDate;
         this.endDate = endDate;
         this.participantLimit = participantLimit;
+    }
+
+    /**
+     * Avança o estudo somente para o estado imediatamente seguinte.
+     *
+     * @param nextStatus estado solicitado
+     * @throws InvalidStudyException quando o estado solicitado não é informado
+     * @throws StudyStatusConflictException quando a transição não é permitida
+     */
+    public void advanceStatus(StudyStatus nextStatus) {
+        if (nextStatus == null) {
+            throw new InvalidStudyException("Informe o novo estado do estudo.");
+        }
+        if (!status.canAdvanceTo(nextStatus)) {
+            throw new StudyStatusConflictException(status, nextStatus);
+        }
+        this.status = nextStatus;
     }
 
     /**
@@ -148,5 +171,14 @@ public class Study {
      */
     public Integer getParticipantLimit() {
         return this.participantLimit;
+    }
+
+    /**
+     * Consulta o estado atual do estudo.
+     *
+     * @return estado persistido
+     */
+    public StudyStatus getStatus() {
+        return this.status;
     }
 }

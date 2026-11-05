@@ -155,7 +155,7 @@ O backend recebe a conexão com o PostgreSQL pelas variáveis de ambiente `DB_UR
 
 A assinatura e a validação dos JWTs usam a variável `JWT_SECRET_BASE64`, que deve conter uma chave aleatória codificada em Base64 com pelo menos 32 bytes. Defina a mesma chave em cada instância do backend e mantenha-a fora do Git. A validade padrão é de 3600 segundos e pode ser alterada com `JWT_EXPIRATION_SECONDS`.
 
-Ao iniciar o backend com um banco vazio, o Flyway aplica `backend/src/main/resources/db/migration/V1__create_users.sql`, que cria a tabela `users`. O Hibernate está configurado para validar a correspondência entre a tabela e a entidade JPA, sem criar ou alterar tabelas automaticamente.
+Ao iniciar o backend, o Flyway aplica as migrações pendentes: V1 cria `users`, V2 cria `studies` e V3 adiciona o estado do estudo. Estudos anteriores à V3 recebem `PLANNING`. O Hibernate valida a correspondência entre as tabelas e as entidades JPA, sem criar ou alterar tabelas automaticamente.
 
 Para carregar as contas fictícias no ambiente local ou de demonstração, execute **manualmente** `backend/dev/seed_demo_users.sql` no banco `clinicalstudypb`, esquema `public`, depois da migração V1. O script pode ser executado novamente sem duplicar as contas. Ele não é uma migração Flyway e não roda na inicialização do backend.
 
@@ -223,9 +223,9 @@ O backend remove espaços nas pontas do nome e do e-mail, guarda o e-mail em min
 
 O login e o logout usam JWT stateless: o cliente descarta o token no logout, sem revogação do lado do servidor. As rotas de gestão de usuários exigem autenticação, mas as permissões específicas por perfil pertencem à tarefa RF03. O `DELETE` atual exclui o registro; se a regra de negócio aprovada pela equipe exigir somente desativação, o contrato e a implementação deverão ser ajustados juntos.
 
-### API de estudos (T6.2)
+### API de estudos (T6.2 e T11.1)
 
-A API usa a base `/api/studies`. O contrato OpenAPI da T2.1 ainda pode ajustar os nomes das rotas e dos campos.
+A API usa a base `/api/studies` e segue o contrato em `backend/openapi.yaml`. As operações de escrita e a consulta atual de estudos exigem o perfil `RESEARCHER`.
 
 | Método e rota | Operação | Resposta de sucesso |
 | --- | --- | --- |
@@ -233,12 +233,17 @@ A API usa a base `/api/studies`. O contrato OpenAPI da T2.1 ainda pode ajustar o
 | `GET /api/studies/{id}` | Consultar estudo | `200` |
 | `POST /api/studies` | Cadastrar estudo | `201`, com `Location: /api/studies/{id}` |
 | `PUT /api/studies/{id}` | Atualizar estudo | `200` |
+| `PATCH /api/studies/{id}/status` | Avançar o estado do estudo | `200` |
 
 Cadastro e atualização recebem `title`, `objective`, `responsibleUserId`, `startDate`, `endDate` e `participantLimit`. As datas usam o formato `AAAA-MM-DD`. O título é obrigatório e tem até 200 caracteres; o objetivo é obrigatório; o limite deve ser maior que zero; a data de término não pode anteceder a de início. O responsável deve existir e ter o perfil `RESEARCHER`, conforme a regra confirmada para a Sprint 1. O serviço consulta o módulo de usuários por `UserService`, sem acessar o repositório interno desse módulo.
 
-O banco mantém a chave estrangeira para `users`, a restrição de datas e a restrição do limite. O serviço valida as regras antes de persistir. Corpos inválidos ou regras violadas recebem `400`; recursos inexistentes recebem `404`. Na atualização, a entidade JPA é alterada dentro de uma transação e o Hibernate grava as mudanças. A API ainda não implementa autenticação ou autorização de acesso.
+O banco mantém a chave estrangeira para `users`, a restrição de datas e a restrição do limite. O serviço valida as regras antes de persistir. Corpos inválidos ou regras violadas recebem `400`; recursos inexistentes recebem `404`. Na atualização, a entidade JPA é alterada dentro de uma transação e o Hibernate grava as mudanças.
+
+O estudo inicia em `PLANNING`. O corpo da transição é, por exemplo, `{"status":"RECRUITMENT"}`. A sequência permitida é `PLANNING → RECRUITMENT → EXECUTION → CLOSED`; saltos, repetições, retrocessos e transições após `CLOSED` recebem `409`. O `PUT` preserva o estado atual. As transições usam uma transação com bloqueio da linha do estudo para impedir que duas requisições simultâneas avancem a partir do mesmo estado. Todas as respostas de estudo incluem `status`.
 
 Os testes automatizados de estudos verificam as regras do serviço, as respostas HTTP e o fluxo completo com PostgreSQL. A API também foi iniciada com PostgreSQL 18 local: listagem `200`, cadastro `201`, atualização `200` e rejeição de datas invertidas `400`, sem alterar os dados já gravados.
+
+Para conferir a V3 no PostgreSQL, consulte `flyway_schema_history` e a coluna `studies.status` após iniciar a aplicação.
 
 ### Testes do backend
 
