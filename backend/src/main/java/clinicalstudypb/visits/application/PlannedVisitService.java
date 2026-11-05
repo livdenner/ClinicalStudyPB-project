@@ -9,7 +9,9 @@ import clinicalstudypb.visits.api.PlannedActivityRequest;
 import clinicalstudypb.visits.api.PlannedActivityResponse;
 import clinicalstudypb.visits.api.PlannedVisitRequest;
 import clinicalstudypb.visits.api.PlannedVisitResponse;
+import clinicalstudypb.visits.domain.PlannedVisit;
 import clinicalstudypb.visits.domain.ProtocolConflictException;
+import clinicalstudypb.visits.infrastructure.PlannedVisitRepository;
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -33,16 +35,19 @@ public class PlannedVisitService {
 
     private final JdbcTemplate jdbc;
     private final StudyService studies;
+    private final PlannedVisitRepository visits;
 
     /**
      * Recebe o acesso transacional ao banco e às regras do estudo.
      *
      * @param jdbc acesso SQL ao protocolo
      * @param studies regras de estudo e responsável
+     * @param visits leitura JPA das visitas com suas atividades
      */
-    public PlannedVisitService(JdbcTemplate jdbc, StudyService studies) {
+    public PlannedVisitService(JdbcTemplate jdbc, StudyService studies, PlannedVisitRepository visits) {
         this.jdbc = jdbc;
         this.studies = studies;
+        this.visits = visits;
     }
 
     /**
@@ -54,9 +59,8 @@ public class PlannedVisitService {
     @Transactional(readOnly = true)
     public List<PlannedVisitResponse> list(Long studyId) {
         studies.getStudy(studyId);
-        List<Long> ids = jdbc.query("SELECT id FROM planned_visits WHERE study_id = ? ORDER BY position",
-                (rs, row) -> rs.getLong("id"), studyId);
-        return ids.stream().map(id -> get(studyId, id)).toList();
+        return visits.findByStudyIdOrderByPositionAsc(studyId).stream()
+                .map(this::toResponse).toList();
     }
 
     /**
@@ -69,15 +73,10 @@ public class PlannedVisitService {
     @Transactional(readOnly = true)
     public PlannedVisitResponse get(Long studyId, Long visitId) {
         studies.getStudy(studyId);
-        VisitRow visit = findVisit(studyId, visitId);
-        List<PlannedActivityResponse> activities = jdbc.query(
-                "SELECT id, name, description, position FROM planned_activities "
-                        + "WHERE planned_visit_id = ? ORDER BY position",
-                (rs, row) -> new PlannedActivityResponse(rs.getLong("id"),
-                        rs.getString("name"), rs.getString("description"), rs.getInt("position")),
-                visitId);
-        return new PlannedVisitResponse(visit.id(), studyId, visit.name(), visit.plannedDate(),
-                visit.position(), activities);
+        PlannedVisit visit = visits.findByIdAndStudyId(visitId, studyId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Visita prevista não encontrada: " + visitId));
+        return toResponse(visit);
     }
 
     /**
@@ -291,6 +290,15 @@ public class PlannedVisitService {
 
     private String nameKey(String name) {
         return name.strip().toLowerCase(Locale.ROOT);
+    }
+
+    private PlannedVisitResponse toResponse(PlannedVisit visit) {
+        List<PlannedActivityResponse> activities = visit.getActivities().stream()
+                .map(activity -> new PlannedActivityResponse(activity.getId(), activity.getName(),
+                        activity.getDescription(), activity.getPosition()))
+                .toList();
+        return new PlannedVisitResponse(visit.getId(), visit.getStudyId(), visit.getName(),
+                visit.getPlannedDate(), visit.getPosition(), activities);
     }
 
     private record VisitRow(Long id, String name, LocalDate plannedDate, Integer position) {
