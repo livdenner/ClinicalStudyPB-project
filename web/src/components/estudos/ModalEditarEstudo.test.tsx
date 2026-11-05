@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ModalEditarEstudo } from "./ModalEditarEstudo";
 import type { EstudoApi } from "../../types/estudo";
 
@@ -15,80 +15,128 @@ const estudo: EstudoApi = {
 
 const pesquisador = { id: 7, name: "Dra. Helena Costa" };
 
+afterEach(cleanup);
+
 describe("ModalEditarEstudo", () => {
-    it("mostra o nome do pesquisador logado quando ele é o responsável", () => {
-        render(
-            <ModalEditarEstudo
-                estudo={estudo}
-                pesquisador={pesquisador}
-                onFechar={vi.fn()}
-                onSalvar={vi.fn()}
-            />
-        );
-
-        expect(screen.getByText("Dra. Helena Costa")).toBeInTheDocument();
-    });
-
-    it("identifica o responsável pelo id quando ele não é o pesquisador logado", () => {
-        render(
-            <ModalEditarEstudo
-                estudo={{ ...estudo, responsibleUserId: 9 }}
-                pesquisador={pesquisador}
-                onFechar={vi.fn()}
-                onSalvar={vi.fn()}
-            />
-        );
-
-        expect(screen.getByText("Pesquisador #9")).toBeInTheDocument();
-    });
-
-    it("impede salvar limite de participantes menor ou igual a zero", () => {
-        const onSalvar = vi.fn();
-
-        render(
-            <ModalEditarEstudo
-                estudo={estudo}
-                pesquisador={pesquisador}
-                onFechar={vi.fn()}
-                onSalvar={onSalvar}
-            />
-        );
-
-        fireEvent.change(screen.getByLabelText("Limite de participantes"), {
-            target: { value: "0" },
-        });
-        fireEvent.click(screen.getByRole("button", { name: "Salvar alterações" }));
-
-        expect(
-            screen.getByText("Informe um limite inteiro entre 1 e 2147483647.")
-        ).toBeInTheDocument();
-        expect(onSalvar).not.toHaveBeenCalled();
-    });
-
-    it("salva as alterações mantendo o responsável original do estudo", async () => {
+    it.each([
+        {
+            id: 7,
+            name: "Dra. Helena Costa",
+            nomeExibido: "Dra. Helena Costa",
+        },
+        {
+            id: 11,
+            name: "Ana Silva",
+            nomeExibido: "Pesquisador #7",
+        },
+    ])("preserva o responsável ao editar como $name", async (usuario) => {
         const onSalvar = vi.fn().mockResolvedValue(undefined);
 
         render(
             <ModalEditarEstudo
-                estudo={{ ...estudo, responsibleUserId: 9 }}
+                estudo={estudo}
+                pesquisador={usuario}
+                onFechar={vi.fn()}
+                onSalvar={onSalvar}
+            />
+        );
+
+        const dialog = await screen.findByRole("dialog", {
+            name: "Editar estudo",
+        });
+
+        expect(within(dialog).getByText(usuario.nomeExibido)).toBeInTheDocument();
+
+        fireEvent.change(within(dialog).getByLabelText(/^Nome do estudo/), {
+            target: { value: "Estudo atualizado" },
+        });
+
+        fireEvent.click(
+            within(dialog).getByRole("button", {
+                name: "Salvar alterações",
+            })
+        );
+
+        const { id: _id, ...dados } = estudo;
+
+        await waitFor(() =>
+            expect(onSalvar).toHaveBeenCalledExactlyOnceWith({
+                ...dados,
+                title: "Estudo atualizado",
+            })
+        );
+    });
+
+    it("impede salvar limite de participantes igual a zero", async () => {
+        const onSalvar = vi.fn().mockResolvedValue(undefined);
+
+        render(
+            <ModalEditarEstudo
+                estudo={estudo}
                 pesquisador={pesquisador}
                 onFechar={vi.fn()}
                 onSalvar={onSalvar}
             />
         );
 
-        fireEvent.change(screen.getByLabelText("Limite de participantes"), {
+        const dialog = await screen.findByRole("dialog", {
+            name: "Editar estudo",
+        });
+
+        fireEvent.change(within(dialog).getByLabelText(/^Limite de participantes/), {
+            target: { value: "0" },
+        });
+
+        fireEvent.click(
+            within(dialog).getByRole("button", {
+                name: "Salvar alterações",
+            })
+        );
+
+        expect(
+            await within(dialog).findByText("Informe um limite inteiro entre 1 e 2147483647.")
+        ).toBeInTheDocument();
+
+        expect(onSalvar).not.toHaveBeenCalled();
+    });
+
+    it("salva o novo limite mantendo o responsável original do estudo", async () => {
+        const onSalvar = vi.fn().mockResolvedValue(undefined);
+        const estudoOutroResponsavel = {
+            ...estudo,
+            responsibleUserId: 9,
+        };
+
+        render(
+            <ModalEditarEstudo
+                estudo={estudoOutroResponsavel}
+                pesquisador={pesquisador}
+                onFechar={vi.fn()}
+                onSalvar={onSalvar}
+            />
+        );
+
+        const dialog = await screen.findByRole("dialog", {
+            name: "Editar estudo",
+        });
+
+        expect(within(dialog).getByText("Pesquisador #9")).toBeInTheDocument();
+
+        fireEvent.change(within(dialog).getByLabelText(/^Limite de participantes/), {
             target: { value: "150" },
         });
-        fireEvent.click(screen.getByRole("button", { name: "Salvar alterações" }));
+
+        fireEvent.click(
+            within(dialog).getByRole("button", {
+                name: "Salvar alterações",
+            })
+        );
+
+        const { id: _id, ...dados } = estudoOutroResponsavel;
 
         await waitFor(() =>
-            expect(onSalvar).toHaveBeenCalledWith({
-                title: "Acompanhamento cardiovascular",
-                objective: "Avaliar a resposta ao tratamento em 12 meses.",
-                responsibleUserId: 9,
-                startDate: "2026-01-01",
-                endDate: "2026-12-31",
+            expect(onSalvar).toHaveBeenCalledExactlyOnceWith({
+                ...dados,
                 participantLimit: 150,
             })
         );
