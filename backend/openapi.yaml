@@ -767,7 +767,9 @@ paths:
         Somente COORDINATOR. studyId vem da rota, não do JSON. name e age são
         obrigatórios; age é inteiro não negativo. O cadastro inicia com
         eligibilityStatus=PENDING. Idade mínima de participação depende dos
-        critérios de cada estudo, não de uma restrição fixa do cadastro.
+        critérios de cada estudo, não de uma restrição fixa do cadastro. O estudo
+        precisa estar em RECRUITMENT. No contrato atual, a duplicidade é definida
+        por nome sem diferença de maiúsculas/espaços e idade dentro do mesmo estudo.
       security:
         - bearerAuth: []
       requestBody:
@@ -805,6 +807,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
 
   /api/studies/{studyId}/candidates/{candidateId}:
     parameters:
