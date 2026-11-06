@@ -2,7 +2,7 @@ package clinicalstudypb.studies.domain;
 
 /**
  * Estados do ciclo de vida de um estudo clínico.
- * Cada estado permite avançar somente para o próximo.
+ * Representa planejamento, recrutamento, execução e desfechos do estudo.
  *
  * @author Lucas N. de Araújo
  * @since 2026-11-03
@@ -16,7 +16,9 @@ public enum StudyStatus {
     /** Estudo em execução. */
     EXECUTION,
     /** Estudo encerrado. */
-    CLOSED;
+    CLOSED,
+    /** Estudo interrompido antes do encerramento normal. */
+    CANCELLED;
 
     /**
      * Verifica se o destino é o próximo estado permitido.
@@ -26,10 +28,11 @@ public enum StudyStatus {
      */
     public boolean canAdvanceTo(StudyStatus destination) {
         return switch (this) {
-            case PLANNING -> destination == RECRUITMENT;
-            case RECRUITMENT -> destination == EXECUTION;
-            case EXECUTION -> destination == CLOSED;
-            case CLOSED -> false;
+            case PLANNING -> destination == RECRUITMENT || destination == CANCELLED;
+            case RECRUITMENT -> destination == PLANNING || destination == EXECUTION
+                    || destination == CANCELLED;
+            case EXECUTION -> destination == CLOSED || destination == CANCELLED;
+            case CLOSED, CANCELLED -> false;
         };
     }
 }

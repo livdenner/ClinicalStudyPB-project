@@ -91,7 +91,12 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
     }
 
     static Stream<Arguments> studyEndpointsForOtherRoles() {
-        return combine(STUDY_ENDPOINTS, UserRole.RESEARCHER);
+        return Arrays.stream(UserRole.values())
+                .filter(role -> role != UserRole.RESEARCHER)
+                .flatMap(role -> STUDY_ENDPOINTS.stream()
+                        .filter(endpoint -> role != UserRole.COORDINATOR
+                                || endpoint.method() != HttpMethod.GET)
+                        .map(endpoint -> Arguments.of(role, endpoint)));
     }
 
     static Stream<Endpoint> userEndpoints() {
@@ -130,6 +135,18 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
         mockMvc.perform(endpoint.toRequest(tokenFor(emailOf(UserRole.RESEARCHER)), study.getId(),
                         researcher.getId()))
                 .andExpect(status().is2xxSuccessful());
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("studyReadEndpoints")
+    void coordinatorCanReadStudies(Endpoint endpoint) throws Exception {
+        mockMvc.perform(endpoint.toRequest(tokenFor(emailOf(UserRole.COORDINATOR)), study.getId(),
+                        researcher.getId()))
+                .andExpect(status().isOk());
+    }
+
+    static Stream<Endpoint> studyReadEndpoints() {
+        return STUDY_ENDPOINTS.stream().filter(endpoint -> endpoint.method() == HttpMethod.GET);
     }
 
     @ParameterizedTest

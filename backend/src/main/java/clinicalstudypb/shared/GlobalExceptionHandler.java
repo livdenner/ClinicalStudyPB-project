@@ -1,9 +1,12 @@
 package clinicalstudypb.shared;
 
+import clinicalstudypb.candidates.domain.CandidateConflictException;
 import clinicalstudypb.studies.domain.InvalidStudyException;
 import clinicalstudypb.studies.domain.StudyStatusConflictException;
 import clinicalstudypb.users.domain.EmailAlreadyInUseException;
+import clinicalstudypb.visits.domain.ProtocolConflictException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -75,5 +78,39 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(StudyStatusConflictException.class)
     public ProblemDetail handleStudyStatusConflict(StudyStatusConflictException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+    }
+
+    /**
+     * Responde com 409 para alterações incompatíveis com o protocolo atual.
+     *
+     * @param exception conflito de protocolo
+     * @return detalhe HTTP do conflito
+     */
+    @ExceptionHandler(ProtocolConflictException.class)
+    public ProblemDetail handleProtocolConflict(ProtocolConflictException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+    }
+
+    /**
+     * Responde com 409 para duplicidade ou estado incompatível no cadastro de candidatos.
+     *
+     * @param exception conflito do módulo de candidatos
+     * @return detalhe HTTP do conflito
+     */
+    @ExceptionHandler(CandidateConflictException.class)
+    public ProblemDetail handleCandidateConflict(CandidateConflictException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+    }
+
+    /**
+     * Responde com 409 quando outra transação alterou o registro primeiro.
+     *
+     * @param exception conflito de versão
+     * @return detalhe HTTP do conflito
+     */
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ProblemDetail handleOptimisticConflict(ObjectOptimisticLockingFailureException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
+                "O registro mudou. Atualize os dados antes de tentar novamente.");
     }
 }
