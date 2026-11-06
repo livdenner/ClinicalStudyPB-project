@@ -71,7 +71,7 @@ export function App() {
                         <Route
                             path="/recrutamento"
                             element={
-                                <ProtectedRoute allowedRoles={["COORDINATOR"]}>
+                                <ProtectedRoute allowedRoles={["COORDINATOR", "RESEARCHER"]}>
                                     <RecrutamentoPage />
                                 </ProtectedRoute>
                             }
