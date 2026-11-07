@@ -1,5 +1,5 @@
 import { apiRequest } from "./api/apiClient";
-import type { DadosEstudoApi, EstudoApi } from "../types/estudo";
+import type { DadosEstudoApi, DadosTransicaoEstudoApi, EstudoApi } from "../types/estudo";
 
 const ESTUDOS_PATH = "/api/studies";
 
@@ -22,6 +22,14 @@ export function cadastrarEstudo(dados: DadosEstudoApi, token: string) {
 export function editarEstudo(id: number, dados: DadosEstudoApi, token: string) {
     return apiRequest<EstudoApi>(`${ESTUDOS_PATH}/${id}`, {
         method: "PUT",
+        body: dados,
+        token,
+    });
+}
+
+export function alterarEstadoEstudo(id: number, dados: DadosTransicaoEstudoApi, token: string) {
+    return apiRequest<EstudoApi>(`${ESTUDOS_PATH}/${id}/status`, {
+        method: "PATCH",
         body: dados,
         token,
     });

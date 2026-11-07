@@ -1,15 +1,25 @@
 import { useEffect, useState } from "react";
 import { Button, Card, Link, Spinner, Surface, toast } from "@heroui/react";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft, LockKeyhole, Pencil } from "lucide-react";
 import { Link as RouterLink, Navigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { ModalEditarEstudo } from "../../components/estudos/ModalEditarEstudo";
+import { ModalTransicaoEstudo } from "../../components/estudos/ModalTransicaoEstudo";
+import { SeloEstadoEstudo } from "../../components/estudos/SeloEstadoEstudo";
+import { ehEstadoEstudo, ESTADOS_ESTUDO } from "../../config/estados-estudo";
 import { ErrorMessage } from "../../components/ui/ErrorMessage";
 import { ApiClientError } from "../../services/api/apiClient";
-import { editarEstudo, obterEstudo } from "../../services/estudos";
+import { alterarEstadoEstudo, editarEstudo, obterEstudo } from "../../services/estudos";
 import type { AuthenticatedUser } from "../../types/auth";
-import type { DadosEstudoApi, EstudoApi } from "../../types/estudo";
-import { formatarPeriodo } from "../../utils/estudos";
+import type { DadosEstudoApi, EstadoEstudo, EstudoApi } from "../../types/estudo";
+import { podeEditarEstudo, podeAlterarEstadoEstudo } from "../../utils/estudos";
+import { obterMensagemErroAcesso } from "../../utils/erros-api";
+
+const MENSAGENS_EDICAO_BLOQUEADA: Partial<Record<EstadoEstudo, string>> = {
+    EXECUTION: "Edição bloqueada durante a execução.",
+    CLOSED: "Estudo encerrado. Edição bloqueada.",
+    CANCELLED: "Estudo cancelado. Edição bloqueada.",
+};
 
 export function VisualizarEstudoPage() {
     const { session } = useAuth();
@@ -86,6 +96,7 @@ function DetalhesEstudo({
     } | null>(null);
     const [tentativa, setTentativa] = useState(0);
     const [editando, setEditando] = useState(false);
+    const [transicao, setTransicao] = useState<EstadoEstudo | null>(null);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -97,11 +108,8 @@ function DetalhesEstudo({
                 if (controller.signal.aborted) return;
                 const status = error instanceof ApiClientError ? error.status : null;
                 const mensagem =
-                    status === 401
-                        ? "Sua sessão não é mais válida. Entre novamente para continuar."
-                        : status === 403
-                          ? "Você não tem permissão para consultar este estudo."
-                          : "Não foi possível carregar o estudo. Verifique a conexão e tente novamente.";
+                    obterMensagemErroAcesso(error) ??
+                    "Não foi possível carregar o estudo. Verifique a conexão e tente novamente.";
                 setErro({ mensagem, status });
             })
             .finally(() => {
@@ -112,6 +120,12 @@ function DetalhesEstudo({
 
     async function salvar(dados: DadosEstudoApi) {
         if (!estudo) return;
+        if (!podeEditarEstudo(estudo, pesquisador)) {
+            throw new ApiClientError(
+                "Não é permitido editar este estudo com o usuário ou estado atual.",
+                { status: 403 }
+            );
+        }
         const atualizado = await editarEstudo(
             estudo.id,
             {
@@ -123,6 +137,30 @@ function DetalhesEstudo({
         setEstudo(atualizado);
         setEditando(false);
         toast.success("Estudo atualizado com sucesso.");
+    }
+
+    async function transicionar() {
+        if (!estudo || !transicao) return;
+        if (!podeAlterarEstadoEstudo(estudo, pesquisador)) {
+            throw new ApiClientError("Você não tem permissão para alterar o estado deste estudo.", {
+                status: 403,
+            });
+        }
+        const atualizado = await alterarEstadoEstudo(
+            estudo.id,
+            { status: transicao, expectedStatus: estudo.status },
+            token
+        );
+        setEstudo(atualizado);
+        setTransicao(null);
+        toast.success("Estado do estudo atualizado com sucesso.");
+    }
+
+    function atualizarEstudo() {
+        setTransicao(null);
+        setCarregando(true);
+        setErro(null);
+        setTentativa((atual) => atual + 1);
     }
 
     if (carregando) {
@@ -181,7 +219,12 @@ function DetalhesEstudo({
         estudo.responsibleUserId === pesquisador.id
             ? pesquisador.name
             : `Pesquisador #${estudo.responsibleUserId}`;
-    const periodo = formatarPeriodo(estudo.startDate, estudo.endDate);
+    const estado = ehEstadoEstudo(estudo.status) ? ESTADOS_ESTUDO[estudo.status] : null;
+    const edicaoPermitida = podeEditarEstudo(estudo, pesquisador);
+    const mensagemBloqueio =
+        pesquisador.id !== estudo.responsibleUserId
+            ? "Apenas o responsável pode editar."
+            : (MENSAGENS_EDICAO_BLOQUEADA[estudo.status] ?? "Edição indisponível.");
 
     return (
         <section className="flex flex-col gap-6" aria-labelledby="estudo-heading">
@@ -196,13 +239,35 @@ function DetalhesEstudo({
                     >
                         {estudo.title}
                     </h1>
-                    <p className="mt-2 text-sm text-[var(--color-muted)]">
-                        {periodo} · {responsavel}
-                    </p>
                 </div>
-                <Button variant="primary" onPress={() => setEditando(true)} className="shrink-0">
-                    <Pencil size={18} aria-hidden="true" /> Editar estudo
-                </Button>
+                <div className="flex max-w-full flex-col items-end gap-3 max-[600px]:items-start">
+                    <div className="flex flex-wrap gap-3 empty:hidden">
+                        {edicaoPermitida && (
+                            <Button
+                                variant="primary"
+                                onPress={() => setEditando(true)}
+                                className="shrink-0"
+                            >
+                                <Pencil size={18} aria-hidden="true" /> Editar estudo
+                            </Button>
+                        )}
+                        {podeAlterarEstadoEstudo(estudo, pesquisador) && estado?.proximo && (
+                            <Button
+                                variant="secondary"
+                                onPress={() => setTransicao(estado.proximo)}
+                                className="border border-[var(--color-primary)] bg-white font-semibold text-[var(--color-primary-dark)] hover:bg-[var(--color-primary-soft)]"
+                            >
+                                {estado.acao}
+                            </Button>
+                        )}
+                    </div>
+                    {!edicaoPermitida && (
+                        <p className="flex max-w-sm items-start gap-2 rounded-lg border border-[var(--color-border)] bg-slate-50 px-3 py-2 text-base font-medium text-[var(--color-text)]">
+                            <LockKeyhole size={18} aria-hidden="true" className="mt-1 shrink-0" />
+                            {mensagemBloqueio}
+                        </p>
+                    )}
+                </div>
             </header>
             <Surface
                 variant="transparent"
@@ -210,8 +275,14 @@ function DetalhesEstudo({
             >
                 <dl
                     aria-label="Resumo do estudo"
-                    className="grid grid-cols-3 gap-5 max-[700px]:grid-cols-1"
+                    className="grid grid-cols-4 gap-5 max-[900px]:grid-cols-2 max-[600px]:grid-cols-1"
                 >
+                    <div>
+                        <dt className="text-xs uppercase tracking-wide text-white/90">Estado</dt>
+                        <dd className="mt-2">
+                            <SeloEstadoEstudo estado={estudo.status} />
+                        </dd>
+                    </div>
                     <div>
                         <dt className="text-xs uppercase tracking-wide text-white/90">
                             Limite de participantes
@@ -260,6 +331,15 @@ function DetalhesEstudo({
                     pesquisador={pesquisador}
                     onFechar={() => setEditando(false)}
                     onSalvar={salvar}
+                />
+            )}
+            {transicao && (
+                <ModalTransicaoEstudo
+                    estudo={estudo}
+                    destino={transicao}
+                    onFechar={() => setTransicao(null)}
+                    onConfirmar={transicionar}
+                    onAtualizar={atualizarEstudo}
                 />
             )}
         </section>

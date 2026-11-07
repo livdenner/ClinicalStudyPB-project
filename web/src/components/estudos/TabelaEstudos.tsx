@@ -2,11 +2,13 @@ import { Button, Table } from "@heroui/react";
 import { Eye, Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import type { EstudoApi } from "../../types/estudo";
-import { formatarPeriodo } from "../../utils/estudos";
+import { formatarPeriodo, podeEditarEstudo } from "../../utils/estudos";
+import type { AuthenticatedUser } from "../../types/auth";
+import { SeloEstadoEstudo } from "./SeloEstadoEstudo";
 
 type TabelaEstudosProps = {
     estudos: EstudoApi[];
-    pesquisador: { id: number; name: string };
+    pesquisador: Pick<AuthenticatedUser, "id" | "name" | "role">;
     onEditar: (estudo: EstudoApi) => void;
 };
 
@@ -35,6 +37,7 @@ export function TabelaEstudos({ estudos, pesquisador, onEditar }: TabelaEstudosP
                     <Table.Header>
                         {[
                             "Estudo",
+                            "Estado",
                             "Responsável",
                             "Limite de participantes",
                             "Período",
@@ -61,6 +64,9 @@ export function TabelaEstudos({ estudos, pesquisador, onEditar }: TabelaEstudosP
                                 <Table.Cell className="break-words border-[var(--color-border)] px-5 py-4 font-semibold text-[var(--color-title)] group-hover:bg-slate-50">
                                     {estudo.title}
                                 </Table.Cell>
+                                <Table.Cell className="border-[var(--color-border)] px-5 py-4 group-hover:bg-slate-50">
+                                    <SeloEstadoEstudo estado={estudo.status} />
+                                </Table.Cell>
                                 <Table.Cell className="border-[var(--color-border)] px-5 py-4 text-[var(--color-text)] group-hover:bg-slate-50">
                                     {estudo.responsibleUserId === pesquisador.id
                                         ? pesquisador.name
@@ -85,16 +91,22 @@ export function TabelaEstudos({ estudos, pesquisador, onEditar }: TabelaEstudosP
                                     </Button>
                                 </Table.Cell>
                                 <Table.Cell className="border-[var(--color-border)] px-5 py-4 group-hover:bg-slate-50">
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        isIconOnly
-                                        aria-label={`Editar estudo: ${estudo.title}`}
-                                        onPress={() => onEditar(estudo)}
-                                        className="h-10 w-10 rounded-lg text-[var(--color-primary)] hover:bg-white"
-                                    >
-                                        <Pencil size={18} aria-hidden="true" />
-                                    </Button>
+                                    {podeEditarEstudo(estudo, pesquisador) ? (
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            isIconOnly
+                                            aria-label={`Editar estudo: ${estudo.title}`}
+                                            onPress={() => onEditar(estudo)}
+                                            className="h-10 w-10 rounded-lg text-[var(--color-primary)] hover:bg-white"
+                                        >
+                                            <Pencil size={18} aria-hidden="true" />
+                                        </Button>
+                                    ) : (
+                                        <span className="text-xs text-[var(--color-muted)]">
+                                            Somente leitura
+                                        </span>
+                                    )}
                                 </Table.Cell>
                             </Table.Row>
                         )}

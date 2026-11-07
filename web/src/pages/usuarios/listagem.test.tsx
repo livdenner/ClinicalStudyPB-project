@@ -223,7 +223,7 @@ describe("Gestão de usuários", () => {
         fireEvent.click(screen.getByRole("button", { name: "Salvar alterações" }));
         fireEvent.click(screen.getByRole("button", { name: "Confirmar" }));
         expect(await screen.findByRole("alert")).toHaveTextContent(
-            "Você não tem permissão para salvar usuários."
+            "Você não tem permissão para realizar esta ação."
         );
         expect(screen.getByRole("switch")).not.toBeChecked();
         expect(screen.getByRole("button", { name: "Salvar alterações" })).toBeEnabled();
@@ -487,8 +487,8 @@ describe("Gestão de usuários", () => {
     );
 
     it.each([
-        [401, "Sua sessão não é mais válida. Entre novamente para continuar."],
-        [403, "Você não tem permissão para consultar usuários."],
+        [401, "Sua sessão expirou. Entre novamente."],
+        [403, "Você não tem permissão para realizar esta ação."],
     ] as const)(
         "mostra a mensagem adequada quando a listagem retorna HTTP %s",
         async (status, mensagem) => {
