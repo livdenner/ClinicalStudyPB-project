@@ -575,8 +575,10 @@ paths:
       tags: [Candidatos]
       summary: Lista candidatos vinculados ao estudo (RF08, T12.1)
       description: |
-        Somente COORDINATOR. A filtragem é feita pelo studyId da rota; não mistura
-        candidatos de estudos diferentes. Retorna [] quando o estudo não tem candidatos.
+        Leitura por COORDINATOR ou pelo RESEARCHER indicado como responsável do
+        estudo. Um pesquisador não responsável recebe 403. A filtragem é feita
+        pelo studyId da rota; não mistura candidatos de estudos diferentes.
+        Retorna [] quando o estudo não tem candidatos.
       security:
         - bearerAuth: []
       responses:
@@ -599,9 +601,9 @@ paths:
       summary: Cadastra um candidato no estudo (RF08, T12.1)
       description: |
         Somente COORDINATOR. studyId vem da rota, não do JSON. name e age são
-        obrigatórios; age é inteiro não negativo. O cadastro inicia com
-        eligibilityStatus=PENDING. Idade mínima de participação depende dos
-        critérios de cada estudo, não de uma restrição fixa do cadastro.
+        obrigatórios; age é inteiro entre 1 e 130 anos. O cadastro inicia com
+        eligibilityStatus=PENDING. A elegibilidade para participar depende dos
+        critérios de cada estudo, além da validade da idade no cadastro.
       security:
         - bearerAuth: []
       requestBody:
@@ -647,7 +649,10 @@ paths:
     get:
       tags: [Candidatos]
       summary: Consulta um candidato do estudo
-      description: Somente COORDINATOR. O candidato deve pertencer ao estudo da rota.
+      description: |
+        Leitura por COORDINATOR ou pelo RESEARCHER indicado como responsável do
+        estudo. Um pesquisador não responsável recebe 403. O candidato deve
+        pertencer ao estudo da rota.
       security:
         - bearerAuth: []
       responses:
@@ -1189,7 +1194,8 @@ components:
         age:
           type: integer
           format: int32
-          minimum: 0
+          minimum: 1
+          maximum: 130
           description: Idade informada no cadastro; elegibilidade depende dos critérios do estudo
     Candidate:
       type: object
@@ -1209,7 +1215,8 @@ components:
         age:
           type: integer
           format: int32
-          minimum: 0
+          minimum: 1
+          maximum: 130
         eligibilityStatus:
           $ref: '#/components/schemas/EligibilityStatus'
     EligibilityStatus:
