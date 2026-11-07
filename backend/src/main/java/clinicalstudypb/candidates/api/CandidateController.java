@@ -30,7 +30,6 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/studies/{studyId}/candidates")
-@PreAuthorize("hasRole('COORDINATOR')")
 @Tag(name = "Candidatos", description = "Cadastro e consulta de candidatos por estudo")
 @SecurityScheme(name = "bearerAuth", type = SecuritySchemeType.HTTP,
         scheme = "bearer", bearerFormat = "JWT")
@@ -54,7 +53,9 @@ public class CandidateController {
      * @return candidatos vinculados ao estudo
      */
     @GetMapping
+    @PreAuthorize("hasRole('COORDINATOR') or (hasRole('RESEARCHER') and @studyService.isResponsible(#studyId))")
     @Operation(summary = "Lista candidatos vinculados ao estudo",
+            description = "COORDINATOR ou RESEARCHER responsável pelo estudo.",
             security = @SecurityRequirement(name = "bearerAuth"),
             responses = {
                 @ApiResponse(responseCode = "200", description = "Candidatos do estudo"),
@@ -74,7 +75,9 @@ public class CandidateController {
      * @return candidato criado e sua localização
      */
     @PostMapping
+    @PreAuthorize("hasRole('COORDINATOR')")
     @Operation(summary = "Cadastra um candidato no estudo",
+            description = "Somente COORDINATOR.",
             security = @SecurityRequirement(name = "bearerAuth"),
             responses = {
                 @ApiResponse(responseCode = "201", description = "Candidato cadastrado",
@@ -101,7 +104,9 @@ public class CandidateController {
      * @return candidato encontrado
      */
     @GetMapping("/{candidateId}")
+    @PreAuthorize("hasRole('COORDINATOR') or (hasRole('RESEARCHER') and @studyService.isResponsible(#studyId))")
     @Operation(summary = "Consulta um candidato do estudo",
+            description = "COORDINATOR ou RESEARCHER responsável pelo estudo.",
             security = @SecurityRequirement(name = "bearerAuth"),
             responses = {
                 @ApiResponse(responseCode = "200", description = "Candidato encontrado",

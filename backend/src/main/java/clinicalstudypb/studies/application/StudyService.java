@@ -84,6 +84,19 @@ public class StudyService {
     }
 
     /**
+     * Verifica se o usuário autenticado é o pesquisador responsável pelo estudo.
+     *
+     * @param id identificador do estudo
+     * @return verdadeiro quando o usuário autenticado é responsável
+     * @throws ResourceNotFoundException se o estudo não existir
+     */
+    @Transactional(readOnly = true)
+    public boolean isResponsible(Long id) {
+        Study study = getStudy(id);
+        return study.getResponsibleUserId().equals(currentActor.userId());
+    }
+
+    /**
      * Cadastra um estudo após validar os dados e o pesquisador responsável.
      *
      * @param title título do estudo
