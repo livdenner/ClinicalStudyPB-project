@@ -1,6 +1,12 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ApiClientError } from "./api/apiClient";
-import { cadastrarEstudo, editarEstudo, listarEstudos, obterEstudo } from "./estudos";
+import {
+    alterarEstadoEstudo,
+    cadastrarEstudo,
+    editarEstudo,
+    listarEstudos,
+    obterEstudo,
+} from "./estudos";
 import type { DadosEstudoApi, EstudoApi } from "../types/estudo";
 
 const dados: DadosEstudoApi = {
@@ -11,7 +17,7 @@ const dados: DadosEstudoApi = {
     endDate: "2026-12-01",
     participantLimit: 30,
 };
-const estudo: EstudoApi = { id: 3, ...dados };
+const estudo: EstudoApi = { id: 3, status: "PLANNING", version: 0, ...dados };
 
 function resposta(body: unknown, status = 200) {
     return new Response(JSON.stringify(body), { status });
@@ -20,6 +26,18 @@ function resposta(body: unknown, status = 200) {
 afterEach(() => vi.restoreAllMocks());
 
 describe("integração HTTP de estudos", () => {
+    it("altera o estado pelo endpoint dedicado com JWT e usa a resposta da API", async () => {
+        const atualizado: EstudoApi = { ...estudo, status: "RECRUITMENT" };
+        const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(resposta(atualizado));
+
+        const transicao = { status: "RECRUITMENT", expectedStatus: "PLANNING" } as const;
+        await expect(alterarEstadoEstudo(3, transicao, "jwt")).resolves.toEqual(atualizado);
+        const [url, options] = fetchMock.mock.calls[0];
+        expect(url).toBe("/api/studies/3/status");
+        expect(options?.method).toBe("PATCH");
+        expect(JSON.parse(String(options?.body))).toEqual(transicao);
+        expect(new Headers(options?.headers).get("Authorization")).toBe("Bearer jwt");
+    });
     it("consulta um estudo pelo ID com JWT e sinal de cancelamento", async () => {
         const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(resposta(estudo));
         const controller = new AbortController();

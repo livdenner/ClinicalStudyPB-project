@@ -9,6 +9,8 @@ import type { UserRole } from "../../types/auth";
 import type { EstudoApi } from "../../types/estudo";
 
 const estudo: EstudoApi = {
+    version: 0,
+    status: "PLANNING",
     id: 3,
     title: "Estudo do sono",
     objective: "Avaliar hábitos de sono.",
@@ -102,6 +104,10 @@ describe("visualização de estudos", () => {
         expect(screen.getByText(estudo.objective)).toBeInTheDocument();
         const resumo = screen.getByLabelText("Resumo do estudo");
         expect(within(resumo).getByText("Pesquisador #11")).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Editar estudo" })).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole("button", { name: "Abrir recrutamento" })
+        ).not.toBeInTheDocument();
         expect(within(resumo).getByText("30")).toBeInTheDocument();
         expect(within(resumo).getByText("01/11/2026 – 01/12/2026")).toBeInTheDocument();
         expect(screen.getByRole("link", { name: /Voltar para estudos/i })).toHaveAttribute(
@@ -119,11 +125,67 @@ describe("visualização de estudos", () => {
         expect(fetchMock.mock.calls[1][0]).toBe("/api/studies");
     });
 
-    it("edita pelo modal existente, mantém o responsável e atualiza os detalhes após sucesso", async () => {
-        const atualizado = { ...estudo, objective: "Objetivo atualizado", participantLimit: 40 };
+    it("confirma a transição do responsável e atualiza o estado pela resposta da API", async () => {
+        const proprio = { ...estudo, responsibleUserId: 7 };
         const fetchMock = vi
             .spyOn(globalThis, "fetch")
-            .mockResolvedValueOnce(resposta(estudo))
+            .mockResolvedValueOnce(resposta(proprio))
+            .mockResolvedValueOnce(resposta({ ...proprio, status: "RECRUITMENT" }));
+        renderPage();
+        fireEvent.click(await screen.findByRole("button", { name: "Abrir recrutamento" }));
+        const dialog = await screen.findByRole("dialog", { name: "Abrir recrutamento" });
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        fireEvent.click(within(dialog).getByRole("button", { name: "Abrir recrutamento" }));
+        await screen.findByRole("button", { name: "Iniciar execução" });
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+        const [url, options] = fetchMock.mock.calls[1];
+        expect(url).toBe("/api/studies/3/status");
+        expect(options?.method).toBe("PATCH");
+        expect(JSON.parse(String(options?.body))).toEqual({
+            status: "RECRUITMENT",
+            expectedStatus: "PLANNING",
+        });
+        expect(new Headers(options?.headers).get("Authorization")).toBe("Bearer token-pesquisador");
+    });
+
+    it("mostra o motivo do conflito e permite atualizar antes de uma nova transição", async () => {
+        const proprio = { ...estudo, responsibleUserId: 7 };
+        const motivo = "O estado do estudo foi alterado por outra operação.";
+        const fetchMock = vi
+            .spyOn(globalThis, "fetch")
+            .mockResolvedValueOnce(resposta(proprio))
+            .mockResolvedValueOnce(resposta({ detail: motivo }, 409))
+            .mockResolvedValueOnce(resposta({ ...proprio, status: "RECRUITMENT" }));
+        renderPage();
+        fireEvent.click(await screen.findByRole("button", { name: "Abrir recrutamento" }));
+        const dialog = await screen.findByRole("dialog", { name: "Abrir recrutamento" });
+        fireEvent.click(within(dialog).getByRole("button", { name: "Abrir recrutamento" }));
+
+        const alerta = await within(dialog).findByRole("alert");
+        expect(alerta).toHaveTextContent(motivo);
+        await waitFor(() => expect(alerta).toHaveFocus());
+        expect(
+            within(dialog).queryByRole("button", { name: "Abrir recrutamento" })
+        ).not.toBeInTheDocument();
+        expect(fetchMock).toHaveBeenCalledTimes(2);
+
+        fireEvent.click(within(dialog).getByRole("button", { name: "Atualizar estudo" }));
+        await screen.findByRole("button", { name: "Iniciar execução" });
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+        expect(fetchMock).toHaveBeenCalledTimes(3);
+        expect(fetchMock.mock.calls[2][0]).toBe("/api/studies/3");
+    });
+
+    it("edita pelo modal existente, mantém o responsável e atualiza os detalhes após sucesso", async () => {
+        const atualizado = {
+            ...estudo,
+            responsibleUserId: 7,
+            objective: "Objetivo atualizado",
+            participantLimit: 40,
+        };
+        const fetchMock = vi
+            .spyOn(globalThis, "fetch")
+            .mockResolvedValueOnce(resposta({ ...estudo, responsibleUserId: 7 }))
             .mockResolvedValueOnce(resposta(atualizado));
         renderPage();
         fireEvent.click(await screen.findByRole("button", { name: "Editar estudo" }));
@@ -140,7 +202,7 @@ describe("visualização de estudos", () => {
         const [url, options] = fetchMock.mock.calls[1];
         expect(url).toBe("/api/studies/3");
         expect(options?.method).toBe("PUT");
-        const { id: _id, ...dados } = atualizado;
+        const { id: _id, status: _status, version: _version, ...dados } = atualizado;
         expect(JSON.parse(String(options?.body))).toEqual(dados);
         expect(screen.getByText(atualizado.objective)).toBeInTheDocument();
         expect(
@@ -190,8 +252,8 @@ describe("visualização de estudos", () => {
     });
 
     it.each([
-        [401, "Sua sessão não é mais válida."],
-        [403, "Você não tem permissão para consultar este estudo."],
+        [401, "Sua sessão expirou. Entre novamente."],
+        [403, "Você não tem permissão para realizar esta ação."],
     ])("trata a resposta HTTP %s sem exibir os detalhes", async (status, mensagem) => {
         vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
             resposta({ detail: "Acesso negado." }, status as number)
