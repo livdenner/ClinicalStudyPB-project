@@ -24,7 +24,6 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/studies")
-@PreAuthorize("hasRole('RESEARCHER')")
 public class StudyController {
 
     private final StudyService studyService;
@@ -44,6 +43,7 @@ public class StudyController {
      * @return estudos encontrados
      */
     @GetMapping
+    @PreAuthorize("hasAnyRole('RESEARCHER', 'COORDINATOR')")
     public List<StudyResponse> listStudies() {
         return studyService.listStudies().stream()
                 .map(StudyResponse::from)
@@ -57,8 +57,11 @@ public class StudyController {
      * @return estudo encontrado
      */
     @GetMapping("/{id}")
-    public StudyResponse getStudy(@PathVariable Long id) {
-        return StudyResponse.from(studyService.getStudy(id));
+    @PreAuthorize("hasAnyRole('RESEARCHER', 'COORDINATOR')")
+    public ResponseEntity<StudyResponse> getStudy(@PathVariable Long id) {
+        var study = studyService.getStudy(id);
+        return ResponseEntity.ok().eTag(String.valueOf(study.getVersion()))
+                .body(StudyResponse.from(study));
     }
 
     /**
@@ -68,6 +71,7 @@ public class StudyController {
      * @return resposta 201 com o estudo e o cabeçalho Location
      */
     @PostMapping
+    @PreAuthorize("hasRole('RESEARCHER')")
     public ResponseEntity<StudyResponse> createStudy(@Valid @RequestBody StudyRequest request) {
         var study = studyService.createStudy(
                 request.title(),
@@ -89,6 +93,7 @@ public class StudyController {
      * @return estudo atualizado
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('RESEARCHER')")
     public StudyResponse updateStudy(@PathVariable Long id, @Valid @RequestBody StudyRequest request) {
         return StudyResponse.from(studyService.updateStudy(
                 id,
@@ -109,8 +114,23 @@ public class StudyController {
      * @return estudo com o novo estado
      */
     @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('RESEARCHER')")
     public StudyResponse advanceStatus(@PathVariable Long id,
                                        @Valid @RequestBody StudyStatusChangeRequest request) {
-        return StudyResponse.from(studyService.advanceStatus(id, request.status()));
+        return StudyResponse.from(studyService.advanceStatus(
+                id, request.status(), request.expectedStatus(), request.reason()));
+    }
+
+    /**
+     * Lista quem alterou o estado de um estudo e quando.
+     *
+     * @param id identificador do estudo
+     * @return mudanças ordenadas
+     */
+    @GetMapping("/{id}/status-history")
+    @PreAuthorize("hasAnyRole('RESEARCHER', 'COORDINATOR')")
+    public List<StudyStatusHistoryResponse> listStatusHistory(@PathVariable Long id) {
+        return studyService.listStatusHistory(id).stream()
+                .map(StudyStatusHistoryResponse::from).toList();
     }
 }

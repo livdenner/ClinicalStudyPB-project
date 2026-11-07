@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import java.time.LocalDate;
 
 /**
@@ -47,6 +48,13 @@ public class Study {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private StudyStatus status = StudyStatus.PLANNING;
+
+    @Version
+    @Column(nullable = false)
+    private Long version;
+
+    @Column(name = "protocol_revision", nullable = false)
+    private Long protocolRevision = 0L;
 
     /** Construtor exigido pela JPA para reconstruir a entidade do banco. */
     protected Study() {
@@ -94,7 +102,7 @@ public class Study {
     }
 
     /**
-     * Avança o estudo somente para o estado imediatamente seguinte.
+     * Altera o estado conforme o fluxo permitido, inclusive o retorno do cancelamento.
      *
      * @param nextStatus estado solicitado
      * @throws InvalidStudyException quando o estado solicitado não é informado
@@ -108,6 +116,19 @@ public class Study {
             throw new StudyStatusConflictException(status, nextStatus);
         }
         this.status = nextStatus;
+    }
+
+    /**
+     * Restaura o estado de origem de um cancelamento reversível.
+     *
+     * @param origin estado anterior ao cancelamento
+     */
+    public void restoreCancelled(StudyStatus origin) {
+        if (status != StudyStatus.CANCELLED
+                || (origin != StudyStatus.PLANNING && origin != StudyStatus.RECRUITMENT)) {
+            throw new StudyStatusConflictException(status, origin);
+        }
+        status = origin;
     }
 
     /**
@@ -180,5 +201,21 @@ public class Study {
      */
     public StudyStatus getStatus() {
         return this.status;
+    }
+
+    /**
+     * Consulta a versão usada para detectar edições simultâneas.
+     *
+     * @return versão persistida
+     */
+    public Long getVersion() {
+        return version;
+    }
+
+    /**
+     * Marca uma mudança no protocolo para que a JPA incremente a versão do estudo.
+     */
+    public void touchProtocol() {
+        protocolRevision++;
     }
 }

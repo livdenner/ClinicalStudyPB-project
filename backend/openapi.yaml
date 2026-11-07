@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: ClinicalStudyPB API
-  version: 1.1.0
+  version: 1.2.0
   description: |
     Contrato da Release 1 (RF01 a RF11). As rotas dos RF05 a RF11 são o alvo
     acordado para a Sprint 2; sua presença aqui não indica implementação pronta.
@@ -9,15 +9,15 @@ info:
     Convenções acordadas:
     - Os nomes JSON usam camelCase; os nomes do banco permanecem em snake_case.
     - Os perfis são RESEARCHER, COORDINATOR, ADMINISTRATOR e PARTICIPANT.
-    - RESEARCHER altera estudos; a leitura por COORDINATOR é prevista na T16.2.
+    - RESEARCHER responsável altera o próprio estudo; COORDINATOR pode consultá-lo.
     - O responsável por um estudo deve ser um usuário pesquisador ativo.
     - O JWT é stateless; no logout o cliente descarta o token, sem revogação no servidor.
     - Todas as rotas da API usam /api, inclusive autenticação em /api/auth.
     - Códigos de enumeração são estáveis em inglês; a interface traduz os rótulos.
-    - RESEARCHER define critérios e visitas previstas e avança o estado do estudo.
+    - RESEARCHER responsável define critérios e visitas previstas e altera o estado.
     - COORDINATOR cadastra candidatos, avalia elegibilidade, registra o
       consentimento simulado e inclui participantes.
-    - A ampliação da leitura de estudos ao COORDINATOR integra a T16.2.
+    - Mudanças de estado registram ator, instante e origem/destino em histórico.
 servers:
   - url: /
     description: Caminhos completos da API com prefixo /api
@@ -243,7 +243,7 @@ paths:
     get:
       tags: [Estudos]
       summary: Lista estudos
-      description: Leitura por RESEARCHER ou COORDINATOR (ampliação planejada na T16.2).
+      description: Leitura por RESEARCHER ou COORDINATOR.
       security:
         - bearerAuth: []
       responses:
@@ -296,12 +296,17 @@ paths:
     get:
       tags: [Estudos]
       summary: Consulta um estudo
-      description: Leitura por RESEARCHER ou COORDINATOR (ampliação planejada na T16.2).
+      description: Leitura por RESEARCHER ou COORDINATOR.
       security:
         - bearerAuth: []
       responses:
         '200':
           description: Estudo encontrado
+          headers:
+            ETag:
+              description: Versão do estudo para enviar em If-Match ao alterar o protocolo
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -316,7 +321,8 @@ paths:
       tags: [Estudos]
       summary: Atualiza um estudo
       description: |
-        Restrito a RESEARCHER. Datas devem respeitar startDate <= endDate e a
+        Restrito ao RESEARCHER responsável, em PLANNING ou RECRUITMENT.
+        Datas devem respeitar startDate <= endDate e a
         edição preserva status. Quando existirem visitas previstas, o novo
         período deve continuar incluindo suas datas. participantLimit não pode
         ficar abaixo da quantidade de participantes já incluídos (409).
@@ -351,12 +357,16 @@ paths:
       - $ref: '#/components/parameters/StudyId'
     patch:
       tags: [Estudos]
-      summary: Avança o estado do estudo (RF07, T11.1)
+      summary: Altera o estado do estudo (RF07, T11.1)
       description: |
-        Somente RESEARCHER. O cadastro inicia em PLANNING. As transições permitidas
-        são PLANNING -> RECRUITMENT -> EXECUTION -> CLOSED; não é permitido saltar,
-        retroceder ou sair de CLOSED. A edição por PUT /api/studies/{studyId}
-        preserva o estado atual. Uma transição incompatível responde 409.
+        Somente RESEARCHER responsável. Fluxo normal PLANNING -> RECRUITMENT ->
+        EXECUTION -> CLOSED. RECRUITMENT pode voltar a PLANNING. PLANNING,
+        RECRUITMENT e EXECUTION podem ir a CANCELLED com justificativa.
+        CANCELLED originado de PLANNING ou RECRUITMENT retorna apenas ao estado
+        de origem; cancelamento em EXECUTION e CLOSED são terminais.
+        expectedStatus deve refletir o estado atual; divergência responde 409.
+        Para iniciar RECRUITMENT: critérios de inclusão e exclusão e visita com
+        atividade. Para iniciar EXECUTION: ao menos um participante incluído.
       security:
         - bearerAuth: []
       requestBody:
@@ -367,6 +377,7 @@ paths:
               $ref: '#/components/schemas/StudyStatusChangeRequest'
             example:
               status: RECRUITMENT
+              expectedStatus: PLANNING
       responses:
         '200':
           description: Estudo com o novo estado
@@ -384,6 +395,31 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+
+  /api/studies/{studyId}/status-history:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+    get:
+      tags: [Estudos]
+      summary: Consulta o histórico de estados do estudo
+      description: RESEARCHER ou COORDINATOR. Histórico ordenado de mudanças.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Mudanças de estado
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StudyStatusHistory'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
   /api/studies/{studyId}/criteria:
     parameters:
@@ -504,11 +540,13 @@ paths:
           $ref: '#/components/responses/NotFound'
     post:
       tags: [Visitas previstas]
+      parameters:
+        - $ref: '#/components/parameters/StudyVersion'
       summary: Define uma visita prevista e suas atividades (RF06, T10.1)
       description: |
-        Somente RESEARCHER. A data prevista deve estar entre startDate e endDate
-        do estudo, inclusive. Deve haver pelo menos uma atividade. A criação da
-        visita e de todas as atividades é atômica.
+        Somente RESEARCHER responsável em PLANNING ou RECRUITMENT. A data prevista
+        deve estar dentro do período do estudo. Deve haver ao menos uma atividade.
+        position opcional insere no meio e desloca as visitas seguintes.
       security:
         - bearerAuth: []
       requestBody:
@@ -520,9 +558,12 @@ paths:
             example:
               name: Avaliação inicial
               plannedDate: '2027-02-10'
+              position: 1
               activities:
-                - description: Entrevista inicial
-                - description: Aferição de pressão arterial
+                - name: Entrevista inicial
+                  description: Registrar histórico clínico
+                - name: Aferição de pressão
+                  description: Medir a pressão arterial
       responses:
         '201':
           description: Visita prevista criada
@@ -543,6 +584,45 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/studies/{studyId}/planned-visits/order:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+    put:
+      tags: [Visitas previstas]
+      parameters:
+        - $ref: '#/components/parameters/StudyVersion'
+      summary: Reordena todas as visitas previstas
+      description: RESEARCHER responsável em PLANNING ou RECRUITMENT; IDs completos e sem repetição.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlannedVisitOrderRequest'
+      responses:
+        '200':
+          description: Visitas na nova ordem
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlannedVisit'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
 
   /api/studies/{studyId}/planned-visits/{plannedVisitId}:
     parameters:
@@ -567,6 +647,92 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Visitas previstas]
+      parameters:
+        - $ref: '#/components/parameters/StudyVersion'
+      summary: Atualiza visita e lista completa de atividades
+      description: |
+        RESEARCHER responsável em PLANNING ou RECRUITMENT. IDs das atividades
+        existentes são preservados; atividades omitidas são excluídas.
+        A ordem da lista define posições 1..N. Ao menos uma atividade permanece.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlannedVisitWriteRequest'
+      responses:
+        '200':
+          description: Visita atualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlannedVisit'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags: [Visitas previstas]
+      parameters:
+        - $ref: '#/components/parameters/StudyVersion'
+      summary: Exclui uma visita prevista e suas atividades
+      description: |
+        RESEARCHER responsável em PLANNING ou RECRUITMENT. Em RECRUITMENT,
+        a última visita não pode ser removida. Visitas com atendimentos
+        reais associados não podem ser excluídas.
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Visita excluída
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/studies/{studyId}/planned-visits/{plannedVisitId}/activities/{activityId}:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+      - $ref: '#/components/parameters/PlannedVisitId'
+      - name: activityId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+    delete:
+      tags: [Visitas previstas]
+      parameters:
+        - $ref: '#/components/parameters/StudyVersion'
+      summary: Exclui uma atividade da visita
+      description: RESEARCHER responsável; a última atividade recebe 409.
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Atividade excluída
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
 
   /api/studies/{studyId}/candidates:
     parameters:
@@ -909,6 +1075,16 @@ components:
         type: integer
         format: int64
         minimum: 1
+    StudyVersion:
+      name: If-Match
+      in: header
+      required: true
+      description: |
+        ETag forte com Study.version entre aspas, por exemplo "0".
+        Divergência responde 409.
+      schema:
+        type: string
+        pattern: '^"[0-9]+"$'
     CriterionId:
       name: criterionId
       in: path
@@ -1054,7 +1230,7 @@ components:
           minimum: 1
     Study:
       type: object
-      required: [id, title, objective, responsibleUserId, startDate, endDate, participantLimit, status]
+      required: [id, title, objective, responsibleUserId, startDate, endDate, participantLimit, status, version]
       properties:
         id:
           type: integer
@@ -1081,19 +1257,49 @@ components:
           minimum: 1
         status:
           $ref: '#/components/schemas/StudyStatus'
+        version:
+          type: integer
+          format: int64
+          readOnly: true
     StudyStatus:
       type: string
       description: |
         PLANNING=Planejamento; RECRUITMENT=Recrutamento;
-        EXECUTION=Em execução; CLOSED=Encerrado.
-      enum: [PLANNING, RECRUITMENT, EXECUTION, CLOSED]
+        EXECUTION=Em execução; CLOSED=Encerrado; CANCELLED=Cancelado.
+      enum: [PLANNING, RECRUITMENT, EXECUTION, CLOSED, CANCELLED]
       default: PLANNING
     StudyStatusChangeRequest:
       type: object
-      required: [status]
+      required: [status, expectedStatus]
       properties:
         status:
           $ref: '#/components/schemas/StudyStatus'
+        expectedStatus:
+          $ref: '#/components/schemas/StudyStatus'
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: Obrigatória quando status é CANCELLED
+    StudyStatusHistory:
+      type: object
+      required: [id, actorUserId, changedAt, fromStatus, toStatus]
+      properties:
+        id:
+          type: integer
+          format: int64
+        actorUserId:
+          type: integer
+          format: int64
+        changedAt:
+          type: string
+          format: date-time
+        fromStatus:
+          $ref: '#/components/schemas/StudyStatus'
+        toStatus:
+          $ref: '#/components/schemas/StudyStatus'
+        reason:
+          type: string
     CriterionType:
       type: string
       description: Critério de inclusão ou exclusão
@@ -1127,23 +1333,37 @@ components:
           maxLength: 500
     PlannedActivityWriteRequest:
       type: object
-      required: [description]
+      required: [name, description]
       properties:
+        id:
+          type: integer
+          format: int64
+          description: ID existente para preservar a atividade em uma edição
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
         description:
           type: string
           minLength: 1
           maxLength: 500
     PlannedActivity:
       type: object
-      required: [id, description]
+      required: [id, name, description, position]
       properties:
         id:
           type: integer
           format: int64
           readOnly: true
+        name:
+          type: string
+          maxLength: 120
         description:
           type: string
           maxLength: 500
+        position:
+          type: integer
+          minimum: 1
     PlannedVisitWriteRequest:
       type: object
       required: [name, plannedDate, activities]
@@ -1156,6 +1376,10 @@ components:
           type: string
           format: date
           description: Data prevista dentro do período do estudo
+        position:
+          type: integer
+          minimum: 1
+          description: Posição de inserção; nula para anexar ao fim
         activities:
           type: array
           minItems: 1
@@ -1163,7 +1387,7 @@ components:
             $ref: '#/components/schemas/PlannedActivityWriteRequest'
     PlannedVisit:
       type: object
-      required: [id, studyId, name, plannedDate, activities]
+      required: [id, studyId, name, plannedDate, position, activities]
       properties:
         id:
           type: integer
@@ -1179,10 +1403,22 @@ components:
         plannedDate:
           type: string
           format: date
+        position:
+          type: integer
+          minimum: 1
         activities:
           type: array
           items:
             $ref: '#/components/schemas/PlannedActivity'
+    PlannedVisitOrderRequest:
+      type: object
+      required: [ids]
+      properties:
+        ids:
+          type: array
+          items:
+            type: integer
+            format: int64
     CandidateCreateRequest:
       type: object
       required: [name, age]
