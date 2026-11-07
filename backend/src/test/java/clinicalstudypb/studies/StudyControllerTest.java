@@ -110,6 +110,7 @@ class StudyControllerTest {
 
         mockMvc.perform(get("/api/studies/3"))
                 .andExpect(status().isOk())
+                .andExpect(header().string("ETag", "\"0\""))
                 .andExpect(jsonPath("$.id").value(3));
 
         mockMvc.perform(get("/api/studies/99"))
@@ -135,11 +136,12 @@ class StudyControllerTest {
     void advanceStatusReturnsUpdatedStudy() throws Exception {
         Study study = study();
         study.advanceStatus(StudyStatus.RECRUITMENT);
-        when(studyService.advanceStatus(3L, StudyStatus.RECRUITMENT)).thenReturn(study);
+        when(studyService.advanceStatus(3L, StudyStatus.RECRUITMENT, StudyStatus.PLANNING, null))
+                .thenReturn(study);
 
         mockMvc.perform(patch("/api/studies/3/status")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"status\":\"RECRUITMENT\"}"))
+                        .content("{\"status\":\"RECRUITMENT\",\"expectedStatus\":\"PLANNING\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(3))
                 .andExpect(jsonPath("$.status").value("RECRUITMENT"));
@@ -157,12 +159,12 @@ class StudyControllerTest {
 
     @Test
     void advanceStatusReturnsConflictForForbiddenTransition() throws Exception {
-        when(studyService.advanceStatus(3L, StudyStatus.CLOSED))
+        when(studyService.advanceStatus(3L, StudyStatus.CLOSED, StudyStatus.PLANNING, null))
                 .thenThrow(new StudyStatusConflictException(StudyStatus.PLANNING, StudyStatus.CLOSED));
 
         mockMvc.perform(patch("/api/studies/3/status")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"status\":\"CLOSED\"}"))
+                        .content("{\"status\":\"CLOSED\",\"expectedStatus\":\"PLANNING\"}"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.detail").value(
                         "Transição de estado não permitida: PLANNING -> CLOSED."));
@@ -172,6 +174,7 @@ class StudyControllerTest {
         Study study = new Study("Estudo do sono", "Avaliar hábitos", 7L,
                 LocalDate.of(2026, 11, 1), LocalDate.of(2026, 12, 1), 30);
         ReflectionTestUtils.setField(study, "id", 3L);
+        ReflectionTestUtils.setField(study, "version", 0L);
         return study;
     }
 }

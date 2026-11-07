@@ -18,4 +18,13 @@ public class StudyStatusConflictException extends RuntimeException {
     public StudyStatusConflictException(StudyStatus current, StudyStatus requested) {
         super("Transição de estado não permitida: " + current + " -> " + requested + ".");
     }
+
+    /**
+     * Descreve um conflito de concorrência na mudança de estado.
+     *
+     * @param message motivo do conflito
+     */
+    public StudyStatusConflictException(String message) {
+        super(message);
+    }
 }
