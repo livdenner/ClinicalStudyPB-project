@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Plus, Search } from "lucide-react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
+import { AvaliacaoElegibilidade } from "../../components/candidatos/AvaliacaoElegibilidade";
 import { ModalNovoCandidato } from "../../components/candidatos/ModalNovoCandidato";
 import { TabelaCandidatos } from "../../components/candidatos/TabelaCandidatos";
 import { Button } from "../../components/ui/Button";
@@ -15,6 +16,7 @@ import {
     type CandidatoApi,
     type DadosCandidatoApi,
     type EstudoComStatusApi,
+    type StatusElegibilidadeApi,
     type StatusEstudoCandidato,
 } from "../../types/candidato";
 
@@ -25,6 +27,7 @@ const STATUS_ESTUDO_CLASSES: Record<StatusEstudoCandidato, string> = {
     RECRUITMENT: "bg-[#E4F4E9] text-[#16804B]",
     EXECUTION: "bg-[#E9F2FD] text-[#245A91]",
     CLOSED: "bg-[#F1F5F9] text-[#475569]",
+    CANCELLED: "bg-[#FDEAEA] text-[#B42318]",
 };
 
 export function RecrutamentoPage() {
@@ -90,6 +93,7 @@ function GestaoCandidatos({
     const [busca, setBusca] = useState("");
     const [modalAberto, setModalAberto] = useState(false);
     const [mensagemSucesso, setMensagemSucesso] = useState("");
+    const [candidatoAvaliandoId, setCandidatoAvaliandoId] = useState<number | null>(null);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -190,6 +194,33 @@ function GestaoCandidatos({
         setMensagemSucesso("Candidato cadastrado com sucesso.");
     }
 
+    function handleAtualizarStatusCandidato(
+        candidateId: number,
+        novoStatus: StatusElegibilidadeApi
+    ) {
+        setCandidatos((atuais) =>
+            atuais.map((c) => (c.id === candidateId ? { ...c, eligibilityStatus: novoStatus } : c))
+        );
+    }
+
+    const candidatoAvaliando =
+        candidatoAvaliandoId !== null
+            ? (candidatos.find((c) => c.id === candidatoAvaliandoId) ?? null)
+            : null;
+
+    if (candidatoAvaliando && estudoSelecionado) {
+        return (
+            <AvaliacaoElegibilidade
+                estudo={estudoSelecionado}
+                candidato={candidatoAvaliando}
+                token={token}
+                role={role}
+                onVoltar={() => setCandidatoAvaliandoId(null)}
+                onAtualizarStatusCandidato={handleAtualizarStatusCandidato}
+            />
+        );
+    }
+
     const termoBusca = busca.trim().toLocaleLowerCase("pt-BR");
     const candidatosFiltrados = candidatos.filter(
         (candidato) => !termoBusca || candidato.name.toLocaleLowerCase("pt-BR").includes(termoBusca)
@@ -258,6 +289,7 @@ function GestaoCandidatos({
                                 const valor = Number(event.target.value);
                                 const novoId = Number.isNaN(valor) ? null : valor;
                                 setMensagemSucesso("");
+                                setCandidatoAvaliandoId(null);
                                 setEstudoSelecionadoId(novoId);
                                 if (novoId !== null) {
                                     setCarregandoCandidatos(true);
@@ -401,7 +433,13 @@ function GestaoCandidatos({
                     </div>
                 ) : (
                     <>
-                        <TabelaCandidatos candidatos={candidatosFiltrados} />
+                        <TabelaCandidatos
+                            candidatos={candidatosFiltrados}
+                            podeAvaliar={podeCadastrar}
+                            onSelecionarCandidato={(candidato) =>
+                                setCandidatoAvaliandoId(candidato.id)
+                            }
+                        />
                         <footer className="border-t border-[var(--color-border)] px-5 py-4 text-xs text-[var(--color-muted)]">
                             Exibindo {candidatosFiltrados.length} de {candidatos.length} candidatos
                         </footer>

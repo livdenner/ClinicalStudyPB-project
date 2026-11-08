@@ -1,4 +1,5 @@
 import { Chip, Table } from "@heroui/react";
+import { ClipboardCheck, Eye } from "lucide-react";
 import {
     ELEGIBILIDADE_LABELS,
     type CandidatoApi,
@@ -7,6 +8,8 @@ import {
 
 type Props = {
     candidatos: CandidatoApi[];
+    podeAvaliar?: boolean;
+    onSelecionarCandidato?: (candidato: CandidatoApi) => void;
 };
 
 const ELEGIBILIDADE_CLASSES: Record<StatusElegibilidadeApi, string> = {
@@ -15,7 +18,11 @@ const ELEGIBILIDADE_CLASSES: Record<StatusElegibilidadeApi, string> = {
     INELIGIBLE: "bg-[#FDEAEA] text-[#B42318]",
 };
 
-export function TabelaCandidatos({ candidatos }: Props) {
+export function TabelaCandidatos({
+    candidatos,
+    podeAvaliar = false,
+    onSelecionarCandidato,
+}: Props) {
     if (candidatos.length === 0) {
         return (
             <div className="flex flex-col items-center gap-2 px-5 py-12 text-center">
@@ -29,6 +36,10 @@ export function TabelaCandidatos({ candidatos }: Props) {
         );
     }
 
+    const colunas = onSelecionarCandidato
+        ? ["Identificação", "Idade", "Elegibilidade", "Avaliação"]
+        : ["Identificação", "Idade", "Elegibilidade"];
+
     return (
         <Table variant="secondary">
             <Table.ScrollContainer className="overflow-x-auto">
@@ -37,7 +48,7 @@ export function TabelaCandidatos({ candidatos }: Props) {
                     className="w-full min-w-[520px] text-left text-sm"
                 >
                     <Table.Header>
-                        {["Identificação", "Idade", "Elegibilidade"].map((titulo) => (
+                        {colunas.map((titulo) => (
                             <Table.Column
                                 key={titulo}
                                 id={titulo}
@@ -52,6 +63,9 @@ export function TabelaCandidatos({ candidatos }: Props) {
                         {(candidato) => {
                             const elegibilidade: StatusElegibilidadeApi =
                                 candidato.eligibilityStatus ?? "PENDING";
+                            const rotuloAcao = podeAvaliar
+                                ? `Avaliar elegibilidade: ${candidato.name}`
+                                : `Consultar elegibilidade: ${candidato.name}`;
 
                             return (
                                 <Table.Row
@@ -76,6 +90,31 @@ export function TabelaCandidatos({ candidatos }: Props) {
                                             </Chip.Label>
                                         </Chip>
                                     </Table.Cell>
+                                    {onSelecionarCandidato && (
+                                        <Table.Cell className="border-[var(--color-border)] px-5 py-4 group-hover:bg-slate-50">
+                                            <button
+                                                type="button"
+                                                onClick={() => onSelecionarCandidato(candidato)}
+                                                aria-label={rotuloAcao}
+                                                className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--color-border)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--color-primary)] transition hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]"
+                                            >
+                                                {podeAvaliar ? (
+                                                    <>
+                                                        <ClipboardCheck
+                                                            size={15}
+                                                            aria-hidden="true"
+                                                        />
+                                                        Avaliar elegibilidade
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Eye size={15} aria-hidden="true" />
+                                                        Consultar elegibilidade
+                                                    </>
+                                                )}
+                                            </button>
+                                        </Table.Cell>
+                                    )}
                                 </Table.Row>
                             );
                         }}
