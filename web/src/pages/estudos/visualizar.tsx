@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { Button, Card, Link, Spinner, Surface, toast } from "@heroui/react";
+import { Button, Card, Link, Spinner, Surface } from "@heroui/react";
 import { ArrowLeft, LockKeyhole, Pencil } from "lucide-react";
 import { Link as RouterLink, Navigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -8,12 +7,10 @@ import { ModalTransicaoEstudo } from "../../components/estudos/ModalTransicaoEst
 import { SeloEstadoEstudo } from "../../components/estudos/SeloEstadoEstudo";
 import { ehEstadoEstudo, ESTADOS_ESTUDO } from "../../config/estados-estudo";
 import { ErrorMessage } from "../../components/ui/ErrorMessage";
-import { ApiClientError } from "../../services/api/apiClient";
-import { alterarEstadoEstudo, editarEstudo, obterEstudo } from "../../services/estudos";
 import type { AuthenticatedUser } from "../../types/auth";
-import type { DadosEstudoApi, EstadoEstudo, EstudoApi } from "../../types/estudo";
+import type { EstadoEstudo } from "../../types/estudo";
 import { podeEditarEstudo, podeAlterarEstadoEstudo } from "../../utils/estudos";
-import { obterMensagemErroAcesso } from "../../utils/erros-api";
+import { useDetalhesEstudo } from "./useDetalhesEstudo";
 
 const MENSAGENS_EDICAO_BLOQUEADA: Partial<Record<EstadoEstudo, string>> = {
     EXECUTION: "Edição bloqueada durante a execução.",
@@ -88,80 +85,19 @@ function DetalhesEstudo({
     token: string;
     pesquisador: AuthenticatedUser;
 }) {
-    const [estudo, setEstudo] = useState<EstudoApi | null>(null);
-    const [carregando, setCarregando] = useState(true);
-    const [erro, setErro] = useState<{
-        mensagem: string;
-        status: number | null;
-    } | null>(null);
-    const [tentativa, setTentativa] = useState(0);
-    const [editando, setEditando] = useState(false);
-    const [transicao, setTransicao] = useState<EstadoEstudo | null>(null);
-
-    useEffect(() => {
-        const controller = new AbortController();
-        obterEstudo(id, token, controller.signal)
-            .then((dados) => {
-                if (!controller.signal.aborted) setEstudo(dados);
-            })
-            .catch((error: unknown) => {
-                if (controller.signal.aborted) return;
-                const status = error instanceof ApiClientError ? error.status : null;
-                const mensagem =
-                    obterMensagemErroAcesso(error) ??
-                    "Não foi possível carregar o estudo. Verifique a conexão e tente novamente.";
-                setErro({ mensagem, status });
-            })
-            .finally(() => {
-                if (!controller.signal.aborted) setCarregando(false);
-            });
-        return () => controller.abort();
-    }, [id, token, tentativa]);
-
-    async function salvar(dados: DadosEstudoApi) {
-        if (!estudo) return;
-        if (!podeEditarEstudo(estudo, pesquisador)) {
-            throw new ApiClientError(
-                "Não é permitido editar este estudo com o usuário ou estado atual.",
-                { status: 403 }
-            );
-        }
-        const atualizado = await editarEstudo(
-            estudo.id,
-            {
-                ...dados,
-                responsibleUserId: estudo.responsibleUserId,
-            },
-            token
-        );
-        setEstudo(atualizado);
-        setEditando(false);
-        toast.success("Estudo atualizado com sucesso.");
-    }
-
-    async function transicionar() {
-        if (!estudo || !transicao) return;
-        if (!podeAlterarEstadoEstudo(estudo, pesquisador)) {
-            throw new ApiClientError("Você não tem permissão para alterar o estado deste estudo.", {
-                status: 403,
-            });
-        }
-        const atualizado = await alterarEstadoEstudo(
-            estudo.id,
-            { status: transicao, expectedStatus: estudo.status },
-            token
-        );
-        setEstudo(atualizado);
-        setTransicao(null);
-        toast.success("Estado do estudo atualizado com sucesso.");
-    }
-
-    function atualizarEstudo() {
-        setTransicao(null);
-        setCarregando(true);
-        setErro(null);
-        setTentativa((atual) => atual + 1);
-    }
+    const {
+        estudo,
+        carregando,
+        erro,
+        origemCancelamento,
+        editando,
+        setEditando,
+        transicao,
+        setTransicao,
+        salvar,
+        transicionar,
+        atualizarEstudo,
+    } = useDetalhesEstudo({ id, token, pesquisador });
 
     if (carregando) {
         return (
@@ -185,14 +121,7 @@ function DetalhesEstudo({
                     Não foi possível abrir o estudo
                 </h1>
                 <ErrorMessage message={erro.mensagem} />
-                <Button
-                    variant="secondary"
-                    onPress={() => {
-                        setCarregando(true);
-                        setErro(null);
-                        setTentativa((atual) => atual + 1);
-                    }}
-                >
+                <Button variant="secondary" onPress={atualizarEstudo}>
                     Tentar novamente
                 </Button>
                 {erro.status === 401 && (
@@ -251,14 +180,45 @@ function DetalhesEstudo({
                                 <Pencil size={18} aria-hidden="true" /> Editar estudo
                             </Button>
                         )}
-                        {podeAlterarEstadoEstudo(estudo, pesquisador) && estado?.proximo && (
-                            <Button
-                                variant="secondary"
-                                onPress={() => setTransicao(estado.proximo)}
-                                className="border border-[var(--color-primary)] bg-white font-semibold text-[var(--color-primary-dark)] hover:bg-[var(--color-primary-soft)]"
-                            >
-                                {estado.acao}
-                            </Button>
+                        {podeAlterarEstadoEstudo(estudo, pesquisador) && (
+                            <>
+                                {estado?.proximo && (
+                                    <Button
+                                        variant="secondary"
+                                        onPress={() => setTransicao(estado.proximo)}
+                                        className="border border-[var(--color-primary)] bg-white font-semibold text-[var(--color-primary-dark)] hover:bg-[var(--color-primary-soft)]"
+                                    >
+                                        {estado.acao}
+                                    </Button>
+                                )}
+                                {estudo.status === "RECRUITMENT" && (
+                                    <Button
+                                        variant="secondary"
+                                        onPress={() => setTransicao("PLANNING")}
+                                    >
+                                        Voltar ao planejamento
+                                    </Button>
+                                )}
+                                {estudo.status === "CANCELLED" ? (
+                                    (origemCancelamento === "PLANNING" ||
+                                        origemCancelamento === "RECRUITMENT") && (
+                                        <Button
+                                            variant="secondary"
+                                            onPress={() => setTransicao(origemCancelamento)}
+                                        >
+                                            Restaurar estudo
+                                        </Button>
+                                    )
+                                ) : (
+                                    <Button
+                                        variant="secondary"
+                                        className="text-[#B42318]"
+                                        onPress={() => setTransicao("CANCELLED")}
+                                    >
+                                        Cancelar estudo
+                                    </Button>
+                                )}
+                            </>
                         )}
                     </div>
                     {!edicaoPermitida && (
