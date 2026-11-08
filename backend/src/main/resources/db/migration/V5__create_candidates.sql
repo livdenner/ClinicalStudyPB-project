@@ -7,7 +7,7 @@ CREATE TABLE candidates (
     eligibility_status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
     CONSTRAINT ck_candidate_name CHECK (NULLIF(TRIM(name), '') IS NOT NULL),
     CONSTRAINT ck_candidate_name_key CHECK (NULLIF(TRIM(name_key), '') IS NOT NULL),
-    CONSTRAINT ck_candidate_age CHECK (age >= 0),
+    CONSTRAINT ck_candidate_age CHECK (age BETWEEN 1 AND 130),
     CONSTRAINT ck_candidate_eligibility_status
         CHECK (eligibility_status IN ('PENDING', 'ELIGIBLE', 'INELIGIBLE')),
     CONSTRAINT uq_candidate_study_name_age UNIQUE (study_id, name_key, age)

@@ -258,7 +258,7 @@ Uma visita prevista tem nome, data no período do estudo, posição 1..N e ao me
 
 **Integração pendente:** a abertura de `RECRUITMENT` exige visita com atividade e critérios de inclusão e exclusão; `EXECUTION` exige participante incluído. Enquanto os módulos de critérios e inclusão não fornecerem `StudyReadiness`, essas duas transições respondem `409`. Assim, o backend não permite avançar sem validar as condições acordadas.
 
-O cadastro e a consulta de candidatos são restritos ao perfil `COORDINATOR`. O cadastro exige estudo em `RECRUITMENT`, inicia `eligibilityStatus` como `PENDING` e rejeita nomes e idades repetidos no mesmo estudo com `409`. Como o contrato atual não fornece outro identificador do candidato, a chave de duplicidade usa o nome normalizado e a idade. A API não acessa repositórios internos do módulo de estudos; consulta o estudo pelo `StudyService`.
+Somente o perfil `COORDINATOR` pode cadastrar candidatos. A consulta é permitida ao `COORDINATOR` e ao `RESEARCHER` responsável pelo estudo. O cadastro exige estudo em `RECRUITMENT`, inicia `eligibilityStatus` como `PENDING` e rejeita nomes e idades repetidos no mesmo estudo com `409`. Como o contrato atual não fornece outro identificador do candidato, a chave de duplicidade usa o nome normalizado e a idade. A API não acessa repositórios internos do módulo de estudos; consulta o estudo pelo `StudyService`.
 
 Os testes automatizados de estudos verificam as regras do serviço, as respostas HTTP e o fluxo completo com PostgreSQL. A API também foi iniciada com PostgreSQL 18 local: listagem `200`, cadastro `201`, atualização `200` e rejeição de datas invertidas `400`, sem alterar os dados já gravados.
 

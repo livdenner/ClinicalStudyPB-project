@@ -24,6 +24,8 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -45,7 +47,7 @@ class CandidateServiceTest {
 
     @Test
     void createStoresTrimmedCandidateWithPendingEligibility() {
-        when(studyService.getStudy(3L)).thenReturn(study(StudyStatus.RECRUITMENT));
+        when(studyService.lockForCandidateRegistration(3L)).thenReturn(study(StudyStatus.RECRUITMENT));
         when(candidateRepository.saveAndFlush(any(Candidate.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -61,7 +63,7 @@ class CandidateServiceTest {
 
     @Test
     void createRejectsDuplicateInSameStudyWithoutSaving() {
-        when(studyService.getStudy(3L)).thenReturn(study(StudyStatus.RECRUITMENT));
+        when(studyService.lockForCandidateRegistration(3L)).thenReturn(study(StudyStatus.RECRUITMENT));
         when(candidateRepository.existsByStudyIdAndNameKeyAndAge(3L, "ana silva", 42)).thenReturn(true);
 
         assertThrows(CandidateConflictException.class,
@@ -72,7 +74,7 @@ class CandidateServiceTest {
 
     @Test
     void createAllowsSameCandidateInDifferentStudy() {
-        when(studyService.getStudy(9L)).thenReturn(study(StudyStatus.RECRUITMENT));
+        when(studyService.lockForCandidateRegistration(9L)).thenReturn(study(StudyStatus.RECRUITMENT));
         when(candidateRepository.saveAndFlush(any(Candidate.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -83,9 +85,10 @@ class CandidateServiceTest {
         verify(candidateRepository).saveAndFlush(any(Candidate.class));
     }
 
-    @Test
-    void createRejectsStudyOutsideRecruitment() {
-        when(studyService.getStudy(3L)).thenReturn(study(StudyStatus.PLANNING));
+    @ParameterizedTest
+    @EnumSource(value = StudyStatus.class, names = "RECRUITMENT", mode = EnumSource.Mode.EXCLUDE)
+    void createRejectsStudyOutsideRecruitment(StudyStatus status) {
+        when(studyService.lockForCandidateRegistration(3L)).thenReturn(study(status));
 
         assertThrows(CandidateConflictException.class,
                 () -> candidateService.create(3L, "Ana Silva", 42));
@@ -95,7 +98,8 @@ class CandidateServiceTest {
 
     @Test
     void createPropagatesMissingStudyWithoutUsingCandidateRepository() {
-        when(studyService.getStudy(99L)).thenThrow(new ResourceNotFoundException("Estudo não encontrado: 99"));
+        when(studyService.lockForCandidateRegistration(99L))
+                .thenThrow(new ResourceNotFoundException("Estudo não encontrado: 99"));
 
         assertThrows(ResourceNotFoundException.class,
                 () -> candidateService.create(99L, "Ana Silva", 42));

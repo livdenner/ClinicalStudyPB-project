@@ -105,17 +105,35 @@ class CandidateIntegrationTest extends IntegrationTestSupport {
     }
 
     @Test
-    void sameCandidateCanBeRegisteredInAnotherStudy() throws Exception {
+    void sameCandidateCanBeRegisteredInDifferentStudiesAndListsRemainIsolated() throws Exception {
         Study otherStudy = saveStudy(StudyStatus.RECRUITMENT);
+        Study emptyStudy = saveStudy(StudyStatus.RECRUITMENT);
 
-        create(study.getId(), "{\"name\":\"Ana Silva\",\"age\":42}")
-                .andExpect(status().isCreated());
-        create(otherStudy.getId(), "{\"name\":\"Ana Silva\",\"age\":42}")
-                .andExpect(status().isCreated());
+        long firstCandidateId = candidateId(create(study.getId(), "{\"name\":\"Ana Silva\",\"age\":42}")
+                .andExpect(status().isCreated()));
+        long secondCandidateId = candidateId(create(otherStudy.getId(), "{\"name\":\"Ana Silva\",\"age\":42}")
+                .andExpect(status().isCreated()));
 
         assertEquals(2, candidateRepository.count());
         assertEquals(1, candidateRepository.findAllByStudyIdOrderByIdAsc(study.getId()).size());
         assertEquals(1, candidateRepository.findAllByStudyIdOrderByIdAsc(otherStudy.getId()).size());
+
+        mockMvc.perform(get(candidatesUrl(study.getId()))
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(firstCandidateId))
+                .andExpect(jsonPath("$[0].studyId").value(study.getId()));
+        mockMvc.perform(get(candidatesUrl(otherStudy.getId()))
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(secondCandidateId))
+                .andExpect(jsonPath("$[0].studyId").value(otherStudy.getId()));
+        mockMvc.perform(get(candidatesUrl(emptyStudy.getId()))
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
     }
 
     @Test

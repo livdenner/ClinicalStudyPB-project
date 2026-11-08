@@ -110,8 +110,6 @@
                 <configuration>
                     <excludes>
                         <exclude>clinicalstudypb/ClinicalStudyPBApplication.class</exclude>
-                        <exclude>**/*Request.class</exclude>
-                        <exclude>**/*Response.class</exclude>
                         <exclude>**/*Configuration.class</exclude>
                         <exclude>**/*Config.class</exclude>
                     </excludes>
