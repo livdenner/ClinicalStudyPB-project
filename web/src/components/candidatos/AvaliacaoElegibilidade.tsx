@@ -203,9 +203,7 @@ export function AvaliacaoElegibilidade({
         } catch (error) {
             if (error instanceof ApiClientError) {
                 if (error.status === 401) {
-                    setErroSalvar(
-                        "Sua sessão expirou. Entre novamente para salvar a avaliação."
-                    );
+                    setErroSalvar("Sua sessão expirou. Entre novamente para salvar a avaliação.");
                 } else if (error.status === 403) {
                     setErroSalvar(
                         "Você não tem permissão para registrar a avaliação de elegibilidade."
@@ -450,7 +448,9 @@ export function AvaliacaoElegibilidade({
                                                     }
                                                     className="h-10 rounded-lg border border-[var(--color-border)] bg-white px-3 text-sm text-[var(--color-text)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] disabled:opacity-60"
                                                 >
-                                                    <option value="">Sem resposta (Pendente)</option>
+                                                    <option value="">
+                                                        Sem resposta (Pendente)
+                                                    </option>
                                                     <option value="true">
                                                         Sim — atende ao critério de inclusão
                                                     </option>
@@ -540,7 +540,9 @@ export function AvaliacaoElegibilidade({
                                                     }
                                                     className="h-10 rounded-lg border border-[var(--color-border)] bg-white px-3 text-sm text-[var(--color-text)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] disabled:opacity-60"
                                                 >
-                                                    <option value="">Sem resposta (Pendente)</option>
+                                                    <option value="">
+                                                        Sem resposta (Pendente)
+                                                    </option>
                                                     <option value="false">
                                                         Não — critério de exclusão não se aplica
                                                     </option>

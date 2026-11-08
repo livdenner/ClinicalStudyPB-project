@@ -1,11 +1,7 @@
 import type { EstudoApi } from "./estudo";
 
 export type StatusEstudoCandidato =
-    | "PLANNING"
-    | "RECRUITMENT"
-    | "EXECUTION"
-    | "CLOSED"
-    | "CANCELLED";
+    "PLANNING" | "RECRUITMENT" | "EXECUTION" | "CLOSED" | "CANCELLED";
 
 export type EstudoComStatusApi = EstudoApi & {
     status?: StatusEstudoCandidato;
