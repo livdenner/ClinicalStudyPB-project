@@ -65,6 +65,16 @@ class CandidateIntegrationTest extends IntegrationTestSupport {
     }
 
     @Test
+    void acceptsMinimumAndMaximumContractAges() throws Exception {
+        create(study.getId(), "{\"name\":\"Idade mínima\",\"age\":1}")
+                .andExpect(status().isCreated());
+        create(study.getId(), "{\"name\":\"Idade máxima\",\"age\":130}")
+                .andExpect(status().isCreated());
+
+        assertEquals(2, candidateRepository.count());
+    }
+
+    @Test
     void listAndGetReturnCandidatesForTheRequestedStudy() throws Exception {
         long candidateId = candidateId(create(study.getId(), "{\"name\":\"Ana Silva\",\"age\":42}")
                 .andExpect(status().isCreated()));
@@ -117,7 +127,11 @@ class CandidateIntegrationTest extends IntegrationTestSupport {
                 .andExpect(jsonPath("$.status").value(400));
         create(study.getId(), "{\"name\":\"Ana Silva\"}").andExpect(status().isBadRequest());
         create(study.getId(), "{\"name\":\"   \",\"age\":42}").andExpect(status().isBadRequest());
+        create(study.getId(), "{\"name\":\"Ana Silva\",\"age\":0}")
+                .andExpect(status().isBadRequest());
         create(study.getId(), "{\"name\":\"Ana Silva\",\"age\":-1}")
+                .andExpect(status().isBadRequest());
+        create(study.getId(), "{\"name\":\"Ana Silva\",\"age\":131}")
                 .andExpect(status().isBadRequest());
 
         assertEquals(0, candidateRepository.count());
@@ -160,12 +174,27 @@ class CandidateIntegrationTest extends IntegrationTestSupport {
     }
 
     @Test
-    void onlyCoordinatorCanReadOrRegisterCandidates() throws Exception {
-        create(study.getId(), "{\"name\":\"Ana Silva\",\"age\":42}")
-                .andExpect(status().isCreated());
+    void coordinatorAndResponsibleResearcherCanReadButOnlyCoordinatorCanRegister() throws Exception {
+        long candidateId = candidateId(create(study.getId(), "{\"name\":\"Ana Silva\",\"age\":42}")
+                .andExpect(status().isCreated()));
 
         mockMvc.perform(get(candidatesUrl(study.getId()))
                         .header(HttpHeaders.AUTHORIZATION, bearer(researcherToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1));
+        mockMvc.perform(get(candidatesUrl(study.getId()) + "/" + candidateId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(researcherToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(candidateId));
+
+        User otherResearcher = saveUser(
+                "Outro pesquisador", "candidate.other-researcher@test.local", UserRole.RESEARCHER);
+        String otherResearcherToken = tokenFor(otherResearcher.getEmail());
+        mockMvc.perform(get(candidatesUrl(study.getId()))
+                        .header(HttpHeaders.AUTHORIZATION, bearer(otherResearcherToken)))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get(candidatesUrl(study.getId()) + "/" + candidateId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(otherResearcherToken)))
                 .andExpect(status().isForbidden());
         create(study.getId(), "{\"name\":\"Beatriz Costa\",\"age\":35}", researcherToken)
                 .andExpect(status().isForbidden());
