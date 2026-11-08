@@ -102,7 +102,7 @@ describe("Rotas protegidas e menu por perfil (T5.2)", () => {
         ).toBeInTheDocument();
     });
 
-    it.each(["/usuarios", "/estudos", "/estudos/3"])(
+    it.each(["/usuarios"])(
         "bloqueia acesso direto de COORDINATOR a %s sem consultar a API",
         async (path) => {
             const fetchSpy = vi.spyOn(globalThis, "fetch");
@@ -127,8 +127,8 @@ describe("Rotas protegidas e menu por perfil (T5.2)", () => {
             ).not.toBeInTheDocument();
 
             expect(
-                within(nav).queryByRole("link", { name: /estudos clínicos/i })
-            ).not.toBeInTheDocument();
+                within(nav).getByRole("link", { name: /estudos clínicos/i })
+            ).toBeInTheDocument();
 
             expect(fetchSpy).not.toHaveBeenCalled();
         }

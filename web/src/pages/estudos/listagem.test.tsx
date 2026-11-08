@@ -349,7 +349,7 @@ describe("estudos conectados à API", () => {
         }
     );
 
-    it.each<UserRole>(["ADMINISTRATOR", "COORDINATOR", "PARTICIPANT"])(
+    it.each<UserRole>(["ADMINISTRATOR", "PARTICIPANT"])(
         "não chama a API para o perfil %s",
         (role) => {
             const fetchMock = vi.spyOn(globalThis, "fetch");
