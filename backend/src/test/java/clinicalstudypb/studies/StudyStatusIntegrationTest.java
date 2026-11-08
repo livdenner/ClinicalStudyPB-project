@@ -1,5 +1,6 @@
 package clinicalstudypb.studies;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -80,6 +81,7 @@ class StudyStatusIntegrationTest extends IntegrationTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("RECRUITMENT"));
         assertStoredStatus("RECRUITMENT");
+        assertStoredDetails("Estudo editado", 25);
 
         advance("EXECUTION", "RECRUITMENT", researcherToken)
                 .andExpect(status().isOk())
@@ -92,10 +94,12 @@ class StudyStatusIntegrationTest extends IntegrationTestSupport {
                         .content("""
                                 {"title":"Edição tardia","objective":"Não deve ser salva",
                                  "responsibleUserId":%d,"startDate":"2027-01-01",
-                                 "endDate":"2027-12-31","participantLimit":25}
+                                 "endDate":"2027-12-31","participantLimit":30}
                                 """.formatted(researcher.getId())))
-                .andExpect(status().isConflict());
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail", containsString("só pode ser alterado em PLANNING ou RECRUITMENT")));
         assertStoredStatus("EXECUTION");
+        assertStoredDetails("Estudo editado", 25);
 
         advance("CLOSED", "EXECUTION", researcherToken)
                 .andExpect(status().isOk())
@@ -106,16 +110,25 @@ class StudyStatusIntegrationTest extends IntegrationTestSupport {
 
     @Test
     void skippedAndRepeatedTransitionsReturnConflictWithoutChangingStoredState() throws Exception {
-        advance("EXECUTION", "PLANNING", researcherToken).andExpect(status().isConflict());
+        expectConflict(advance("EXECUTION", "PLANNING", researcherToken), "PLANNING -> EXECUTION");
         assertStoredStatus("PLANNING");
 
-        advance("PLANNING", "PLANNING", researcherToken).andExpect(status().isConflict());
+        expectConflict(advance("PLANNING", "PLANNING", researcherToken), "PLANNING -> PLANNING");
         assertStoredStatus("PLANNING");
 
         prepareForRecruitment();
         advance("RECRUITMENT", "PLANNING", researcherToken).andExpect(status().isOk());
-        advance("RECRUITMENT", "RECRUITMENT", researcherToken).andExpect(status().isConflict());
-        advance("PLANNING", "PLANNING", researcherToken).andExpect(status().isConflict());
+        expectConflict(advance("RECRUITMENT", "RECRUITMENT", researcherToken),
+                "RECRUITMENT -> RECRUITMENT");
+        assertStoredStatus("RECRUITMENT");
+        assertHistoryCount(1);
+    }
+
+    @Test
+    void staleExpectedStatusReturnsItsOwnConflict() throws Exception {
+        prepareForRecruitment();
+        advance("RECRUITMENT", "PLANNING", researcherToken).andExpect(status().isOk());
+        expectConflict(advance("PLANNING", "PLANNING", researcherToken), "estado do estudo mudou");
         assertStoredStatus("RECRUITMENT");
         assertHistoryCount(1);
     }
@@ -132,21 +145,28 @@ class StudyStatusIntegrationTest extends IntegrationTestSupport {
         advance("RECRUITMENT", "PLANNING", researcherToken).andExpect(status().isOk());
         advance("EXECUTION", "RECRUITMENT", researcherToken).andExpect(status().isOk());
         advance("CLOSED", "EXECUTION", researcherToken).andExpect(status().isOk());
-        advance("EXECUTION", "CLOSED", researcherToken).andExpect(status().isConflict());
+        expectConflict(advance("EXECUTION", "CLOSED", researcherToken), "CLOSED -> EXECUTION");
+        expectConflict(advanceWithReason("CANCELLED", "CLOSED", "Teste", researcherToken),
+                "CLOSED -> CANCELLED");
         assertStoredStatus("CLOSED");
         assertHistoryCount(5);
     }
 
     @Test
     void recruitmentNeedsVisitAndCriteriaAndExecutionNeedsIncludedParticipant() throws Exception {
-        advance("RECRUITMENT", "PLANNING", researcherToken).andExpect(status().isConflict());
+        when(readiness.hasInclusionAndExclusionCriteria(studyId)).thenReturn(true);
+        expectConflict(advance("RECRUITMENT", "PLANNING", researcherToken),
+                "visita prevista com atividade");
         createPlannedVisit();
-        advance("RECRUITMENT", "PLANNING", researcherToken).andExpect(status().isConflict());
+        when(readiness.hasInclusionAndExclusionCriteria(studyId)).thenReturn(false);
+        expectConflict(advance("RECRUITMENT", "PLANNING", researcherToken),
+                "critérios de inclusão e exclusão");
         assertStoredStatus("PLANNING");
 
         when(readiness.hasInclusionAndExclusionCriteria(studyId)).thenReturn(true);
         advance("RECRUITMENT", "PLANNING", researcherToken).andExpect(status().isOk());
-        advance("EXECUTION", "RECRUITMENT", researcherToken).andExpect(status().isConflict());
+        expectConflict(advance("EXECUTION", "RECRUITMENT", researcherToken),
+                "ao menos um participante");
         assertStoredStatus("RECRUITMENT");
         assertHistoryCount(1);
     }
@@ -154,7 +174,12 @@ class StudyStatusIntegrationTest extends IntegrationTestSupport {
     @Test
     void cancellationRequiresReasonAndRestoresOnlyThePreviousState() throws Exception {
         advance("CANCELLED", "PLANNING", researcherToken).andExpect(status().isBadRequest());
+        advanceWithReason("CANCELLED", "PLANNING", "   ", researcherToken)
+                .andExpect(status().isBadRequest());
+        advanceWithReason("CANCELLED", "PLANNING", "x".repeat(1001), researcherToken)
+                .andExpect(status().isBadRequest());
         assertStoredStatus("PLANNING");
+        assertHistoryCount(0);
 
         advanceWithReason("CANCELLED", "PLANNING", "Sem financiamento", researcherToken)
                 .andExpect(status().isOk());
@@ -168,7 +193,8 @@ class StudyStatusIntegrationTest extends IntegrationTestSupport {
                 .andExpect(jsonPath("$[0].reason").value("Sem financiamento"))
                 .andExpect(jsonPath("$[0].changedAt").exists());
 
-        advance("RECRUITMENT", "CANCELLED", researcherToken).andExpect(status().isConflict());
+        expectConflict(advance("RECRUITMENT", "CANCELLED", researcherToken),
+                "CANCELLED -> RECRUITMENT");
         advance("PLANNING", "CANCELLED", researcherToken).andExpect(status().isOk());
         assertStoredStatus("PLANNING");
         assertHistoryCount(2);
@@ -180,7 +206,8 @@ class StudyStatusIntegrationTest extends IntegrationTestSupport {
         advance("RECRUITMENT", "PLANNING", researcherToken).andExpect(status().isOk());
         advanceWithReason("CANCELLED", "RECRUITMENT", "Pausa no recrutamento", researcherToken)
                 .andExpect(status().isOk());
-        advance("PLANNING", "CANCELLED", researcherToken).andExpect(status().isConflict());
+        expectConflict(advance("PLANNING", "CANCELLED", researcherToken),
+                "CANCELLED -> PLANNING");
         advance("RECRUITMENT", "CANCELLED", researcherToken).andExpect(status().isOk());
         assertStoredStatus("RECRUITMENT");
         assertHistoryCount(3);
@@ -194,7 +221,8 @@ class StudyStatusIntegrationTest extends IntegrationTestSupport {
         advance("EXECUTION", "RECRUITMENT", researcherToken).andExpect(status().isOk());
         advanceWithReason("CANCELLED", "EXECUTION", "Interrupção definitiva", researcherToken)
                 .andExpect(status().isOk());
-        advance("EXECUTION", "CANCELLED", researcherToken).andExpect(status().isConflict());
+        expectConflict(advance("EXECUTION", "CANCELLED", researcherToken),
+                "CANCELLED -> EXECUTION");
         assertStoredStatus("CANCELLED");
         assertHistoryCount(3);
     }
@@ -229,6 +257,7 @@ class StudyStatusIntegrationTest extends IntegrationTestSupport {
                                 + "\"reason\":\"Teste\"}"))
                 .andExpect(status().isNotFound());
         assertStoredStatus("PLANNING");
+        assertHistoryCount(0);
     }
 
     @Test
@@ -239,18 +268,22 @@ class StudyStatusIntegrationTest extends IntegrationTestSupport {
                                 + "\"reason\":\"Teste\"}"))
                 .andExpect(status().isUnauthorized());
         assertStoredStatus("PLANNING");
+        assertHistoryCount(0);
     }
 
     @ParameterizedTest
     @EnumSource(value = UserRole.class, names = {"ADMINISTRATOR", "COORDINATOR", "PARTICIPANT"})
     void rolesOtherThanResearcherCannotChangeStatus(UserRole role) throws Exception {
         String email = role.name().toLowerCase(Locale.ROOT) + ".status@clinicalstudypb.test";
-        saveUser("Usuário " + role, email, role);
+        User user = saveUser("Usuário " + role, email, role);
+        studyId = studyRepository.save(new Study("Estudo do perfil", "Testar autorização",
+                user.getId(), LocalDate.of(2027, 1, 1), LocalDate.of(2027, 12, 31), 20)).getId();
 
         advanceWithReason("CANCELLED", "PLANNING", "Teste", tokenFor(email))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("FORBIDDEN"));
         assertStoredStatus("PLANNING");
+        assertHistoryCount(0);
     }
 
     @Test
@@ -308,5 +341,17 @@ class StudyStatusIntegrationTest extends IntegrationTestSupport {
     private void assertHistoryCount(int expected) {
         assertEquals(expected, jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM study_status_history WHERE study_id = ?", Integer.class, studyId));
+    }
+
+    private void assertStoredDetails(String title, int participantLimit) {
+        var stored = jdbcTemplate.queryForMap(
+                "SELECT title, participant_limit FROM studies WHERE id = ?", studyId);
+        assertEquals(title, stored.get("title"));
+        assertEquals(participantLimit, stored.get("participant_limit"));
+    }
+
+    private void expectConflict(ResultActions result, String detail) throws Exception {
+        result.andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail", containsString(detail)));
     }
 }
