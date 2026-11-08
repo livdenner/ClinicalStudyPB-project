@@ -745,6 +745,7 @@ paths:
         estudo. Um pesquisador não responsável recebe 403. A filtragem é feita
         pelo studyId da rota; não mistura candidatos de estudos diferentes.
         Retorna [] quando o estudo não tem candidatos.
+
       security:
         - bearerAuth: []
       responses:
@@ -770,6 +771,7 @@ paths:
         obrigatórios; age é inteiro entre 1 e 130 anos. O cadastro inicia com
         eligibilityStatus=PENDING. A elegibilidade para participar depende dos
         critérios de cada estudo, além da validade da idade no cadastro.
+
       security:
         - bearerAuth: []
       requestBody:
@@ -807,6 +809,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
 
   /api/studies/{studyId}/candidates/{candidateId}:
     parameters:
@@ -816,9 +820,11 @@ paths:
       tags: [Candidatos]
       summary: Consulta um candidato do estudo
       description: |
+
         Leitura por COORDINATOR ou pelo RESEARCHER indicado como responsável do
         estudo. Um pesquisador não responsável recebe 403. O candidato deve
         pertencer ao estudo da rota.
+
       security:
         - bearerAuth: []
       responses:
