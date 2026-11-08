@@ -51,22 +51,38 @@ public class StudyCriterion {
         this.description = description;
     }
 
-    /** @return identificador persistido */
+    /**
+     * Consulta o identificador do critério.
+     *
+     * @return identificador persistido
+     */
     public Long getId() {
         return id;
     }
 
-    /** @return identificador do estudo associado */
+    /**
+     * Consulta o estudo associado.
+     *
+     * @return identificador do estudo associado
+     */
     public Long getStudyId() {
         return studyId;
     }
 
-    /** @return tipo de critério */
+    /**
+     * Consulta a classificação do critério.
+     *
+     * @return tipo de critério
+     */
     public CriterionType getType() {
         return type;
     }
 
-    /** @return descrição do critério */
+    /**
+     * Consulta o texto do critério.
+     *
+     * @return descrição do critério
+     */
     public String getDescription() {
         return description;
     }

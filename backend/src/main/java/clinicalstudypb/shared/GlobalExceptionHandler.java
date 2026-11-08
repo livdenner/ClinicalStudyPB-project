@@ -1,6 +1,7 @@
 package clinicalstudypb.shared;
 
 import clinicalstudypb.candidates.domain.CandidateConflictException;
+import clinicalstudypb.consent.domain.ConsentConflictException;
 import clinicalstudypb.studies.domain.InvalidStudyException;
 import clinicalstudypb.studies.domain.StudyStatusConflictException;
 import clinicalstudypb.users.domain.EmailAlreadyInUseException;
@@ -99,6 +100,17 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(CandidateConflictException.class)
     public ProblemDetail handleCandidateConflict(CandidateConflictException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+    }
+
+    /**
+     * Responde com 409 quando o consentimento não pode ser alterado.
+     *
+     * @param exception conflito de estado do consentimento
+     * @return detalhe HTTP do conflito
+     */
+    @ExceptionHandler(ConsentConflictException.class)
+    public ProblemDetail handleConsentConflict(ConsentConflictException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
     }
 

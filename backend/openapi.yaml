@@ -938,8 +938,9 @@ paths:
       summary: Registra a decisão simulada do candidato (RF10, T14.1)
       description: |
         Somente COORDINATOR. GRANTED ou DECLINED substitui a decisão anterior
-        enquanto o candidato não foi incluído. A decisão é registrada pelo
-        backend com horário; após inclusão não pode ser alterada (409).
+        durante RECRUITMENT, enquanto o candidato não foi incluído. A decisão
+        é registrada pelo backend com horário; após inclusão não pode ser
+        alterada (409). PENDING não é aceito no corpo da requisição.
       security:
         - bearerAuth: []
       requestBody:
