@@ -53,7 +53,7 @@ public class CandidateService {
      */
     @Transactional
     public Candidate create(Long studyId, String name, Integer age) {
-        Study study = studyService.getStudy(studyId);
+        Study study = studyService.lockForCandidateRegistration(studyId);
         if (study.getStatus() != StudyStatus.RECRUITMENT) {
             throw new CandidateConflictException("O estudo não está aberto ao recrutamento.");
         }
