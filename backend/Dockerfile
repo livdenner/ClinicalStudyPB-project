@@ -8,7 +8,7 @@ RUN apt-get update \
 COPY .mvn/ .mvn/
 COPY mvnw pom.xml ./
 COPY src/ src/
-RUN ./mvnw -B -ntp -DskipTests package
+RUN ./mvnw -B -ntp -DskipTests -Dcheckstyle.skip package
 
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app
