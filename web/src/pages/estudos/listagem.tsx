@@ -18,12 +18,12 @@ import { obterMensagemErroAcesso } from "../../utils/erros-api";
 export function ListagemEstudosPage() {
     const { session } = useAuth();
     if (!session) return <Navigate to="/login" replace />;
-    if (session.user.role !== "RESEARCHER") {
+    if (session.user.role !== "RESEARCHER" && session.user.role !== "COORDINATOR") {
         return (
             <section className="py-12 text-center">
                 <h1 className="text-2xl font-bold text-[var(--color-title)]">Acesso restrito</h1>
                 <p className="my-4">
-                    A gestão de estudos está disponível apenas para pesquisadores.
+                    A consulta de estudos está disponível para pesquisadores e coordenadores.
                 </p>
                 {session.user.role === "ADMINISTRATOR" && (
                     <Link className="text-[var(--color-primary)] underline" to="/usuarios">
@@ -71,6 +71,11 @@ function GestaoEstudos({ token, pesquisador }: { token: string; pesquisador: Aut
     }, [token, tentativa]);
 
     async function cadastrar(dados: DadosEstudoApi) {
+        if (pesquisador.role !== "RESEARCHER") {
+            throw new ApiClientError("Você não tem permissão para cadastrar estudos.", {
+                status: 403,
+            });
+        }
         const novo = await cadastrarEstudo({ ...dados, responsibleUserId: pesquisador.id }, token);
         setEstudos((atuais) => [...atuais, novo]);
         setModal(null);
@@ -117,13 +122,15 @@ function GestaoEstudos({ token, pesquisador }: { token: string; pesquisador: Aut
                         Gerencie os dados e responsáveis dos estudos.
                     </p>
                 </div>
-                <Button
-                    variant="primary"
-                    isDisabled={carregando || Boolean(erro)}
-                    onPress={() => setModal({})}
-                >
-                    <Plus aria-hidden="true" size={20} /> Novo estudo
-                </Button>
+                {pesquisador.role === "RESEARCHER" && (
+                    <Button
+                        variant="primary"
+                        isDisabled={carregando || Boolean(erro)}
+                        onPress={() => setModal({})}
+                    >
+                        <Plus aria-hidden="true" size={20} /> Novo estudo
+                    </Button>
+                )}
             </header>
             <section
                 className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-white"
