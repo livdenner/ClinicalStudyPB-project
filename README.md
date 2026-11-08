@@ -70,6 +70,7 @@ Como regra de dependência, um módulo não deve acessar diretamente as classes 
 ```text
 backend/
 ├── dev/
+│   ├── seed_demo_studies.sql
 │   └── seed_demo_users.sql
 └── src/
     ├── main/
@@ -135,10 +136,11 @@ docker compose logs -f backend
 
 O backend só inicia depois que o banco estiver saudável, e o Flyway aplica as migrações na primeira inicialização.
 
-**4. (Opcional) Carregue as contas de demonstração**, depois que o backend tiver iniciado e aplicado as migrações:
+**4. (Opcional) Carregue os dados de demonstração** (contas e estudos), depois que o backend tiver iniciado e aplicado as migrações. Os comandos funcionam no bash e no PowerShell:
 
 ```bash
-docker compose exec -T db psql -U clinicalstudypb -d clinicalstudypb < backend/dev/seed_demo_users.sql
+docker compose cp backend/dev/. db:/tmp/seed
+docker compose exec db psql -U clinicalstudypb -d clinicalstudypb -v ON_ERROR_STOP=1 -f /tmp/seed/seed_demo_users.sql -f /tmp/seed/seed_demo_studies.sql
 ```
 
 Se você alterou `DB_USER`, use o seu valor no lugar de `clinicalstudypb` após `-U`.
@@ -171,6 +173,18 @@ Para carregar as contas fictícias no ambiente local ou de demonstração, execu
 | Participante | `participante@clinicalstudypb.test` | `Demo@Clinical2026` |
 
 Essas credenciais são apenas para demonstração e podem ser usadas para obter um token de acesso pelo endpoint de login.
+
+Depois das contas, `backend/dev/seed_demo_studies.sql` cria um estudo fictício em cada estado, todos com o Pesquisador de demonstração como responsável. Cada estudo tem visitas previstas com atividades e um histórico de estados coerente com o estado atual. Como a API ainda não avança um estudo além de `PLANNING` (faltam critérios e participantes), o script é hoje a forma de demonstrar os demais estados. Ele também pode ser executado novamente: um estudo só é criado se ainda não houver outro com o mesmo título.
+
+| Estudo | Estado | Visitas | Para demonstrar |
+| --- | --- | --- | --- |
+| Adesão ao tratamento da hipertensão arterial | `PLANNING` | 2 | Edição do protocolo e das visitas. |
+| Vacina contra influenza em idosos | `RECRUITMENT` | 3 | Volta para `PLANNING` e cancelamento com justificativa. |
+| Controle glicêmico no diabetes tipo 2 | `EXECUTION` | 3 | Protocolo bloqueado para edição. |
+| Reabilitação motora após AVC | `CLOSED` | 2 | Estado final: nenhuma transição é aceita. |
+| Tratamento da asma em crianças | `CANCELLED` | 1 | Restauração para `RECRUITMENT`, o estado de origem. |
+
+O teste `DemoSeedIntegrationTest` executa os dois scripts no PostgreSQL do Testcontainers. Assim, uma migração nova que quebre o seed falha no CI. A stack de E2E também carrega os dois scripts.
 
 ### Autenticação (T4.1)
 
