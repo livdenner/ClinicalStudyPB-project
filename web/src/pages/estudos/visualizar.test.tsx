@@ -150,11 +150,12 @@ describe("visualização de estudos", () => {
 
     it("mostra o motivo do conflito e permite atualizar antes de uma nova transição", async () => {
         const proprio = { ...estudo, responsibleUserId: 7 };
-        const motivo = "O estado do estudo foi alterado por outra operação.";
+        const motivo = "O estudo foi alterado. Atualize os dados antes de tentar novamente.";
         const fetchMock = vi
             .spyOn(globalThis, "fetch")
             .mockResolvedValueOnce(resposta(proprio))
             .mockResolvedValueOnce(resposta({ detail: motivo }, 409))
+            .mockResolvedValueOnce(resposta({ ...proprio, status: "RECRUITMENT" }))
             .mockResolvedValueOnce(resposta({ ...proprio, status: "RECRUITMENT" }));
         renderPage();
         fireEvent.click(await screen.findByRole("button", { name: "Abrir recrutamento" }));
@@ -167,13 +168,125 @@ describe("visualização de estudos", () => {
         expect(
             within(dialog).queryByRole("button", { name: "Abrir recrutamento" })
         ).not.toBeInTheDocument();
-        expect(fetchMock).toHaveBeenCalledTimes(2);
+        expect(fetchMock).toHaveBeenCalledTimes(3);
 
         fireEvent.click(within(dialog).getByRole("button", { name: "Atualizar estudo" }));
         await screen.findByRole("button", { name: "Iniciar execução" });
         expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+        expect(fetchMock).toHaveBeenCalledTimes(4);
+        expect(fetchMock.mock.calls[3][0]).toBe("/api/studies/3");
+    });
+
+    it("retorna do recrutamento ao planejamento após confirmação", async () => {
+        const proprio = { ...estudo, responsibleUserId: 7, status: "RECRUITMENT" };
+        const fetchMock = vi
+            .spyOn(globalThis, "fetch")
+            .mockResolvedValueOnce(resposta(proprio))
+            .mockResolvedValueOnce(resposta({ ...proprio, status: "PLANNING" }));
+        renderPage();
+        fireEvent.click(await screen.findByRole("button", { name: "Voltar ao planejamento" }));
+        const dialog = await screen.findByRole("dialog", { name: "Voltar ao planejamento" });
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        fireEvent.click(within(dialog).getByRole("button", { name: "Voltar ao planejamento" }));
+        await screen.findByRole("button", { name: "Abrir recrutamento" });
+        expect(JSON.parse(String(fetchMock.mock.calls[1][1]?.body))).toEqual({
+            status: "PLANNING",
+            expectedStatus: "RECRUITMENT",
+        });
+    });
+
+    it("exige justificativa para cancelar e envia o texto sem espaços nas extremidades", async () => {
+        const proprio = { ...estudo, responsibleUserId: 7 };
+        const fetchMock = vi
+            .spyOn(globalThis, "fetch")
+            .mockResolvedValueOnce(resposta(proprio))
+            .mockResolvedValueOnce(resposta({ ...proprio, status: "CANCELLED" }));
+        renderPage();
+        fireEvent.click(await screen.findByRole("button", { name: "Cancelar estudo" }));
+        const dialog = await screen.findByRole("dialog", { name: "Cancelar estudo" });
+        fireEvent.click(within(dialog).getByRole("button", { name: "Cancelar estudo" }));
+        expect(
+            await within(dialog).findByText("Informe uma justificativa de até 1000 caracteres.")
+        ).toBeInTheDocument();
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        fireEvent.change(within(dialog).getByLabelText(/^Justificativa/), {
+            target: { value: "  Estudo suspenso pelo patrocinador.  " },
+        });
+        fireEvent.click(within(dialog).getByRole("button", { name: "Cancelar estudo" }));
+        await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+        expect(JSON.parse(String(fetchMock.mock.calls[1][1]?.body))).toEqual({
+            status: "CANCELLED",
+            expectedStatus: "PLANNING",
+            reason: "Estudo suspenso pelo patrocinador.",
+        });
+        expect(screen.getByRole("button", { name: "Restaurar estudo" })).toBeInTheDocument();
+    });
+
+    it.each(["PLANNING", "RECRUITMENT"])(
+        "restaura cancelamento para a origem %s consultada no histórico",
+        async (origem) => {
+            const proprio = { ...estudo, responsibleUserId: 7, status: "CANCELLED" };
+            const fetchMock = vi
+                .spyOn(globalThis, "fetch")
+                .mockResolvedValueOnce(resposta(proprio))
+                .mockResolvedValueOnce(
+                    resposta([{ id: 20, fromStatus: origem, toStatus: "CANCELLED" }])
+                )
+                .mockResolvedValueOnce(resposta({ ...proprio, status: origem }));
+            renderPage();
+            fireEvent.click(await screen.findByRole("button", { name: "Restaurar estudo" }));
+            const dialog = await screen.findByRole("dialog", { name: "Restaurar estudo" });
+            fireEvent.click(within(dialog).getByRole("button", { name: "Restaurar estudo" }));
+            await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+            expect(fetchMock.mock.calls[1][0]).toBe("/api/studies/3/status-history");
+            expect(JSON.parse(String(fetchMock.mock.calls[2][1]?.body))).toEqual({
+                status: origem,
+                expectedStatus: "CANCELLED",
+            });
+        }
+    );
+
+    it.each(["EXECUTION", "CLOSED"])(
+        "não restaura cancelamento originado de %s",
+        async (origem) => {
+            const fetchMock = vi
+                .spyOn(globalThis, "fetch")
+                .mockResolvedValueOnce(
+                    resposta({ ...estudo, responsibleUserId: 7, status: "CANCELLED" })
+                )
+                .mockResolvedValueOnce(
+                    resposta([{ id: 20, fromStatus: origem, toStatus: "CANCELLED" }])
+                );
+            renderPage();
+            await screen.findByRole("heading", { name: estudo.title });
+            expect(
+                screen.queryByRole("button", { name: "Restaurar estudo" })
+            ).not.toBeInTheDocument();
+            expect(
+                screen.queryByRole("button", { name: "Cancelar estudo" })
+            ).not.toBeInTheDocument();
+            expect(fetchMock).toHaveBeenCalledTimes(2);
+        }
+    );
+
+    it("mostra a pré-condição do HTTP 409 sem exigir atualização de estado", async () => {
+        const proprio = { ...estudo, responsibleUserId: 7 };
+        const motivo = "Cadastre uma visita prevista com atividade antes de abrir o recrutamento.";
+        const fetchMock = vi
+            .spyOn(globalThis, "fetch")
+            .mockResolvedValueOnce(resposta(proprio))
+            .mockResolvedValueOnce(resposta({ detail: motivo }, 409))
+            .mockResolvedValueOnce(resposta(proprio));
+        renderPage();
+        fireEvent.click(await screen.findByRole("button", { name: "Abrir recrutamento" }));
+        const dialog = await screen.findByRole("dialog", { name: "Abrir recrutamento" });
+        fireEvent.click(within(dialog).getByRole("button", { name: "Abrir recrutamento" }));
+        expect(await within(dialog).findByRole("alert")).toHaveTextContent(motivo);
+        expect(
+            within(dialog).queryByRole("button", { name: "Atualizar estudo" })
+        ).not.toBeInTheDocument();
+        expect(within(dialog).getByRole("button", { name: "Abrir recrutamento" })).toBeEnabled();
         expect(fetchMock).toHaveBeenCalledTimes(3);
-        expect(fetchMock.mock.calls[2][0]).toBe("/api/studies/3");
     });
 
     it("edita pelo modal existente, mantém o responsável e atualiza os detalhes após sucesso", async () => {
