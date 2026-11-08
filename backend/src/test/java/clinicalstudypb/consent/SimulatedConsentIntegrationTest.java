@@ -1,5 +1,11 @@
 package clinicalstudypb.consent;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -8,19 +14,33 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import clinicalstudypb.candidates.domain.Candidate;
 import clinicalstudypb.candidates.infrastructure.CandidateRepository;
 import clinicalstudypb.consent.application.SimulatedConsentService;
+import clinicalstudypb.consent.domain.ConsentConflictException;
 import clinicalstudypb.consent.domain.ConsentDecision;
 import clinicalstudypb.consent.infrastructure.SimulatedConsentRepository;
 import clinicalstudypb.studies.domain.Study;
+import clinicalstudypb.studies.domain.StudyStatus;
 import clinicalstudypb.support.IntegrationTestSupport;
 import clinicalstudypb.users.domain.User;
 import clinicalstudypb.users.domain.UserRole;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Locale;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * Confere a API, a persistência e as permissões do consentimento simulado.
@@ -41,6 +61,9 @@ class SimulatedConsentIntegrationTest extends IntegrationTestSupport {
 
     @Autowired
     private JdbcTemplate jdbc;
+
+    @Autowired
+    private PlatformTransactionManager transactionManager;
 
     private Long studyId;
     private Long candidateId;
@@ -71,7 +94,7 @@ class SimulatedConsentIntegrationTest extends IntegrationTestSupport {
                 .andExpect(jsonPath("$.candidateId").value(candidateId))
                 .andExpect(jsonPath("$.status").value("PENDING"))
                 .andExpect(jsonPath("$.recordedAt").doesNotExist());
-        org.junit.jupiter.api.Assertions.assertFalse(consentRepository.existsById(candidateId));
+        assertFalse(consentRepository.existsById(candidateId));
     }
 
     @Test
@@ -84,17 +107,21 @@ class SimulatedConsentIntegrationTest extends IntegrationTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("GRANTED"))
                 .andExpect(jsonPath("$.recordedAt").exists());
-        org.junit.jupiter.api.Assertions.assertEquals(ConsentDecision.GRANTED,
+        assertEquals(ConsentDecision.GRANTED,
                 consentRepository.findById(candidateId).orElseThrow().getStatus());
     }
 
     @Test
     void coordinatorCanReplaceDecisionBeforeInclusion() throws Exception {
         write("GRANTED").andExpect(status().isOk());
+        Instant firstRecordedAt = consentRepository.findById(candidateId).orElseThrow().getRecordedAt();
         write("DECLINED")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("DECLINED"));
-        org.junit.jupiter.api.Assertions.assertEquals(1L, consentRepository.count());
+        var saved = consentRepository.findById(candidateId).orElseThrow();
+        assertEquals(ConsentDecision.DECLINED, saved.getStatus());
+        assertNotEquals(firstRecordedAt, saved.getRecordedAt());
+        assertEquals(1L, consentRepository.count());
     }
 
     @Test
@@ -104,16 +131,21 @@ class SimulatedConsentIntegrationTest extends IntegrationTestSupport {
         mockMvc.perform(put(path()).header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
                         .contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isBadRequest());
-        org.junit.jupiter.api.Assertions.assertFalse(consentRepository.existsById(candidateId));
+        assertFalse(consentRepository.existsById(candidateId));
     }
 
-    @Test
-    void researcherCannotConsultOrChangeConsent() throws Exception {
-        mockMvc.perform(get(path()).header(HttpHeaders.AUTHORIZATION, bearer(researcherToken)))
+    @ParameterizedTest
+    @EnumSource(value = UserRole.class, names = {"RESEARCHER", "ADMINISTRATOR", "PARTICIPANT"})
+    void otherRolesCannotConsultOrChangeConsent(UserRole role) throws Exception {
+        String token = role == UserRole.RESEARCHER ? researcherToken
+                : tokenFor(saveUser("Usuário " + role,
+                        "consent." + role.name().toLowerCase(Locale.ROOT) + "@test.local", role).getEmail());
+        mockMvc.perform(get(path()).header(HttpHeaders.AUTHORIZATION, bearer(token)))
                 .andExpect(status().isForbidden());
-        mockMvc.perform(put(path()).header(HttpHeaders.AUTHORIZATION, bearer(researcherToken))
+        mockMvc.perform(put(path()).header(HttpHeaders.AUTHORIZATION, bearer(token))
                         .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"GRANTED\"}"))
                 .andExpect(status().isForbidden());
+        assertFalse(consentRepository.existsById(candidateId));
     }
 
     @Test
@@ -122,6 +154,7 @@ class SimulatedConsentIntegrationTest extends IntegrationTestSupport {
         mockMvc.perform(put(path()).contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"GRANTED\"}"))
                 .andExpect(status().isUnauthorized());
+        assertFalse(consentRepository.existsById(candidateId));
     }
 
     @Test
@@ -131,41 +164,110 @@ class SimulatedConsentIntegrationTest extends IntegrationTestSupport {
         mockMvc.perform(get("/api/studies/" + otherStudy + "/candidates/" + candidateId + "/consent")
                         .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken)))
                 .andExpect(status().isNotFound());
+        mockMvc.perform(put("/api/studies/" + otherStudy + "/candidates/" + candidateId + "/consent")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"GRANTED\"}"))
+                .andExpect(status().isNotFound());
         mockMvc.perform(put("/api/studies/" + studyId + "/candidates/999999/consent")
                         .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
                         .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"GRANTED\"}"))
                 .andExpect(status().isNotFound());
+        assertFalse(consentRepository.existsById(candidateId));
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = StudyStatus.class, names = {"PLANNING", "EXECUTION", "CLOSED", "CANCELLED"})
+    void consentCannotChangeOutsideRecruitment(StudyStatus state) throws Exception {
+        write("GRANTED").andExpect(status().isOk());
+        Instant recordedAt = consentRepository.findById(candidateId).orElseThrow().getRecordedAt();
+        jdbc.update("UPDATE studies SET status = ? WHERE id = ?", state.name(), studyId);
+        write("DECLINED")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail").value("O consentimento só pode mudar durante o recrutamento."));
+        var saved = consentRepository.findById(candidateId).orElseThrow();
+        assertEquals(ConsentDecision.GRANTED, saved.getStatus());
+        assertEquals(recordedAt, saved.getRecordedAt());
     }
 
     @Test
-    void consentCannotChangeOutsideRecruitment() throws Exception {
-        jdbc.update("UPDATE studies SET status = 'EXECUTION' WHERE id = ?", studyId);
-        write("GRANTED").andExpect(status().isConflict());
-        org.junit.jupiter.api.Assertions.assertFalse(consentRepository.existsById(candidateId));
+    void consentWaitsForStudyTransitionAndDoesNotOverwritePriorDecision() throws Exception {
+        write("GRANTED").andExpect(status().isOk());
+        Instant recordedAt = consentRepository.findById(candidateId).orElseThrow().getRecordedAt();
+        CountDownLatch requestStarted = new CountDownLatch(1);
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        try {
+            Future<ResultActions> response = new TransactionTemplate(transactionManager).execute(transaction -> {
+                Study locked = studyRepository.findByIdForUpdate(studyId).orElseThrow();
+                Future<ResultActions> request = executor.submit(() -> {
+                    requestStarted.countDown();
+                    return mockMvc.perform(put(path())
+                            .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"status\":\"DECLINED\"}"));
+                });
+                try {
+                    assertTrue(requestStarted.await(5, TimeUnit.SECONDS));
+                    assertTrue(awaitStudyRowLockWait(),
+                            "O registro de consentimento deve aguardar o bloqueio do estudo.");
+                } catch (InterruptedException exception) {
+                    Thread.currentThread().interrupt();
+                    throw new IllegalStateException("Aguardando o bloqueio do estudo.", exception);
+                }
+                locked.advanceStatus(StudyStatus.CANCELLED);
+                return request;
+            });
+            assertNotNull(response);
+            response.get(10, TimeUnit.SECONDS)
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.detail").value("O consentimento só pode mudar durante o recrutamento."));
+            var saved = consentRepository.findById(candidateId).orElseThrow();
+            assertEquals(ConsentDecision.GRANTED, saved.getStatus());
+            assertEquals(recordedAt, saved.getRecordedAt());
+        } finally {
+            executor.shutdownNow();
+        }
     }
 
     @Test
     void includedCandidateKeepsItsGrantedDecision() throws Exception {
         write("GRANTED").andExpect(status().isOk());
+        Instant recordedAt = consentRepository.findById(candidateId).orElseThrow().getRecordedAt();
         consentService.lockAfterInclusion(studyId, candidateId);
-        write("DECLINED").andExpect(status().isConflict());
-        org.junit.jupiter.api.Assertions.assertEquals(ConsentDecision.GRANTED,
-                consentRepository.findById(candidateId).orElseThrow().getStatus());
+        write("DECLINED")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail").value("O consentimento não pode mudar após a inclusão."));
+        var saved = consentRepository.findById(candidateId).orElseThrow();
+        assertEquals(ConsentDecision.GRANTED, saved.getStatus());
+        assertEquals(recordedAt, saved.getRecordedAt());
     }
 
     @Test
     void inclusionLockRequiresGrantedConsent() throws Exception {
-        org.junit.jupiter.api.Assertions.assertThrows(
-                clinicalstudypb.consent.domain.ConsentConflictException.class,
+        assertThrows(
+                ConsentConflictException.class,
                 () -> consentService.lockAfterInclusion(studyId, candidateId));
         write("DECLINED").andExpect(status().isOk());
-        org.junit.jupiter.api.Assertions.assertThrows(
-                clinicalstudypb.consent.domain.ConsentConflictException.class,
+        assertThrows(
+                ConsentConflictException.class,
                 () -> consentService.lockAfterInclusion(studyId, candidateId));
     }
 
     private String path() {
         return "/api/studies/" + studyId + "/candidates/" + candidateId + "/consent";
+    }
+
+    private boolean awaitStudyRowLockWait() throws InterruptedException {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        while (System.nanoTime() < deadline) {
+            jdbc.execute("SELECT pg_stat_clear_snapshot()");
+            Integer waiting = jdbc.queryForObject("SELECT COUNT(*) FROM pg_stat_activity "
+                    + "WHERE wait_event_type = 'Lock' AND query ILIKE '%studies%'", Integer.class);
+            if (waiting != null && waiting > 0) {
+                return true;
+            }
+            Thread.sleep(25);
+        }
+        return false;
     }
 
     private org.springframework.test.web.servlet.ResultActions write(String decision) throws Exception {

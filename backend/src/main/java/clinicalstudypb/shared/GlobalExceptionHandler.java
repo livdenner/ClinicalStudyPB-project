@@ -93,24 +93,13 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Responde com 409 para duplicidade ou estado incompatível no cadastro de candidatos.
+     * Responde com 409 para conflitos de cadastro ou consentimento de candidatos.
      *
-     * @param exception conflito do módulo de candidatos
+     * @param exception conflito de candidatos ou consentimento
      * @return detalhe HTTP do conflito
      */
-    @ExceptionHandler(CandidateConflictException.class)
-    public ProblemDetail handleCandidateConflict(CandidateConflictException exception) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
-    }
-
-    /**
-     * Responde com 409 quando o consentimento não pode ser alterado.
-     *
-     * @param exception conflito de estado do consentimento
-     * @return detalhe HTTP do conflito
-     */
-    @ExceptionHandler(ConsentConflictException.class)
-    public ProblemDetail handleConsentConflict(ConsentConflictException exception) {
+    @ExceptionHandler({CandidateConflictException.class, ConsentConflictException.class})
+    public ProblemDetail handleCandidateConflict(RuntimeException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
     }
 

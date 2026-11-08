@@ -7,6 +7,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import clinicalstudypb.candidates.domain.Candidate;
+import clinicalstudypb.candidates.infrastructure.CandidateRepository;
+import clinicalstudypb.consent.infrastructure.SimulatedConsentRepository;
 import clinicalstudypb.studies.domain.Study;
 import clinicalstudypb.support.IntegrationTestSupport;
 import clinicalstudypb.users.domain.User;
@@ -21,6 +24,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -68,9 +72,21 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
                      "startDate":"2027-01-01","endDate":"2027-12-31","participantLimit":60}
                     """));
 
+    private static final List<Endpoint> CONSENT_ENDPOINTS = List.of(
+            new Endpoint(HttpMethod.GET, "/api/studies/{id}/candidates/{candidateId}/consent", null),
+            new Endpoint(HttpMethod.PUT, "/api/studies/{id}/candidates/{candidateId}/consent",
+                    "{\"status\":\"GRANTED\"}"));
+
+    @Autowired
+    private CandidateRepository candidateRepository;
+
+    @Autowired
+    private SimulatedConsentRepository consentRepository;
+
     private User researcher;
     private User coordinator;
     private Study study;
+    private Candidate candidate;
 
     @BeforeEach
     void setUp() {
@@ -84,6 +100,7 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
         }
         study = studyRepository.save(new Study("Estudo existente", "Objetivo original", researcher.getId(),
                 LocalDate.of(2027, 1, 1), LocalDate.of(2027, 6, 30), 40));
+        candidate = candidateRepository.save(new Candidate(study.getId(), "Candidato", "candidato", 42));
     }
 
     static Stream<Arguments> userEndpointsForOtherRoles() {
@@ -107,6 +124,10 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
         return STUDY_ENDPOINTS.stream();
     }
 
+    static Stream<Arguments> consentEndpointsForOtherRoles() {
+        return combine(CONSENT_ENDPOINTS, UserRole.COORDINATOR);
+    }
+
     @ParameterizedTest(name = "{0}: {1}")
     @MethodSource("userEndpointsForOtherRoles")
     void onlyAdministratorManagesUsers_otherRolesAreForbiddenWithoutSideEffects(UserRole role, Endpoint endpoint)
@@ -121,11 +142,18 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
         assertForbiddenWithoutSideEffects(role, endpoint, study.getId());
     }
 
+    @ParameterizedTest(name = "{0}: {1}")
+    @MethodSource("consentEndpointsForOtherRoles")
+    void onlyCoordinatorAccessesConsent_otherRolesAreForbiddenWithoutSideEffects(UserRole role, Endpoint endpoint)
+            throws Exception {
+        assertForbiddenWithoutSideEffects(role, endpoint, study.getId());
+    }
+
     @ParameterizedTest(name = "{0}")
     @MethodSource("userEndpoints")
     void administratorIsAllowedOnEveryUserEndpoint(Endpoint endpoint) throws Exception {
         mockMvc.perform(endpoint.toRequest(tokenFor(emailOf(UserRole.ADMINISTRATOR)), coordinator.getId(),
-                        researcher.getId()))
+                        researcher.getId(), candidate.getId()))
                 .andExpect(status().is2xxSuccessful());
     }
 
@@ -133,7 +161,7 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
     @MethodSource("studyEndpoints")
     void researcherIsAllowedOnEveryStudyEndpoint(Endpoint endpoint) throws Exception {
         mockMvc.perform(endpoint.toRequest(tokenFor(emailOf(UserRole.RESEARCHER)), study.getId(),
-                        researcher.getId()))
+                        researcher.getId(), candidate.getId()))
                 .andExpect(status().is2xxSuccessful());
     }
 
@@ -141,7 +169,7 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
     @MethodSource("studyReadEndpoints")
     void coordinatorCanReadStudies(Endpoint endpoint) throws Exception {
         mockMvc.perform(endpoint.toRequest(tokenFor(emailOf(UserRole.COORDINATOR)), study.getId(),
-                        researcher.getId()))
+                        researcher.getId(), candidate.getId()))
                 .andExpect(status().isOk());
     }
 
@@ -161,7 +189,8 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
             throws Exception {
         List<String> before = databaseSnapshot();
 
-        mockMvc.perform(endpoint.toRequest(tokenFor(emailOf(role)), targetId, researcher.getId()))
+        mockMvc.perform(endpoint.toRequest(tokenFor(emailOf(role)), targetId, researcher.getId(),
+                        candidate.getId()))
                 .andExpect(status().isForbidden())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.code").value("FORBIDDEN"))
@@ -180,7 +209,11 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
                         saved.getObjective(), String.valueOf(saved.getResponsibleUserId()),
                         String.valueOf(saved.getStartDate()), String.valueOf(saved.getEndDate()),
                         String.valueOf(saved.getParticipantLimit())));
-        return Stream.concat(users, studies).sorted().toList();
+        Stream<String> consents = consentRepository.findAll().stream()
+                .map(saved -> String.join("|", "consent", String.valueOf(saved.getCandidateId()),
+                        saved.getStatus().name(), saved.getRecordedAt().toString(),
+                        String.valueOf(saved.isLockedAfterInclusion())));
+        return Stream.of(users, studies, consents).flatMap(stream -> stream).sorted().toList();
     }
 
     private static Stream<Arguments> combine(List<Endpoint> endpoints, UserRole allowedRole) {
@@ -196,10 +229,10 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
     /** Um endpoint da API, com corpo JSON opcional. */
     private record Endpoint(HttpMethod method, String uri, String body) {
 
-        MockHttpServletRequestBuilder toRequest(String token, Long targetId, Long researcherId) {
-            MockHttpServletRequestBuilder builder = uri.contains("{id}")
-                    ? request(method, uri, targetId)
-                    : request(method, uri);
+        MockHttpServletRequestBuilder toRequest(String token, Long targetId, Long researcherId, Long candidateId) {
+            String path = uri.replace("{id}", targetId.toString())
+                    .replace("{candidateId}", candidateId.toString());
+            MockHttpServletRequestBuilder builder = request(method, path);
             builder.header(HttpHeaders.AUTHORIZATION, bearer(token));
             if (body != null) {
                 builder.contentType(MediaType.APPLICATION_JSON).content(body.formatted(researcherId));

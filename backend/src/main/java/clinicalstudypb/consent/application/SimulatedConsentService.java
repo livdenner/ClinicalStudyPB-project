@@ -6,6 +6,7 @@ import clinicalstudypb.consent.domain.ConsentDecision;
 import clinicalstudypb.consent.domain.SimulatedConsent;
 import clinicalstudypb.consent.infrastructure.SimulatedConsentRepository;
 import clinicalstudypb.studies.application.StudyService;
+import clinicalstudypb.studies.domain.Study;
 import clinicalstudypb.studies.domain.StudyStatus;
 import java.time.Instant;
 import java.util.Optional;
@@ -62,14 +63,18 @@ public class SimulatedConsentService {
      */
     @Transactional
     public SimulatedConsent record(Long studyId, Long candidateId, ConsentDecision decision) {
+        Study study = studyService.lockForCandidateRegistration(studyId);
         candidateService.lockForConsentUpdate(studyId, candidateId);
-        if (studyService.getStudy(studyId).getStatus() != StudyStatus.RECRUITMENT) {
+        if (study.getStatus() != StudyStatus.RECRUITMENT) {
             throw new ConsentConflictException("O consentimento só pode mudar durante o recrutamento.");
         }
         Instant now = Instant.now();
-        SimulatedConsent consent = consentRepository.findById(candidateId)
-                .orElseGet(() -> new SimulatedConsent(candidateId, decision, now));
-        consent.replace(decision, now);
+        SimulatedConsent consent = consentRepository.findById(candidateId).orElse(null);
+        if (consent == null) {
+            consent = new SimulatedConsent(candidateId, decision, now);
+        } else {
+            consent.replace(decision, now);
+        }
         return consentRepository.saveAndFlush(consent);
     }
 
@@ -82,6 +87,7 @@ public class SimulatedConsentService {
      */
     @Transactional
     public void lockAfterInclusion(Long studyId, Long candidateId) {
+        studyService.lockForCandidateRegistration(studyId);
         candidateService.lockForConsentUpdate(studyId, candidateId);
         SimulatedConsent consent = consentRepository.findById(candidateId)
                 .orElseThrow(() -> new ConsentConflictException("A inclusão exige consentimento concedido."));
