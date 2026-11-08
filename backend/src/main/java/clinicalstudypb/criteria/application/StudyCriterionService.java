@@ -1,5 +1,6 @@
 package clinicalstudypb.criteria.application;
 
+import clinicalstudypb.candidates.application.EligibilityResponseLookup;
 import clinicalstudypb.criteria.domain.CriterionType;
 import clinicalstudypb.criteria.domain.StudyCriterion;
 import clinicalstudypb.criteria.infrastructure.StudyCriterionRepository;
@@ -7,6 +8,7 @@ import clinicalstudypb.shared.ResourceNotFoundException;
 import clinicalstudypb.studies.application.StudyReadiness;
 import clinicalstudypb.studies.application.StudyService;
 import clinicalstudypb.studies.domain.Study;
+import clinicalstudypb.visits.domain.ProtocolConflictException;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,16 +25,20 @@ public class StudyCriterionService implements StudyReadiness {
 
     private final StudyCriterionRepository criterionRepository;
     private final StudyService studyService;
+    private final EligibilityResponseLookup eligibilityResponseLookup;
 
     /**
      * Recebe o repositório do módulo e o serviço público de estudos.
      *
      * @param criterionRepository persistência dos critérios
      * @param studyService regras e consultas públicas de estudos
+     * @param eligibilityResponseLookup consulta pública de respostas de elegibilidade
      */
-    public StudyCriterionService(StudyCriterionRepository criterionRepository, StudyService studyService) {
+    public StudyCriterionService(StudyCriterionRepository criterionRepository, StudyService studyService,
+                                 EligibilityResponseLookup eligibilityResponseLookup) {
         this.criterionRepository = criterionRepository;
         this.studyService = studyService;
+        this.eligibilityResponseLookup = eligibilityResponseLookup;
     }
 
     /**
@@ -46,6 +52,10 @@ public class StudyCriterionService implements StudyReadiness {
     @Transactional
     public StudyCriterion create(Long studyId, CriterionType type, String description) {
         Study study = studyService.lockForProtocolEdit(studyId);
+        if (eligibilityResponseLookup.hasResponses(studyId)) {
+            throw new ProtocolConflictException(
+                    "Não é possível adicionar critérios após a primeira resposta de elegibilidade.");
+        }
         studyService.touchProtocol(study, study.getVersion());
         StudyCriterion criterion = new StudyCriterion(studyId, type, description.strip());
         return criterionRepository.saveAndFlush(criterion);
