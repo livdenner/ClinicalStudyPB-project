@@ -159,7 +159,7 @@ O backend recebe a conexão com o PostgreSQL pelas variáveis de ambiente `DB_UR
 
 A assinatura e a validação dos JWTs usam a variável `JWT_SECRET_BASE64`, que deve conter uma chave aleatória codificada em Base64 com pelo menos 32 bytes. Defina a mesma chave em cada instância do backend e mantenha-a fora do Git. A validade padrão é de 3600 segundos e pode ser alterada com `JWT_EXPIRATION_SECONDS`.
 
-Ao iniciar o backend, o Flyway aplica as migrações pendentes: V1 cria `users`, V2 cria `studies` e V3 adiciona o estado do estudo. Estudos anteriores à V3 recebem `PLANNING`. O Hibernate valida a correspondência entre as tabelas e as entidades JPA, sem criar ou alterar tabelas automaticamente.
+Ao iniciar o backend, o Flyway aplica as migrações pendentes: V1 cria `users`, V2 cria `studies`, V3 adiciona o estado do estudo e V4 cria o histórico de estados, visitas previstas e atividades. Estudos anteriores à V3 recebem `PLANNING`. O Hibernate valida a correspondência entre as tabelas e as entidades JPA, sem criar ou alterar tabelas automaticamente.
 
 Para carregar as contas fictícias no ambiente local ou de demonstração, execute **manualmente** `backend/dev/seed_demo_users.sql` no banco `clinicalstudypb`, esquema `public`, depois da migração V1. O script pode ser executado novamente sem duplicar as contas. Ele não é uma migração Flyway e não roda na inicialização do backend.
 
@@ -251,6 +251,8 @@ O banco mantém a chave estrangeira para `users`, a restrição de datas e a res
 O estudo inicia em `PLANNING`. Para alterar o estado, envie, por exemplo, `{"status":"RECRUITMENT","expectedStatus":"PLANNING"}`. O fluxo normal é `PLANNING → RECRUITMENT → EXECUTION → CLOSED`. `RECRUITMENT` pode voltar a `PLANNING`. Os três estados não terminais podem ir a `CANCELLED`, com `reason` obrigatório; cancelamentos anteriores à execução podem retornar somente ao estado de origem. `CLOSED` e o cancelamento originado em `EXECUTION` são terminais. Cada transição grava ator, instante, origem e destino em histórico. A linha do estudo é bloqueada e `expectedStatus` divergente recebe `409`.
 
 Uma visita prevista tem nome, data no período do estudo, posição 1..N e ao menos uma atividade. Cada atividade tem nome e descrição; nomes não se repetem na mesma visita. A lista de atividades enviada no `PUT` é a lista completa: IDs existentes são preservados, atividades novas não trazem ID e atividades omitidas são removidas. A ordem da lista define a posição de cada atividade. O servidor ajusta as posições das visitas em uma transação. O protocolo só pode ser alterado em `PLANNING` ou `RECRUITMENT`. Em cada `POST`, `PUT` e `DELETE` de visita ou atividade, envie `If-Match` com o número de `version` retornado em `GET /api/studies/{id}`, entre aspas (por exemplo, `If-Match: "0"`); uma versão antiga recebe `409`.
+
+`PlannedVisit` e `PlannedActivity` mapeiam as tabelas como entidades JPA. As consultas da API usam o repositório JPA com as atividades carregadas na ordem. As gravações e reordenações usam `JdbcTemplate` na mesma transação, com bloqueio do estudo e restrições únicas no PostgreSQL; esse caminho mantém as posições contínuas quando várias linhas mudam de lugar.
 
 **Integração pendente:** a abertura de `RECRUITMENT` exige visita com atividade e critérios de inclusão e exclusão; `EXECUTION` exige participante incluído. Enquanto os módulos de critérios e inclusão não fornecerem `StudyReadiness`, essas duas transições respondem `409`. Assim, o backend não permite avançar sem validar as condições acordadas.
 
