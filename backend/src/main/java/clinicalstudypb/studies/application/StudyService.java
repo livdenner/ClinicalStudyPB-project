@@ -275,6 +275,19 @@ public class StudyService {
     }
 
     /**
+     * Busca um estudo com bloqueio de escrita antes de cadastrar um candidato.
+     * O serviço de candidatos valida o estado enquanto este bloqueio permanece
+     * ativo na transação externa de cadastro.
+     *
+     * @param id identificador do estudo
+     * @return estudo bloqueado
+     */
+    @Transactional
+    public Study lockForCandidateRegistration(Long id) {
+        return getStudyForUpdate(id);
+    }
+
+    /**
      * Confere a versão apresentada pelo cliente antes de alterar o protocolo.
      * Ao marcar a entidade como modificada, a JPA incrementa a versão no commit.
      *
