@@ -75,7 +75,7 @@ describe("ModalEstudo", () => {
         ["0", "Informe um número inteiro maior que zero."],
         ["-1", "Informe um número inteiro maior que zero."],
         ["1.5", "Informe um número inteiro maior que zero."],
-        ["2147483648", "O limite informado excede o valor permitido."],
+        ["1000001", "O limite informado excede o valor permitido."],
     ])("impede salvar o limite inválido %s", async (limite, mensagem) => {
         const onSalvar = vi.fn().mockResolvedValue(undefined);
         render(
@@ -95,6 +95,27 @@ describe("ModalEstudo", () => {
         expect(onSalvar).not.toHaveBeenCalled();
     });
 
+    it("aceita o limite máximo de 1.000.000 participantes", async () => {
+        const onSalvar = vi.fn().mockResolvedValue(undefined);
+        render(
+            <ModalEstudo
+                estudo={estudo}
+                responsavel={pesquisador}
+                onFechar={vi.fn()}
+                onSalvar={onSalvar}
+            />
+        );
+        const dialog = await screen.findByRole("dialog", { name: "Editar estudo" });
+        fireEvent.change(within(dialog).getByLabelText(/^Limite de participantes/), {
+            target: { value: "1000000" },
+        });
+        fireEvent.click(within(dialog).getByRole("button", { name: "Salvar alterações" }));
+        await waitFor(() =>
+            expect(onSalvar).toHaveBeenCalledExactlyOnceWith(
+                expect.objectContaining({ participantLimit: 1000000 })
+            )
+        );
+    });
     it("aceita limite mínimo e datas de início e término iguais", async () => {
         const onSalvar = vi.fn().mockResolvedValue(undefined);
         const estudoMesmoDia = {
