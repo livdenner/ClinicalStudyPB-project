@@ -159,7 +159,7 @@ O backend recebe a conexão com o PostgreSQL pelas variáveis de ambiente `DB_UR
 
 A assinatura e a validação dos JWTs usam a variável `JWT_SECRET_BASE64`, que deve conter uma chave aleatória codificada em Base64 com pelo menos 32 bytes. Defina a mesma chave em cada instância do backend e mantenha-a fora do Git. A validade padrão é de 3600 segundos e pode ser alterada com `JWT_EXPIRATION_SECONDS`.
 
-Ao iniciar o backend, o Flyway aplica as migrações pendentes: V1 cria `users`, V2 cria `studies`, V3 adiciona o estado do estudo, V4 cria o histórico de estados, visitas previstas e atividades, e V5 cria candidatos. Estudos anteriores à V3 recebem `PLANNING`. O Hibernate valida a correspondência entre as tabelas e as entidades JPA, sem criar ou alterar tabelas automaticamente.
+Ao iniciar o backend, o Flyway aplica as migrações pendentes: V1 cria `users`, V2 cria `studies`, V3 adiciona o estado do estudo, V4 cria o histórico de estados, visitas previstas e atividades, V5 cria candidatos, V6 cria critérios e V7 cria respostas de elegibilidade. V9 registra autoria e instante da avaliação; V10 prepara os vínculos de participantes para integração com a T15.1. A V8 está reservada ao consentimento: confira a [ordem de integração das migrações](backend/docs/eligibility-integration.md) antes do merge. Estudos anteriores à V3 recebem `PLANNING`. O Hibernate valida a correspondência entre as tabelas e as entidades JPA, sem criar ou alterar tabelas automaticamente.
 
 Para carregar as contas fictícias no ambiente local ou de demonstração, execute **manualmente** `backend/dev/seed_demo_users.sql` no banco `clinicalstudypb`, esquema `public`, depois da migração V1. O script pode ser executado novamente sem duplicar as contas. Ele não é uma migração Flyway e não roda na inicialização do backend.
 
@@ -245,6 +245,8 @@ A API usa a base `/api/studies` e segue o contrato em `backend/openapi.yaml`. Pe
 | `DELETE /api/studies/{id}/planned-visits/{visitId}/activities/{activityId}` | Excluir atividade sem esvaziar a visita | `204` |
 | `GET/POST /api/studies/{studyId}/candidates` | Listar ou cadastrar candidatos | `200/201` |
 | `GET /api/studies/{studyId}/candidates/{candidateId}` | Consultar um candidato do estudo | `200` |
+| `GET /api/studies/{studyId}/candidates/{candidateId}/eligibility` | Consultar respostas e resultado da elegibilidade | `200` |
+| `PUT /api/studies/{studyId}/candidates/{candidateId}/eligibility` | Substituir respostas e recalcular elegibilidade | `200` |
 
 Cadastro e atualização recebem `title`, `objective`, `responsibleUserId`, `startDate`, `endDate` e `participantLimit`. As datas usam o formato `AAAA-MM-DD`. O título é obrigatório e tem até 200 caracteres; o objetivo é obrigatório; o limite deve ser maior que zero; a data de término não pode anteceder a de início. O responsável deve existir e ter o perfil `RESEARCHER`, conforme a regra confirmada para a Sprint 1. O serviço consulta o módulo de usuários por `UserService`, sem acessar o repositório interno desse módulo.
 
@@ -259,6 +261,8 @@ Uma visita prevista tem nome, data no período do estudo, posição 1..N e ao me
 **Integração pendente:** a abertura de `RECRUITMENT` exige visita com atividade e critérios de inclusão e exclusão; `EXECUTION` exige participante incluído. Enquanto os módulos de critérios e inclusão não fornecerem `StudyReadiness`, essas duas transições respondem `409`. Assim, o backend não permite avançar sem validar as condições acordadas.
 
 Somente o perfil `COORDINATOR` pode cadastrar candidatos. A consulta é permitida ao `COORDINATOR` e ao `RESEARCHER` responsável pelo estudo. O cadastro exige estudo em `RECRUITMENT`, inicia `eligibilityStatus` como `PENDING` e rejeita nomes e idades repetidos no mesmo estudo com `409`. Como o contrato atual não fornece outro identificador do candidato, a chave de duplicidade usa o nome normalizado e a idade. A API não acessa repositórios internos do módulo de estudos; consulta o estudo pelo `StudyService`.
+
+A avaliação de elegibilidade é exclusiva do `COORDINATOR`. Antes da primeira avaliação, o GET retorna `PENDING`, `answers: []` e omite `evaluatedAt`. O PUT recebe `answers` com ao menos uma resposta, substitui todas as anteriores e registra o autor autenticado e o instante da avaliação. Critério sem resposta mantém `PENDING`; com todos respondidos, todas as inclusões devem ter `matches: true` e todas as exclusões, `matches: false`, para obter `ELIGIBLE`. Caso contrário, o resultado é `INELIGIBLE`. Critérios repetidos ou de outro estudo retornam `400`; candidato inexistente ou fora do estudo da rota retorna `404`; estudo sem critérios ou candidato já incluído retorna `409`. As gravações usam o bloqueio compartilhado do estudo e uma única transação. A preparação da integração com participantes está descrita em [elegibilidade e T15.1](backend/docs/eligibility-integration.md).
 
 Os testes automatizados de estudos verificam as regras do serviço, as respostas HTTP e o fluxo completo com PostgreSQL. A API também foi iniciada com PostgreSQL 18 local: listagem `200`, cadastro `201`, atualização `200` e rejeição de datas invertidas `400`, sem alterar os dados já gravados.
 

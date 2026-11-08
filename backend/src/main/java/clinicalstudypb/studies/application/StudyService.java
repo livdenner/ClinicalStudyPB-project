@@ -284,6 +284,19 @@ public class StudyService {
      */
     @Transactional
     public Study lockForCandidateRegistration(Long id) {
+        return lockForCandidateOperations(id);
+    }
+
+    /**
+     * Compartilha o bloqueio do estudo entre cadastro, avaliação e inclusão de candidatos.
+     * Cada operação aplica suas próprias regras de estado e autorização.
+     *
+     * @param id identificador do estudo
+     * @return estudo bloqueado até o encerramento da transação
+     * @throws ResourceNotFoundException quando o estudo não existe
+     */
+    @Transactional
+    public Study lockForCandidateOperations(Long id) {
         return getStudyForUpdate(id);
     }
 

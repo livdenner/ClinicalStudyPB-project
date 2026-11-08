@@ -1,6 +1,7 @@
 package clinicalstudypb.shared;
 
 import clinicalstudypb.candidates.domain.CandidateConflictException;
+import clinicalstudypb.candidates.domain.InvalidEligibilityEvaluationException;
 import clinicalstudypb.studies.domain.InvalidStudyException;
 import clinicalstudypb.studies.domain.StudyStatusConflictException;
 import clinicalstudypb.users.domain.EmailAlreadyInUseException;
@@ -66,6 +67,17 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(InvalidStudyException.class)
     public ProblemDetail handleInvalidStudy(InvalidStudyException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+    }
+
+    /**
+     * Responde com 400 para respostas de elegibilidade inválidas.
+     *
+     * @param exception validação não atendida
+     * @return detalhe da regra violada
+     */
+    @ExceptionHandler(InvalidEligibilityEvaluationException.class)
+    public ProblemDetail handleInvalidEligibilityEvaluation(InvalidEligibilityEvaluationException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
     }
 
