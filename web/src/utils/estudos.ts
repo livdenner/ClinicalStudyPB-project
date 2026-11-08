@@ -23,11 +23,15 @@ export function podeAlterarEstadoEstudo(estudo: EstudoApi, usuario: UsuarioEstud
 
 const formatterMes = new Intl.DateTimeFormat("pt-BR", { month: "short" });
 
+export function formatarMes(data: Date): string {
+    return formatterMes.format(data).replace(".", "");
+}
+
 export function formatarPeriodo(inicio: string, fim: string): string {
     const dataInicio = new Date(`${inicio}T12:00:00`);
     const dataFim = new Date(`${fim}T12:00:00`);
-    const mesInicio = formatterMes.format(dataInicio).replace(".", "");
-    const mesFim = formatterMes.format(dataFim).replace(".", "");
+    const mesInicio = formatarMes(dataInicio);
+    const mesFim = formatarMes(dataFim);
     const anoInicio = dataInicio.getFullYear();
     const anoFim = dataFim.getFullYear();
 
