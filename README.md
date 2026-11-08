@@ -257,7 +257,7 @@ Uma visita prevista tem nome, data no período do estudo, posição 1..N e ao me
 
 `PlannedVisit` e `PlannedActivity` mapeiam as tabelas como entidades JPA. As consultas da API usam o repositório JPA com as atividades carregadas na ordem. As gravações e reordenações usam `JdbcTemplate` na mesma transação, com bloqueio do estudo e restrições únicas no PostgreSQL; esse caminho mantém as posições contínuas quando várias linhas mudam de lugar.
 
-**Integração pendente:** a abertura de `RECRUITMENT` exige visita com atividade e critérios de inclusão e exclusão; `EXECUTION` exige participante incluído. Enquanto os módulos de critérios e inclusão não fornecerem `StudyReadiness`, essas duas transições respondem `409`. Assim, o backend não permite avançar sem validar as condições acordadas.
+Para abrir `RECRUITMENT`, o estudo precisa ter uma visita com atividade e critérios de inclusão e exclusão. Para iniciar `EXECUTION`, precisa ter um participante incluído; essa transição permanece bloqueada até a implementação da inclusão.
 
 O consentimento simulado de um candidato é consultado e registrado em
 `GET/PUT /api/studies/{studyId}/candidates/{candidateId}/consent`.
@@ -270,7 +270,7 @@ prepara o bloqueio da decisão após a inclusão e deve ser chamado pela futura
 T15.1 na mesma transação que cria o participante. Isso é um registro de teste,
 sem assinatura ou validade de consentimento clínico.
 
-O cadastro de candidatos é restrito ao perfil `COORDINATOR`; a consulta também é permitida ao `RESEARCHER` responsável pelo estudo. O cadastro exige estudo em `RECRUITMENT`, inicia `eligibilityStatus` como `PENDING` e rejeita nomes e idades repetidos no mesmo estudo com `409`. Como o contrato atual não fornece outro identificador do candidato, a chave de duplicidade usa o nome normalizado e a idade. A API não acessa repositórios internos do módulo de estudos; consulta o estudo pelo `StudyService`.
+Somente o perfil `COORDINATOR` pode cadastrar candidatos. A consulta é permitida ao `COORDINATOR` e ao `RESEARCHER` responsável pelo estudo. O cadastro exige estudo em `RECRUITMENT`, inicia `eligibilityStatus` como `PENDING` e rejeita nomes e idades repetidos no mesmo estudo com `409`. Como o contrato atual não fornece outro identificador do candidato, a chave de duplicidade usa o nome normalizado e a idade. A API não acessa repositórios internos do módulo de estudos; consulta o estudo pelo `StudyService`.
 
 Os testes automatizados de estudos verificam as regras do serviço, as respostas HTTP e o fluxo completo com PostgreSQL. A API também foi iniciada com PostgreSQL 18 local: listagem `200`, cadastro `201`, atualização `200` e rejeição de datas invertidas `400`, sem alterar os dados já gravados.
 
