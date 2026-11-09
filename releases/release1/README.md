@@ -177,6 +177,26 @@ A revisão da PR #41 registrou 138 testes Web passando, além de ESLint, Prettie
 
 A validação dos fluxos com API e banco reais permanece pendente.
 
+## Critérios do estudo (Task 3446) — consulta e cadastro
+
+A aba “Critérios” nos detalhes do estudo separa critérios de inclusão e exclusão. A consulta utiliza `GET /api/studies/{studyId}/criteria`. O cadastro utiliza `POST` na mesma rota com `type` (`INCLUSION` ou `EXCLUSION`) e `description`. A descrição é obrigatória, recebe remoção de espaços nas extremidades e aceita até 500 caracteres. Os dados são consultados e persistidos pela API.
+
+O cadastro fica disponível para o pesquisador responsável em `PLANNING` ou `RECRUITMENT`. Coordenadores, outros pesquisadores e estudos em estados bloqueados recebem visualização somente leitura. A API também impede adicionar critérios após a primeira resposta de elegibilidade. A web apresenta o motivo retornado e permite atualizar os dados.
+
+Após o cadastro, a tela recarrega os critérios e o estudo para sincronizar sua versão com as visitas e as ações de estado. Carregamentos, listas vazias, sucesso e falhas HTTP possuem feedback na interface.
+
+### Operações pendentes
+
+Edição e remoção aguardam os respectivos endpoints da API RF05. O contrato atual da Release 1 preserva os critérios cadastrados para manter a rastreabilidade das avaliações.
+
+A validação com API e banco reais permanece pendente.
+
+### Testes de componente (Task 3447)
+
+A suíte `web/src/pages/estudos/criterios.test.tsx` cobre nove cenários principais usando o formulário e os controles HeroUI reais, com respostas HTTP simuladas. Inclui cadastro dos dois tipos nos estados editáveis, normalização da descrição, bloqueio durante o envio, validação de campos obrigatórios e espaços em branco, erro de campo HTTP 400, conflito HTTP 409 com atualização dos dados, restrições de perfil e responsável, estado bloqueado e recuperação de falha na consulta com agrupamento de inclusão e exclusão.
+
+Os testes de edição acompanham a pendência dessa operação na task 3446. As verificações são determinísticas e executam sem backend externo.
+
 ## Como executar a web
 
 Pré-requisitos: Git e Node.js 22 LTS.
