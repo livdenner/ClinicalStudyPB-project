@@ -2,6 +2,8 @@ package clinicalstudypb.studies;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -17,8 +19,12 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.test.web.servlet.ResultActions;
 
 /**
@@ -169,6 +175,72 @@ class StudyIntegrationTest extends IntegrationTestSupport {
                 .andExpect(status().isBadRequest());
 
         assertEquals(0, studyRepository.count());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 1_000_000})
+    void createAcceptsAndPersistsParticipantLimitBoundaries(int participantLimit) throws Exception {
+        Long id = idOf(create(new StudyBody("Estudo", "Objetivo", researcher.getId(),
+                START_DATE, END_DATE, participantLimit))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.participantLimit").value(participantLimit)));
+
+        assertEquals(participantLimit, studyRepository.findById(id).orElseThrow().getParticipantLimit());
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 1_000_000})
+    void updateAcceptsAndPersistsParticipantLimitBoundaries(int participantLimit) throws Exception {
+        Long id = idOf(create(validBody("Estudo original")).andExpect(status().isCreated()));
+
+        update(id, new StudyBody("Estudo atualizado", "Objetivo", researcher.getId(),
+                START_DATE, END_DATE, participantLimit))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.participantLimit").value(participantLimit));
+
+        assertEquals(participantLimit, studyRepository.findById(id).orElseThrow().getParticipantLimit());
+        assertEquals(1, studyRepository.count());
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(ints = {-1, 0, 1_000_001, Integer.MAX_VALUE})
+    void createRejectsInvalidParticipantLimitBeforePersistence(Integer participantLimit) throws Exception {
+        create(new StudyBody("Estudo", "Objetivo", researcher.getId(), START_DATE, END_DATE, participantLimit))
+                .andExpect(status().isBadRequest())
+                .andExpect(result -> {
+                    MethodArgumentNotValidException exception = assertInstanceOf(
+                            MethodArgumentNotValidException.class, result.getResolvedException());
+                    assertNotNull(exception.getBindingResult().getFieldError("participantLimit"));
+                });
+
+        assertEquals(0, studyRepository.count());
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(ints = {-1, 0, 1_000_001, Integer.MAX_VALUE})
+    void updateRejectsInvalidParticipantLimitAndPreservesStoredData(Integer participantLimit) throws Exception {
+        Long id = idOf(create(validBody("Estudo preservado")).andExpect(status().isCreated()));
+        Long originalVersion = studyRepository.findById(id).orElseThrow().getVersion();
+
+        update(id, new StudyBody("Título que não deve ser salvo", "Objetivo alterado", researcher.getId(),
+                START_DATE.plusDays(1), END_DATE.plusDays(1), participantLimit))
+                .andExpect(status().isBadRequest())
+                .andExpect(result -> {
+                    MethodArgumentNotValidException exception = assertInstanceOf(
+                            MethodArgumentNotValidException.class, result.getResolvedException());
+                    assertNotNull(exception.getBindingResult().getFieldError("participantLimit"));
+                });
+
+        Study saved = studyRepository.findById(id).orElseThrow();
+        assertEquals("Estudo preservado", saved.getTitle());
+        assertEquals("Objetivo do estudo", saved.getObjective());
+        assertEquals(50, saved.getParticipantLimit());
+        assertEquals(START_DATE, saved.getStartDate());
+        assertEquals(END_DATE, saved.getEndDate());
+        assertEquals(originalVersion, saved.getVersion());
+        assertEquals(1, studyRepository.count());
     }
 
     @Test

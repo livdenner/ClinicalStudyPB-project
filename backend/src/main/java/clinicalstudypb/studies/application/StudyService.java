@@ -321,6 +321,9 @@ public class StudyService {
         if (participantLimit == null || participantLimit <= 0) {
             throw new InvalidStudyException("O limite de participantes deve ser maior que zero.");
         }
+        if (participantLimit > 1_000_000) {
+            throw new InvalidStudyException("O limite de participantes não pode exceder 1.000.000.");
+        }
         if (responsibleUserId == null || responsibleUserId <= 0) {
             throw new InvalidStudyException("Informe um usuário responsável válido.");
         }
