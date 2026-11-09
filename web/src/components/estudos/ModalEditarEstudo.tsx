@@ -1,9 +1,11 @@
 import type { DadosEstudoApi, EstudoApi } from "../../types/estudo";
 import { ModalEstudo } from "./ModalEstudo";
+import type { AuthenticatedUser } from "../../types/auth";
+import { podeEditarEstudo } from "../../utils/estudos";
 
 type ModalEditarEstudoProps = {
     estudo: EstudoApi;
-    pesquisador: { id: number; name: string };
+    pesquisador: Pick<AuthenticatedUser, "id" | "name" | "role">;
     onFechar: () => void;
     onSalvar: (dados: DadosEstudoApi) => Promise<void>;
 };
@@ -28,6 +30,7 @@ export function ModalEditarEstudo({
             responsavel={responsavel}
             onFechar={onFechar}
             onSalvar={onSalvar}
+            somenteLeitura={!podeEditarEstudo(estudo, pesquisador)}
         />
     );
 }

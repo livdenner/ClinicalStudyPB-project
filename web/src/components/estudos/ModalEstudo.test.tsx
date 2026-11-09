@@ -6,6 +6,8 @@ import type { EstudoApi } from "../../types/estudo";
 
 const pesquisador = { id: 7, name: "Ana Silva" };
 const estudo: EstudoApi = {
+    version: 0,
+    status: "PLANNING",
     id: 3,
     title: "Estudo do sono",
     objective: "Avaliar hábitos",
@@ -31,7 +33,7 @@ describe("ModalEstudo", () => {
         expect(screen.getByText("Informe o objetivo do estudo.")).toBeInTheDocument();
         expect(screen.getByText("Informe a data de início.")).toBeInTheDocument();
         expect(screen.getByText("Informe a data de término.")).toBeInTheDocument();
-        expect(screen.getByText(/Informe um limite inteiro/)).toBeInTheDocument();
+        expect(screen.getByText("Informe um número inteiro maior que zero.")).toBeInTheDocument();
         expect(within(dialog).getByLabelText(/^Nome do estudo/)).toHaveFocus();
         expect(onSalvar).not.toHaveBeenCalled();
     });
@@ -59,7 +61,7 @@ describe("ModalEstudo", () => {
             target: { value: " Novo objetivo " },
         });
         fireEvent.click(within(dialog).getByRole("button", { name: "Salvar alterações" }));
-        const { id: _id, ...dados } = estudo;
+        const { id: _id, status: _status, version: _version, ...dados } = estudo;
         await waitFor(() =>
             expect(onSalvar).toHaveBeenCalledWith({
                 ...dados,
@@ -69,28 +71,51 @@ describe("ModalEstudo", () => {
         );
     });
 
-    it.each(["0", "-1", "1.5", "2147483648"])(
-        "impede salvar o limite inválido %s",
-        async (limite) => {
-            const onSalvar = vi.fn().mockResolvedValue(undefined);
-            render(
-                <ModalEstudo
-                    estudo={estudo}
-                    responsavel={pesquisador}
-                    onFechar={vi.fn()}
-                    onSalvar={onSalvar}
-                />
-            );
-            const dialog = await screen.findByRole("dialog");
-            fireEvent.change(within(dialog).getByLabelText(/^Limite de participantes/), {
-                target: { value: limite },
-            });
-            fireEvent.click(within(dialog).getByRole("button", { name: "Salvar alterações" }));
-            expect(await screen.findByText(/Informe um limite inteiro/)).toBeInTheDocument();
-            expect(onSalvar).not.toHaveBeenCalled();
-        }
-    );
+    it.each([
+        ["0", "Informe um número inteiro maior que zero."],
+        ["-1", "Informe um número inteiro maior que zero."],
+        ["1.5", "Informe um número inteiro maior que zero."],
+        ["1000001", "O limite informado excede o valor permitido."],
+    ])("impede salvar o limite inválido %s", async (limite, mensagem) => {
+        const onSalvar = vi.fn().mockResolvedValue(undefined);
+        render(
+            <ModalEstudo
+                estudo={estudo}
+                responsavel={pesquisador}
+                onFechar={vi.fn()}
+                onSalvar={onSalvar}
+            />
+        );
+        const dialog = await screen.findByRole("dialog");
+        fireEvent.change(within(dialog).getByLabelText(/^Limite de participantes/), {
+            target: { value: limite },
+        });
+        fireEvent.click(within(dialog).getByRole("button", { name: "Salvar alterações" }));
+        expect(await screen.findByText(mensagem)).toBeInTheDocument();
+        expect(onSalvar).not.toHaveBeenCalled();
+    });
 
+    it("aceita o limite máximo de 1.000.000 participantes", async () => {
+        const onSalvar = vi.fn().mockResolvedValue(undefined);
+        render(
+            <ModalEstudo
+                estudo={estudo}
+                responsavel={pesquisador}
+                onFechar={vi.fn()}
+                onSalvar={onSalvar}
+            />
+        );
+        const dialog = await screen.findByRole("dialog", { name: "Editar estudo" });
+        fireEvent.change(within(dialog).getByLabelText(/^Limite de participantes/), {
+            target: { value: "1000000" },
+        });
+        fireEvent.click(within(dialog).getByRole("button", { name: "Salvar alterações" }));
+        await waitFor(() =>
+            expect(onSalvar).toHaveBeenCalledExactlyOnceWith(
+                expect.objectContaining({ participantLimit: 1000000 })
+            )
+        );
+    });
     it("aceita limite mínimo e datas de início e término iguais", async () => {
         const onSalvar = vi.fn().mockResolvedValue(undefined);
         const estudoMesmoDia = {
@@ -199,8 +224,8 @@ describe("ModalEstudo", () => {
     });
 
     it.each([
-        [401, "Sua sessão expirou. Entre novamente para salvar."],
-        [403, "Você não tem permissão para salvar estudos."],
+        [401, "Sua sessão expirou. Entre novamente."],
+        [403, "Você não tem permissão para realizar esta ação."],
     ] as const)("trata HTTP %s e mantém o formulário disponível", async (status, mensagem) => {
         const onSalvar = vi.fn().mockRejectedValue(new ApiClientError("Acesso negado", { status }));
         render(

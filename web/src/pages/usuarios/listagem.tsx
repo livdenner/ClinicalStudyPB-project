@@ -16,6 +16,7 @@ import {
 } from "../../services/usuarios";
 import type { UserRole } from "../../types/auth";
 import type { DadosCadastroUsuario, FiltroSituacaoUsuario, Usuario } from "../../types/usuario";
+import { obterMensagemErroAcesso } from "../../utils/erros-api";
 
 export function ListagemUsuariosPage() {
     const { session } = useAuth();
@@ -54,15 +55,10 @@ function GestaoUsuarios({ token }: { token: string }) {
             })
             .catch((error: unknown) => {
                 if (controller.signal.aborted) return;
-                if (error instanceof ApiClientError && error.status === 401) {
-                    setErro("Sua sessão não é mais válida. Entre novamente para continuar.");
-                } else if (error instanceof ApiClientError && error.status === 403) {
-                    setErro("Você não tem permissão para consultar usuários.");
-                } else {
-                    setErro(
+                setErro(
+                    obterMensagemErroAcesso(error) ??
                         "Não foi possível carregar os usuários. Verifique a conexão e tente novamente."
-                    );
-                }
+                );
             })
             .finally(() => {
                 if (!controller.signal.aborted) setCarregando(false);

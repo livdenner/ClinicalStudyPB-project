@@ -95,6 +95,21 @@ public class CandidateService {
                 .orElseThrow(() -> new ResourceNotFoundException("Candidato não encontrado: " + candidateId));
     }
 
+    /**
+     * Bloqueia um candidato do estudo para alterar seu consentimento ou incluí-lo.
+     * Deve ser chamado dentro da transação da operação de negócio.
+     *
+     * @param studyId identificador do estudo
+     * @param candidateId identificador do candidato
+     * @return candidato bloqueado
+     */
+    @Transactional
+    public Candidate lockForConsentUpdate(Long studyId, Long candidateId) {
+        studyService.getStudy(studyId);
+        return candidateRepository.findForConsentUpdate(candidateId, studyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Candidato não encontrado: " + candidateId));
+    }
+
     private String normalizeDisplayName(String name) {
         return WHITESPACE.matcher(name.strip()).replaceAll(" ");
     }
