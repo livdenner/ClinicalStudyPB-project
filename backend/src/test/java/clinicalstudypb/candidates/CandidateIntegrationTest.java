@@ -18,13 +18,22 @@ import clinicalstudypb.support.IntegrationTestSupport;
 import clinicalstudypb.users.domain.User;
 import clinicalstudypb.users.domain.UserRole;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Locale;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
 
+/**
+ * Verifica regras, isolamento por estudo e permissões da API de candidatos com PostgreSQL real.
+ *
+ * @author Lívia
+ */
 class CandidateIntegrationTest extends IntegrationTestSupport {
 
     private static final String CANDIDATES_URL = "/api/studies/%d/candidates";
@@ -219,6 +228,39 @@ class CandidateIntegrationTest extends IntegrationTestSupport {
         mockMvc.perform(get(candidatesUrl(study.getId()))).andExpect(status().isUnauthorized());
 
         assertEquals(1, candidateRepository.count());
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole.class, names = {"ADMINISTRATOR", "PARTICIPANT"})
+    void unauthorizedProfilesCannotRegisterListOrReadCandidate(UserRole role) throws Exception {
+        long existingCandidateId = candidateId(create(study.getId(), "{\"name\":\"Ana Silva\",\"age\":42}")
+                .andExpect(status().isCreated()));
+        User deniedUser = saveUser("Perfil sem acesso", "candidate.denied."
+                + role.name().toLowerCase(Locale.ROOT) + "@test.local", role);
+        String deniedToken = tokenFor(deniedUser.getEmail());
+
+        create(study.getId(), "{\"name\":\"Beatriz Costa\",\"age\":35}", deniedToken)
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get(candidatesUrl(study.getId()))
+                        .header(HttpHeaders.AUTHORIZATION, bearer(deniedToken)))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get(candidatesUrl(study.getId()) + "/" + existingCandidateId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(deniedToken)))
+                .andExpect(status().isForbidden());
+
+        assertEquals(1, candidateRepository.count());
+        assertEquals(List.of(existingCandidateId), candidateRepository.findAllByStudyIdOrderByIdAsc(study.getId())
+                .stream().map(Candidate::getId).toList());
+    }
+
+    @Test
+    void anonymousRegistrationReturnsUnauthorizedWithoutCreatingCandidate() throws Exception {
+        mockMvc.perform(post(candidatesUrl(study.getId()))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Beatriz Costa\",\"age\":35}"))
+                .andExpect(status().isUnauthorized());
+
+        assertEquals(0, candidateRepository.count());
     }
 
     private Study saveStudy(StudyStatus status) {
