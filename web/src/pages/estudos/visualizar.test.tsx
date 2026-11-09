@@ -9,6 +9,8 @@ import type { UserRole } from "../../types/auth";
 import type { EstudoApi } from "../../types/estudo";
 
 const estudo: EstudoApi = {
+    version: 0,
+    status: "PLANNING",
     id: 3,
     title: "Estudo do sono",
     objective: "Avaliar hábitos de sono.",
@@ -102,6 +104,10 @@ describe("visualização de estudos", () => {
         expect(screen.getByText(estudo.objective)).toBeInTheDocument();
         const resumo = screen.getByLabelText("Resumo do estudo");
         expect(within(resumo).getByText("Pesquisador #11")).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Editar estudo" })).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole("button", { name: "Abrir recrutamento" })
+        ).not.toBeInTheDocument();
         expect(within(resumo).getByText("30")).toBeInTheDocument();
         expect(within(resumo).getByText("01/11/2026 – 01/12/2026")).toBeInTheDocument();
         expect(screen.getByRole("link", { name: /Voltar para estudos/i })).toHaveAttribute(
@@ -119,11 +125,223 @@ describe("visualização de estudos", () => {
         expect(fetchMock.mock.calls[1][0]).toBe("/api/studies");
     });
 
-    it("edita pelo modal existente, mantém o responsável e atualiza os detalhes após sucesso", async () => {
-        const atualizado = { ...estudo, objective: "Objetivo atualizado", participantLimit: 40 };
+    it("confirma a transição do responsável e atualiza o estado pela resposta da API", async () => {
+        const proprio = { ...estudo, responsibleUserId: 7 };
         const fetchMock = vi
             .spyOn(globalThis, "fetch")
-            .mockResolvedValueOnce(resposta(estudo))
+            .mockResolvedValueOnce(resposta(proprio))
+            .mockResolvedValueOnce(resposta({ ...proprio, status: "RECRUITMENT" }));
+        renderPage();
+        fireEvent.click(await screen.findByRole("button", { name: "Abrir recrutamento" }));
+        const dialog = await screen.findByRole("dialog", { name: "Abrir recrutamento" });
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        fireEvent.click(within(dialog).getByRole("button", { name: "Abrir recrutamento" }));
+        await screen.findByRole("button", { name: "Iniciar execução" });
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+        const [url, options] = fetchMock.mock.calls[1];
+        expect(url).toBe("/api/studies/3/status");
+        expect(options?.method).toBe("PATCH");
+        expect(JSON.parse(String(options?.body))).toEqual({
+            status: "RECRUITMENT",
+            expectedStatus: "PLANNING",
+        });
+        expect(new Headers(options?.headers).get("Authorization")).toBe("Bearer token-pesquisador");
+    });
+
+    it("mostra o motivo do conflito e permite atualizar antes de uma nova transição", async () => {
+        const proprio = { ...estudo, responsibleUserId: 7 };
+        const motivo = "O estudo foi alterado. Atualize os dados antes de tentar novamente.";
+        const fetchMock = vi
+            .spyOn(globalThis, "fetch")
+            .mockResolvedValueOnce(resposta(proprio))
+            .mockResolvedValueOnce(resposta({ detail: motivo }, 409))
+            .mockResolvedValueOnce(resposta({ ...proprio, status: "RECRUITMENT" }))
+            .mockResolvedValueOnce(resposta({ ...proprio, status: "RECRUITMENT" }));
+        renderPage();
+        fireEvent.click(await screen.findByRole("button", { name: "Abrir recrutamento" }));
+        const dialog = await screen.findByRole("dialog", { name: "Abrir recrutamento" });
+        fireEvent.click(within(dialog).getByRole("button", { name: "Abrir recrutamento" }));
+
+        const alerta = await within(dialog).findByRole("alert");
+        expect(alerta).toHaveTextContent(motivo);
+        await waitFor(() => expect(alerta).toHaveFocus());
+        expect(
+            within(dialog).queryByRole("button", { name: "Abrir recrutamento" })
+        ).not.toBeInTheDocument();
+        expect(fetchMock).toHaveBeenCalledTimes(3);
+
+        fireEvent.click(within(dialog).getByRole("button", { name: "Atualizar estudo" }));
+        await screen.findByRole("button", { name: "Iniciar execução" });
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+        expect(fetchMock).toHaveBeenCalledTimes(4);
+        expect(fetchMock.mock.calls[3][0]).toBe("/api/studies/3");
+    });
+
+    it("retorna do recrutamento ao planejamento após confirmação", async () => {
+        const proprio = { ...estudo, responsibleUserId: 7, status: "RECRUITMENT" };
+        const fetchMock = vi
+            .spyOn(globalThis, "fetch")
+            .mockResolvedValueOnce(resposta(proprio))
+            .mockResolvedValueOnce(resposta({ ...proprio, status: "PLANNING" }));
+        renderPage();
+        fireEvent.click(await screen.findByRole("button", { name: "Voltar ao planejamento" }));
+        const dialog = await screen.findByRole("dialog", { name: "Voltar ao planejamento" });
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        fireEvent.click(within(dialog).getByRole("button", { name: "Voltar ao planejamento" }));
+        await screen.findByRole("button", { name: "Abrir recrutamento" });
+        expect(JSON.parse(String(fetchMock.mock.calls[1][1]?.body))).toEqual({
+            status: "PLANNING",
+            expectedStatus: "RECRUITMENT",
+        });
+    });
+
+    it("exige justificativa para cancelar e envia o texto sem espaços nas extremidades", async () => {
+        const proprio = { ...estudo, responsibleUserId: 7 };
+        const fetchMock = vi
+            .spyOn(globalThis, "fetch")
+            .mockResolvedValueOnce(resposta(proprio))
+            .mockResolvedValueOnce(resposta({ ...proprio, status: "CANCELLED" }))
+            .mockResolvedValueOnce(
+                resposta([{ id: 20, fromStatus: "PLANNING", toStatus: "CANCELLED" }])
+            );
+        renderPage();
+        fireEvent.click(await screen.findByRole("button", { name: "Cancelar estudo" }));
+        const dialog = await screen.findByRole("dialog", { name: "Cancelar estudo" });
+        fireEvent.click(within(dialog).getByRole("button", { name: "Cancelar estudo" }));
+        expect(
+            await within(dialog).findByText("Informe uma justificativa de até 1000 caracteres.")
+        ).toBeInTheDocument();
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        fireEvent.change(within(dialog).getByLabelText(/^Justificativa/), {
+            target: { value: "  Estudo suspenso pelo patrocinador.  " },
+        });
+        fireEvent.click(within(dialog).getByRole("button", { name: "Cancelar estudo" }));
+        await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+        expect(JSON.parse(String(fetchMock.mock.calls[1][1]?.body))).toEqual({
+            status: "CANCELLED",
+            expectedStatus: "PLANNING",
+            reason: "Estudo suspenso pelo patrocinador.",
+        });
+        expect(await screen.findByRole("button", { name: "Restaurar estudo" })).toBeInTheDocument();
+    });
+
+    it.each(["PLANNING", "RECRUITMENT"])(
+        "restaura cancelamento para a origem %s consultada no histórico",
+        async (origem) => {
+            const proprio = { ...estudo, responsibleUserId: 7, status: "CANCELLED" };
+            const fetchMock = vi
+                .spyOn(globalThis, "fetch")
+                .mockResolvedValueOnce(resposta(proprio))
+                .mockResolvedValueOnce(
+                    resposta([{ id: 20, fromStatus: origem, toStatus: "CANCELLED" }])
+                )
+                .mockResolvedValueOnce(resposta({ ...proprio, status: origem }));
+            renderPage();
+            fireEvent.click(await screen.findByRole("button", { name: "Restaurar estudo" }));
+            const dialog = await screen.findByRole("dialog", { name: "Restaurar estudo" });
+            fireEvent.click(within(dialog).getByRole("button", { name: "Restaurar estudo" }));
+            await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+            expect(fetchMock.mock.calls[1][0]).toBe("/api/studies/3/status-history");
+            expect(JSON.parse(String(fetchMock.mock.calls[2][1]?.body))).toEqual({
+                status: origem,
+                expectedStatus: "CANCELLED",
+            });
+        }
+    );
+
+    it("mantém o estudo visível após falha do histórico e permite repetir somente essa consulta", async () => {
+        let concluirHistorico!: (response: Response) => void;
+        const historicoPendente = new Promise<Response>((resolve) => {
+            concluirHistorico = resolve;
+        });
+        const fetchMock = vi
+            .spyOn(globalThis, "fetch")
+            .mockResolvedValueOnce(
+                resposta({ ...estudo, responsibleUserId: 7, status: "CANCELLED" })
+            )
+            .mockResolvedValueOnce(resposta({ detail: "Histórico indisponível." }, 500))
+            .mockReturnValueOnce(historicoPendente);
+        renderPage();
+        expect(await screen.findByRole("heading", { name: estudo.title })).toBeInTheDocument();
+        expect(await screen.findByRole("alert")).toHaveTextContent(
+            "Não foi possível verificar a restauração do estudo."
+        );
+        expect(screen.getByText(estudo.objective)).toBeInTheDocument();
+        expect(
+            screen.queryByRole("heading", { name: "Não foi possível abrir o estudo" })
+        ).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Restaurar estudo" })).not.toBeInTheDocument();
+        fireEvent.click(
+            screen.getByRole("button", { name: "Tentar consultar histórico novamente" })
+        );
+        await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+        expect(screen.getByRole("heading", { name: estudo.title })).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Restaurar estudo" })).not.toBeInTheDocument();
+        await act(async () =>
+            concluirHistorico(resposta([{ id: 20, fromStatus: "PLANNING", toStatus: "CANCELLED" }]))
+        );
+        expect(await screen.findByRole("button", { name: "Restaurar estudo" })).toBeInTheDocument();
+        expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+        expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
+            "/api/studies/3",
+            "/api/studies/3/status-history",
+            "/api/studies/3/status-history",
+        ]);
+    });
+
+    it.each(["EXECUTION", "CLOSED"])(
+        "não restaura cancelamento originado de %s",
+        async (origem) => {
+            const fetchMock = vi
+                .spyOn(globalThis, "fetch")
+                .mockResolvedValueOnce(
+                    resposta({ ...estudo, responsibleUserId: 7, status: "CANCELLED" })
+                )
+                .mockResolvedValueOnce(
+                    resposta([{ id: 20, fromStatus: origem, toStatus: "CANCELLED" }])
+                );
+            renderPage();
+            await screen.findByRole("heading", { name: estudo.title });
+            expect(
+                screen.queryByRole("button", { name: "Restaurar estudo" })
+            ).not.toBeInTheDocument();
+            expect(
+                screen.queryByRole("button", { name: "Cancelar estudo" })
+            ).not.toBeInTheDocument();
+            expect(fetchMock).toHaveBeenCalledTimes(2);
+        }
+    );
+
+    it("mostra a pré-condição do HTTP 409 sem exigir atualização de estado", async () => {
+        const proprio = { ...estudo, responsibleUserId: 7 };
+        const motivo = "Cadastre uma visita prevista com atividade antes de abrir o recrutamento.";
+        const fetchMock = vi
+            .spyOn(globalThis, "fetch")
+            .mockResolvedValueOnce(resposta(proprio))
+            .mockResolvedValueOnce(resposta({ detail: motivo }, 409))
+            .mockResolvedValueOnce(resposta(proprio));
+        renderPage();
+        fireEvent.click(await screen.findByRole("button", { name: "Abrir recrutamento" }));
+        const dialog = await screen.findByRole("dialog", { name: "Abrir recrutamento" });
+        fireEvent.click(within(dialog).getByRole("button", { name: "Abrir recrutamento" }));
+        expect(await within(dialog).findByRole("alert")).toHaveTextContent(motivo);
+        expect(
+            within(dialog).queryByRole("button", { name: "Atualizar estudo" })
+        ).not.toBeInTheDocument();
+        expect(within(dialog).getByRole("button", { name: "Abrir recrutamento" })).toBeEnabled();
+        expect(fetchMock).toHaveBeenCalledTimes(3);
+    });
+
+    it("edita pelo modal existente, mantém o responsável e atualiza os detalhes após sucesso", async () => {
+        const atualizado = {
+            ...estudo,
+            responsibleUserId: 7,
+            objective: "Objetivo atualizado",
+            participantLimit: 40,
+        };
+        const fetchMock = vi
+            .spyOn(globalThis, "fetch")
+            .mockResolvedValueOnce(resposta({ ...estudo, responsibleUserId: 7 }))
             .mockResolvedValueOnce(resposta(atualizado));
         renderPage();
         fireEvent.click(await screen.findByRole("button", { name: "Editar estudo" }));
@@ -140,7 +358,7 @@ describe("visualização de estudos", () => {
         const [url, options] = fetchMock.mock.calls[1];
         expect(url).toBe("/api/studies/3");
         expect(options?.method).toBe("PUT");
-        const { id: _id, ...dados } = atualizado;
+        const { id: _id, status: _status, version: _version, ...dados } = atualizado;
         expect(JSON.parse(String(options?.body))).toEqual(dados);
         expect(screen.getByText(atualizado.objective)).toBeInTheDocument();
         expect(
@@ -190,8 +408,8 @@ describe("visualização de estudos", () => {
     });
 
     it.each([
-        [401, "Sua sessão não é mais válida."],
-        [403, "Você não tem permissão para consultar este estudo."],
+        [401, "Sua sessão expirou. Entre novamente."],
+        [403, "Você não tem permissão para realizar esta ação."],
     ])("trata a resposta HTTP %s sem exibir os detalhes", async (status, mensagem) => {
         vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
             resposta({ detail: "Acesso negado." }, status as number)

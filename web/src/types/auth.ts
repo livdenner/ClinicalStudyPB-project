@@ -1,3 +1,7 @@
+import type { ApiFieldError } from "./api";
+
+export type { ApiFieldError } from "./api";
+
 export type UserRole = "RESEARCHER" | "COORDINATOR" | "ADMINISTRATOR" | "PARTICIPANT";
 
 export type AuthenticatedUser = {
@@ -25,11 +29,6 @@ export type AuthSession = {
     tokenType: string;
     expiresAt: number;
     user: AuthenticatedUser;
-};
-
-export type ApiFieldError = {
-    field: string;
-    message: string;
 };
 
 export type ApiErrorResponse = {

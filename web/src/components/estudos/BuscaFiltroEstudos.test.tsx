@@ -7,7 +7,14 @@ afterEach(cleanup);
 describe("BuscaFiltroEstudos", () => {
     it("exibe a busca atual e informa a digitação e a limpeza pelo callback", () => {
         const aoMudarBusca = vi.fn();
-        render(<BuscaFiltroEstudos busca="sono" aoMudarBusca={aoMudarBusca} />);
+        render(
+            <BuscaFiltroEstudos
+                busca="sono"
+                aoMudarBusca={aoMudarBusca}
+                estado=""
+                aoMudarEstado={vi.fn()}
+            />
+        );
         const busca = screen.getByRole("searchbox", {
             name: "Buscar por nome do estudo",
         });

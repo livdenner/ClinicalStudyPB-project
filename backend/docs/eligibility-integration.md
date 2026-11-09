@@ -12,22 +12,22 @@ como previsto no contrato; o identificador do autor fica persistido internamente
 ## Migrações
 
 - V7, já integrada pela T9.1: respostas por candidato e critério; deve permanecer inalterada.
-- V8, publicada na branch `feat/consent-rf10-t14-1-t14-2`: consentimento simulado.
+- V8, já integrada à `development`: consentimento simulado.
 - V9: autor e instante da última avaliação. O resultado continua em `candidates.eligibility_status`.
 - V10: estrutura compartilhada de participantes, consultada pela elegibilidade e reutilizada na T15.1.
 
-**Ordem de integração:** integrar a V8 de consentimento antes da PR com V9/V10.
-Se a ordem das PRs precisar mudar, alinhar as versões com o responsável pelo consentimento antes
-de aplicar novas migrações em bancos persistentes. Não alterar migrações já aplicadas nem habilitar
-`outOfOrder` para contornar a ordem. Em banco novo, a branch da T13.1 aplica suas migrações sem
-depender de tabelas do consentimento.
+**Ordem de integração:** a atualização da T13.1 com a `development` inclui a V8 antes das V9/V10.
+O Flyway aplica a sequência V1 a V10 em banco novo e somente as versões pendentes em bancos
+atualizados pela sequência anterior. As migrações existentes mantêm sua numeração e conteúdo.
 
 ## Protocolo transacional para T15.1
 
 1. A inclusão deve chamar `StudyService.lockForCandidateOperations(studyId)` dentro de sua transação.
 2. Após obter o bloqueio, validar candidato, estudo em recrutamento, elegibilidade, consentimento,
    ausência de inclusão anterior e disponibilidade de vaga.
-3. Persistir `Participant`, incluindo `includedBy` e `includedAt`, na mesma transação dessas validações.
+3. Chamar `SimulatedConsentService.lockAfterInclusion(studyId, candidateId)` para impedir alterações
+   posteriores do consentimento, dentro dessa mesma transação.
+4. Persistir `Participant`, incluindo `includedBy` e `includedAt`, na mesma transação dessas validações.
 
 A avaliação já usa esse bloqueio antes de consultar os critérios e `ParticipantLookup`.
 A criação de critérios também bloqueia a mesma linha do estudo. Assim, inclusão, avaliação,
@@ -43,7 +43,6 @@ continuam sendo responsabilidade da T15.1. Esta preparação não expõe uma API
 
 ## Validação e testes
 
-Os novos testes automatizados de elegibilidade ficam na task própria, em branch separada.
-Executar `./mvnw clean verify` para verificar a suíte existente, Checkstyle e o mínimo de 80%
-de cobertura. A expansão do código de negócio pode exigir a integração da task de testes para
-atender novamente ao mínimo; a configuração de cobertura não deve ser reduzida ou ignorada.
+Os testes unitários, HTTP e de concorrência da T13.2 foram integrados à branch da T13.1.
+Executar `./mvnw clean verify` para verificar a suíte completa, Checkstyle e o mínimo de 80%
+de cobertura.

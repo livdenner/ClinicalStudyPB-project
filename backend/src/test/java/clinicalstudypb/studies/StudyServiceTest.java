@@ -33,6 +33,9 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -140,12 +143,60 @@ class StudyServiceTest {
         verifyNoInteractions(studyRepository, userService);
     }
 
-    @Test
-    void createStudyRejectsNonPositiveParticipantLimit() {
+    @ParameterizedTest
+    @ValueSource(ints = {1, 1_000_000})
+    void createStudyAcceptsParticipantLimitBoundaries(int participantLimit) {
+        when(userService.getUser(7L)).thenReturn(userWithRole(UserRole.RESEARCHER));
+        when(studyRepository.save(any(Study.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Study created = studyService.createStudy("Estudo", "Objetivo", 7L,
+                START_DATE, END_DATE, participantLimit);
+
+        assertEquals(participantLimit, created.getParticipantLimit());
+        verify(studyRepository).save(created);
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(ints = {-1, 0, 1_000_001, Integer.MAX_VALUE})
+    void createStudyRejectsParticipantLimitOutsideContract(Integer participantLimit) {
         assertThrows(InvalidStudyException.class,
-                () -> studyService.createStudy("Estudo", "Objetivo", 7L, START_DATE, END_DATE, 0));
+                () -> studyService.createStudy("Estudo", "Objetivo", 7L,
+                        START_DATE, END_DATE, participantLimit));
 
         verifyNoInteractions(studyRepository, userService);
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {1, 1_000_000})
+    void updateStudyAcceptsParticipantLimitBoundaries(int participantLimit) {
+        Study study = study("Título antigo", 10);
+        when(studyRepository.findByIdForUpdate(3L)).thenReturn(Optional.of(study));
+        when(userService.getUser(7L)).thenReturn(userWithRole(UserRole.RESEARCHER));
+
+        Study updated = studyService.updateStudy(3L, "Novo título", "Novo objetivo", 7L,
+                START_DATE, END_DATE, participantLimit);
+
+        assertSame(study, updated);
+        assertEquals(participantLimit, updated.getParticipantLimit());
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(ints = {-1, 0, 1_000_001, Integer.MAX_VALUE})
+    void updateStudyRejectsInvalidParticipantLimitWithoutChangingData(Integer participantLimit) {
+        Study study = study("Título antigo", 10);
+        when(studyRepository.findByIdForUpdate(3L)).thenReturn(Optional.of(study));
+
+        assertThrows(InvalidStudyException.class,
+                () -> studyService.updateStudy(3L, "Novo título", "Novo objetivo", 7L,
+                        START_DATE, END_DATE, participantLimit));
+
+        assertEquals("Título antigo", study.getTitle());
+        assertEquals("Objetivo", study.getObjective());
+        assertEquals(10, study.getParticipantLimit());
+        verifyNoInteractions(userService, jdbc);
+        verify(studyRepository, never()).save(any(Study.class));
     }
 
     @Test

@@ -1,9 +1,13 @@
 package clinicalstudypb.candidates.infrastructure;
 
 import clinicalstudypb.candidates.domain.Candidate;
+import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 /**
  * Persistência e consultas de candidatos sem expor repositórios de outros módulos.
@@ -30,6 +34,17 @@ public interface CandidateRepository extends JpaRepository<Candidate, Long> {
      * @return candidato quando pertence ao estudo
      */
     Optional<Candidate> findByIdAndStudyId(Long id, Long studyId);
+
+    /**
+     * Bloqueia o candidato durante a troca de consentimento ou inclusão.
+     *
+     * @param id identificador do candidato
+     * @param studyId identificador do estudo
+     * @return candidato pertencente ao estudo, quando existe
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select c from Candidate c where c.id = :id and c.studyId = :studyId")
+    Optional<Candidate> findForConsentUpdate(@Param("id") Long id, @Param("studyId") Long studyId);
 
     /**
      * Confere a chave de duplicidade antes de gravar.

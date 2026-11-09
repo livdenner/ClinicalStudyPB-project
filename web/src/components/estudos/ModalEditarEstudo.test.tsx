@@ -1,10 +1,12 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ModalEditarEstudo } from "./ModalEditarEstudo";
-import type { EstudoApi } from "../../types/estudo";
+import type { EstadoEstudo, EstudoApi } from "../../types/estudo";
 
 const estudo: EstudoApi = {
+    version: 0,
     id: 1,
+    status: "RECRUITMENT",
     title: "Acompanhamento cardiovascular",
     objective: "Avaliar a resposta ao tratamento em 12 meses.",
     responsibleUserId: 7,
@@ -12,64 +14,12 @@ const estudo: EstudoApi = {
     endDate: "2026-12-31",
     participantLimit: 120,
 };
-
-const pesquisador = { id: 7, name: "Dra. Helena Costa" };
-
+const pesquisador = { id: 7, name: "Helena Costa", role: "RESEARCHER" as const };
 afterEach(cleanup);
 
-describe("ModalEditarEstudo", () => {
-    it.each([
-        {
-            id: 7,
-            name: "Dra. Helena Costa",
-            nomeExibido: "Dra. Helena Costa",
-        },
-        {
-            id: 11,
-            name: "Ana Silva",
-            nomeExibido: "Pesquisador #7",
-        },
-    ])("preserva o responsável ao editar como $name", async (usuario) => {
+describe("permissões de edição do estudo", () => {
+    it("permite ao responsável salvar em recrutamento sem enviar estado", async () => {
         const onSalvar = vi.fn().mockResolvedValue(undefined);
-
-        render(
-            <ModalEditarEstudo
-                estudo={estudo}
-                pesquisador={usuario}
-                onFechar={vi.fn()}
-                onSalvar={onSalvar}
-            />
-        );
-
-        const dialog = await screen.findByRole("dialog", {
-            name: "Editar estudo",
-        });
-
-        expect(within(dialog).getByText(usuario.nomeExibido)).toBeInTheDocument();
-
-        fireEvent.change(within(dialog).getByLabelText(/^Nome do estudo/), {
-            target: { value: "Estudo atualizado" },
-        });
-
-        fireEvent.click(
-            within(dialog).getByRole("button", {
-                name: "Salvar alterações",
-            })
-        );
-
-        const { id: _id, ...dados } = estudo;
-
-        await waitFor(() =>
-            expect(onSalvar).toHaveBeenCalledExactlyOnceWith({
-                ...dados,
-                title: "Estudo atualizado",
-            })
-        );
-    });
-
-    it("impede salvar limite de participantes igual a zero", async () => {
-        const onSalvar = vi.fn().mockResolvedValue(undefined);
-
         render(
             <ModalEditarEstudo
                 estudo={estudo}
@@ -78,67 +28,54 @@ describe("ModalEditarEstudo", () => {
                 onSalvar={onSalvar}
             />
         );
-
-        const dialog = await screen.findByRole("dialog", {
-            name: "Editar estudo",
+        await screen.findByRole("dialog", { name: "Editar estudo" });
+        expect(screen.getByText(pesquisador.name)).toBeInTheDocument();
+        fireEvent.change(screen.getByLabelText(/^Limite de participantes/), {
+            target: { value: "150" },
         });
-
-        fireEvent.change(within(dialog).getByLabelText(/^Limite de participantes/), {
-            target: { value: "0" },
-        });
-
-        fireEvent.click(
-            within(dialog).getByRole("button", {
-                name: "Salvar alterações",
-            })
+        fireEvent.click(screen.getByRole("button", { name: "Salvar alterações" }));
+        const { id: _id, status: _status, version: _version, ...dados } = estudo;
+        await waitFor(() =>
+            expect(onSalvar).toHaveBeenCalledExactlyOnceWith({ ...dados, participantLimit: 150 })
         );
+    });
 
-        expect(
-            await within(dialog).findByText("Informe um limite inteiro entre 1 e 2147483647.")
-        ).toBeInTheDocument();
-
+    it("bloqueia a edição por outro pesquisador, inclusive o envio direto do formulário", async () => {
+        const onSalvar = vi.fn();
+        render(
+            <ModalEditarEstudo
+                estudo={estudo}
+                pesquisador={{ ...pesquisador, id: 9 }}
+                onFechar={vi.fn()}
+                onSalvar={onSalvar}
+            />
+        );
+        await screen.findByRole("dialog", { name: "Consultar estudo" });
+        expect(screen.getByText("Pesquisador #7")).toBeInTheDocument();
+        const campo = screen.getByLabelText(/^Nome do estudo/);
+        expect(campo).toBeDisabled();
+        expect(screen.queryByRole("button", { name: "Salvar alterações" })).not.toBeInTheDocument();
+        fireEvent.submit(campo.closest("form")!);
         expect(onSalvar).not.toHaveBeenCalled();
     });
 
-    it("salva o novo limite mantendo o responsável original do estudo", async () => {
-        const onSalvar = vi.fn().mockResolvedValue(undefined);
-        const estudoOutroResponsavel = {
-            ...estudo,
-            responsibleUserId: 9,
-        };
-
-        render(
-            <ModalEditarEstudo
-                estudo={estudoOutroResponsavel}
-                pesquisador={pesquisador}
-                onFechar={vi.fn()}
-                onSalvar={onSalvar}
-            />
+    it("mantém execução, encerrado e cancelado somente leitura para o próprio responsável", async () => {
+        const onSalvar = vi.fn();
+        const props = { pesquisador, onFechar: vi.fn(), onSalvar };
+        const estados: EstadoEstudo[] = ["EXECUTION", "CLOSED", "CANCELLED"];
+        const { rerender } = render(
+            <ModalEditarEstudo {...props} estudo={{ ...estudo, status: "EXECUTION" }} />
         );
-
-        const dialog = await screen.findByRole("dialog", {
-            name: "Editar estudo",
-        });
-
-        expect(within(dialog).getByText("Pesquisador #9")).toBeInTheDocument();
-
-        fireEvent.change(within(dialog).getByLabelText(/^Limite de participantes/), {
-            target: { value: "150" },
-        });
-
-        fireEvent.click(
-            within(dialog).getByRole("button", {
-                name: "Salvar alterações",
-            })
-        );
-
-        const { id: _id, ...dados } = estudoOutroResponsavel;
-
-        await waitFor(() =>
-            expect(onSalvar).toHaveBeenCalledExactlyOnceWith({
-                ...dados,
-                participantLimit: 150,
-            })
-        );
+        for (const status of estados) {
+            rerender(<ModalEditarEstudo {...props} estudo={{ ...estudo, status }} />);
+            await screen.findByRole("dialog", { name: "Consultar estudo" });
+            const campo = screen.getByLabelText(/^Nome do estudo/);
+            expect(campo).toBeDisabled();
+            expect(
+                screen.queryByRole("button", { name: "Salvar alterações" })
+            ).not.toBeInTheDocument();
+            fireEvent.submit(campo.closest("form")!);
+        }
+        expect(onSalvar).not.toHaveBeenCalled();
     });
 });

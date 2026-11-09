@@ -2,6 +2,7 @@ package clinicalstudypb.shared;
 
 import clinicalstudypb.candidates.domain.CandidateConflictException;
 import clinicalstudypb.candidates.domain.InvalidEligibilityEvaluationException;
+import clinicalstudypb.consent.domain.ConsentConflictException;
 import clinicalstudypb.studies.domain.InvalidStudyException;
 import clinicalstudypb.studies.domain.StudyStatusConflictException;
 import clinicalstudypb.users.domain.EmailAlreadyInUseException;
@@ -104,13 +105,13 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Responde com 409 para duplicidade ou estado incompatível no cadastro de candidatos.
+     * Responde com 409 para conflitos de cadastro ou consentimento de candidatos.
      *
-     * @param exception conflito do módulo de candidatos
+     * @param exception conflito de candidatos ou consentimento
      * @return detalhe HTTP do conflito
      */
-    @ExceptionHandler(CandidateConflictException.class)
-    public ProblemDetail handleCandidateConflict(CandidateConflictException exception) {
+    @ExceptionHandler({CandidateConflictException.class, ConsentConflictException.class})
+    public ProblemDetail handleCandidateConflict(RuntimeException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
     }
 
