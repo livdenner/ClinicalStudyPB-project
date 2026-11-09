@@ -25,6 +25,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * Garante que os scripts de demonstração de {@code backend/dev} (T16.3) continuam válidos para o
  * esquema atual: rodam no PostgreSQL real, podem ser repetidos sem duplicar dados e produzem
  * estudos que a API lê e altera como se tivessem sido criados por ela.
+ *
+ * @author Júlia Pamplona
+ * @since 2026-11-08
+ * @version 0.0.1
  */
 class DemoSeedIntegrationTest extends IntegrationTestSupport {
 
