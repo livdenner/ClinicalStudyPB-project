@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
     Button,
     FieldError,
+    Form,
     Input,
     Label,
     ListBox,
@@ -14,6 +15,8 @@ import { Eye, EyeOff, X } from "lucide-react";
 import { ApiClientError } from "../../services/api/apiClient";
 import { ROLE_LABELS, type UserRole } from "../../types/auth";
 import type { DadosCadastroUsuario, Usuario } from "../../types/usuario";
+import { obterErrosCampos, obterMensagemErroAcesso } from "../../utils/erros-api";
+import { focarPrimeiroCampoInvalido } from "../../utils/formularios";
 import { ErrorMessage } from "../ui/ErrorMessage";
 
 type Props = {
@@ -48,30 +51,43 @@ export function ModalUsuario({ usuario, onFechar, onSalvar }: Props) {
         if (erro) {
             errorRef.current?.focus();
         } else if (Object.keys(errosCampos).length > 0) {
-            formRef.current
-                ?.querySelector<HTMLElement>(
-                    'input[aria-invalid="true"], button[aria-invalid="true"]'
-                )
-                ?.focus();
+            focarPrimeiroCampoInvalido(formRef.current);
         }
     }, [erro, errosCampos, ocupado]);
+
+    function tratarErroAoSalvar(error: unknown) {
+        if (!(error instanceof ApiClientError)) {
+            setErro("Não foi possível salvar o usuário. Tente novamente.");
+            return;
+        }
+        if (error.code === "PARTIAL_UPDATE") {
+            setErro(error.message);
+            return;
+        }
+        const mensagemAcesso = obterMensagemErroAcesso(error);
+        if (mensagemAcesso) {
+            setErro(mensagemAcesso);
+            return;
+        }
+        if (error.status === 409) {
+            setErrosCampos({ email: "Este e-mail já está cadastrado. Informe outro e-mail." });
+            return;
+        }
+        const camposApi = obterErrosCampos(error.fieldErrors, [
+            "name",
+            "email",
+            "role",
+            ...(!usuario ? ["password"] : []),
+        ]);
+        if (Object.keys(camposApi).length > 0) setErrosCampos(camposApi);
+        else setErro(error.message);
+    }
 
     async function salvar(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         if (ocupado) return;
         setErro("");
         setErrosCampos({});
-        const campos: Record<string, string> = {};
-        if (!name.trim()) campos.name = "Informe o nome do usuário.";
-        if (!email.trim()) campos.email = "Informe o e-mail do usuário.";
-        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-            campos.email = "Informe um endereço de e-mail válido.";
-        }
-        if (!usuario && !password.trim()) campos.password = "Informe uma senha.";
-        if (Object.keys(campos).length > 0) {
-            setErrosCampos(campos);
-            return;
-        }
         if (usuario && ativo !== usuario.active && !confirmandoSituacao) {
             setConfirmandoSituacao(true);
             return;
@@ -88,38 +104,7 @@ export function ModalUsuario({ usuario, onFechar, onSalvar }: Props) {
                 usuario ? ativo : undefined
             );
         } catch (error) {
-            if (error instanceof ApiClientError) {
-                if (error.code === "PARTIAL_UPDATE") {
-                    setErro(error.message);
-                    return;
-                }
-                if (error.status === 409) {
-                    setErrosCampos({
-                        email: "Este e-mail já está cadastrado. Informe outro e-mail.",
-                    });
-                    return;
-                }
-                const camposApi = Object.fromEntries(
-                    error.fieldErrors
-                        .filter(({ field }) =>
-                            ["name", "email", "role", ...(!usuario ? ["password"] : [])].includes(
-                                field
-                            )
-                        )
-                        .map((item) => [item.field, item.message])
-                );
-                if (error.status === 401) {
-                    setErro("Sua sessão expirou. Entre novamente para salvar.");
-                } else if (error.status === 403) {
-                    setErro("Você não tem permissão para salvar usuários.");
-                } else if (Object.keys(camposApi).length > 0) {
-                    setErrosCampos(camposApi);
-                } else {
-                    setErro(error.message);
-                }
-            } else {
-                setErro("Não foi possível salvar o usuário. Tente novamente.");
-            }
+            tratarErroAoSalvar(error);
         } finally {
             setSalvando(false);
             setConfirmandoSituacao(false);
@@ -168,9 +153,11 @@ export function ModalUsuario({ usuario, onFechar, onSalvar }: Props) {
                                 <X size={20} aria-hidden="true" />
                             </Button>
                         </Modal.Header>
-                        <form
+                        <Form
                             ref={formRef}
                             onSubmit={salvar}
+                            validationBehavior="native"
+                            validationErrors={errosCampos}
                             aria-busy={ocupado}
                             className="flex min-h-0 flex-col overflow-hidden"
                         >
@@ -186,12 +173,14 @@ export function ModalUsuario({ usuario, onFechar, onSalvar }: Props) {
                                 )}
                                 <TextField
                                     id="usuario-nome"
+                                    name="name"
                                     value={name}
                                     onChange={setName}
                                     isRequired
                                     isDisabled={camposBloqueados}
-                                    isInvalid={Boolean(errosCampos.name)}
-                                    validationBehavior="aria"
+                                    validate={(value) =>
+                                        value.trim() ? null : "Informe o nome do usuário."
+                                    }
                                     maxLength={120}
                                     autoComplete="name"
                                     className="flex flex-col gap-1"
@@ -200,19 +189,22 @@ export function ModalUsuario({ usuario, onFechar, onSalvar }: Props) {
                                         Nome
                                     </Label>
                                     <Input className={inputClass} required />
-                                    <FieldError className="text-sm text-[#b91c1c]">
-                                        {errosCampos.name}
-                                    </FieldError>
+                                    <FieldError className="text-sm text-[#b91c1c]" />
                                 </TextField>
                                 <TextField
                                     id="usuario-email"
+                                    name="email"
                                     type="email"
                                     value={email}
                                     onChange={setEmail}
                                     isRequired
                                     isDisabled={camposBloqueados}
-                                    isInvalid={Boolean(errosCampos.email)}
-                                    validationBehavior="aria"
+                                    validate={(value) => {
+                                        if (!value.trim()) return "Informe o e-mail do usuário.";
+                                        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+                                            ? null
+                                            : "Informe um endereço de e-mail válido.";
+                                    }}
                                     maxLength={255}
                                     autoComplete="email"
                                     className="flex flex-col gap-1"
@@ -221,20 +213,17 @@ export function ModalUsuario({ usuario, onFechar, onSalvar }: Props) {
                                         E-mail
                                     </Label>
                                     <Input className={inputClass} required />
-                                    <FieldError className="text-sm text-[#b91c1c]">
-                                        {errosCampos.email}
-                                    </FieldError>
+                                    <FieldError className="text-sm text-[#b91c1c]" />
                                 </TextField>
                                 <Select
                                     id="usuario-perfil"
+                                    name="role"
                                     selectedKey={role}
                                     onSelectionChange={(valor) => {
                                         if (valor !== null) setRole(valor as UserRole);
                                     }}
                                     isRequired
                                     isDisabled={camposBloqueados}
-                                    isInvalid={Boolean(errosCampos.role)}
-                                    validationBehavior="aria"
                                     className="flex flex-col gap-1"
                                 >
                                     <Label className="text-sm font-medium text-[var(--color-text)]">
@@ -260,9 +249,7 @@ export function ModalUsuario({ usuario, onFechar, onSalvar }: Props) {
                                             )}
                                         </ListBox>
                                     </Select.Popover>
-                                    <FieldError className="text-sm text-[#b91c1c]">
-                                        {errosCampos.role}
-                                    </FieldError>
+                                    <FieldError className="text-sm text-[#b91c1c]" />
                                 </Select>
                                 {usuario && (
                                     <section
@@ -302,13 +289,15 @@ export function ModalUsuario({ usuario, onFechar, onSalvar }: Props) {
                                 {!usuario && (
                                     <TextField
                                         id="usuario-senha"
+                                        name="password"
                                         type={mostrarSenha ? "text" : "password"}
                                         value={password}
                                         onChange={setPassword}
                                         isRequired
                                         isDisabled={ocupado}
-                                        isInvalid={Boolean(errosCampos.password)}
-                                        validationBehavior="aria"
+                                        validate={(value) =>
+                                            value.trim() ? null : "Informe uma senha."
+                                        }
                                         autoComplete="new-password"
                                         className="flex flex-col gap-1"
                                     >
@@ -334,9 +323,7 @@ export function ModalUsuario({ usuario, onFechar, onSalvar }: Props) {
                                                 )}
                                             </Button>
                                         </div>
-                                        <FieldError className="text-sm text-[#b91c1c]">
-                                            {errosCampos.password}
-                                        </FieldError>
+                                        <FieldError className="text-sm text-[#b91c1c]" />
                                     </TextField>
                                 )}
                             </Modal.Body>
@@ -368,7 +355,7 @@ export function ModalUsuario({ usuario, onFechar, onSalvar }: Props) {
                                             : "Cadastrar usuário"}
                                 </Button>
                             </Modal.Footer>
-                        </form>
+                        </Form>
                     </Modal.Dialog>
                 </Modal.Container>
             </Modal.Backdrop>

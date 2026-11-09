@@ -11,8 +11,9 @@ import { ErrorMessage } from "../../components/ui/ErrorMessage";
 import { ApiClientError } from "../../services/api/apiClient";
 import { cadastrarEstudo, editarEstudo, listarEstudos } from "../../services/estudos";
 import type { AuthenticatedUser } from "../../types/auth";
-import type { DadosEstudoApi, EstudoApi } from "../../types/estudo";
-import { filtrarEstudos } from "../../utils/estudos";
+import type { DadosEstudoApi, EstudoApi, FiltroEstadoEstudo } from "../../types/estudo";
+import { filtrarEstudos, podeEditarEstudo } from "../../utils/estudos";
+import { obterMensagemErroAcesso } from "../../utils/erros-api";
 
 export function ListagemEstudosPage() {
     const { session } = useAuth();
@@ -47,6 +48,7 @@ function GestaoEstudos({ token, pesquisador }: { token: string; pesquisador: Aut
     const [erro, setErro] = useState("");
     const [tentativa, setTentativa] = useState(0);
     const [busca, setBusca] = useState("");
+    const [estado, setEstado] = useState<FiltroEstadoEstudo>("");
     const [modal, setModal] = useState<{ estudo?: EstudoApi } | null>(null);
 
     useEffect(() => {
@@ -57,15 +59,10 @@ function GestaoEstudos({ token, pesquisador }: { token: string; pesquisador: Aut
             })
             .catch((error: unknown) => {
                 if (controller.signal.aborted) return;
-                if (error instanceof ApiClientError && error.status === 401) {
-                    setErro("Sua sessão não é mais válida. Entre novamente para continuar.");
-                } else if (error instanceof ApiClientError && error.status === 403) {
-                    setErro("Você não tem permissão para consultar estudos.");
-                } else {
-                    setErro(
+                setErro(
+                    obterMensagemErroAcesso(error) ??
                         "Não foi possível carregar os estudos. Verifique a conexão e tente novamente."
-                    );
-                }
+                );
             })
             .finally(() => {
                 if (!controller.signal.aborted) setCarregando(false);
@@ -83,6 +80,12 @@ function GestaoEstudos({ token, pesquisador }: { token: string; pesquisador: Aut
     async function salvar(dados: DadosEstudoApi) {
         const editando = modal?.estudo;
         if (!editando) return;
+        if (!podeEditarEstudo(editando, pesquisador)) {
+            throw new ApiClientError(
+                "Não é permitido editar este estudo com o usuário ou estado atual.",
+                { status: 403 }
+            );
+        }
         const atualizado = await editarEstudo(
             editando.id,
             {
@@ -98,7 +101,7 @@ function GestaoEstudos({ token, pesquisador }: { token: string; pesquisador: Aut
         toast.success("Estudo atualizado com sucesso.");
     }
 
-    const filtrados = filtrarEstudos(estudos, busca);
+    const filtrados = filtrarEstudos(estudos, busca, estado);
 
     return (
         <section className="flex flex-col gap-6" aria-labelledby="studies-heading">
@@ -138,7 +141,12 @@ function GestaoEstudos({ token, pesquisador }: { token: string; pesquisador: Aut
                             Visão geral dos estudos cadastrados
                         </p>
                     </div>
-                    <BuscaFiltroEstudos busca={busca} aoMudarBusca={setBusca} />
+                    <BuscaFiltroEstudos
+                        busca={busca}
+                        aoMudarBusca={setBusca}
+                        estado={estado}
+                        aoMudarEstado={setEstado}
+                    />
                 </div>
                 {carregando ? (
                     <p role="status" className="p-8 text-center">
@@ -166,7 +174,9 @@ function GestaoEstudos({ token, pesquisador }: { token: string; pesquisador: Aut
                         <TabelaEstudos
                             estudos={filtrados}
                             pesquisador={pesquisador}
-                            onEditar={(estudo) => setModal({ estudo })}
+                            onEditar={(estudo) => {
+                                if (podeEditarEstudo(estudo, pesquisador)) setModal({ estudo });
+                            }}
                         />
                         <footer className="border-t border-[var(--color-border)] px-5 py-4 text-xs text-[var(--color-muted)]">
                             Exibindo {filtrados.length} de {estudos.length} estudos

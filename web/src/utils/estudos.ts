@@ -1,4 +1,25 @@
-import type { EstudoApi } from "../types/estudo";
+import type { EstudoApi, FiltroEstadoEstudo } from "../types/estudo";
+import type { AuthenticatedUser } from "../types/auth";
+import { ehEstadoEstudo } from "../config/estados-estudo";
+
+type UsuarioEstudo = Pick<AuthenticatedUser, "id" | "role">;
+
+export function podeEditarEstudo(estudo: EstudoApi, usuario: UsuarioEstudo): boolean {
+    return (
+        usuario.role === "RESEARCHER" &&
+        usuario.id === estudo.responsibleUserId &&
+        (estudo.status === "PLANNING" || estudo.status === "RECRUITMENT")
+    );
+}
+
+export function podeAlterarEstadoEstudo(estudo: EstudoApi, usuario: UsuarioEstudo): boolean {
+    return (
+        usuario.role === "RESEARCHER" &&
+        usuario.id === estudo.responsibleUserId &&
+        ehEstadoEstudo(estudo.status) &&
+        estudo.status !== "CLOSED"
+    );
+}
 
 const formatterMes = new Intl.DateTimeFormat("pt-BR", { month: "short" });
 
@@ -20,7 +41,15 @@ export function calcularOcupacao(participantes: number, limite: number): number 
     return Math.min((participantes / limite) * 100, 100);
 }
 
-export function filtrarEstudos(estudos: EstudoApi[], busca: string): EstudoApi[] {
+export function filtrarEstudos(
+    estudos: EstudoApi[],
+    busca: string,
+    estado: FiltroEstadoEstudo = ""
+): EstudoApi[] {
     const termo = busca.trim().toLocaleLowerCase("pt-BR");
-    return estudos.filter((estudo) => estudo.title.toLocaleLowerCase("pt-BR").includes(termo));
+    return estudos.filter(
+        (estudo) =>
+            estudo.title.toLocaleLowerCase("pt-BR").includes(termo) &&
+            (!estado || estudo.status === estado)
+    );
 }

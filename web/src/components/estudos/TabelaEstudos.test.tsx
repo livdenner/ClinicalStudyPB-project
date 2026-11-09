@@ -4,10 +4,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { TabelaEstudos } from "./TabelaEstudos";
 import type { EstudoApi } from "../../types/estudo";
 
-const pesquisador = { id: 7, name: "Ana Silva" };
+const pesquisador = { id: 7, name: "Ana Silva", role: "RESEARCHER" as const };
 const estudos: EstudoApi[] = [
     {
         id: 3,
+        version: 0,
+        status: "PLANNING",
         title: "Estudo do sono",
         objective: "Avaliar hábitos",
         responsibleUserId: 7,
@@ -17,6 +19,8 @@ const estudos: EstudoApi[] = [
     },
     {
         id: 4,
+        version: 0,
+        status: "RECRUITMENT",
         title: "Estudo cardiovascular",
         objective: "Acompanhar indicadores",
         responsibleUserId: 11,
@@ -61,11 +65,14 @@ describe("TabelaEstudos", () => {
         );
         fireEvent.click(
             screen.getByRole("button", {
-                name: "Editar estudo: Estudo cardiovascular",
+                name: "Editar estudo: Estudo do sono",
             })
         );
         expect(onEditar).toHaveBeenCalledTimes(1);
-        expect(onEditar).toHaveBeenCalledWith(estudos[1]);
+        expect(onEditar).toHaveBeenCalledWith(estudos[0]);
+        expect(
+            screen.queryByRole("button", { name: "Editar estudo: Estudo cardiovascular" })
+        ).not.toBeInTheDocument();
         expect(
             screen.getByRole("button", {
                 name: "Visualizar estudo: Estudo cardiovascular",

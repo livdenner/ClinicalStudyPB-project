@@ -160,7 +160,7 @@ describe("ModalUsuario", () => {
         const dialog = await screen.findByRole("dialog");
         fireEvent.click(within(dialog).getByRole("button", { name: "Salvar alterações" }));
         expect(await screen.findByRole("alert")).toHaveTextContent(
-            "Sua sessão expirou. Entre novamente para salvar."
+            "Sua sessão expirou. Entre novamente."
         );
         expect(within(dialog).getByLabelText(/^Nome/)).toHaveValue(usuario.name);
         expect(within(dialog).getByRole("button", { name: "Salvar alterações" })).toBeEnabled();
