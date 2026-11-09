@@ -1,5 +1,5 @@
 import { Button, Card, Link, Spinner, Surface } from "@heroui/react";
-import { ArrowLeft, LockKeyhole, Pencil } from "lucide-react";
+import { ArrowLeft, Info, LockKeyhole, Pencil } from "lucide-react";
 import { Link as RouterLink, Navigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { ModalEditarEstudo } from "../../components/estudos/ModalEditarEstudo";
@@ -90,6 +90,9 @@ function DetalhesEstudo({
         carregando,
         erro,
         origemCancelamento,
+        carregandoHistorico,
+        erroHistorico,
+        tentarHistoricoNovamente,
         editando,
         setEditando,
         transicao,
@@ -229,6 +232,47 @@ function DetalhesEstudo({
                     )}
                 </div>
             </header>
+            {estudo.status === "CANCELLED" &&
+                podeAlterarEstadoEstudo(estudo, pesquisador) &&
+                (carregandoHistorico || erroHistorico) && (
+                    <Surface
+                        variant="transparent"
+                        className="flex flex-row items-center justify-between gap-3 rounded-xl border border-[var(--color-border)] bg-white px-4 py-3 shadow-none max-[600px]:flex-col max-[600px]:items-stretch"
+                    >
+                        <div
+                            role={erroHistorico ? "alert" : "status"}
+                            className="flex min-w-0 items-center gap-3"
+                        >
+                            {carregandoHistorico ? (
+                                <Spinner
+                                    size="sm"
+                                    color="current"
+                                    aria-hidden="true"
+                                    role="presentation"
+                                    className="shrink-0 text-[var(--color-primary)]"
+                                />
+                            ) : (
+                                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
+                                    <Info size={18} aria-hidden="true" />
+                                </span>
+                            )}
+                            <p className="text-sm leading-relaxed text-[var(--color-text)]">
+                                {erroHistorico ?? "Verificando restauração..."}
+                            </p>
+                        </div>
+                        {erroHistorico && (
+                            <Button
+                                variant="secondary"
+                                aria-label="Tentar consultar histórico novamente"
+                                onPress={tentarHistoricoNovamente}
+                                isDisabled={carregandoHistorico}
+                                className="min-h-11 shrink-0 border border-[var(--color-primary)] bg-white text-[var(--color-primary-dark)] hover:bg-[var(--color-primary-soft)]"
+                            >
+                                Tentar novamente
+                            </Button>
+                        )}
+                    </Surface>
+                )}
             <Surface
                 variant="transparent"
                 className="rounded-xl bg-linear-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] p-6 text-white"

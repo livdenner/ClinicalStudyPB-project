@@ -200,7 +200,10 @@ describe("visualização de estudos", () => {
         const fetchMock = vi
             .spyOn(globalThis, "fetch")
             .mockResolvedValueOnce(resposta(proprio))
-            .mockResolvedValueOnce(resposta({ ...proprio, status: "CANCELLED" }));
+            .mockResolvedValueOnce(resposta({ ...proprio, status: "CANCELLED" }))
+            .mockResolvedValueOnce(
+                resposta([{ id: 20, fromStatus: "PLANNING", toStatus: "CANCELLED" }])
+            );
         renderPage();
         fireEvent.click(await screen.findByRole("button", { name: "Cancelar estudo" }));
         const dialog = await screen.findByRole("dialog", { name: "Cancelar estudo" });
@@ -219,7 +222,7 @@ describe("visualização de estudos", () => {
             expectedStatus: "PLANNING",
             reason: "Estudo suspenso pelo patrocinador.",
         });
-        expect(screen.getByRole("button", { name: "Restaurar estudo" })).toBeInTheDocument();
+        expect(await screen.findByRole("button", { name: "Restaurar estudo" })).toBeInTheDocument();
     });
 
     it.each(["PLANNING", "RECRUITMENT"])(
@@ -245,6 +248,46 @@ describe("visualização de estudos", () => {
             });
         }
     );
+
+    it("mantém o estudo visível após falha do histórico e permite repetir somente essa consulta", async () => {
+        let concluirHistorico!: (response: Response) => void;
+        const historicoPendente = new Promise<Response>((resolve) => {
+            concluirHistorico = resolve;
+        });
+        const fetchMock = vi
+            .spyOn(globalThis, "fetch")
+            .mockResolvedValueOnce(
+                resposta({ ...estudo, responsibleUserId: 7, status: "CANCELLED" })
+            )
+            .mockResolvedValueOnce(resposta({ detail: "Histórico indisponível." }, 500))
+            .mockReturnValueOnce(historicoPendente);
+        renderPage();
+        expect(await screen.findByRole("heading", { name: estudo.title })).toBeInTheDocument();
+        expect(await screen.findByRole("alert")).toHaveTextContent(
+            "Não foi possível verificar a restauração do estudo."
+        );
+        expect(screen.getByText(estudo.objective)).toBeInTheDocument();
+        expect(
+            screen.queryByRole("heading", { name: "Não foi possível abrir o estudo" })
+        ).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Restaurar estudo" })).not.toBeInTheDocument();
+        fireEvent.click(
+            screen.getByRole("button", { name: "Tentar consultar histórico novamente" })
+        );
+        await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
+        expect(screen.getByRole("heading", { name: estudo.title })).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Restaurar estudo" })).not.toBeInTheDocument();
+        await act(async () =>
+            concluirHistorico(resposta([{ id: 20, fromStatus: "PLANNING", toStatus: "CANCELLED" }]))
+        );
+        expect(await screen.findByRole("button", { name: "Restaurar estudo" })).toBeInTheDocument();
+        expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+        expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
+            "/api/studies/3",
+            "/api/studies/3/status-history",
+            "/api/studies/3/status-history",
+        ]);
+    });
 
     it.each(["EXECUTION", "CLOSED"])(
         "não restaura cancelamento originado de %s",

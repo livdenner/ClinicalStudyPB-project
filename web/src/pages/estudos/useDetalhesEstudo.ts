@@ -26,6 +26,9 @@ export function useDetalhesEstudo({ id, token, pesquisador }: Props) {
         status: number | null;
     } | null>(null);
     const [origemCancelamento, setOrigemCancelamento] = useState<EstadoEstudo | null>(null);
+    const [carregandoHistorico, setCarregandoHistorico] = useState(false);
+    const [erroHistorico, setErroHistorico] = useState<string | null>(null);
+    const [tentativaHistorico, setTentativaHistorico] = useState(0);
     const [tentativa, setTentativa] = useState(0);
     const [editando, setEditando] = useState(false);
     const [transicao, setTransicao] = useState<EstadoEstudo | null>(null);
@@ -33,19 +36,9 @@ export function useDetalhesEstudo({ id, token, pesquisador }: Props) {
     useEffect(() => {
         const controller = new AbortController();
         obterEstudo(id, token, controller.signal)
-            .then(async (dados) => {
-                let origem: EstadoEstudo | null = null;
-                if (dados.status === "CANCELLED" && podeAlterarEstadoEstudo(dados, pesquisador)) {
-                    const historico = await obterHistoricoEstadoEstudo(
-                        id,
-                        token,
-                        controller.signal
-                    );
-                    const ultimo = historico[historico.length - 1];
-                    if (ultimo?.toStatus === "CANCELLED") origem = ultimo.fromStatus;
-                }
+            .then((dados) => {
                 if (!controller.signal.aborted) {
-                    setOrigemCancelamento(origem);
+                    setOrigemCancelamento(null);
                     setEstudo(dados);
                 }
             })
@@ -62,6 +55,46 @@ export function useDetalhesEstudo({ id, token, pesquisador }: Props) {
             });
         return () => controller.abort();
     }, [id, token, tentativa, pesquisador]);
+
+    useEffect(() => {
+        if (
+            !estudo ||
+            estudo.status !== "CANCELLED" ||
+            !podeAlterarEstadoEstudo(estudo, pesquisador)
+        )
+            return;
+        const controller = new AbortController();
+
+        async function carregarHistorico() {
+            setCarregandoHistorico(true);
+            setErroHistorico(null);
+            setOrigemCancelamento(null);
+            try {
+                const historico = await obterHistoricoEstadoEstudo(id, token, controller.signal);
+                if (controller.signal.aborted) return;
+                const ultimo = historico[historico.length - 1];
+                if (ultimo?.toStatus === "CANCELLED") setOrigemCancelamento(ultimo.fromStatus);
+            } catch (error) {
+                if (controller.signal.aborted) return;
+                setErroHistorico(
+                    obterMensagemErroAcesso(error) ??
+                        "Não foi possível verificar a restauração do estudo."
+                );
+            } finally {
+                if (!controller.signal.aborted) setCarregandoHistorico(false);
+            }
+        }
+
+        void carregarHistorico();
+        return () => controller.abort();
+    }, [estudo, id, token, pesquisador, tentativaHistorico]);
+
+    function tentarHistoricoNovamente() {
+        setOrigemCancelamento(null);
+        setErroHistorico(null);
+        setCarregandoHistorico(true);
+        setTentativaHistorico((atual) => atual + 1);
+    }
 
     async function salvar(dados: DadosEstudoApi) {
         if (!estudo) return;
@@ -121,7 +154,7 @@ export function useDetalhesEstudo({ id, token, pesquisador }: Props) {
             }
             throw error;
         }
-        setOrigemCancelamento(transicao === "CANCELLED" ? estudo.status : null);
+        setOrigemCancelamento(null);
         setEstudo(atualizado);
         setTransicao(null);
         toast.success("Estado do estudo atualizado com sucesso.");
@@ -139,6 +172,9 @@ export function useDetalhesEstudo({ id, token, pesquisador }: Props) {
         carregando,
         erro,
         origemCancelamento,
+        carregandoHistorico,
+        erroHistorico,
+        tentarHistoricoNovamente,
         editando,
         setEditando,
         transicao,
