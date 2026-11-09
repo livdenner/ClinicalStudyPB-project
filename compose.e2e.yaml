@@ -48,15 +48,16 @@ services:
       retries: 60
       start_period: 10s
 
-  # Carrega as contas de demonstração (senha Demo@Clinical2026) depois das migrações.
+  # Carrega as contas (senha Demo@Clinical2026) e os estudos de demonstração depois das migrações.
   seed:
     image: postgres:18
     profiles: [seed]
     environment:
       PGPASSWORD: e2e-somente-teste
     volumes:
-      - ./backend/dev/seed_demo_users.sql:/seed.sql:ro
-    command: ["psql", "-h", "db", "-U", "clinicalstudypb", "-d", "clinicalstudypb", "-v", "ON_ERROR_STOP=1", "-f", "/seed.sql"]
+      - ./backend/dev:/seed:ro
+    command: ["psql", "-h", "db", "-U", "clinicalstudypb", "-d", "clinicalstudypb", "-v", "ON_ERROR_STOP=1",
+              "-f", "/seed/seed_demo_users.sql", "-f", "/seed/seed_demo_studies.sql"]
     depends_on:
       backend:
         condition: service_healthy
