@@ -1,6 +1,7 @@
 import type { EstudoApi } from "./estudo";
 
-export type StatusEstudoCandidato = "PLANNING" | "RECRUITMENT" | "EXECUTION" | "CLOSED";
+export type StatusEstudoCandidato =
+    "PLANNING" | "RECRUITMENT" | "EXECUTION" | "CLOSED" | "CANCELLED";
 
 export type EstudoComStatusApi = EstudoApi & {
     status?: StatusEstudoCandidato;
@@ -26,6 +27,7 @@ export const STATUS_ESTUDO_LABELS: Record<StatusEstudoCandidato, string> = {
     RECRUITMENT: "Em recrutamento",
     EXECUTION: "Em execução",
     CLOSED: "Encerrado",
+    CANCELLED: "Cancelado",
 };
 
 export const ELEGIBILIDADE_LABELS: Record<StatusElegibilidadeApi, string> = {
