@@ -159,7 +159,7 @@ O backend recebe a conexão com o PostgreSQL pelas variáveis de ambiente `DB_UR
 
 A assinatura e a validação dos JWTs usam a variável `JWT_SECRET_BASE64`, que deve conter uma chave aleatória codificada em Base64 com pelo menos 32 bytes. Defina a mesma chave em cada instância do backend e mantenha-a fora do Git. A validade padrão é de 3600 segundos e pode ser alterada com `JWT_EXPIRATION_SECONDS`.
 
-Ao iniciar o backend, o Flyway aplica as migrações pendentes: V1 cria `users`, V2 cria `studies`, V3 adiciona o estado do estudo e V4 cria o histórico de estados, visitas previstas e atividades. Estudos anteriores à V3 recebem `PLANNING`. O Hibernate valida a correspondência entre as tabelas e as entidades JPA, sem criar ou alterar tabelas automaticamente.
+Ao iniciar o backend, o Flyway aplica as migrações pendentes: V1 cria `users`, V2 cria `studies`, V3 adiciona o estado do estudo, V4 cria o histórico de estados, visitas previstas e atividades, V5 cria candidatos, V6 cria critérios de estudo, V7 cria respostas de elegibilidade e V8 cria consentimentos simulados. Estudos anteriores à V3 recebem `PLANNING`. O Hibernate valida a correspondência entre as tabelas e as entidades JPA, sem criar ou alterar tabelas automaticamente.
 
 Para carregar as contas fictícias no ambiente local ou de demonstração, execute **manualmente** `backend/dev/seed_demo_users.sql` no banco `clinicalstudypb`, esquema `public`, depois da migração V1. O script pode ser executado novamente sem duplicar as contas. Ele não é uma migração Flyway e não roda na inicialização do backend.
 
@@ -243,8 +243,11 @@ A API usa a base `/api/studies` e segue o contrato em `backend/openapi.yaml`. Pe
 | `GET/PUT/DELETE /api/studies/{id}/planned-visits/{visitId}` | Consultar, editar ou excluir uma visita | `200/200/204` |
 | `PUT /api/studies/{id}/planned-visits/order` | Reordenar visitas | `200` |
 | `DELETE /api/studies/{id}/planned-visits/{visitId}/activities/{activityId}` | Excluir atividade sem esvaziar a visita | `204` |
+| `GET/POST /api/studies/{studyId}/candidates` | Listar ou cadastrar candidatos | `200/201` |
+| `GET /api/studies/{studyId}/candidates/{candidateId}` | Consultar um candidato do estudo | `200` |
+| `GET/PUT /api/studies/{studyId}/candidates/{candidateId}/consent` | Consultar ou registrar consentimento simulado | `200/200` |
 
-Cadastro e atualização recebem `title`, `objective`, `responsibleUserId`, `startDate`, `endDate` e `participantLimit`. As datas usam o formato `AAAA-MM-DD`. O título é obrigatório e tem até 200 caracteres; o objetivo é obrigatório; o limite deve ser maior que zero; a data de término não pode anteceder a de início. O responsável deve existir e ter o perfil `RESEARCHER`, conforme a regra confirmada para a Sprint 1. O serviço consulta o módulo de usuários por `UserService`, sem acessar o repositório interno desse módulo.
+Cadastro e atualização recebem `title`, `objective`, `responsibleUserId`, `startDate`, `endDate` e `participantLimit`. As datas usam o formato `AAAA-MM-DD`. O título é obrigatório e tem até 200 caracteres; o objetivo é obrigatório; o limite de participantes deve estar entre 1 e 1.000.000, inclusive; a data de término não pode anteceder a de início. O responsável deve existir e ter o perfil `RESEARCHER`, conforme a regra confirmada para a Sprint 1. O serviço consulta o módulo de usuários por `UserService`, sem acessar o repositório interno desse módulo.
 
 O banco mantém a chave estrangeira para `users`, a restrição de datas e a restrição do limite. O serviço valida as regras antes de persistir. Corpos inválidos ou regras violadas recebem `400`; recursos inexistentes recebem `404`. Na atualização, a entidade JPA é alterada dentro de uma transação e o Hibernate grava as mudanças.
 
@@ -254,7 +257,20 @@ Uma visita prevista tem nome, data no período do estudo, posição 1..N e ao me
 
 `PlannedVisit` e `PlannedActivity` mapeiam as tabelas como entidades JPA. As consultas da API usam o repositório JPA com as atividades carregadas na ordem. As gravações e reordenações usam `JdbcTemplate` na mesma transação, com bloqueio do estudo e restrições únicas no PostgreSQL; esse caminho mantém as posições contínuas quando várias linhas mudam de lugar.
 
-**Integração pendente:** a abertura de `RECRUITMENT` exige visita com atividade e critérios de inclusão e exclusão; `EXECUTION` exige participante incluído. Enquanto os módulos de critérios e inclusão não fornecerem `StudyReadiness`, essas duas transições respondem `409`. Assim, o backend não permite avançar sem validar as condições acordadas.
+Para abrir `RECRUITMENT`, o estudo precisa ter uma visita com atividade e critérios de inclusão e exclusão. Para iniciar `EXECUTION`, precisa ter um participante incluído; essa transição permanece bloqueada até a implementação da inclusão.
+
+O consentimento simulado de um candidato é consultado e registrado em
+`GET/PUT /api/studies/{studyId}/candidates/{candidateId}/consent`.
+Somente o coordenador acessa essas operações. Antes da primeira decisão, a
+consulta retorna `PENDING` sem horário. Durante `RECRUITMENT`, o `PUT`
+aceita `GRANTED` ou `DECLINED` e o backend registra o horário; `PENDING`
+não pode ser enviado como decisão. A migração V8 cria
+`simulated_consents`. O método `SimulatedConsentService.lockAfterInclusion`
+prepara o bloqueio da decisão após a inclusão e deve ser chamado pela futura
+T15.1 na mesma transação que cria o participante. Isso é um registro de teste,
+sem assinatura ou validade de consentimento clínico.
+
+Somente o perfil `COORDINATOR` pode cadastrar candidatos. A consulta é permitida ao `COORDINATOR` e ao `RESEARCHER` responsável pelo estudo. O cadastro exige estudo em `RECRUITMENT`, inicia `eligibilityStatus` como `PENDING` e rejeita nomes e idades repetidos no mesmo estudo com `409`. Como o contrato atual não fornece outro identificador do candidato, a chave de duplicidade usa o nome normalizado e a idade. A API não acessa repositórios internos do módulo de estudos; consulta o estudo pelo `StudyService`.
 
 Os testes automatizados de estudos verificam as regras do serviço, as respostas HTTP e o fluxo completo com PostgreSQL. A API também foi iniciada com PostgreSQL 18 local: listagem `200`, cadastro `201`, atualização `200` e rejeição de datas invertidas `400`, sem alterar os dados já gravados.
 

@@ -7,8 +7,11 @@ RUN apt-get update \
 
 COPY .mvn/ .mvn/
 COPY mvnw pom.xml ./
+COPY checkstyle.xml ./
 COPY src/ src/
-RUN ./mvnw -B -ntp -DskipTests -Dcheckstyle.skip package
+RUN sed -i 's/\r$//' mvnw \
+    && chmod +x mvnw \
+    && ./mvnw -B -ntp -DskipTests package
 
 FROM eclipse-temurin:21-jre-jammy
 WORKDIR /app

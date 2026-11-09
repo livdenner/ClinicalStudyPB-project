@@ -7,6 +7,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import clinicalstudypb.candidates.domain.Candidate;
+import clinicalstudypb.candidates.infrastructure.CandidateRepository;
 import clinicalstudypb.studies.domain.Study;
 import clinicalstudypb.support.IntegrationTestSupport;
 import clinicalstudypb.users.domain.User;
@@ -102,15 +104,25 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
             Endpoint.versioned(HttpMethod.DELETE,
                     "/api/studies/{id}/planned-visits/{visitId}/activities/{activityId}", null));
 
+    private static final List<Endpoint> CONSENT_ENDPOINTS = List.of(
+            new Endpoint(HttpMethod.GET, "/api/studies/{id}/candidates/{candidateId}/consent", null),
+            new Endpoint(HttpMethod.PUT, "/api/studies/{id}/candidates/{candidateId}/consent",
+                    "{\"status\":\"GRANTED\"}"));
+
     /** Tabelas comparadas antes e depois de um acesso negado. */
     private static final List<String> SNAPSHOT_TABLES = List.of(
-            "users", "studies", "study_status_history", "planned_visits", "planned_activities");
+            "users", "studies", "study_status_history", "planned_visits", "planned_activities",
+            "simulated_consents");
 
     @Autowired
     private JdbcTemplate jdbc;
 
+    @Autowired
+    private CandidateRepository candidateRepository;
+
     private final Map<UserRole, User> users = new EnumMap<>(UserRole.class);
     private Study study;
+    private Candidate candidate;
     private Long visitId;
     private Long otherVisitId;
     private Long activityId;
@@ -123,6 +135,7 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
         }
         study = studyRepository.save(new Study("Estudo existente", "Objetivo original",
                 users.get(UserRole.RESEARCHER).getId(), LocalDate.of(2027, 1, 1), LocalDate.of(2027, 6, 30), 40));
+        candidate = candidateRepository.save(new Candidate(study.getId(), "Candidato", "candidato", 42));
         visitId = insertVisit("Visita inicial", LocalDate.of(2027, 2, 1), 1);
         otherVisitId = insertVisit("Visita final", LocalDate.of(2027, 6, 1), 2);
         activityId = insertActivity(visitId, "Entrevista", "Histórico clínico", 1);
@@ -154,6 +167,10 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
         return STUDY_ENDPOINTS.stream().filter(Endpoint::isRead);
     }
 
+    static Stream<Arguments> consentEndpointsForOtherRoles() {
+        return combine(CONSENT_ENDPOINTS, UserRole.COORDINATOR);
+    }
+
     @ParameterizedTest(name = "{0}: {1}")
     @MethodSource("userEndpointsForOtherRoles")
     void onlyAdministratorManagesUsers_otherRolesAreForbiddenWithoutSideEffects(UserRole role, Endpoint endpoint)
@@ -167,6 +184,13 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
             throws Exception {
         // O próprio usuário vira o responsável: a única regra que pode negar é a de perfil.
         makeResponsible(role);
+        assertForbiddenWithoutSideEffects(role, endpoint, study.getId());
+    }
+
+    @ParameterizedTest(name = "{0}: {1}")
+    @MethodSource("consentEndpointsForOtherRoles")
+    void onlyCoordinatorAccessesConsent_otherRolesAreForbiddenWithoutSideEffects(UserRole role, Endpoint endpoint)
+            throws Exception {
         assertForbiddenWithoutSideEffects(role, endpoint, study.getId());
     }
 
@@ -218,6 +242,7 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
         Map<String, Long> ids = Map.of(
                 "id", targetId,
                 "ownerId", responsibleId(),
+                "candidateId", candidate.getId(),
                 "visitId", visitId,
                 "otherVisitId", otherVisitId,
                 "activityId", activityId,
@@ -260,12 +285,14 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
     }
 
     /**
-     * Todas as linhas das tabelas de usuários, estudos, histórico e visitas, para comparar antes
-     * e depois de um acesso negado. Inclui estado, versão e revisão do protocolo do estudo.
+     * Todas as linhas das tabelas de usuários, estudos, histórico, visitas e consentimentos, para
+     * comparar antes e depois de um acesso negado. Inclui estado, versão e revisão do protocolo do
+     * estudo. Ordena pela primeira coluna, a chave primária ({@code simulated_consents} não tem
+     * coluna {@code id}).
      */
     private List<String> databaseSnapshot() {
         return SNAPSHOT_TABLES.stream()
-                .flatMap(table -> jdbc.queryForList("SELECT * FROM " + table + " ORDER BY id").stream()
+                .flatMap(table -> jdbc.queryForList("SELECT * FROM " + table + " ORDER BY 1").stream()
                         .map(row -> table + "|" + row))
                 .toList();
     }
