@@ -25,7 +25,8 @@ Entregar a primeira versão operacional do ClinicalStudyPB para a aplicação we
 | Controle de acesso web/API (RF03)                                   | Em andamento | Autorização por perfil no backend com `@PreAuthorize` e proteção de rotas e menu na web com `ProtectedRoute`, `ForbiddenPage` e configuração de navegação.                                                       |
 | Gestão de estudos (RF04)                                            | Em andamento | Listagem, busca por título, cadastro, edição e visualização por ID integrados a `/api/studies`, com JWT e persistência no banco. Cadastro utiliza o pesquisador logado; edição preserva o responsável existente. |
 | Protótipos web de painel, recrutamento, visitas e relatórios (T7.2) | Em andamento | Telas navegáveis com dados mock locais e modais interativos em `/dashboard`, `/recrutamento`, `/visitas` e `/relatorios`, com testes em `web/src/pages/prototipos.test.tsx`.                                     |
-| Recrutamento e inclusão (RF05 a RF11)                               | Pendente     | Planejado para a Sprint 2.                                                                                                                                                                                       |
+| Recrutamento e inclusão (RF05 a RF10)                               | Em andamento | API de critérios, visitas, estados, candidatos, elegibilidade e consentimento na `development`, com testes de integração. Na web, há telas de candidatos, estados e visitas; elegibilidade está no PR #50 e consentimento ainda não tem tela. |
+| Inclusão de participantes (RF11)                                    | Pendente     | Existem a tabela `participants` e o contrato OpenAPI, mas ainda não há endpoint de inclusão.                                                                                                                     |
 
 ## Cliente HTTP da web
 
@@ -195,11 +196,44 @@ npm --prefix web run test
 npm --prefix web run build
 ```
 
+## Resultados da CI, testes e cobertura (T16.8)
+
+Números da [execução 42689718497 do GitHub Actions](https://github.com/livdenner/ClinicalStudyPB-project/actions/runs/42689718497), feita em 09/11/2026 no push da `development` no commit `548164d` (merge do PR #49). Os quatro jobs concluíram com sucesso.
+
+| Job                                  | O que verifica                                                                       | Resultado                                          |
+| ------------------------------------ | ------------------------------------------------------------------------------------ | -------------------------------------------------- |
+| Backend (Maven, Checkstyle, JUnit, JaCoCo) | `mvnw verify` com Testcontainers e PostgreSQL real; reprova abaixo de 80% de linhas  | 345 testes, 0 falhas, 0 erros, 0 ignorados         |
+| Web (ESLint, Vitest, build)          | Prettier, ESLint, testes com cobertura e build                                       | 20 arquivos, 157 testes passando                   |
+| E2E Web (Playwright)                 | Navegador, web, API Spring Boot e PostgreSQL em contêineres                          | 7 testes passando                                  |
+| Mobile (Jest)                        | Testes com cobertura do esqueleto do aplicativo                                      | 2 testes passando                                  |
+
+Dos 345 testes do backend, 246 são de integração.
+
+### Cobertura
+
+| Módulo  | Linhas                | Ramos            | Meta                                                   |
+| ------- | --------------------- | ---------------- | ------------------------------------------------------ |
+| Backend | **92,38%** (788/853)  | 77,44% (206/266) | 80% das linhas, verificada pelo JaCoCo no `mvnw verify` |
+| Web     | 86,55%                | 77,98%           | Sem limite mínimo configurado                          |
+| Mobile  | 76,47%                | 58,06%           | Sem limite mínimo configurado                          |
+
+O JaCoCo exclui da meta somente `ClinicalStudyPBApplication` e as classes `*Configuration` e `*Config`. Os pacotes com menor cobertura de linhas no backend são `criteria.api` (30,77%), `criteria.application` (63,16%) e `candidates.api` (68%). Os testes dos PRs #42 e #43, ainda em revisão, tratam de critérios e candidatos.
+
+### Relatórios
+
+Os relatórios ficam nos artefatos da execução, disponíveis até 07/02/2027: `jacoco-report`, `junit-report`, `web-coverage`, `mobile-coverage` e `playwright-report`.
+
+### Limitações conhecidas
+
+- As branches `development` e `main` não têm proteção de branch, então a CI reprova o PR, mas não impede o merge.
+- O merge do PR #41 deixou a CI da `development` vermelha por cerca de 30 minutos em 09/11/2026, com erro de tipos em `web/src/pages/recrutamento/recrutamento.test.tsx`. A execução seguinte, do merge do PR #44, passou.
+- A inclusão de participantes (RF11) ainda não tem endpoint, portanto esses números não cobrem esse fluxo.
+
 ## Evidências a registrar no fechamento
 
 - [ ] Link do board e burndown da sprint no Azure DevOps.
 - [ ] Capturas ou demonstração dos fluxos concluídos.
-- [ ] Resultados da CI, testes e cobertura.
+- [x] Resultados da CI, testes e cobertura.
 - [ ] Link da documentação OpenAPI/Swagger.
 - [ ] Pendências, impedimentos e ações da retrospectiva.
 - [ ] Tag e GitHub Release `release1`.
@@ -210,4 +244,4 @@ npm --prefix web run build
 - Os resultados deste documento devem ser atualizados com evidências reais; itens planejados não devem ser apresentados como entregues.
 - Pré-requisitos e comandos do backend;
 - Pré-requisitos e comandos do mobile;
-- Resultados reais dos testes, CI, cobertura, capturas e burndown.
+- Capturas e burndown.
