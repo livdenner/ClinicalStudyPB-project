@@ -16,4 +16,14 @@ export type EstudoApi = DadosEstudoApi & { id: number; status: EstadoEstudo; ver
 export type DadosTransicaoEstudoApi = {
     status: EstadoEstudo;
     expectedStatus: EstadoEstudo;
+    reason?: string;
+};
+
+export type HistoricoEstadoEstudo = {
+    id: number;
+    actorUserId: number;
+    changedAt: string;
+    fromStatus: EstadoEstudo;
+    toStatus: EstadoEstudo;
+    reason: string | null;
 };

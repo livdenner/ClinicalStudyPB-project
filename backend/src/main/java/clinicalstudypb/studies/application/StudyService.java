@@ -84,6 +84,19 @@ public class StudyService {
     }
 
     /**
+     * Verifica se o usuário autenticado é o pesquisador responsável pelo estudo.
+     *
+     * @param id identificador do estudo
+     * @return verdadeiro quando o usuário autenticado é responsável
+     * @throws ResourceNotFoundException se o estudo não existir
+     */
+    @Transactional(readOnly = true)
+    public boolean isResponsible(Long id) {
+        Study study = getStudy(id);
+        return study.getResponsibleUserId().equals(currentActor.userId());
+    }
+
+    /**
      * Cadastra um estudo após validar os dados e o pesquisador responsável.
      *
      * @param title título do estudo
@@ -262,6 +275,19 @@ public class StudyService {
     }
 
     /**
+     * Busca um estudo com bloqueio de escrita antes de cadastrar um candidato.
+     * O serviço de candidatos valida o estado enquanto este bloqueio permanece
+     * ativo na transação externa de cadastro.
+     *
+     * @param id identificador do estudo
+     * @return estudo bloqueado
+     */
+    @Transactional
+    public Study lockForCandidateRegistration(Long id) {
+        return getStudyForUpdate(id);
+    }
+
+    /**
      * Confere a versão apresentada pelo cliente antes de alterar o protocolo.
      * Ao marcar a entidade como modificada, a JPA incrementa a versão no commit.
      *
@@ -294,6 +320,9 @@ public class StudyService {
         }
         if (participantLimit == null || participantLimit <= 0) {
             throw new InvalidStudyException("O limite de participantes deve ser maior que zero.");
+        }
+        if (participantLimit > 1_000_000) {
+            throw new InvalidStudyException("O limite de participantes não pode exceder 1.000.000.");
         }
         if (responsibleUserId == null || responsibleUserId <= 0) {
             throw new InvalidStudyException("Informe um usuário responsável válido.");

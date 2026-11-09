@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Button, Modal } from "@heroui/react";
+import { Button, FieldError, Label, Modal, TextArea, TextField } from "@heroui/react";
 import { ESTADOS_ESTUDO } from "../../config/estados-estudo";
 import { ApiClientError } from "../../services/api/apiClient";
 import type { EstadoEstudo, EstudoApi } from "../../types/estudo";
@@ -10,11 +10,19 @@ type Props = {
     estudo: EstudoApi;
     destino: EstadoEstudo;
     onFechar: () => void;
-    onConfirmar: () => Promise<void>;
+    onConfirmar: (justificativa?: string) => Promise<void>;
     onAtualizar: () => void;
 };
 
 const TEXTOS_TRANSICAO: Partial<Record<EstadoEstudo, { acao: string; pergunta: string }>> = {
+    PLANNING: {
+        acao: "Voltar ao planejamento",
+        pergunta: "Deseja retornar este estudo ao planejamento?",
+    },
+    CANCELLED: {
+        acao: "Cancelar estudo",
+        pergunta: "Deseja cancelar este estudo? Informe a justificativa.",
+    },
     RECRUITMENT: {
         acao: "Abrir recrutamento",
         pergunta: "Deseja abrir o recrutamento deste estudo?",
@@ -40,7 +48,16 @@ export function ModalTransicaoEstudo({
     const [erro, setErro] = useState("");
     const [conflito, setConflito] = useState(false);
     const erroRef = useRef<HTMLParagraphElement>(null);
-    const textos = TEXTOS_TRANSICAO[destino];
+    const textos =
+        estudo.status === "CANCELLED"
+            ? {
+                  acao: "Restaurar estudo",
+                  pergunta: `Deseja restaurar este estudo para ${ESTADOS_ESTUDO[destino].rotulo}?`,
+              }
+            : TEXTOS_TRANSICAO[destino];
+    const [justificativa, setJustificativa] = useState("");
+    const [erroJustificativa, setErroJustificativa] = useState("");
+    const justificativaRef = useRef<HTMLTextAreaElement>(null);
 
     useEffect(() => {
         if (erro) erroRef.current?.focus();
@@ -57,9 +74,8 @@ export function ModalTransicaoEstudo({
             return;
         }
         if (error.status === 409) {
-            setConflito(true);
-            const motivo = error.message.trim() || "A transição não é mais permitida.";
-            setErro(`${motivo} Atualize o estudo para conferir o estado atual.`);
+            setConflito(error.code === "STUDY_REFRESH_REQUIRED");
+            setErro(error.message.trim() || "A transição não é permitida no estado atual.");
             return;
         }
         if (error.status === 400) {
@@ -74,9 +90,18 @@ export function ModalTransicaoEstudo({
     async function confirmar() {
         if (salvando || conflito) return;
         setErro("");
+        setErroJustificativa("");
+        if (
+            destino === "CANCELLED" &&
+            (!justificativa.trim() || justificativa.trim().length > 1000)
+        ) {
+            setErroJustificativa("Informe uma justificativa de até 1000 caracteres.");
+            justificativaRef.current?.focus();
+            return;
+        }
         setSalvando(true);
         try {
-            await onConfirmar();
+            await onConfirmar(destino === "CANCELLED" ? justificativa.trim() : undefined);
         } catch (error) {
             tratarErroAoConfirmar(error);
         } finally {
@@ -118,7 +143,7 @@ export function ModalTransicaoEstudo({
                                     </dd>
                                 </div>
                                 <div>
-                                    <dt className="mb-2 text-sm">Próximo estado</dt>
+                                    <dt className="mb-2 text-sm">Estado de destino</dt>
                                     <dd>
                                         <SeloEstadoEstudo estado={destino} />
                                     </dd>
@@ -128,6 +153,24 @@ export function ModalTransicaoEstudo({
                                 {textos?.pergunta ??
                                     `Confirma a mudança para ${ESTADOS_ESTUDO[destino].rotulo}?`}
                             </p>
+                            {destino === "CANCELLED" && (
+                                <TextField
+                                    name="reason"
+                                    isRequired
+                                    isDisabled={salvando}
+                                    isInvalid={Boolean(erroJustificativa)}
+                                >
+                                    <Label>Justificativa</Label>
+                                    <TextArea
+                                        ref={justificativaRef}
+                                        value={justificativa}
+                                        onChange={(event) => setJustificativa(event.target.value)}
+                                        maxLength={1000}
+                                        rows={3}
+                                    />
+                                    <FieldError>{erroJustificativa}</FieldError>
+                                </TextField>
+                            )}
                             {erro && (
                                 <p
                                     ref={erroRef}
@@ -141,7 +184,7 @@ export function ModalTransicaoEstudo({
                         </Modal.Body>
                         <Modal.Footer className="shrink-0 justify-end gap-3 border-t border-[var(--color-border)] px-5 py-4">
                             <Button variant="secondary" isDisabled={salvando} onPress={onFechar}>
-                                Cancelar
+                                Voltar
                             </Button>
                             {conflito ? (
                                 <Button variant="primary" onPress={onAtualizar}>

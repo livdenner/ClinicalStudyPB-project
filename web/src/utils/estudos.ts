@@ -1,6 +1,6 @@
 import type { EstudoApi, FiltroEstadoEstudo } from "../types/estudo";
 import type { AuthenticatedUser } from "../types/auth";
-import { ehEstadoEstudo, ESTADOS_ESTUDO } from "../config/estados-estudo";
+import { ehEstadoEstudo } from "../config/estados-estudo";
 
 type UsuarioEstudo = Pick<AuthenticatedUser, "id" | "role">;
 
@@ -17,7 +17,7 @@ export function podeAlterarEstadoEstudo(estudo: EstudoApi, usuario: UsuarioEstud
         usuario.role === "RESEARCHER" &&
         usuario.id === estudo.responsibleUserId &&
         ehEstadoEstudo(estudo.status) &&
-        ESTADOS_ESTUDO[estudo.status].proximo !== null
+        estudo.status !== "CLOSED"
     );
 }
 

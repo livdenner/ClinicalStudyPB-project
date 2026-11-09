@@ -36,6 +36,13 @@ jobs:
           name: jacoco-report
           path: backend/target/site/jacoco
           if-no-files-found: ignore
+      - name: Relatório de testes JUnit (Surefire)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: junit-report
+          path: backend/target/surefire-reports
+          if-no-files-found: ignore
 
   web:
     name: Web (ESLint, Vitest, build)
@@ -65,8 +72,7 @@ jobs:
 
   e2e:
     name: E2E Web (Playwright)
-    # Conforme o plano de testes, o E2E roda nos PRs e pushes para a main.
-    if: github.base_ref == 'main' || github.ref == 'refs/heads/main'
+    # O E2E roda em todos os PRs e pushes para a development e a main (os gatilhos do workflow).
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -121,3 +127,10 @@ jobs:
         run: npm ci
       - if: steps.app.outputs.exists == 'true'
         run: npm test -- --ci --coverage
+      - name: Relatório de cobertura Jest
+        if: always() && steps.app.outputs.exists == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-coverage
+          path: mobile/coverage
+          if-no-files-found: ignore

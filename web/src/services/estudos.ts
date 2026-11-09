@@ -1,5 +1,10 @@
 import { apiRequest } from "./api/apiClient";
-import type { DadosEstudoApi, DadosTransicaoEstudoApi, EstudoApi } from "../types/estudo";
+import type {
+    DadosEstudoApi,
+    DadosTransicaoEstudoApi,
+    EstudoApi,
+    HistoricoEstadoEstudo,
+} from "../types/estudo";
 
 const ESTUDOS_PATH = "/api/studies";
 
@@ -32,5 +37,12 @@ export function alterarEstadoEstudo(id: number, dados: DadosTransicaoEstudoApi, 
         method: "PATCH",
         body: dados,
         token,
+    });
+}
+
+export function obterHistoricoEstadoEstudo(id: number, token: string, signal?: AbortSignal) {
+    return apiRequest<HistoricoEstadoEstudo[]>(`${ESTUDOS_PATH}/${id}/status-history`, {
+        token,
+        signal,
     });
 }

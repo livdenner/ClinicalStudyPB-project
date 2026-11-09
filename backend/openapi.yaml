@@ -769,7 +769,9 @@ paths:
         Somente COORDINATOR. studyId vem da rota, não do JSON. name e age são
         obrigatórios; age é inteiro entre 1 e 130 anos. O cadastro inicia com
         eligibilityStatus=PENDING. A elegibilidade para participar depende dos
-        critérios de cada estudo, além da validade da idade no cadastro.
+        critérios de cada estudo, além da validade da idade no cadastro. O estudo
+        precisa estar em RECRUITMENT. No contrato atual, a duplicidade é definida
+        por nome sem diferença de maiúsculas/espaços e idade dentro do mesmo estudo.
       security:
         - bearerAuth: []
       requestBody:
@@ -807,6 +809,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
 
   /api/studies/{studyId}/candidates/{candidateId}:
     parameters:
@@ -934,8 +938,9 @@ paths:
       summary: Registra a decisão simulada do candidato (RF10, T14.1)
       description: |
         Somente COORDINATOR. GRANTED ou DECLINED substitui a decisão anterior
-        enquanto o candidato não foi incluído. A decisão é registrada pelo
-        backend com horário; após inclusão não pode ser alterada (409).
+        durante RECRUITMENT, enquanto o candidato não foi incluído. A decisão
+        é registrada pelo backend com horário; após inclusão não pode ser
+        alterada (409). PENDING não é aceito no corpo da requisição.
       security:
         - bearerAuth: []
       requestBody:
@@ -1228,6 +1233,7 @@ components:
           type: integer
           format: int32
           minimum: 1
+          maximum: 1000000
     Study:
       type: object
       required: [id, title, objective, responsibleUserId, startDate, endDate, participantLimit, status, version]
@@ -1255,6 +1261,7 @@ components:
           type: integer
           format: int32
           minimum: 1
+          maximum: 1000000
         status:
           $ref: '#/components/schemas/StudyStatus'
         version:

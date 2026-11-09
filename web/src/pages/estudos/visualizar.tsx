@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { Button, Card, Link, Spinner, Tabs, toast } from "@heroui/react";
-import { ArrowLeft } from "lucide-react";
+import { useState } from "react";
+import { Button, Card, Link, Spinner, Tabs, Surface } from "@heroui/react";
+import { ArrowLeft, Info } from "lucide-react";
 import { Link as RouterLink, Navigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { ModalEditarEstudo } from "../../components/estudos/ModalEditarEstudo";
@@ -9,12 +9,10 @@ import { CabecalhoEstudo } from "../../components/estudos/CabecalhoEstudo";
 import { ResumoEstudo } from "../../components/estudos/ResumoEstudo";
 import { ehEstadoEstudo, ESTADOS_ESTUDO } from "../../config/estados-estudo";
 import { ErrorMessage } from "../../components/ui/ErrorMessage";
-import { ApiClientError } from "../../services/api/apiClient";
-import { alterarEstadoEstudo, editarEstudo, obterEstudo } from "../../services/estudos";
 import type { AuthenticatedUser } from "../../types/auth";
-import type { DadosEstudoApi, EstadoEstudo, EstudoApi } from "../../types/estudo";
+import type { EstadoEstudo } from "../../types/estudo";
 import { podeEditarEstudo, podeAlterarEstadoEstudo } from "../../utils/estudos";
-import { obterMensagemErroAcesso } from "../../utils/erros-api";
+import { useDetalhesEstudo } from "./useDetalhesEstudo";
 import { VisitasPrevistasEstudo } from "./visitas-previstas";
 
 const MENSAGENS_EDICAO_BLOQUEADA: Partial<Record<EstadoEstudo, string>> = {
@@ -90,82 +88,25 @@ function DetalhesEstudo({
     token: string;
     pesquisador: AuthenticatedUser;
 }) {
-    const [estudo, setEstudo] = useState<EstudoApi | null>(null);
-    const [carregando, setCarregando] = useState(true);
-    const [erro, setErro] = useState<{
-        mensagem: string;
-        status: number | null;
-    } | null>(null);
-    const [tentativa, setTentativa] = useState(0);
-    const [editando, setEditando] = useState(false);
-    const [transicao, setTransicao] = useState<EstadoEstudo | null>(null);
+    const {
+        estudo,
+        setEstudo,
+        carregando,
+        erro,
+        origemCancelamento,
+        carregandoHistorico,
+        erroHistorico,
+        tentarHistoricoNovamente,
+        editando,
+        setEditando,
+        transicao,
+        setTransicao,
+        salvar,
+        transicionar,
+        atualizarEstudo,
+    } = useDetalhesEstudo({ id, token, pesquisador });
     const [visitasMontadas, setVisitasMontadas] = useState(false);
     const [visitasEmProcessamento, setVisitasEmProcessamento] = useState(false);
-
-    useEffect(() => {
-        const controller = new AbortController();
-        obterEstudo(id, token, controller.signal)
-            .then((dados) => {
-                if (!controller.signal.aborted) setEstudo(dados);
-            })
-            .catch((error: unknown) => {
-                if (controller.signal.aborted) return;
-                const status = error instanceof ApiClientError ? error.status : null;
-                const mensagem =
-                    obterMensagemErroAcesso(error) ??
-                    "Não foi possível carregar o estudo. Verifique a conexão e tente novamente.";
-                setErro({ mensagem, status });
-            })
-            .finally(() => {
-                if (!controller.signal.aborted) setCarregando(false);
-            });
-        return () => controller.abort();
-    }, [id, token, tentativa]);
-
-    async function salvar(dados: DadosEstudoApi) {
-        if (!estudo) return;
-        if (!podeEditarEstudo(estudo, pesquisador)) {
-            throw new ApiClientError(
-                "Não é permitido editar este estudo com o usuário ou estado atual.",
-                { status: 403 }
-            );
-        }
-        const atualizado = await editarEstudo(
-            estudo.id,
-            {
-                ...dados,
-                responsibleUserId: estudo.responsibleUserId,
-            },
-            token
-        );
-        setEstudo(atualizado);
-        setEditando(false);
-        toast.success("Estudo atualizado com sucesso.");
-    }
-
-    async function transicionar() {
-        if (!estudo || !transicao) return;
-        if (!podeAlterarEstadoEstudo(estudo, pesquisador)) {
-            throw new ApiClientError("Você não tem permissão para alterar o estado deste estudo.", {
-                status: 403,
-            });
-        }
-        const atualizado = await alterarEstadoEstudo(
-            estudo.id,
-            { status: transicao, expectedStatus: estudo.status },
-            token
-        );
-        setEstudo(atualizado);
-        setTransicao(null);
-        toast.success("Estado do estudo atualizado com sucesso.");
-    }
-
-    function atualizarEstudo() {
-        setTransicao(null);
-        setCarregando(true);
-        setErro(null);
-        setTentativa((atual) => atual + 1);
-    }
 
     if (carregando) {
         return (
@@ -189,14 +130,7 @@ function DetalhesEstudo({
                     Não foi possível abrir o estudo
                 </h1>
                 <ErrorMessage message={erro.mensagem} />
-                <Button
-                    variant="secondary"
-                    onPress={() => {
-                        setCarregando(true);
-                        setErro(null);
-                        setTentativa((atual) => atual + 1);
-                    }}
-                >
+                <Button variant="secondary" onPress={atualizarEstudo}>
                     Tentar novamente
                 </Button>
                 {erro.status === 401 && (
@@ -237,6 +171,8 @@ function DetalhesEstudo({
                 edicaoPermitida={edicaoPermitida}
                 mensagemBloqueio={mensagemBloqueio}
                 emProcessamento={visitasEmProcessamento}
+                alteracaoEstadoPermitida={podeAlterarEstadoEstudo(estudo, pesquisador)}
+                origemCancelamento={origemCancelamento}
                 proximaTransicao={
                     podeAlterarEstadoEstudo(estudo, pesquisador) && estado?.proximo
                         ? { estado: estado.proximo, rotulo: estado.acao }
@@ -245,6 +181,47 @@ function DetalhesEstudo({
                 onEditar={() => setEditando(true)}
                 onTransicionar={setTransicao}
             />
+            {estudo.status === "CANCELLED" &&
+                podeAlterarEstadoEstudo(estudo, pesquisador) &&
+                (carregandoHistorico || erroHistorico) && (
+                    <Surface
+                        variant="transparent"
+                        className="flex flex-row items-center justify-between gap-3 rounded-xl border border-[var(--color-border)] bg-white px-4 py-3 shadow-none max-[600px]:flex-col max-[600px]:items-stretch"
+                    >
+                        <div
+                            role={erroHistorico ? "alert" : "status"}
+                            className="flex min-w-0 items-center gap-3"
+                        >
+                            {carregandoHistorico ? (
+                                <Spinner
+                                    size="sm"
+                                    color="current"
+                                    aria-hidden="true"
+                                    role="presentation"
+                                    className="shrink-0 text-[var(--color-primary)]"
+                                />
+                            ) : (
+                                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
+                                    <Info size={18} aria-hidden="true" />
+                                </span>
+                            )}
+                            <p className="text-sm leading-relaxed text-[var(--color-text)]">
+                                {erroHistorico ?? "Verificando restauração..."}
+                            </p>
+                        </div>
+                        {erroHistorico && (
+                            <Button
+                                variant="secondary"
+                                aria-label="Tentar consultar histórico novamente"
+                                onPress={tentarHistoricoNovamente}
+                                isDisabled={carregandoHistorico}
+                                className="min-h-11 shrink-0 border border-[var(--color-primary)] bg-white text-[var(--color-primary-dark)] hover:bg-[var(--color-primary-soft)]"
+                            >
+                                Tentar novamente
+                            </Button>
+                        )}
+                    </Surface>
+                )}
             <ResumoEstudo estudo={estudo} responsavel={responsavel} />
             <Tabs
                 variant="secondary"

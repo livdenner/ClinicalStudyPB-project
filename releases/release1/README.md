@@ -150,16 +150,16 @@ A verificação integrada com API e banco deve ser repetida nessa base, conferin
 - [x] Suítes automatizadas existentes passando e build aprovado.
 - [ ] Compatibilidade de cadastro e edição com RF07 validada após integração do contrato de estados.
 
-## Estados dos estudos (Task 3457) - implementação parcial
+## Estados dos estudos (Task 3457)
 
 A web utiliza o contrato RF07 atualizado de `backend/openapi.yaml`. O estudo retorna `status` e `version`. A alteração de estado é enviada por `PATCH /api/studies/{id}/status`, com JWT e corpo `{"status":"RECRUITMENT","expectedStatus":"PLANNING"}`, por exemplo. `expectedStatus` representa o estado que a tela consultou. Cadastro e edição enviam os campos de `StudyWriteRequest`.
 
 - Selo de estado na listagem e nos detalhes, usando Chip do HeroUI.
 - Filtro local por estado combinado com a busca por título, pois o GET atual retorna a lista completa.
-- Nos detalhes, somente o pesquisador responsável vê a ação de avanço normal `PLANNING` → `RECRUITMENT` → `EXECUTION` → `CLOSED`. As ações de retorno, cancelamento e restauração disponíveis no backend ainda precisam de interface própria.
+- Nos detalhes, somente o pesquisador responsável vê as ações de avanço `PLANNING` → `RECRUITMENT` → `EXECUTION` → `CLOSED`, retorno de `RECRUITMENT` para `PLANNING` e cancelamento dos estados permitidos pela API.
 - Confirmação em Modal do HeroUI, com estado atual e destino, bloqueio de fechamento e envio durante o salvamento.
 - Estado e ação disponíveis atualizados somente após sucesso, usando o estudo devolvido pela API. Falhas preservam os dados anteriores.
-- Mensagens para 400, 401 e 403. Em 409, a tela preserva o motivo informado pela API e oferece "Atualizar estudo", que consulta novamente o GET individual antes de outra tentativa.
+- Mensagens para 400, 401 e 403. Após HTTP 409, a web consulta o estudo para conferir estado e versão. Se os dados mudaram ou a conferência falhou, oferece "Atualizar estudo". Se continuam iguais, exibe a pendência informada pela API, como cadastrar visitas, critérios ou incluir participantes.
 
 Rótulos, cores e próximos estados ficam centralizados em `web/src/config/estados-estudo.ts`. Tipos ficam em `web/src/types/estudo.ts`, e a chamada REST em `web/src/services/estudos.ts`. Quando o backend ainda não informa um estado reconhecido, a interface mostra "Estado indisponível" e não oferece uma mudança baseada em suposição.
 
@@ -167,9 +167,15 @@ Rótulos, cores e próximos estados ficam centralizados em `web/src/config/estad
 
 As decisões de negócio fornecidas pela equipe restringem edição e transição ao pesquisador responsável. A web verifica perfil e identificador do responsável: outro pesquisador consulta os dados, mas não recebe botões de edição ou mudança de estado. A edição dos dados é permitida apenas em `PLANNING` e `RECRUITMENT`; `EXECUTION`, `CLOSED` e `CANCELLED` ficam somente leitura. O modal também bloqueia o envio direto de um formulário em modo de consulta.
 
-O estado `CANCELLED` é reconhecido pela apresentação, pelo filtro e pelos bloqueios da web. O backend já aceita cancelamento com justificativa e restauração conforme o estado de origem, consultável pelo histórico. A interface dessas operações permanece pendente.
+O cancelamento exige justificativa de até 1.000 caracteres, enviada em `reason`. Para estudos em `CANCELLED`, a web consulta `GET /api/studies/{id}/status-history` e oferece restauração apenas para a origem `PLANNING` ou `RECRUITMENT`. Cancelamentos originados em `EXECUTION` não oferecem restauração. Se o histórico falhar, os dados do estudo continuam visíveis e a interface oferece uma nova tentativa da consulta ao histórico. A restauração fica indisponível até identificar um destino permitido.
 
 O backend integrado valida o pesquisador responsável e permite editar estudo e protocolo em `PLANNING` e `RECRUITMENT`. Ao abrir recrutamento, verifica visita com atividade e critérios de inclusão/exclusão. Ao iniciar execução, verifica participante incluído. A validação de critérios e inclusão depende do provedor `StudyReadiness`. Os motivos de bloqueio retornados pela API são exibidos pela web.
+
+### Verificações de RF07
+
+A revisão da PR #41 registrou 138 testes Web passando, além de ESLint, Prettier, build e checks da CI. Os testes cobrem avanço, retorno ao planejamento, justificativa obrigatória, restauração conforme histórico e distinção dos conflitos HTTP 409. O cenário de falha e recuperação do histórico foi acrescentado após essa revisão.
+
+A validação dos fluxos com API e banco reais permanece pendente.
 
 ## Como executar a web
 

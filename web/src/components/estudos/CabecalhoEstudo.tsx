@@ -7,6 +7,8 @@ type Props = {
     edicaoPermitida: boolean;
     mensagemBloqueio: string;
     emProcessamento: boolean;
+    alteracaoEstadoPermitida: boolean;
+    origemCancelamento: EstadoEstudo | null;
     proximaTransicao: { estado: EstadoEstudo; rotulo: string | null } | null;
     onEditar: () => void;
     onTransicionar: (estado: EstadoEstudo) => void;
@@ -18,6 +20,8 @@ export function CabecalhoEstudo({
     mensagemBloqueio,
     emProcessamento,
     proximaTransicao,
+    alteracaoEstadoPermitida,
+    origemCancelamento,
     onEditar,
     onTransicionar,
 }: Props) {
@@ -55,6 +59,40 @@ export function CabecalhoEstudo({
                         >
                             {proximaTransicao.rotulo}
                         </Button>
+                    )}
+                    {alteracaoEstadoPermitida && (
+                        <>
+                            {estudo.status === "RECRUITMENT" && (
+                                <Button
+                                    variant="secondary"
+                                    isDisabled={emProcessamento}
+                                    onPress={() => onTransicionar("PLANNING")}
+                                >
+                                    Voltar ao planejamento
+                                </Button>
+                            )}
+                            {estudo.status === "CANCELLED" ? (
+                                (origemCancelamento === "PLANNING" ||
+                                    origemCancelamento === "RECRUITMENT") && (
+                                    <Button
+                                        variant="secondary"
+                                        isDisabled={emProcessamento}
+                                        onPress={() => onTransicionar(origemCancelamento)}
+                                    >
+                                        Restaurar estudo
+                                    </Button>
+                                )
+                            ) : (
+                                <Button
+                                    variant="secondary"
+                                    isDisabled={emProcessamento}
+                                    className="text-[#B42318]"
+                                    onPress={() => onTransicionar("CANCELLED")}
+                                >
+                                    Cancelar estudo
+                                </Button>
+                            )}
+                        </>
                     )}
                 </div>
                 {!edicaoPermitida && (
