@@ -104,4 +104,13 @@ public class Candidate {
     public EligibilityStatus getEligibilityStatus() {
         return eligibilityStatus;
     }
+
+    /**
+     * Atualiza o resultado calculado na mesma transação das respostas de elegibilidade.
+     *
+     * @param status resultado da avaliação atual
+     */
+    public void updateEligibilityStatus(EligibilityStatus status) {
+        this.eligibilityStatus = java.util.Objects.requireNonNull(status);
+    }
 }
