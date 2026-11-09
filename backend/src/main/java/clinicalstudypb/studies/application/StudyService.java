@@ -284,6 +284,19 @@ public class StudyService {
      */
     @Transactional
     public Study lockForCandidateRegistration(Long id) {
+        return lockForCandidateOperations(id);
+    }
+
+    /**
+     * Compartilha o bloqueio do estudo entre cadastro, avaliação e inclusão de candidatos.
+     * Cada operação aplica suas próprias regras de estado e autorização.
+     *
+     * @param id identificador do estudo
+     * @return estudo bloqueado até o encerramento da transação
+     * @throws ResourceNotFoundException quando o estudo não existe
+     */
+    @Transactional
+    public Study lockForCandidateOperations(Long id) {
         return getStudyForUpdate(id);
     }
 
@@ -320,6 +333,9 @@ public class StudyService {
         }
         if (participantLimit == null || participantLimit <= 0) {
             throw new InvalidStudyException("O limite de participantes deve ser maior que zero.");
+        }
+        if (participantLimit > 1_000_000) {
+            throw new InvalidStudyException("O limite de participantes não pode exceder 1.000.000.");
         }
         if (responsibleUserId == null || responsibleUserId <= 0) {
             throw new InvalidStudyException("Informe um usuário responsável válido.");

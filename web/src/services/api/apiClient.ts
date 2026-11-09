@@ -1,7 +1,6 @@
-export type ApiFieldError = {
-    field: string;
-    message: string;
-};
+import type { ApiFieldError } from "../../types/api";
+
+export type { ApiFieldError } from "../../types/api";
 
 export class ApiClientError extends Error {
     readonly status: number | null;

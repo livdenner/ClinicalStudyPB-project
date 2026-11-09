@@ -70,6 +70,7 @@ Como regra de dependência, um módulo não deve acessar diretamente as classes 
 ```text
 backend/
 ├── dev/
+│   ├── seed_demo_studies.sql
 │   └── seed_demo_users.sql
 └── src/
     ├── main/
@@ -135,10 +136,11 @@ docker compose logs -f backend
 
 O backend só inicia depois que o banco estiver saudável, e o Flyway aplica as migrações na primeira inicialização.
 
-**4. (Opcional) Carregue as contas de demonstração**, depois que o backend tiver iniciado e aplicado as migrações:
+**4. (Opcional) Carregue os dados de demonstração** (contas e estudos), depois que o backend tiver iniciado e aplicado as migrações. Os comandos funcionam no bash e no PowerShell:
 
 ```bash
-docker compose exec -T db psql -U clinicalstudypb -d clinicalstudypb < backend/dev/seed_demo_users.sql
+docker compose cp backend/dev/. db:/tmp/seed
+docker compose exec db psql -U clinicalstudypb -d clinicalstudypb -v ON_ERROR_STOP=1 -f /tmp/seed/seed_demo_users.sql -f /tmp/seed/seed_demo_studies.sql
 ```
 
 Se você alterou `DB_USER`, use o seu valor no lugar de `clinicalstudypb` após `-U`.
@@ -159,7 +161,7 @@ O backend recebe a conexão com o PostgreSQL pelas variáveis de ambiente `DB_UR
 
 A assinatura e a validação dos JWTs usam a variável `JWT_SECRET_BASE64`, que deve conter uma chave aleatória codificada em Base64 com pelo menos 32 bytes. Defina a mesma chave em cada instância do backend e mantenha-a fora do Git. A validade padrão é de 3600 segundos e pode ser alterada com `JWT_EXPIRATION_SECONDS`.
 
-Ao iniciar o backend, o Flyway aplica as migrações pendentes: V1 cria `users`, V2 cria `studies`, V3 adiciona o estado do estudo, V4 cria o histórico de estados, visitas previstas e atividades, e V5 cria candidatos. Estudos anteriores à V3 recebem `PLANNING`. O Hibernate valida a correspondência entre as tabelas e as entidades JPA, sem criar ou alterar tabelas automaticamente.
+Ao iniciar o backend, o Flyway aplica as migrações pendentes: V1 cria `users`, V2 cria `studies`, V3 adiciona o estado do estudo, V4 cria o histórico de estados, visitas previstas e atividades, V5 cria candidatos, V6 cria critérios de estudo, V7 cria respostas de elegibilidade e V8 cria consentimentos simulados. V9 registra autoria e instante da avaliação; V10 prepara os vínculos de participantes para integração com a T15.1. A sequência e o protocolo de integração estão descritos em [elegibilidade e participantes](backend/docs/eligibility-integration.md). Estudos anteriores à V3 recebem `PLANNING`. O Hibernate valida a correspondência entre as tabelas e as entidades JPA, sem criar ou alterar tabelas automaticamente.
 
 Para carregar as contas fictícias no ambiente local ou de demonstração, execute **manualmente** `backend/dev/seed_demo_users.sql` no banco `clinicalstudypb`, esquema `public`, depois da migração V1. O script pode ser executado novamente sem duplicar as contas. Ele não é uma migração Flyway e não roda na inicialização do backend.
 
@@ -171,6 +173,18 @@ Para carregar as contas fictícias no ambiente local ou de demonstração, execu
 | Participante | `participante@clinicalstudypb.test` | `Demo@Clinical2026` |
 
 Essas credenciais são apenas para demonstração e podem ser usadas para obter um token de acesso pelo endpoint de login.
+
+Depois das contas, `backend/dev/seed_demo_studies.sql` cria um estudo fictício em cada estado, todos com o Pesquisador de demonstração como responsável. Cada estudo tem visitas previstas com atividades e um histórico de estados coerente com o estado atual. Como a API ainda não avança um estudo além de `PLANNING` (faltam critérios e participantes), o script é hoje a forma de demonstrar os demais estados. Ele também pode ser executado novamente: um estudo só é criado se ainda não houver outro com o mesmo título.
+
+| Estudo | Estado | Visitas | Para demonstrar |
+| --- | --- | --- | --- |
+| Adesão ao tratamento da hipertensão arterial | `PLANNING` | 2 | Edição do protocolo e das visitas. |
+| Vacina contra influenza em idosos | `RECRUITMENT` | 3 | Volta para `PLANNING` e cancelamento com justificativa. |
+| Controle glicêmico no diabetes tipo 2 | `EXECUTION` | 3 | Protocolo bloqueado para edição. |
+| Reabilitação motora após AVC | `CLOSED` | 2 | Estado final: nenhuma transição é aceita. |
+| Tratamento da asma em crianças | `CANCELLED` | 1 | Restauração para `RECRUITMENT`, o estado de origem. |
+
+O teste `DemoSeedIntegrationTest` executa os dois scripts no PostgreSQL do Testcontainers. Assim, uma migração nova que quebre o seed falha no CI. A stack de E2E também carrega os dois scripts.
 
 ### Autenticação (T4.1)
 
@@ -245,8 +259,11 @@ A API usa a base `/api/studies` e segue o contrato em `backend/openapi.yaml`. Pe
 | `DELETE /api/studies/{id}/planned-visits/{visitId}/activities/{activityId}` | Excluir atividade sem esvaziar a visita | `204` |
 | `GET/POST /api/studies/{studyId}/candidates` | Listar ou cadastrar candidatos | `200/201` |
 | `GET /api/studies/{studyId}/candidates/{candidateId}` | Consultar um candidato do estudo | `200` |
+| `GET /api/studies/{studyId}/candidates/{candidateId}/eligibility` | Consultar respostas e resultado da elegibilidade | `200` |
+| `PUT /api/studies/{studyId}/candidates/{candidateId}/eligibility` | Substituir respostas e recalcular elegibilidade | `200` |
+| `GET/PUT /api/studies/{studyId}/candidates/{candidateId}/consent` | Consultar ou registrar consentimento simulado | `200/200` |
 
-Cadastro e atualização recebem `title`, `objective`, `responsibleUserId`, `startDate`, `endDate` e `participantLimit`. As datas usam o formato `AAAA-MM-DD`. O título é obrigatório e tem até 200 caracteres; o objetivo é obrigatório; o limite deve ser maior que zero; a data de término não pode anteceder a de início. O responsável deve existir e ter o perfil `RESEARCHER`, conforme a regra confirmada para a Sprint 1. O serviço consulta o módulo de usuários por `UserService`, sem acessar o repositório interno desse módulo.
+Cadastro e atualização recebem `title`, `objective`, `responsibleUserId`, `startDate`, `endDate` e `participantLimit`. As datas usam o formato `AAAA-MM-DD`. O título é obrigatório e tem até 200 caracteres; o objetivo é obrigatório; o limite de participantes deve estar entre 1 e 1.000.000, inclusive; a data de término não pode anteceder a de início. O responsável deve existir e ter o perfil `RESEARCHER`, conforme a regra confirmada para a Sprint 1. O serviço consulta o módulo de usuários por `UserService`, sem acessar o repositório interno desse módulo.
 
 O banco mantém a chave estrangeira para `users`, a restrição de datas e a restrição do limite. O serviço valida as regras antes de persistir. Corpos inválidos ou regras violadas recebem `400`; recursos inexistentes recebem `404`. Na atualização, a entidade JPA é alterada dentro de uma transação e o Hibernate grava as mudanças.
 
@@ -256,9 +273,22 @@ Uma visita prevista tem nome, data no período do estudo, posição 1..N e ao me
 
 `PlannedVisit` e `PlannedActivity` mapeiam as tabelas como entidades JPA. As consultas da API usam o repositório JPA com as atividades carregadas na ordem. As gravações e reordenações usam `JdbcTemplate` na mesma transação, com bloqueio do estudo e restrições únicas no PostgreSQL; esse caminho mantém as posições contínuas quando várias linhas mudam de lugar.
 
-**Integração pendente:** a abertura de `RECRUITMENT` exige visita com atividade e critérios de inclusão e exclusão; `EXECUTION` exige participante incluído. Enquanto os módulos de critérios e inclusão não fornecerem `StudyReadiness`, essas duas transições respondem `409`. Assim, o backend não permite avançar sem validar as condições acordadas.
+Para abrir `RECRUITMENT`, o estudo precisa ter uma visita com atividade e critérios de inclusão e exclusão. Para iniciar `EXECUTION`, precisa ter um participante incluído; essa transição permanece bloqueada até a implementação da inclusão.
+
+O consentimento simulado de um candidato é consultado e registrado em
+`GET/PUT /api/studies/{studyId}/candidates/{candidateId}/consent`.
+Somente o coordenador acessa essas operações. Antes da primeira decisão, a
+consulta retorna `PENDING` sem horário. Durante `RECRUITMENT`, o `PUT`
+aceita `GRANTED` ou `DECLINED` e o backend registra o horário; `PENDING`
+não pode ser enviado como decisão. A migração V8 cria
+`simulated_consents`. O método `SimulatedConsentService.lockAfterInclusion`
+prepara o bloqueio da decisão após a inclusão e deve ser chamado pela futura
+T15.1 na mesma transação que cria o participante. Isso é um registro de teste,
+sem assinatura ou validade de consentimento clínico.
 
 Somente o perfil `COORDINATOR` pode cadastrar candidatos. A consulta é permitida ao `COORDINATOR` e ao `RESEARCHER` responsável pelo estudo. O cadastro exige estudo em `RECRUITMENT`, inicia `eligibilityStatus` como `PENDING` e rejeita nomes e idades repetidos no mesmo estudo com `409`. Como o contrato atual não fornece outro identificador do candidato, a chave de duplicidade usa o nome normalizado e a idade. A API não acessa repositórios internos do módulo de estudos; consulta o estudo pelo `StudyService`.
+
+A avaliação de elegibilidade é exclusiva do `COORDINATOR`. Antes da primeira avaliação, o GET retorna `PENDING`, `answers: []` e omite `evaluatedAt`. O PUT recebe `answers` com ao menos uma resposta, substitui todas as anteriores e registra o autor autenticado e o instante da avaliação. Critério sem resposta mantém `PENDING`; com todos respondidos, todas as inclusões devem ter `matches: true` e todas as exclusões, `matches: false`, para obter `ELIGIBLE`. Caso contrário, o resultado é `INELIGIBLE`. Critérios repetidos ou de outro estudo retornam `400`; candidato inexistente ou fora do estudo da rota retorna `404`; estudo sem critérios ou candidato já incluído retorna `409`. As gravações usam o bloqueio compartilhado do estudo e uma única transação. A preparação da integração com participantes está descrita em [elegibilidade e T15.1](backend/docs/eligibility-integration.md).
 
 Os testes automatizados de estudos verificam as regras do serviço, as respostas HTTP e o fluxo completo com PostgreSQL. A API também foi iniciada com PostgreSQL 18 local: listagem `200`, cadastro `201`, atualização `200` e rejeição de datas invertidas `400`, sem alterar os dados já gravados.
 

@@ -7,6 +7,7 @@ type CampoDataProps = {
     value: CalendarDate | null;
     onChange: (data: CalendarDate | null) => void;
     minValue?: CalendarDate;
+    maxValue?: CalendarDate;
     isDisabled?: boolean;
     errorMessage?: string;
 };
@@ -16,6 +17,7 @@ export function CampoData({
     value,
     onChange,
     minValue,
+    maxValue,
     isDisabled,
     errorMessage,
 }: CampoDataProps) {
@@ -24,6 +26,7 @@ export function CampoData({
             value={value}
             onChange={onChange}
             minValue={minValue}
+            maxValue={maxValue}
             isDisabled={isDisabled}
             isRequired
             isInvalid={Boolean(errorMessage)}

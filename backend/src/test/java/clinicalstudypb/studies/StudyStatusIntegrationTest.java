@@ -10,7 +10,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import clinicalstudypb.studies.application.StudyReadiness;
+import clinicalstudypb.criteria.application.StudyCriterionService;
 import clinicalstudypb.studies.domain.Study;
 import clinicalstudypb.support.IntegrationTestSupport;
 import clinicalstudypb.users.domain.User;
@@ -45,7 +45,7 @@ class StudyStatusIntegrationTest extends IntegrationTestSupport {
     private JdbcTemplate jdbcTemplate;
 
     @MockitoBean
-    private StudyReadiness readiness;
+    private StudyCriterionService readiness;
 
     private User researcher;
     private String researcherToken;

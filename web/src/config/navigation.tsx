@@ -21,7 +21,7 @@ export const navigationItems: NavigationItem[] = [
         label: "Estudos clínicos",
         path: "/estudos",
         icon: "studies",
-        allowedRoles: ["RESEARCHER"],
+        allowedRoles: ["RESEARCHER", "COORDINATOR"],
     },
     {
         label: "Usuários e acessos",

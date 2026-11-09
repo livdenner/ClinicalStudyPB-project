@@ -44,10 +44,12 @@ vi.mock("../../components/estudos/CampoData", async () => {
 });
 
 const estudo: EstudoApi = {
+    version: 0,
+    status: "PLANNING",
     id: 3,
     title: "Estudo do sono",
     objective: "Avaliar hábitos",
-    responsibleUserId: 11,
+    responsibleUserId: 7,
     startDate: "2026-11-01",
     endDate: "2026-12-01",
     participantLimit: 30,
@@ -122,7 +124,7 @@ describe("estudos conectados à API", () => {
                     ...estudo,
                     id: 4,
                     title: "Estudo cardiovascular",
-                    responsibleUserId: 7,
+                    responsibleUserId: 11,
                 },
             ])
         );
@@ -206,7 +208,7 @@ describe("estudos conectados à API", () => {
         expect(toast.success).toHaveBeenCalledWith("Estudo cadastrado com sucesso.");
     });
 
-    it("preserva outro responsável na edição e bloqueia o formulário até o PUT terminar", async () => {
+    it("preserva o responsável na edição e bloqueia o formulário até o PUT terminar", async () => {
         let concluir!: (value: Response) => void;
         const pendente = new Promise<Response>((resolve) => {
             concluir = resolve;
@@ -222,7 +224,7 @@ describe("estudos conectados à API", () => {
         fireEvent.change(within(dialog).getByLabelText(/^Objetivo/), {
             target: { value: "Novo objetivo" },
         });
-        expect(within(dialog).getByText("Pesquisador #11")).toBeInTheDocument();
+        expect(within(dialog).getByText("Ana Silva")).toBeInTheDocument();
         expect(within(dialog).queryByLabelText("Status do estudo")).not.toBeInTheDocument();
         fireEvent.click(within(dialog).getByRole("button", { name: "Salvar alterações" }));
         await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
@@ -234,7 +236,7 @@ describe("estudos conectados à API", () => {
         const [url, options] = fetchMock.mock.calls[1];
         expect(url).toBe("/api/studies/3");
         expect(options?.method).toBe("PUT");
-        const { id: _id, ...dados } = estudo;
+        const { id: _id, status: _status, version: _version, ...dados } = estudo;
         expect(JSON.parse(String(options?.body))).toEqual({
             ...dados,
             objective: "Novo objetivo",
@@ -309,7 +311,7 @@ describe("estudos conectados à API", () => {
         });
         fireEvent.click(within(dialog).getByRole("button", { name: "Salvar alterações" }));
         expect(await screen.findByText("Informe o objetivo do estudo.")).toBeInTheDocument();
-        expect(screen.getByText(/Informe um limite inteiro/)).toBeInTheDocument();
+        expect(screen.getByText("Informe um número inteiro maior que zero.")).toBeInTheDocument();
         expect(screen.getByText(/A data de término deve ser igual/)).toBeInTheDocument();
         expect(fetchMock).toHaveBeenCalledTimes(1);
     });
@@ -328,8 +330,8 @@ describe("estudos conectados à API", () => {
     });
 
     it.each([
-        [401, "Sua sessão não é mais válida. Entre novamente para continuar."],
-        [403, "Você não tem permissão para consultar estudos."],
+        [401, "Sua sessão expirou. Entre novamente."],
+        [403, "Você não tem permissão para realizar esta ação."],
     ] as const)(
         "trata a resposta HTTP %s na listagem sem mostrar dados",
         async (status, mensagem) => {
@@ -347,7 +349,7 @@ describe("estudos conectados à API", () => {
         }
     );
 
-    it.each<UserRole>(["ADMINISTRATOR", "COORDINATOR", "PARTICIPANT"])(
+    it.each<UserRole>(["ADMINISTRATOR", "PARTICIPANT"])(
         "não chama a API para o perfil %s",
         (role) => {
             const fetchMock = vi.spyOn(globalThis, "fetch");
