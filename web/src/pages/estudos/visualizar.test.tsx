@@ -120,6 +120,7 @@ describe("visualização de estudos", () => {
                 "aria-selected",
                 "true"
             );
+            expect(screen.getByRole("tab", { name: "Critérios" })).toBeInTheDocument();
             expect(screen.getByRole("tab", { name: "Visitas previstas" })).toBeInTheDocument();
             expect(screen.queryByText("Progresso de inclusão")).not.toBeInTheDocument();
             expect(screen.queryByText("Status do estudo")).not.toBeInTheDocument();
