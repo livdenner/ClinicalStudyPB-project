@@ -44,17 +44,29 @@ public class EligibilityEvaluation {
         this.evaluatedAt = evaluatedAt;
     }
 
-    /** @return candidato avaliado */
+    /**
+     * Retorna candidato avaliado.
+     *
+     * @return candidato avaliado
+     */
     public Long getCandidateId() {
         return candidateId;
     }
 
-    /** @return identificador do autor autenticado */
+    /**
+     * Retorna identificador do autor autenticado.
+     *
+     * @return identificador do autor autenticado
+     */
     public Long getEvaluatedBy() {
         return evaluatedBy;
     }
 
-    /** @return instante da última avaliação */
+    /**
+     * Retorna instante da última avaliação.
+     *
+     * @return instante da última avaliação
+     */
     public Instant getEvaluatedAt() {
         return evaluatedAt;
     }

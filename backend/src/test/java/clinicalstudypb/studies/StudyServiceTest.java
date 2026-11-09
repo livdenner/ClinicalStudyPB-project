@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import clinicalstudypb.shared.ResourceNotFoundException;
+import clinicalstudypb.participants.application.ParticipantLookup;
 import clinicalstudypb.shared.CurrentActor;
 import clinicalstudypb.studies.application.StudyService;
 import clinicalstudypb.studies.application.StudyReadiness;
@@ -74,12 +75,15 @@ class StudyServiceTest {
     @Mock
     private StudyReadiness readiness;
 
+    @Mock
+    private ParticipantLookup participantLookup;
+
     private StudyService studyService;
 
     @BeforeEach
     void setUp() {
         studyService = new StudyService(studyRepository, userService, historyRepository,
-                currentActor, jdbc, readinessProvider);
+                currentActor, jdbc, readinessProvider, participantLookup);
         org.mockito.Mockito.lenient().when(currentActor.userId()).thenReturn(7L);
     }
 

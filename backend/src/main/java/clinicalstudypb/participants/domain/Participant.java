@@ -10,7 +10,7 @@ import java.time.Instant;
 
 /**
  * Vínculo persistido de um candidato incluído como participante do estudo.
- * A gravação pela T15.1 deve adquirir antes o bloqueio público de operações do candidato.
+ * A inclusão adquire antes os bloqueios públicos do estudo e do candidato.
  *
  * @author Lívia
  * @since 2026-11-08
@@ -55,27 +55,47 @@ public class Participant {
         this.includedAt = includedAt;
     }
 
-    /** @return identificador do participante */
+    /**
+     * Retorna identificador do participante.
+     *
+     * @return identificador do participante
+     */
     public Long getId() {
         return id;
     }
 
-    /** @return estudo do participante */
+    /**
+     * Retorna estudo do participante.
+     *
+     * @return estudo do participante
+     */
     public Long getStudyId() {
         return studyId;
     }
 
-    /** @return candidato que originou o participante */
+    /**
+     * Retorna candidato que originou o participante.
+     *
+     * @return candidato que originou o participante
+     */
     public Long getCandidateId() {
         return candidateId;
     }
 
-    /** @return autor da inclusão */
+    /**
+     * Retorna autor da inclusão.
+     *
+     * @return autor da inclusão
+     */
     public Long getIncludedBy() {
         return includedBy;
     }
 
-    /** @return instante da inclusão */
+    /**
+     * Retorna instante da inclusão.
+     *
+     * @return instante da inclusão
+     */
     public Instant getIncludedAt() {
         return includedAt;
     }

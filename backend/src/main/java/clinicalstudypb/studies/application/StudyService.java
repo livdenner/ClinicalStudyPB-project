@@ -1,5 +1,6 @@
 package clinicalstudypb.studies.application;
 
+import clinicalstudypb.participants.application.ParticipantLookup;
 import clinicalstudypb.shared.ResourceNotFoundException;
 import clinicalstudypb.shared.CurrentActor;
 import clinicalstudypb.studies.domain.InvalidStudyException;
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Confere os dados do estudo e o perfil e estado do pesquisador responsável.
  *
  * @author Lucas N. de Araújo
+ * @author Lívia
  * @since 2026-10-22
  * @version 0.0.1
  */
@@ -38,6 +40,7 @@ public class StudyService {
     private final CurrentActor currentActor;
     private final JdbcTemplate jdbc;
     private final ObjectProvider<StudyReadiness> readinessProvider;
+    private final ParticipantLookup participantLookup;
 
     /**
      * Recebe as dependências de persistência e consulta de usuários.
@@ -48,16 +51,19 @@ public class StudyService {
      * @param currentActor usuário autenticado
      * @param jdbc acesso às visitas previstas para validar o protocolo
      * @param readinessProvider verificação de critérios e participantes quando integrada
+     * @param participantLookup contagem pública de inclusões para proteger o limite
      */
     public StudyService(StudyRepository studyRepository, UserService userService,
                         StudyStatusHistoryRepository historyRepository, CurrentActor currentActor,
-                        JdbcTemplate jdbc, ObjectProvider<StudyReadiness> readinessProvider) {
+                        JdbcTemplate jdbc, ObjectProvider<StudyReadiness> readinessProvider,
+                        ParticipantLookup participantLookup) {
         this.studyRepository = studyRepository;
         this.userService = userService;
         this.historyRepository = historyRepository;
         this.currentActor = currentActor;
         this.jdbc = jdbc;
         this.readinessProvider = readinessProvider;
+        this.participantLookup = participantLookup;
     }
 
     /**
@@ -147,6 +153,9 @@ public class StudyService {
                 Integer.class, id, startDate, endDate);
         if (visitsOutsidePeriod != null && visitsOutsidePeriod > 0) {
             throw new ProtocolConflictException("O novo período precisa conter todas as visitas previstas.");
+        }
+        if (participantLookup.countIncluded(id) > participantLimit) {
+            throw new ProtocolConflictException("O limite não pode ser menor que a quantidade já incluída.");
         }
         study.updateDetails(title.strip(), objective.strip(), responsibleUserId,
                 startDate, endDate, participantLimit);

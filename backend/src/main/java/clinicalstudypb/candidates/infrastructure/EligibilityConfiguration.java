@@ -14,7 +14,15 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class EligibilityConfiguration {
 
-    /** @return relógio UTC usado para registrar avaliações */
+    /** Cria a configuração do relógio da elegibilidade. */
+    public EligibilityConfiguration() {
+    }
+
+    /**
+     * Fornece o relógio de avaliações com fuso UTC.
+     *
+     * @return relógio UTC usado para registrar avaliações
+     */
     @Bean
     public Clock eligibilityClock() {
         return Clock.systemUTC();

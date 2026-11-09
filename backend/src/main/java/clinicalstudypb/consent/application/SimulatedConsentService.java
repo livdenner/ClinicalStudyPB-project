@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
  * Consulta e registra decisões simuladas de consentimento para candidatos.
  *
  * @author Lucas N. de Araújo
+ * @author Lívia
  * @since 2026-11-07
  * @version 0.0.1
  */
@@ -79,8 +80,8 @@ public class SimulatedConsentService {
     }
 
     /**
-     * Bloqueia alterações posteriores à inclusão. A futura T15.1 deve chamar este
-     * método na mesma transação que grava o participante, antes de confirmar a inclusão.
+     * Bloqueia alterações posteriores à inclusão. O serviço de participantes chama
+     * este método na mesma transação que grava o vínculo, antes de confirmar a inclusão.
      *
      * @param studyId identificador do estudo
      * @param candidateId identificador do candidato

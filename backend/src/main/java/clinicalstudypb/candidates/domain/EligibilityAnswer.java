@@ -50,22 +50,38 @@ public class EligibilityAnswer {
         this.matches = matches;
     }
 
-    /** @return identificador da resposta */
+    /**
+     * Retorna identificador da resposta.
+     *
+     * @return identificador da resposta
+     */
     public Long getId() {
         return id;
     }
 
-    /** @return identificador do candidato */
+    /**
+     * Retorna identificador do candidato.
+     *
+     * @return identificador do candidato
+     */
     public Long getCandidateId() {
         return candidateId;
     }
 
-    /** @return identificador do critério */
+    /**
+     * Retorna identificador do critério.
+     *
+     * @return identificador do critério
+     */
     public Long getCriterionId() {
         return criterionId;
     }
 
-    /** @return se o candidato atende ao critério */
+    /**
+     * Retorna se o candidato atende ao critério.
+     *
+     * @return se o candidato atende ao critério
+     */
     public boolean isMatches() {
         return matches;
     }
