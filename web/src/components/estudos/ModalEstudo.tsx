@@ -4,6 +4,8 @@ import { parseDate, type CalendarDate } from "@internationalized/date";
 import { X } from "lucide-react";
 import { ApiClientError } from "../../services/api/apiClient";
 import type { DadosEstudoApi, EstudoApi } from "../../types/estudo";
+import { obterErrosCampos, obterMensagemErroAcesso } from "../../utils/erros-api";
+import { focarPrimeiroCampoInvalido } from "../../utils/formularios";
 import { CampoData } from "./CampoData";
 
 type Props = {
@@ -11,12 +13,22 @@ type Props = {
     responsavel: { id: number; name: string };
     onFechar: () => void;
     onSalvar: (dados: DadosEstudoApi) => Promise<void>;
+    somenteLeitura?: boolean;
 };
 
 const inputClass =
     "h-10 rounded-lg border border-[var(--color-border)] bg-white px-3 text-sm text-[var(--color-text)] shadow-none focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]";
 
-export function ModalEstudo({ estudo, responsavel, onFechar, onSalvar }: Props) {
+// o valor máximo aceito pelo campo Integer do backend é 2147483647, mas vou colocar um limite de 1000000
+const LIMITE_MAXIMO_PARTICIPANTES = 1000000;
+
+export function ModalEstudo({
+    estudo,
+    responsavel,
+    onFechar,
+    onSalvar,
+    somenteLeitura = false,
+}: Props) {
     const [titulo, setTitulo] = useState(estudo?.title ?? "");
     const [objetivo, setObjetivo] = useState(estudo?.objective ?? "");
     const [limite, setLimite] = useState(String(estudo?.participantLimit ?? ""));
@@ -36,31 +48,57 @@ export function ModalEstudo({ estudo, responsavel, onFechar, onSalvar }: Props) 
         if (salvando) return;
         if (erro) erroRef.current?.focus();
         else if (Object.keys(errosCampos).length > 0) {
-            formRef.current
-                ?.querySelector<HTMLElement>(
-                    'input[aria-invalid="true"], textarea[aria-invalid="true"], [role="spinbutton"][aria-invalid="true"], [aria-invalid="true"] [role="spinbutton"]'
-                )
-                ?.focus();
+            focarPrimeiroCampoInvalido(formRef.current);
         }
     }, [erro, errosCampos, salvando]);
 
-    async function salvar(event: FormEvent<HTMLFormElement>) {
-        event.preventDefault();
-        if (salvando) return;
-        setErro("");
+    function validarFormulario() {
         const campos: Record<string, string> = {};
         if (!titulo.trim()) campos.title = "Informe o nome do estudo.";
         else if (titulo.trim().length > 200) campos.title = "O nome deve ter até 200 caracteres.";
         if (!objetivo.trim()) campos.objective = "Informe o objetivo do estudo.";
         const limiteNumero = Number(limite);
-        if (!Number.isInteger(limiteNumero) || limiteNumero <= 0 || limiteNumero > 2147483647) {
-            campos.participantLimit = "Informe um limite inteiro entre 1 e 2147483647.";
+        if (!Number.isInteger(limiteNumero) || limiteNumero <= 0) {
+            campos.participantLimit = "Informe um número inteiro maior que zero.";
+        } else if (limiteNumero > LIMITE_MAXIMO_PARTICIPANTES) {
+            campos.participantLimit = "O limite informado excede o valor permitido.";
         }
         if (!dataInicio) campos.startDate = "Informe a data de início.";
         if (!dataFim) campos.endDate = "Informe a data de término.";
         else if (dataInicio && dataFim.compare(dataInicio) < 0) {
             campos.endDate = "A data de término deve ser igual ou posterior à data de início.";
         }
+        return campos;
+    }
+
+    function tratarErroAoSalvar(error: unknown) {
+        if (!(error instanceof ApiClientError)) {
+            setErro("Não foi possível salvar o estudo. Tente novamente.");
+            return;
+        }
+        const mensagemAcesso = obterMensagemErroAcesso(error);
+        if (mensagemAcesso) {
+            setErro(mensagemAcesso);
+            return;
+        }
+
+        const camposApi = obterErrosCampos(error.fieldErrors, [
+            "title",
+            "objective",
+            "startDate",
+            "endDate",
+            "participantLimit",
+        ]);
+        if (Object.keys(camposApi).length > 0) setErrosCampos(camposApi);
+        else setErro(error.message);
+    }
+
+    async function salvar(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        if (salvando || somenteLeitura) return;
+
+        setErro("");
+        const campos = validarFormulario();
         setErrosCampos(campos);
         if (Object.keys(campos).length > 0 || !dataInicio || !dataFim) return;
 
@@ -72,32 +110,10 @@ export function ModalEstudo({ estudo, responsavel, onFechar, onSalvar }: Props) 
                 responsibleUserId: estudo?.responsibleUserId ?? responsavel.id,
                 startDate: dataInicio.toString(),
                 endDate: dataFim.toString(),
-                participantLimit: limiteNumero,
+                participantLimit: Number(limite),
             });
         } catch (error) {
-            if (error instanceof ApiClientError) {
-                if (error.status === 401)
-                    setErro("Sua sessão expirou. Entre novamente para salvar.");
-                else if (error.status === 403)
-                    setErro("Você não tem permissão para salvar estudos.");
-                else {
-                    const camposApi = Object.fromEntries(
-                        error.fieldErrors
-                            .filter(({ field }) =>
-                                [
-                                    "title",
-                                    "objective",
-                                    "startDate",
-                                    "endDate",
-                                    "participantLimit",
-                                ].includes(field)
-                            )
-                            .map(({ field, message }) => [field, message])
-                    );
-                    if (Object.keys(camposApi).length > 0) setErrosCampos(camposApi);
-                    else setErro(error.message);
-                }
-            } else setErro("Não foi possível salvar o estudo. Tente novamente.");
+            tratarErroAoSalvar(error);
         } finally {
             setSalvando(false);
         }
@@ -130,12 +146,18 @@ export function ModalEstudo({ estudo, responsavel, onFechar, onSalvar }: Props) 
                                     id="titulo-modal-estudo"
                                     className="text-xl font-bold text-[var(--color-title)]"
                                 >
-                                    {estudo ? "Editar estudo" : "Novo estudo"}
+                                    {somenteLeitura
+                                        ? "Consultar estudo"
+                                        : estudo
+                                          ? "Editar estudo"
+                                          : "Novo estudo"}
                                 </Modal.Heading>
                                 <p className="mt-1 text-sm text-[var(--color-muted)]">
-                                    {estudo
-                                        ? "Atualize os dados do estudo clínico."
-                                        : "Preencha os dados do estudo clínico."}
+                                    {somenteLeitura
+                                        ? "Este estudo está disponível somente para consulta."
+                                        : estudo
+                                          ? "Atualize os dados do estudo clínico."
+                                          : "Preencha os dados do estudo clínico."}
                                 </p>
                             </div>
                             <Button
@@ -172,7 +194,7 @@ export function ModalEstudo({ estudo, responsavel, onFechar, onSalvar }: Props) 
                                     onChange={setTitulo}
                                     isRequired
                                     validationBehavior="aria"
-                                    isDisabled={salvando}
+                                    isDisabled={salvando || somenteLeitura}
                                     isInvalid={Boolean(errosCampos.title)}
                                     className="col-span-full flex flex-col gap-1"
                                 >
@@ -190,7 +212,7 @@ export function ModalEstudo({ estudo, responsavel, onFechar, onSalvar }: Props) 
                                     onChange={setObjetivo}
                                     isRequired
                                     validationBehavior="aria"
-                                    isDisabled={salvando}
+                                    isDisabled={salvando || somenteLeitura}
                                     isInvalid={Boolean(errosCampos.objective)}
                                     className="col-span-full flex flex-col gap-1"
                                 >
@@ -212,7 +234,7 @@ export function ModalEstudo({ estudo, responsavel, onFechar, onSalvar }: Props) 
                                     label="Data de início"
                                     value={dataInicio}
                                     onChange={setDataInicio}
-                                    isDisabled={salvando}
+                                    isDisabled={salvando || somenteLeitura}
                                     errorMessage={errosCampos.startDate}
                                 />
                                 <CampoData
@@ -220,7 +242,7 @@ export function ModalEstudo({ estudo, responsavel, onFechar, onSalvar }: Props) 
                                     value={dataFim}
                                     onChange={setDataFim}
                                     minValue={dataInicio ?? undefined}
-                                    isDisabled={salvando}
+                                    isDisabled={salvando || somenteLeitura}
                                     errorMessage={errosCampos.endDate}
                                 />
                                 <TextField
@@ -230,7 +252,7 @@ export function ModalEstudo({ estudo, responsavel, onFechar, onSalvar }: Props) 
                                     onChange={setLimite}
                                     isRequired
                                     validationBehavior="aria"
-                                    isDisabled={salvando}
+                                    isDisabled={salvando || somenteLeitura}
                                     isInvalid={Boolean(errosCampos.participantLimit)}
                                     className="col-span-full flex flex-col gap-1"
                                 >
@@ -240,7 +262,7 @@ export function ModalEstudo({ estudo, responsavel, onFechar, onSalvar }: Props) 
                                     <Input
                                         className={inputClass}
                                         min={1}
-                                        max={2147483647}
+                                        max={LIMITE_MAXIMO_PARTICIPANTES}
                                         step={1}
                                         placeholder="Ex.: 100"
                                     />
@@ -254,20 +276,22 @@ export function ModalEstudo({ estudo, responsavel, onFechar, onSalvar }: Props) 
                                     isDisabled={salvando}
                                     onPress={onFechar}
                                 >
-                                    Cancelar
+                                    {somenteLeitura ? "Fechar" : "Cancelar"}
                                 </Button>
-                                <Button
-                                    type="submit"
-                                    variant="primary"
-                                    isDisabled={salvando}
-                                    className="bg-[var(--color-primary)] text-white"
-                                >
-                                    {salvando
-                                        ? "Salvando..."
-                                        : estudo
-                                          ? "Salvar alterações"
-                                          : "Cadastrar estudo"}
-                                </Button>
+                                {!somenteLeitura && (
+                                    <Button
+                                        type="submit"
+                                        variant="primary"
+                                        isDisabled={salvando}
+                                        className="bg-[var(--color-primary)] text-white"
+                                    >
+                                        {salvando
+                                            ? "Salvando..."
+                                            : estudo
+                                              ? "Salvar alterações"
+                                              : "Cadastrar estudo"}
+                                    </Button>
+                                )}
                             </Modal.Footer>
                         </form>
                     </Modal.Dialog>

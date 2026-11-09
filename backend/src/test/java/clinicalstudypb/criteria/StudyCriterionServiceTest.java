@@ -4,13 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import clinicalstudypb.candidates.application.EligibilityResponseLookup;
 import clinicalstudypb.criteria.application.StudyCriterionService;
 import clinicalstudypb.criteria.domain.CriterionType;
 import clinicalstudypb.criteria.domain.StudyCriterion;
@@ -25,9 +26,16 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+/**
+ * Verifica cadastro, consultas e prontidão de critérios com dependências isoladas.
+ *
+ * @author Lívia
+ */
 @ExtendWith(MockitoExtension.class)
 class StudyCriterionServiceTest {
 
@@ -37,17 +45,21 @@ class StudyCriterionServiceTest {
     @Mock
     private StudyService studyService;
 
+    @Mock
+    private EligibilityResponseLookup eligibilityResponseLookup;
+
     private StudyCriterionService criterionService;
 
     @BeforeEach
     void setUp() {
-        criterionService = new StudyCriterionService(criterionRepository, studyService);
+        criterionService = new StudyCriterionService(criterionRepository, studyService, eligibilityResponseLookup);
     }
 
     @Test
     void createsInclusionCriterionAndTrimsDescription() {
         Study study = study();
         when(studyService.lockForProtocolEdit(3L)).thenReturn(study);
+        when(eligibilityResponseLookup.hasResponses(3L)).thenReturn(false);
         when(criterionRepository.saveAndFlush(any(StudyCriterion.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -62,6 +74,7 @@ class StudyCriterionServiceTest {
     @Test
     void createsExclusionCriterion() {
         when(studyService.lockForProtocolEdit(3L)).thenReturn(study());
+        when(eligibilityResponseLookup.hasResponses(3L)).thenReturn(false);
         when(criterionRepository.saveAndFlush(any(StudyCriterion.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -90,6 +103,20 @@ class StudyCriterionServiceTest {
         assertThrows(ProtocolConflictException.class,
                 () -> criterionService.create(3L, CriterionType.EXCLUSION, "Condição clínica X"));
 
+        verify(criterionRepository, never()).saveAndFlush(any(StudyCriterion.class));
+    }
+
+    @Test
+    void firstEligibilityResponsePreventsCriterionPersistence() {
+        Study study = study();
+        when(studyService.lockForProtocolEdit(3L)).thenReturn(study);
+        when(eligibilityResponseLookup.hasResponses(3L)).thenReturn(true);
+
+        assertThrows(ProtocolConflictException.class,
+                () -> criterionService.create(3L, CriterionType.INCLUSION, "Idade mínima"));
+
+        verify(eligibilityResponseLookup).hasResponses(3L);
+        verify(studyService, never()).touchProtocol(study, study.getVersion());
         verify(criterionRepository, never()).saveAndFlush(any(StudyCriterion.class));
     }
 
@@ -132,20 +159,16 @@ class StudyCriterionServiceTest {
         assertThrows(ResourceNotFoundException.class, () -> criterionService.get(3L, 7L));
     }
 
-    @Test
-    void readinessRequiresAtLeastOneOfEachCriterionType() {
-        when(criterionRepository.existsByStudyIdAndType(3L, CriterionType.INCLUSION)).thenReturn(true);
-        when(criterionRepository.existsByStudyIdAndType(3L, CriterionType.EXCLUSION)).thenReturn(true);
+    @ParameterizedTest
+    @CsvSource({"true,true,true", "true,false,false", "false,true,false", "false,false,false"})
+    void readinessRequiresBothInclusionAndExclusion(boolean inclusionExists, boolean exclusionExists,
+                                                   boolean expected) {
+        // Representa os tipos presentes sem depender da ordem de consulta ou do curto-circuito do serviço.
+        when(criterionRepository.existsByStudyIdAndType(eq(3L), any(CriterionType.class)))
+                .thenAnswer(invocation -> invocation.getArgument(1, CriterionType.class) == CriterionType.INCLUSION
+                        ? inclusionExists : exclusionExists);
 
-        assertTrue(criterionService.hasInclusionAndExclusionCriteria(3L));
-    }
-
-    @Test
-    void readinessIsFalseWhenEitherCriterionTypeIsAbsent() {
-        when(criterionRepository.existsByStudyIdAndType(3L, CriterionType.INCLUSION)).thenReturn(true);
-        when(criterionRepository.existsByStudyIdAndType(3L, CriterionType.EXCLUSION)).thenReturn(false);
-
-        assertFalse(criterionService.hasInclusionAndExclusionCriteria(3L));
+        assertEquals(expected, criterionService.hasInclusionAndExclusionCriteria(3L));
     }
 
     @Test

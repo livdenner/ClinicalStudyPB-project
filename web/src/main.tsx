@@ -44,7 +44,7 @@ export function App() {
                         <Route
                             path="/estudos"
                             element={
-                                <ProtectedRoute allowedRoles={["RESEARCHER"]}>
+                                <ProtectedRoute allowedRoles={["RESEARCHER", "COORDINATOR"]}>
                                     <ListagemEstudosPage />
                                 </ProtectedRoute>
                             }
@@ -53,7 +53,7 @@ export function App() {
                         <Route
                             path="/estudos/:id"
                             element={
-                                <ProtectedRoute allowedRoles={["RESEARCHER"]}>
+                                <ProtectedRoute allowedRoles={["RESEARCHER", "COORDINATOR"]}>
                                     <VisualizarEstudoPage />
                                 </ProtectedRoute>
                             }

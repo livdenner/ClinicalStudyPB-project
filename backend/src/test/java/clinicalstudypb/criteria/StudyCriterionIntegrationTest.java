@@ -6,6 +6,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import clinicalstudypb.candidates.domain.Candidate;
+import clinicalstudypb.candidates.domain.EligibilityAnswer;
+import clinicalstudypb.candidates.infrastructure.CandidateRepository;
+import clinicalstudypb.candidates.infrastructure.EligibilityAnswerRepository;
 import clinicalstudypb.criteria.domain.CriterionType;
 import clinicalstudypb.criteria.domain.StudyCriterion;
 import clinicalstudypb.criteria.infrastructure.StudyCriterionRepository;
@@ -15,19 +19,33 @@ import clinicalstudypb.support.IntegrationTestSupport;
 import clinicalstudypb.users.domain.User;
 import clinicalstudypb.users.domain.UserRole;
 import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
 
+/**
+ * Verifica o contrato HTTP de critérios, persistência, estados e autorização por perfil.
+ *
+ * @author Lívia
+ */
 class StudyCriterionIntegrationTest extends IntegrationTestSupport {
 
     private static final String PATH = "/api/studies/%d/criteria";
 
     @Autowired
     private StudyCriterionRepository criterionRepository;
+
+    @Autowired
+    private CandidateRepository candidateRepository;
+
+    @Autowired
+    private EligibilityAnswerRepository answerRepository;
 
     private User researcher;
     private User coordinator;
@@ -48,8 +66,13 @@ class StudyCriterionIntegrationTest extends IntegrationTestSupport {
         participantToken = tokenFor(participant.getEmail());
     }
 
-    @Test
-    void researcherCreatesBothCriterionTypesAndReadsThem() throws Exception {
+    @ParameterizedTest
+    @EnumSource(value = StudyStatus.class, names = {"PLANNING", "RECRUITMENT"})
+    void researcherCreatesBothCriterionTypesAndReadsThem(StudyStatus studyStatus) throws Exception {
+        if (studyStatus == StudyStatus.RECRUITMENT) {
+            study.advanceStatus(studyStatus);
+            studyRepository.saveAndFlush(study);
+        }
         long inclusionId = criterionId(create("INCLUSION", "Idade mínima de 18 anos")
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.type").value("INCLUSION")));
@@ -66,6 +89,11 @@ class StudyCriterionIntegrationTest extends IntegrationTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(inclusionId))
                 .andExpect(jsonPath("$.studyId").value(study.getId()));
+        mockMvc.perform(get(path()).header(HttpHeaders.AUTHORIZATION, bearer(researcherToken)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(2));
+        mockMvc.perform(get(path() + "/" + inclusionId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken)))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(inclusionId));
         assertEquals(2, criterionRepository.count());
     }
 
@@ -83,6 +111,9 @@ class StudyCriterionIntegrationTest extends IntegrationTestSupport {
         create("INCLUSION", "").andExpect(status().isBadRequest());
         create("EXCLUSION", "   ").andExpect(status().isBadRequest());
         create("INCLUSION", "x".repeat(501)).andExpect(status().isBadRequest());
+        mockMvc.perform(post(path()).header(HttpHeaders.AUTHORIZATION, bearer(researcherToken))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"type\":\"INCLUSION\"}"))
+                .andExpect(status().isBadRequest());
 
         assertEquals(0, criterionRepository.count());
     }
@@ -121,14 +152,41 @@ class StudyCriterionIntegrationTest extends IntegrationTestSupport {
         assertEquals(1, criterionRepository.count());
     }
 
-    @Test
-    void protocolChangeIsBlockedOutsideEditableStudyStates() throws Exception {
-        Study executionStudy = saveStudy(StudyStatus.EXECUTION, researcher);
+    @ParameterizedTest
+    @EnumSource(value = StudyStatus.class, names = {"EXECUTION", "CLOSED", "CANCELLED"})
+    void protocolChangeIsBlockedOutsideEditableStudyStates(StudyStatus studyStatus) throws Exception {
+        Study nonEditableStudy = saveStudy(studyStatus, researcher);
 
-        create("INCLUSION", "Idade mínima", researcherToken, executionStudy.getId())
+        create("INCLUSION", "Idade mínima", researcherToken, nonEditableStudy.getId())
                 .andExpect(status().isConflict());
 
         assertEquals(0, criterionRepository.count());
+    }
+
+    @Test
+    void addingCriterionAfterFirstEligibilityResponseReturnsConflictWithoutPersistence() throws Exception {
+        StudyCriterion existingCriterion = criterionRepository.saveAndFlush(
+                new StudyCriterion(study.getId(), CriterionType.INCLUSION, "Idade mínima"));
+        Candidate candidate = candidateRepository.saveAndFlush(
+                new Candidate(study.getId(), "Ana Silva", "ana silva", 42));
+        answerRepository.saveAndFlush(new EligibilityAnswer(
+                candidate.getId(), existingCriterion.getId(), true));
+
+        create("EXCLUSION", "Condição clínica X")
+                .andExpect(status().isConflict());
+
+        assertEquals(1, criterionRepository.count());
+    }
+
+    @Test
+    void criterionFromAnotherStudyIsNotFound() throws Exception {
+        long criterionId = criterionId(create("INCLUSION", "Idade mínima")
+                .andExpect(status().isCreated()));
+        Study otherStudy = saveStudy(StudyStatus.PLANNING, researcher);
+
+        mockMvc.perform(get(PATH.formatted(otherStudy.getId()) + "/" + criterionId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(researcherToken)))
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -142,6 +200,37 @@ class StudyCriterionIntegrationTest extends IntegrationTestSupport {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].description").value("Primeiro critério"))
                 .andExpect(jsonPath("$[1].description").value("Segundo critério"));
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole.class, names = {"ADMINISTRATOR", "PARTICIPANT"})
+    void unauthorizedProfilesCannotCreateListOrReadCriteria(UserRole role) throws Exception {
+        long existingId = criterionId(create("INCLUSION", "Idade mínima").andExpect(status().isCreated()));
+        String deniedToken = role == UserRole.PARTICIPANT ? participantToken
+                : tokenFor(saveUser("Administrador", "criteria.admin@test.local", role).getEmail());
+
+        create("EXCLUSION", "Condição clínica válida", deniedToken).andExpect(status().isForbidden());
+        mockMvc.perform(get(path()).header(HttpHeaders.AUTHORIZATION, bearer(deniedToken)))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get(path() + "/" + existingId).header(HttpHeaders.AUTHORIZATION, bearer(deniedToken)))
+                .andExpect(status().isForbidden());
+
+        assertEquals(1, criterionRepository.count());
+        assertEquals(List.of(existingId), criterionRepository.findAllByStudyIdOrderByIdAsc(study.getId())
+                .stream().map(StudyCriterion::getId).toList());
+    }
+
+    @Test
+    void anonymousRequestsCannotCreateListOrReadCriteria() throws Exception {
+        mockMvc.perform(post(path()).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"type\":\"INCLUSION\",\"description\":\"Idade mínima\"}"))
+                .andExpect(status().isUnauthorized());
+        assertEquals(0, criterionRepository.count());
+
+        long existingId = criterionId(create("INCLUSION", "Idade mínima").andExpect(status().isCreated()));
+        mockMvc.perform(get(path())).andExpect(status().isUnauthorized());
+        mockMvc.perform(get(path() + "/" + existingId)).andExpect(status().isUnauthorized());
+        assertEquals(1, criterionRepository.count());
     }
 
     private ResultActions create(String type, String description) throws Exception {
@@ -173,7 +262,7 @@ class StudyCriterionIntegrationTest extends IntegrationTestSupport {
     }
 
     private Study saveStudy(StudyStatus status, User responsible) {
-        Study saved = new Study("Estudo " + System.nanoTime(), "Objetivo", responsible.getId(),
+        Study saved = new Study("Estudo de critérios", "Objetivo", responsible.getId(),
                 LocalDate.of(2027, 1, 1), LocalDate.of(2027, 12, 31), 20);
         if (status == StudyStatus.RECRUITMENT || status == StudyStatus.EXECUTION
                 || status == StudyStatus.CLOSED) {
@@ -184,6 +273,9 @@ class StudyCriterionIntegrationTest extends IntegrationTestSupport {
         }
         if (status == StudyStatus.CLOSED) {
             saved.advanceStatus(StudyStatus.CLOSED);
+        }
+        if (status == StudyStatus.CANCELLED) {
+            saved.advanceStatus(StudyStatus.CANCELLED);
         }
         return studyRepository.saveAndFlush(saved);
     }
