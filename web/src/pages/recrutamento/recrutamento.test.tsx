@@ -9,6 +9,7 @@ import { RecrutamentoPage } from "./recrutamento";
 
 const estudoRecrutamento: EstudoComStatusApi = {
     id: 10,
+    version: 0,
     title: "Estudo Cardiovascular Fase II",
     objective: "Avaliar pressão arterial",
     responsibleUserId: 2,
@@ -20,6 +21,7 @@ const estudoRecrutamento: EstudoComStatusApi = {
 
 const estudoPlanejamento: EstudoComStatusApi = {
     id: 20,
+    version: 0,
     title: "Estudo Neurológico Inicial",
     objective: "Avaliar qualidade do sono",
     responsibleUserId: 2,

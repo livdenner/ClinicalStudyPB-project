@@ -1,6 +1,6 @@
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { toast } from "@heroui/react";
+import { Tabs, toast } from "@heroui/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "../../main";
 import { AuthProvider } from "../../context/AuthContext";
@@ -92,37 +92,69 @@ describe("visualização de estudos", () => {
         expect(fetchMock).toHaveBeenCalledTimes(2);
     });
 
-    it("carrega diretamente pelo endereço e mostra somente dados disponíveis na API", async () => {
-        const fetchMock = vi
-            .spyOn(globalThis, "fetch")
-            .mockResolvedValueOnce(resposta(estudo))
+    it.each<UserRole>(["RESEARCHER", "COORDINATOR"])(
+        "carrega os detalhes em modo de consulta para %s",
+        async (role) => {
+            const fetchMock = vi
+                .spyOn(globalThis, "fetch")
+                .mockResolvedValueOnce(resposta(estudo))
+                .mockResolvedValueOnce(resposta([]));
+            renderPage("/estudos/3", role);
+            expect(screen.getByRole("status")).toHaveTextContent("Carregando estudo...");
+            expect(await screen.findByRole("heading", { name: estudo.title })).toBeInTheDocument();
+            expect(screen.getByText("Estudo #3")).toBeInTheDocument();
+            expect(screen.getByText(estudo.objective)).toBeInTheDocument();
+            const resumo = screen.getByLabelText("Resumo do estudo");
+            expect(within(resumo).getByText("Pesquisador #11")).toBeInTheDocument();
+            expect(screen.queryByRole("button", { name: "Editar estudo" })).not.toBeInTheDocument();
+            expect(
+                screen.queryByRole("button", { name: "Abrir recrutamento" })
+            ).not.toBeInTheDocument();
+            expect(within(resumo).getByText("30")).toBeInTheDocument();
+            expect(within(resumo).getByText("01/11/2026 – 01/12/2026")).toBeInTheDocument();
+            expect(screen.getByRole("link", { name: /Voltar para estudos/i })).toHaveAttribute(
+                "href",
+                "/estudos"
+            );
+            expect(screen.getByRole("tab", { name: "Visão geral" })).toHaveAttribute(
+                "aria-selected",
+                "true"
+            );
+            expect(screen.getByRole("tab", { name: "Visitas previstas" })).toBeInTheDocument();
+            expect(screen.queryByText("Progresso de inclusão")).not.toBeInTheDocument();
+            expect(screen.queryByText("Status do estudo")).not.toBeInTheDocument();
+            fireEvent.click(screen.getByRole("link", { name: /Voltar para estudos/i }));
+            expect(
+                await screen.findByRole("heading", { name: "Estudos clínicos" })
+            ).toBeInTheDocument();
+            await screen.findByText("Nenhum estudo encontrado");
+            expect(fetchMock.mock.calls[1][0]).toBe("/api/studies");
+        }
+    );
+
+    it("libera as ações do estudo após falha nas visitas e permite recuperar a aba", async () => {
+        vi.spyOn(Tabs, "Indicator").mockImplementation(() => <span aria-hidden="true" />);
+        const proprio = { ...estudo, responsibleUserId: 7 };
+        vi.spyOn(globalThis, "fetch")
+            .mockResolvedValueOnce(resposta(proprio))
+            .mockResolvedValueOnce(resposta(proprio))
+            .mockResolvedValueOnce(resposta({ detail: "Falha ao carregar as visitas." }, 500))
+            .mockResolvedValueOnce(resposta(proprio))
             .mockResolvedValueOnce(resposta([]));
         renderPage();
-        expect(screen.getByRole("status")).toHaveTextContent("Carregando estudo...");
-        expect(await screen.findByRole("heading", { name: estudo.title })).toBeInTheDocument();
-        expect(screen.getByText("Estudo #3")).toBeInTheDocument();
-        expect(screen.getByText(estudo.objective)).toBeInTheDocument();
-        const resumo = screen.getByLabelText("Resumo do estudo");
-        expect(within(resumo).getByText("Pesquisador #11")).toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: "Editar estudo" })).not.toBeInTheDocument();
-        expect(
-            screen.queryByRole("button", { name: "Abrir recrutamento" })
-        ).not.toBeInTheDocument();
-        expect(within(resumo).getByText("30")).toBeInTheDocument();
-        expect(within(resumo).getByText("01/11/2026 – 01/12/2026")).toBeInTheDocument();
-        expect(screen.getByRole("link", { name: /Voltar para estudos/i })).toHaveAttribute(
-            "href",
-            "/estudos"
+        fireEvent.click(await screen.findByRole("tab", { name: "Visitas previstas" }));
+        expect(await screen.findByRole("alert")).toHaveTextContent("Falha ao carregar as visitas.");
+        await waitFor(() =>
+            expect(screen.getByRole("button", { name: "Editar estudo" })).toBeEnabled()
         );
-        expect(screen.queryByRole("tab")).not.toBeInTheDocument();
-        expect(screen.queryByText("Progresso de inclusão")).not.toBeInTheDocument();
-        expect(screen.queryByText("Status do estudo")).not.toBeInTheDocument();
-        fireEvent.click(screen.getByRole("link", { name: /Voltar para estudos/i }));
+        expect(screen.getByRole("button", { name: "Nova visita" })).toBeDisabled();
+        fireEvent.click(screen.getByRole("button", { name: "Atualizar" }));
+        await waitFor(() =>
+            expect(screen.getByRole("button", { name: "Nova visita" })).toBeEnabled()
+        );
         expect(
-            await screen.findByRole("heading", { name: "Estudos clínicos" })
+            screen.getByRole("heading", { name: "Nenhuma visita prevista" })
         ).toBeInTheDocument();
-        await screen.findByText("Nenhum estudo encontrado");
-        expect(fetchMock.mock.calls[1][0]).toBe("/api/studies");
     });
 
     it("confirma a transição do responsável e atualiza o estado pela resposta da API", async () => {
@@ -419,7 +451,7 @@ describe("visualização de estudos", () => {
         expect(screen.queryByLabelText("Resumo do estudo")).not.toBeInTheDocument();
     });
 
-    it.each<UserRole>(["ADMINISTRATOR", "COORDINATOR", "PARTICIPANT"])(
+    it.each<UserRole>(["ADMINISTRATOR", "PARTICIPANT"])(
         "não consulta o estudo para o perfil %s",
         (role) => {
             const fetchMock = vi.spyOn(globalThis, "fetch");

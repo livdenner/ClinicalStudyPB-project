@@ -1,16 +1,19 @@
-import { Button, Card, Link, Spinner, Surface } from "@heroui/react";
-import { ArrowLeft, Info, LockKeyhole, Pencil } from "lucide-react";
+import { useState } from "react";
+import { Button, Card, Link, Spinner, Tabs, Surface } from "@heroui/react";
+import { ArrowLeft, Info } from "lucide-react";
 import { Link as RouterLink, Navigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { ModalEditarEstudo } from "../../components/estudos/ModalEditarEstudo";
 import { ModalTransicaoEstudo } from "../../components/estudos/ModalTransicaoEstudo";
-import { SeloEstadoEstudo } from "../../components/estudos/SeloEstadoEstudo";
+import { CabecalhoEstudo } from "../../components/estudos/CabecalhoEstudo";
+import { ResumoEstudo } from "../../components/estudos/ResumoEstudo";
 import { ehEstadoEstudo, ESTADOS_ESTUDO } from "../../config/estados-estudo";
 import { ErrorMessage } from "../../components/ui/ErrorMessage";
 import type { AuthenticatedUser } from "../../types/auth";
 import type { EstadoEstudo } from "../../types/estudo";
 import { podeEditarEstudo, podeAlterarEstadoEstudo } from "../../utils/estudos";
 import { useDetalhesEstudo } from "./useDetalhesEstudo";
+import { VisitasPrevistasEstudo } from "./visitas-previstas";
 
 const MENSAGENS_EDICAO_BLOQUEADA: Partial<Record<EstadoEstudo, string>> = {
     EXECUTION: "Edição bloqueada durante a execução.",
@@ -22,12 +25,12 @@ export function VisualizarEstudoPage() {
     const { session } = useAuth();
     const { id: parametroId } = useParams();
     if (!session) return <Navigate to="/login" replace />;
-    if (session.user.role !== "RESEARCHER") {
+    if (session.user.role !== "RESEARCHER" && session.user.role !== "COORDINATOR") {
         return (
             <section className="py-12 text-center">
                 <h1 className="text-2xl font-bold text-[var(--color-title)]">Acesso restrito</h1>
                 <p className="my-4">
-                    A gestão de estudos está disponível apenas para pesquisadores.
+                    A consulta de estudos está disponível para pesquisadores e coordenadores.
                 </p>
             </section>
         );
@@ -87,6 +90,7 @@ function DetalhesEstudo({
 }) {
     const {
         estudo,
+        setEstudo,
         carregando,
         erro,
         origemCancelamento,
@@ -101,6 +105,8 @@ function DetalhesEstudo({
         transicionar,
         atualizarEstudo,
     } = useDetalhesEstudo({ id, token, pesquisador });
+    const [visitasMontadas, setVisitasMontadas] = useState(false);
+    const [visitasEmProcessamento, setVisitasEmProcessamento] = useState(false);
 
     if (carregando) {
         return (
@@ -160,78 +166,21 @@ function DetalhesEstudo({
 
     return (
         <section className="flex flex-col gap-6" aria-labelledby="estudo-heading">
-            <header className="flex items-start justify-between gap-5 max-[600px]:flex-col">
-                <div className="min-w-0">
-                    <p className="mb-2 text-sm font-medium text-[var(--color-primary)]">
-                        Estudo #{estudo.id}
-                    </p>
-                    <h1
-                        id="estudo-heading"
-                        className="break-words text-[28px] font-bold tracking-tight text-[var(--color-title)]"
-                    >
-                        {estudo.title}
-                    </h1>
-                </div>
-                <div className="flex max-w-full flex-col items-end gap-3 max-[600px]:items-start">
-                    <div className="flex flex-wrap gap-3 empty:hidden">
-                        {edicaoPermitida && (
-                            <Button
-                                variant="primary"
-                                onPress={() => setEditando(true)}
-                                className="shrink-0"
-                            >
-                                <Pencil size={18} aria-hidden="true" /> Editar estudo
-                            </Button>
-                        )}
-                        {podeAlterarEstadoEstudo(estudo, pesquisador) && (
-                            <>
-                                {estado?.proximo && (
-                                    <Button
-                                        variant="secondary"
-                                        onPress={() => setTransicao(estado.proximo)}
-                                        className="border border-[var(--color-primary)] bg-white font-semibold text-[var(--color-primary-dark)] hover:bg-[var(--color-primary-soft)]"
-                                    >
-                                        {estado.acao}
-                                    </Button>
-                                )}
-                                {estudo.status === "RECRUITMENT" && (
-                                    <Button
-                                        variant="secondary"
-                                        onPress={() => setTransicao("PLANNING")}
-                                    >
-                                        Voltar ao planejamento
-                                    </Button>
-                                )}
-                                {estudo.status === "CANCELLED" ? (
-                                    (origemCancelamento === "PLANNING" ||
-                                        origemCancelamento === "RECRUITMENT") && (
-                                        <Button
-                                            variant="secondary"
-                                            onPress={() => setTransicao(origemCancelamento)}
-                                        >
-                                            Restaurar estudo
-                                        </Button>
-                                    )
-                                ) : (
-                                    <Button
-                                        variant="secondary"
-                                        className="text-[#B42318]"
-                                        onPress={() => setTransicao("CANCELLED")}
-                                    >
-                                        Cancelar estudo
-                                    </Button>
-                                )}
-                            </>
-                        )}
-                    </div>
-                    {!edicaoPermitida && (
-                        <p className="flex max-w-sm items-start gap-2 rounded-lg border border-[var(--color-border)] bg-slate-50 px-3 py-2 text-base font-medium text-[var(--color-text)]">
-                            <LockKeyhole size={18} aria-hidden="true" className="mt-1 shrink-0" />
-                            {mensagemBloqueio}
-                        </p>
-                    )}
-                </div>
-            </header>
+            <CabecalhoEstudo
+                estudo={estudo}
+                edicaoPermitida={edicaoPermitida}
+                mensagemBloqueio={mensagemBloqueio}
+                emProcessamento={visitasEmProcessamento}
+                alteracaoEstadoPermitida={podeAlterarEstadoEstudo(estudo, pesquisador)}
+                origemCancelamento={origemCancelamento}
+                proximaTransicao={
+                    podeAlterarEstadoEstudo(estudo, pesquisador) && estado?.proximo
+                        ? { estado: estado.proximo, rotulo: estado.acao }
+                        : null
+                }
+                onEditar={() => setEditando(true)}
+                onTransicionar={setTransicao}
+            />
             {estudo.status === "CANCELLED" &&
                 podeAlterarEstadoEstudo(estudo, pesquisador) &&
                 (carregandoHistorico || erroHistorico) && (
@@ -273,62 +222,73 @@ function DetalhesEstudo({
                         )}
                     </Surface>
                 )}
-            <Surface
-                variant="transparent"
-                className="rounded-xl bg-linear-to-r from-[var(--color-primary-dark)] to-[var(--color-primary)] p-6 text-white"
+            <ResumoEstudo estudo={estudo} responsavel={responsavel} />
+            <Tabs
+                variant="secondary"
+                defaultSelectedKey="visao-geral"
+                onSelectionChange={(aba) => {
+                    if (aba === "visitas-previstas") setVisitasMontadas(true);
+                }}
+                className="w-full"
             >
-                <dl
-                    aria-label="Resumo do estudo"
-                    className="grid grid-cols-4 gap-5 max-[900px]:grid-cols-2 max-[600px]:grid-cols-1"
+                <Tabs.List
+                    aria-label="Seções do estudo"
+                    className="mb-5 w-full min-w-0 gap-5 overflow-x-auto border-b border-[var(--color-border)] p-0"
                 >
-                    <div>
-                        <dt className="text-xs uppercase tracking-wide text-white/90">Estado</dt>
-                        <dd className="mt-2">
-                            <SeloEstadoEstudo estado={estudo.status} />
-                        </dd>
-                    </div>
-                    <div>
-                        <dt className="text-xs uppercase tracking-wide text-white/90">
-                            Limite de participantes
-                        </dt>
-                        <dd className="mt-2 text-base font-semibold">{estudo.participantLimit}</dd>
-                    </div>
-                    <div className="min-w-0">
-                        <dt className="text-xs uppercase tracking-wide text-white/90">
-                            Responsável
-                        </dt>
-                        <dd className="mt-2 break-words text-base font-semibold">{responsavel}</dd>
-                    </div>
-                    <div>
-                        <dt className="text-xs uppercase tracking-wide text-white/90">Período</dt>
-                        <dd className="mt-2 text-base font-semibold">
-                            {estudo.startDate.split("-").reverse().join("/")} –{" "}
-                            {estudo.endDate.split("-").reverse().join("/")}
-                        </dd>
-                    </div>
-                </dl>
-            </Surface>
-            <Card
-                render={(props) => <section {...props} />}
-                aria-labelledby="sobre-estudo-heading"
-                className="gap-0 rounded-xl border border-[var(--color-border)] bg-white p-6 shadow-none"
-            >
-                <Card.Header>
-                    <Card.Title
-                        render={(props) => <h2 {...props} />}
-                        id="sobre-estudo-heading"
-                        className="text-lg font-semibold text-[var(--color-title)]"
+                    <Tabs.Tab
+                        id="visao-geral"
+                        className="min-h-12 w-auto shrink-0 rounded-none px-1 text-sm font-medium data-[selected=true]:text-[var(--color-primary)]"
                     >
-                        Sobre o estudo
-                    </Card.Title>
-                </Card.Header>
-                <Card.Content className="gap-0">
-                    <h3 className="mt-5 text-sm font-medium text-[var(--color-text)]">Objetivo</h3>
-                    <Card.Description className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-[var(--color-muted)]">
-                        {estudo.objective}
-                    </Card.Description>
-                </Card.Content>
-            </Card>
+                        Visão geral
+                        <Tabs.Indicator className="top-auto bottom-0 h-0.5 rounded-none bg-[var(--color-primary)] shadow-none" />
+                    </Tabs.Tab>
+                    <Tabs.Tab
+                        id="visitas-previstas"
+                        className="min-h-12 w-auto shrink-0 rounded-none px-1 text-sm font-medium data-[selected=true]:text-[var(--color-primary)]"
+                    >
+                        Visitas previstas
+                        <Tabs.Indicator className="top-auto bottom-0 h-0.5 rounded-none bg-[var(--color-primary)] shadow-none" />
+                    </Tabs.Tab>
+                </Tabs.List>
+                <Tabs.Panel id="visao-geral" className="m-0 p-0">
+                    <Card
+                        render={(props) => <section {...props} />}
+                        aria-labelledby="sobre-estudo-heading"
+                        className="gap-0 rounded-xl border border-[var(--color-border)] bg-white p-6 shadow-none"
+                    >
+                        <Card.Header>
+                            <Card.Title
+                                render={(props) => <h2 {...props} />}
+                                id="sobre-estudo-heading"
+                                className="text-lg font-semibold text-[var(--color-title)]"
+                            >
+                                Sobre o estudo
+                            </Card.Title>
+                        </Card.Header>
+                        <Card.Content className="gap-0">
+                            <h3 className="mt-5 text-sm font-medium text-[var(--color-text)]">
+                                Objetivo
+                            </h3>
+                            <Card.Description className="mt-2 whitespace-pre-wrap break-words text-sm leading-relaxed text-[var(--color-muted)]">
+                                {estudo.objective}
+                            </Card.Description>
+                        </Card.Content>
+                    </Card>
+                </Tabs.Panel>
+                <Tabs.Panel
+                    id="visitas-previstas"
+                    shouldForceMount={visitasMontadas}
+                    className="m-0 p-0 data-[inert=true]:hidden"
+                >
+                    <VisitasPrevistasEstudo
+                        estudo={estudo}
+                        usuario={pesquisador}
+                        token={token}
+                        onAtualizarEstudo={setEstudo}
+                        onProcessamentoChange={setVisitasEmProcessamento}
+                    />
+                </Tabs.Panel>
+            </Tabs>
             {editando && (
                 <ModalEditarEstudo
                     estudo={estudo}

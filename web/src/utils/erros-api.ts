@@ -18,3 +18,12 @@ export function obterMensagemErroAcesso(error: unknown): string | null {
     if (error.status === 403) return "Você não tem permissão para realizar esta ação.";
     return null;
 }
+
+export function obterMensagemErroApi(error: unknown, mensagemPadrao: string): string {
+    const mensagemAcesso = obterMensagemErroAcesso(error);
+    if (mensagemAcesso) return mensagemAcesso;
+    if (error instanceof ApiClientError) {
+        return error.fieldErrors[0]?.message || error.message || mensagemPadrao;
+    }
+    return mensagemPadrao;
+}

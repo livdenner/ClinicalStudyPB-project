@@ -169,6 +169,7 @@ export function useDetalhesEstudo({ id, token, pesquisador }: Props) {
 
     return {
         estudo,
+        setEstudo,
         carregando,
         erro,
         origemCancelamento,
