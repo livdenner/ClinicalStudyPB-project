@@ -435,9 +435,10 @@ function GestaoCandidatos({
                     <>
                         <TabelaCandidatos
                             candidatos={candidatosFiltrados}
-                            podeAvaliar={podeCadastrar}
-                            onSelecionarCandidato={(candidato) =>
-                                setCandidatoAvaliandoId(candidato.id)
+                            onSelecionarCandidato={
+                                podeCadastrar
+                                    ? (candidato) => setCandidatoAvaliandoId(candidato.id)
+                                    : undefined
                             }
                         />
                         <footer className="border-t border-[var(--color-border)] px-5 py-4 text-xs text-[var(--color-muted)]">

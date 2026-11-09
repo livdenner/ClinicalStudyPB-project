@@ -87,30 +87,25 @@ export function AvaliacaoElegibilidade({
         const controller = new AbortController();
 
         const promessaCriterios = listarCriteriosPorEstudo(estudo.id, token, controller.signal);
-        const promessaAvaliacao =
-            role === "COORDINATOR"
-                ? obterAvaliacaoElegibilidade(estudo.id, candidato.id, token, controller.signal)
-                : obterAvaliacaoElegibilidade(
-                      estudo.id,
-                      candidato.id,
-                      token,
-                      controller.signal
-                  ).catch(() => null);
+        const promessaAvaliacao = obterAvaliacaoElegibilidade(
+            estudo.id,
+            candidato.id,
+            token,
+            controller.signal
+        );
 
         Promise.all([promessaCriterios, promessaAvaliacao])
             .then(([listaCriterios, avaliacao]) => {
                 if (controller.signal.aborted) return;
                 setCriterios(listaCriterios);
+                setStatusParecer(avaliacao.status);
+                setAvaliadoEm(avaliacao.evaluatedAt);
 
-                if (avaliacao) {
-                    setStatusParecer(avaliacao.status);
-                    setAvaliadoEm(avaliacao.evaluatedAt);
-                    const mapaRespostas: Record<number, boolean | undefined> = {};
-                    for (const item of avaliacao.answers) {
-                        mapaRespostas[item.criterionId] = item.matches;
-                    }
-                    setRespostas(mapaRespostas);
+                const mapaRespostas: Record<number, boolean | undefined> = {};
+                for (const item of avaliacao.answers) {
+                    mapaRespostas[item.criterionId] = item.matches;
                 }
+                setRespostas(mapaRespostas);
             })
             .catch((error: unknown) => {
                 if (controller.signal.aborted) return;
