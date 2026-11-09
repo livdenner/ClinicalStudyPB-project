@@ -31,4 +31,11 @@ public class ParticipantQueryService implements ParticipantLookup {
     public boolean isIncluded(Long studyId, Long candidateId) {
         return participantRepository.existsByStudyIdAndCandidateId(studyId, candidateId);
     }
+
+    /** {@inheritDoc} */
+    @Override
+    @Transactional(readOnly = true)
+    public long countIncluded(Long studyId) {
+        return participantRepository.countByStudyId(studyId);
+    }
 }

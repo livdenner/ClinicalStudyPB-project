@@ -1,6 +1,8 @@
 package clinicalstudypb.participants.infrastructure;
 
 import clinicalstudypb.participants.domain.Participant;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
@@ -20,4 +22,29 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
      * @return verdadeiro se o candidato já foi incluído
      */
     boolean existsByStudyIdAndCandidateId(Long studyId, Long candidateId);
+
+    /**
+     * Conta as inclusões persistidas de um estudo.
+     *
+     * @param studyId estudo consultado
+     * @return quantidade de participantes incluídos
+     */
+    long countByStudyId(Long studyId);
+
+    /**
+     * Lista os vínculos persistidos somente no estudo solicitado.
+     *
+     * @param studyId estudo consultado
+     * @return participantes em ordem estável de inclusão
+     */
+    List<Participant> findAllByStudyIdOrderByIdAsc(Long studyId);
+
+    /**
+     * Busca um vínculo pelo identificador e pelo estudo.
+     *
+     * @param id participante consultado
+     * @param studyId estudo da rota
+     * @return vínculo do estudo
+     */
+    Optional<Participant> findByIdAndStudyId(Long id, Long studyId);
 }

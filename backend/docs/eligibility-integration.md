@@ -38,8 +38,22 @@ A T13.1 consulta inclusões reais pela existência do vínculo em `participants`
 de inclusão duplicado no candidato. A chave estrangeira composta impede vincular o candidato a
 outro estudo, e a unicidade impede duas inclusões do mesmo candidato.
 
-Endpoints, regras de consentimento/capacidade e a integração da prontidão para `EXECUTION`
-continuam sendo responsabilidade da T15.1. Esta preparação não expõe uma API de inclusão.
+A T15.1 completa essa integração com `POST /api/studies/{studyId}/candidates/{candidateId}/inclusion`
+e `GET /api/studies/{studyId}/participants[/{participantId}]`. O POST é exclusivo de `COORDINATOR`;
+as consultas permitem `RESEARCHER` e `COORDINATOR`. O POST retorna `201` com `Location` e não recebe corpo.
+Estudo/candidato inexistente ou candidato de outro estudo retorna `404`; pré-condições de negócio
+não atendidas retornam `409`, conforme o contrato atual.
+
+`ParticipantService` valida recrutamento, elegibilidade, duplicidade e capacidade sob o bloqueio
+do estudo. Em seguida bloqueia o consentimento concedido e grava o vínculo na mesma transação.
+Uma falha de persistência desfaz também o bloqueio do consentimento. A capacidade usa a contagem
+real de `participants`; não existe um contador separado de vagas que possa ficar desatualizado.
+
+`IntegratedStudyReadiness` é a implementação principal de `StudyReadiness`: consulta critérios
+pelo serviço de critérios e inclusões por `ParticipantLookup`. A execução só começa após uma
+inclusão real. O mesmo serviço público de contagem impede reduzir o limite do estudo abaixo da
+quantidade já incluída. Nenhuma migração existente precisa ser alterada: a V10 já contém autoria,
+instante, unicidade e a chave estrangeira composta necessários à inclusão.
 
 ## Validação e testes
 

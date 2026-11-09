@@ -262,6 +262,9 @@ A API usa a base `/api/studies` e segue o contrato em `backend/openapi.yaml`. Pe
 | `GET /api/studies/{studyId}/candidates/{candidateId}/eligibility` | Consultar respostas e resultado da elegibilidade | `200` |
 | `PUT /api/studies/{studyId}/candidates/{candidateId}/eligibility` | Substituir respostas e recalcular elegibilidade | `200` |
 | `GET/PUT /api/studies/{studyId}/candidates/{candidateId}/consent` | Consultar ou registrar consentimento simulado | `200/200` |
+| `POST /api/studies/{studyId}/candidates/{candidateId}/inclusion` | Incluir candidato como participante | `201`, com `Location` do participante |
+| `GET /api/studies/{studyId}/participants` | Listar participantes incluídos no estudo | `200` |
+| `GET /api/studies/{studyId}/participants/{participantId}` | Consultar participante do estudo | `200` |
 
 Cadastro e atualização recebem `title`, `objective`, `responsibleUserId`, `startDate`, `endDate` e `participantLimit`. As datas usam o formato `AAAA-MM-DD`. O título é obrigatório e tem até 200 caracteres; o objetivo é obrigatório; o limite de participantes deve estar entre 1 e 1.000.000, inclusive; a data de término não pode anteceder a de início. O responsável deve existir e ter o perfil `RESEARCHER`, conforme a regra confirmada para a Sprint 1. O serviço consulta o módulo de usuários por `UserService`, sem acessar o repositório interno desse módulo.
 
@@ -273,7 +276,7 @@ Uma visita prevista tem nome, data no período do estudo, posição 1..N e ao me
 
 `PlannedVisit` e `PlannedActivity` mapeiam as tabelas como entidades JPA. As consultas da API usam o repositório JPA com as atividades carregadas na ordem. As gravações e reordenações usam `JdbcTemplate` na mesma transação, com bloqueio do estudo e restrições únicas no PostgreSQL; esse caminho mantém as posições contínuas quando várias linhas mudam de lugar.
 
-Para abrir `RECRUITMENT`, o estudo precisa ter uma visita com atividade e critérios de inclusão e exclusão. Para iniciar `EXECUTION`, precisa ter um participante incluído; essa transição permanece bloqueada até a implementação da inclusão.
+Para abrir `RECRUITMENT`, o estudo precisa ter uma visita com atividade e critérios de inclusão e exclusão. Para iniciar `EXECUTION`, precisa ter um participante incluído. A prontidão consulta critérios e participantes reais pelos serviços públicos desses módulos.
 
 O consentimento simulado de um candidato é consultado e registrado em
 `GET/PUT /api/studies/{studyId}/candidates/{candidateId}/consent`.
@@ -282,13 +285,16 @@ consulta retorna `PENDING` sem horário. Durante `RECRUITMENT`, o `PUT`
 aceita `GRANTED` ou `DECLINED` e o backend registra o horário; `PENDING`
 não pode ser enviado como decisão. A migração V8 cria
 `simulated_consents`. O método `SimulatedConsentService.lockAfterInclusion`
-prepara o bloqueio da decisão após a inclusão e deve ser chamado pela futura
-T15.1 na mesma transação que cria o participante. Isso é um registro de teste,
+bloqueia a decisão na mesma transação que cria o participante na T15.1. Isso é um registro de teste,
 sem assinatura ou validade de consentimento clínico.
 
 Somente o perfil `COORDINATOR` pode cadastrar candidatos. A consulta é permitida ao `COORDINATOR` e ao `RESEARCHER` responsável pelo estudo. O cadastro exige estudo em `RECRUITMENT`, inicia `eligibilityStatus` como `PENDING` e rejeita nomes e idades repetidos no mesmo estudo com `409`. Como o contrato atual não fornece outro identificador do candidato, a chave de duplicidade usa o nome normalizado e a idade. A API não acessa repositórios internos do módulo de estudos; consulta o estudo pelo `StudyService`.
 
 A avaliação de elegibilidade é exclusiva do `COORDINATOR`. Antes da primeira avaliação, o GET retorna `PENDING`, `answers: []` e omite `evaluatedAt`. O PUT recebe `answers` com ao menos uma resposta, substitui todas as anteriores e registra o autor autenticado e o instante da avaliação. Critério sem resposta mantém `PENDING`; com todos respondidos, todas as inclusões devem ter `matches: true` e todas as exclusões, `matches: false`, para obter `ELIGIBLE`. Caso contrário, o resultado é `INELIGIBLE`. Critérios repetidos ou de outro estudo retornam `400`; candidato inexistente ou fora do estudo da rota retorna `404`; estudo sem critérios ou candidato já incluído retorna `409`. As gravações usam o bloqueio compartilhado do estudo e uma única transação. A preparação da integração com participantes está descrita em [elegibilidade e T15.1](backend/docs/eligibility-integration.md).
+
+A inclusão de participantes (T15.1) é exclusiva do `COORDINATOR`, não recebe corpo JSON e exige estudo em `RECRUITMENT`, candidato `ELIGIBLE`, consentimento `GRANTED`, ausência de inclusão anterior e vaga disponível. Essas condições são verificadas sob o mesmo bloqueio da linha do estudo usado nas transições, na avaliação e na alteração de consentimento. A gravação do participante e o bloqueio definitivo do consentimento pertencem à mesma transação: uma falha desfaz ambos. Condições de negócio não atendidas recebem `409`; estudo ou candidato inexistente, inclusive candidato de outro estudo, recebe `404`. Ao iniciar `EXECUTION`, novas inclusões são recusadas. O limite do estudo também não pode ser reduzido abaixo da contagem já incluída (`409`).
+
+As consultas de participantes são permitidas a `COORDINATOR` e `RESEARCHER`, conforme o contrato atual. A listagem retorna `[]` para estudo sem inclusões e não mistura estudos. A consulta individual exige que o participante pertença ao estudo da rota. A resposta contém `id`, `studyId`, `candidateId`, `candidateName` e `includedAt`; o autor autenticado fica registrado internamente em `included_by`. A T15.1 reutiliza a entidade e a tabela `participants` da V10, sem alterar migrações já integradas nem criar outra tabela para o mesmo vínculo.
 
 Os testes automatizados de estudos verificam as regras do serviço, as respostas HTTP e o fluxo completo com PostgreSQL. A API também foi iniciada com PostgreSQL 18 local: listagem `200`, cadastro `201`, atualização `200` e rejeição de datas invertidas `400`, sem alterar os dados já gravados.
 
