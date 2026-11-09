@@ -20,6 +20,7 @@ import org.springframework.http.MediaType;
  * Verifica transições, histórico e controle de autoria com JWT e PostgreSQL.
  *
  * @author Lucas N. de Araújo
+ * @author Lívia
  * @since 2026-11-05
  * @version 0.0.1
  */
@@ -78,6 +79,39 @@ class StudyLifecycleIntegrationTest extends IntegrationTestSupport {
     }
 
     @Test
+    void recruitmentIsBlockedWhenInclusionCriterionIsMissing() throws Exception {
+        createVisitWithActivity();
+        createCriterion("EXCLUSION");
+
+        change(token, "RECRUITMENT", "PLANNING", null)
+                .andExpect(status().isConflict());
+        mockMvc.perform(get(path()).header(HttpHeaders.AUTHORIZATION, bearer(token)))
+                .andExpect(jsonPath("$.status").value("PLANNING"));
+    }
+
+    @Test
+    void recruitmentIsBlockedWhenExclusionCriterionIsMissing() throws Exception {
+        createVisitWithActivity();
+        createCriterion("INCLUSION");
+
+        change(token, "RECRUITMENT", "PLANNING", null)
+                .andExpect(status().isConflict());
+        mockMvc.perform(get(path()).header(HttpHeaders.AUTHORIZATION, bearer(token)))
+                .andExpect(jsonPath("$.status").value("PLANNING"));
+    }
+
+    @Test
+    void recruitmentStartsWhenBothCriterionTypesAndAValidVisitExist() throws Exception {
+        createVisitWithActivity();
+        createCriterion("INCLUSION");
+        createCriterion("EXCLUSION");
+
+        change(token, "RECRUITMENT", "PLANNING", null)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("RECRUITMENT"));
+    }
+
+    @Test
     void staleStatusChangeIsRejectedAfterCancellation() throws Exception {
         change(token, "CANCELLED", "PLANNING", "Interrompido")
                 .andExpect(status().isOk());
@@ -102,6 +136,28 @@ class StudyLifecycleIntegrationTest extends IntegrationTestSupport {
 
     private String path() {
         return "/api/studies/" + study.getId();
+    }
+
+    private void createVisitWithActivity() throws Exception {
+        long version = studyRepository.findById(study.getId()).orElseThrow().getVersion();
+        mockMvc.perform(post(path() + "/planned-visits")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(token))
+                        .header(HttpHeaders.IF_MATCH, "\"" + version + "\"")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"Inicial","plannedDate":"2027-02-01",
+                                 "activities":[{"name":"Entrevista","description":"Histórico"}]}
+                                """))
+                .andExpect(status().isCreated());
+    }
+
+    private void createCriterion(String type) throws Exception {
+        mockMvc.perform(post(path() + "/criteria")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"type\":\"" + type
+                                + "\",\"description\":\"Critério " + type + "\"}"))
+                .andExpect(status().isCreated());
     }
 
     private org.springframework.test.web.servlet.ResultActions change(
