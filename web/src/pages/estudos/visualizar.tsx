@@ -13,6 +13,7 @@ import type { AuthenticatedUser } from "../../types/auth";
 import type { EstadoEstudo } from "../../types/estudo";
 import { podeEditarEstudo, podeAlterarEstadoEstudo } from "../../utils/estudos";
 import { useDetalhesEstudo } from "./useDetalhesEstudo";
+import { CriteriosEstudo } from "./criterios";
 import { VisitasPrevistasEstudo } from "./visitas-previstas";
 
 const MENSAGENS_EDICAO_BLOQUEADA: Partial<Record<EstadoEstudo, string>> = {
@@ -90,7 +91,7 @@ function DetalhesEstudo({
 }) {
     const {
         estudo,
-        setEstudo,
+        sincronizarEstudo,
         carregando,
         erro,
         origemCancelamento,
@@ -105,6 +106,8 @@ function DetalhesEstudo({
         transicionar,
         atualizarEstudo,
     } = useDetalhesEstudo({ id, token, pesquisador });
+    const [criteriosMontados, setCriteriosMontados] = useState(false);
+    const [criteriosEmProcessamento, setCriteriosEmProcessamento] = useState(false);
     const [visitasMontadas, setVisitasMontadas] = useState(false);
     const [visitasEmProcessamento, setVisitasEmProcessamento] = useState(false);
 
@@ -170,7 +173,7 @@ function DetalhesEstudo({
                 estudo={estudo}
                 edicaoPermitida={edicaoPermitida}
                 mensagemBloqueio={mensagemBloqueio}
-                emProcessamento={visitasEmProcessamento}
+                emProcessamento={visitasEmProcessamento || criteriosEmProcessamento}
                 alteracaoEstadoPermitida={podeAlterarEstadoEstudo(estudo, pesquisador)}
                 origemCancelamento={origemCancelamento}
                 proximaTransicao={
@@ -227,6 +230,7 @@ function DetalhesEstudo({
                 variant="secondary"
                 defaultSelectedKey="visao-geral"
                 onSelectionChange={(aba) => {
+                    if (aba === "criterios") setCriteriosMontados(true);
                     if (aba === "visitas-previstas") setVisitasMontadas(true);
                 }}
                 className="w-full"
@@ -240,6 +244,13 @@ function DetalhesEstudo({
                         className="min-h-12 w-auto shrink-0 rounded-none px-1 text-sm font-medium data-[selected=true]:text-[var(--color-primary)]"
                     >
                         Visão geral
+                        <Tabs.Indicator className="top-auto bottom-0 h-0.5 rounded-none bg-[var(--color-primary)] shadow-none" />
+                    </Tabs.Tab>
+                    <Tabs.Tab
+                        id="criterios"
+                        className="min-h-12 w-auto shrink-0 rounded-none px-1 text-sm font-medium data-[selected=true]:text-[var(--color-primary)]"
+                    >
+                        Critérios
                         <Tabs.Indicator className="top-auto bottom-0 h-0.5 rounded-none bg-[var(--color-primary)] shadow-none" />
                     </Tabs.Tab>
                     <Tabs.Tab
@@ -276,6 +287,19 @@ function DetalhesEstudo({
                     </Card>
                 </Tabs.Panel>
                 <Tabs.Panel
+                    id="criterios"
+                    shouldForceMount={criteriosMontados}
+                    className="m-0 p-0 data-[inert=true]:hidden"
+                >
+                    <CriteriosEstudo
+                        estudo={estudo}
+                        usuario={pesquisador}
+                        token={token}
+                        onAtualizarEstudo={sincronizarEstudo}
+                        onProcessamentoChange={setCriteriosEmProcessamento}
+                    />
+                </Tabs.Panel>
+                <Tabs.Panel
                     id="visitas-previstas"
                     shouldForceMount={visitasMontadas}
                     className="m-0 p-0 data-[inert=true]:hidden"
@@ -284,7 +308,7 @@ function DetalhesEstudo({
                         estudo={estudo}
                         usuario={pesquisador}
                         token={token}
-                        onAtualizarEstudo={setEstudo}
+                        onAtualizarEstudo={sincronizarEstudo}
                         onProcessamentoChange={setVisitasEmProcessamento}
                     />
                 </Tabs.Panel>

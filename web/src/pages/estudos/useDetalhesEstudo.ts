@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "@heroui/react";
 import { ApiClientError } from "../../services/api/apiClient";
 import {
@@ -160,6 +160,10 @@ export function useDetalhesEstudo({ id, token, pesquisador }: Props) {
         toast.success("Estado do estudo atualizado com sucesso.");
     }
 
+    const sincronizarEstudo = useCallback((atualizado: EstudoApi) => {
+        setEstudo((atual) => (atual && atualizado.version < atual.version ? atual : atualizado));
+    }, []);
+
     function atualizarEstudo() {
         setTransicao(null);
         setCarregando(true);
@@ -169,7 +173,7 @@ export function useDetalhesEstudo({ id, token, pesquisador }: Props) {
 
     return {
         estudo,
-        setEstudo,
+        sincronizarEstudo,
         carregando,
         erro,
         origemCancelamento,
