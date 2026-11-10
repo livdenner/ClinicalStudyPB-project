@@ -29,7 +29,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * estudos que a API lê e altera como se tivessem sido criados por ela.
  *
  * @author Júlia Pamplona
- * @since 2026-11-08
+ * @since 2026-11-09
  * @version 0.0.1
  */
 class DemoSeedIntegrationTest extends IntegrationTestSupport {
