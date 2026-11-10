@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Plus, Search } from "lucide-react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { AvaliacaoElegibilidade } from "../../components/candidatos/AvaliacaoElegibilidade";
+import { ConsentimentoSimulado } from "../../components/candidatos/ConsentimentoSimulado";
 import { ModalNovoCandidato } from "../../components/candidatos/ModalNovoCandidato";
 import { TabelaCandidatos } from "../../components/candidatos/TabelaCandidatos";
 import { Button } from "../../components/ui/Button";
@@ -19,8 +20,39 @@ import {
     type StatusElegibilidadeApi,
     type StatusEstudoCandidato,
 } from "../../types/candidato";
+import type { StatusConsentimentoApi } from "../../types/consentimento";
 
 const PERFIS_PERMITIDOS: UserRole[] = ["COORDINATOR", "RESEARCHER"];
+const CONSENTIMENTO_CACHE_KEY = "clinicalstudypb.consentimentos";
+
+type CacheConsentimentoItem = {
+    status: StatusConsentimentoApi;
+    termo: string;
+};
+
+function lerCacheConsentimentos(): Record<number, CacheConsentimentoItem> {
+    try {
+        const bruto = localStorage.getItem(CONSENTIMENTO_CACHE_KEY);
+        if (!bruto) return {};
+        return JSON.parse(bruto) as Record<number, CacheConsentimentoItem>;
+    } catch {
+        return {};
+    }
+}
+
+function salvarCacheConsentimento(
+    candidateId: number,
+    status: StatusConsentimentoApi,
+    termo: string
+) {
+    try {
+        const atual = lerCacheConsentimentos();
+        atual[candidateId] = { status, termo };
+        localStorage.setItem(CONSENTIMENTO_CACHE_KEY, JSON.stringify(atual));
+    } catch {
+        // Ignora falha de armazenamento local
+    }
+}
 
 const STATUS_ESTUDO_CLASSES: Record<StatusEstudoCandidato, string> = {
     PLANNING: "bg-[#FEF3C7] text-[#92400E]",
@@ -65,6 +97,7 @@ export function RecrutamentoPage() {
             key={session.accessToken}
             token={session.accessToken}
             role={session.user.role}
+            responsavelNome={session.user.name}
             onIrParaLogin={handleIrParaLogin}
         />
     );
@@ -73,10 +106,12 @@ export function RecrutamentoPage() {
 function GestaoCandidatos({
     token,
     role,
+    responsavelNome,
     onIrParaLogin,
 }: {
     token: string;
     role: UserRole;
+    responsavelNome: string;
     onIrParaLogin: () => Promise<void>;
 }) {
     const [estudos, setEstudos] = useState<EstudoComStatusApi[]>([]);
@@ -94,6 +129,15 @@ function GestaoCandidatos({
     const [modalAberto, setModalAberto] = useState(false);
     const [mensagemSucesso, setMensagemSucesso] = useState("");
     const [candidatoAvaliandoId, setCandidatoAvaliandoId] = useState<number | null>(null);
+    const [candidatoConsentimentoId, setCandidatoConsentimentoId] = useState<number | null>(null);
+    const [termosConsentimento, setTermosConsentimento] = useState<Record<number, string>>(() => {
+        const cache = lerCacheConsentimentos();
+        const inicial: Record<number, string> = {};
+        for (const [idStr, item] of Object.entries(cache)) {
+            inicial[Number(idStr)] = item.termo;
+        }
+        return inicial;
+    });
 
     useEffect(() => {
         const controller = new AbortController();
@@ -141,7 +185,15 @@ function GestaoCandidatos({
         listarCandidatosPorEstudo(estudoSelecionadoId, token, controller.signal)
             .then((dados) => {
                 if (!controller.signal.aborted) {
-                    setCandidatos(dados);
+                    const cache = lerCacheConsentimentos();
+                    setCandidatos(
+                        dados.map((candidato) => {
+                            const salvo = cache[candidato.id];
+                            return salvo
+                                ? { ...candidato, consentStatus: salvo.status }
+                                : candidato;
+                        })
+                    );
                 }
             })
             .catch((error: unknown) => {
@@ -203,6 +255,20 @@ function GestaoCandidatos({
         );
     }
 
+    const handleAtualizarConsentimentoCandidato = useCallback(
+        (candidateId: number, novoStatus: StatusConsentimentoApi, termoIdentificacao: string) => {
+            salvarCacheConsentimento(candidateId, novoStatus, termoIdentificacao);
+            setCandidatos((atuais) =>
+                atuais.map((c) => (c.id === candidateId ? { ...c, consentStatus: novoStatus } : c))
+            );
+            setTermosConsentimento((atuais) => ({
+                ...atuais,
+                [candidateId]: termoIdentificacao,
+            }));
+        },
+        []
+    );
+
     const candidatoAvaliando =
         candidatoAvaliandoId !== null
             ? (candidatos.find((c) => c.id === candidatoAvaliandoId) ?? null)
@@ -217,6 +283,26 @@ function GestaoCandidatos({
                 role={role}
                 onVoltar={() => setCandidatoAvaliandoId(null)}
                 onAtualizarStatusCandidato={handleAtualizarStatusCandidato}
+            />
+        );
+    }
+
+    const candidatoConsentimento =
+        candidatoConsentimentoId !== null
+            ? (candidatos.find((c) => c.id === candidatoConsentimentoId) ?? null)
+            : null;
+
+    if (candidatoConsentimento && estudoSelecionado) {
+        return (
+            <ConsentimentoSimulado
+                estudo={estudoSelecionado}
+                candidato={candidatoConsentimento}
+                token={token}
+                role={role}
+                responsavelNome={responsavelNome}
+                termoInicial={termosConsentimento[candidatoConsentimento.id]}
+                onVoltar={() => setCandidatoConsentimentoId(null)}
+                onAtualizarConsentimentoCandidato={handleAtualizarConsentimentoCandidato}
             />
         );
     }
@@ -251,7 +337,7 @@ function GestaoCandidatos({
                             setMensagemSucesso("");
                             setModalAberto(true);
                         }}
-                        className="inline-flex items-center gap-2 font-semibold"
+                        className="btn btn-primary inline-flex items-center gap-2 font-semibold transition hover:bg-[var(--color-primary-dark)]"
                     >
                         <Plus aria-hidden="true" size={18} />
                         Novo candidato
@@ -290,6 +376,7 @@ function GestaoCandidatos({
                                 const novoId = Number.isNaN(valor) ? null : valor;
                                 setMensagemSucesso("");
                                 setCandidatoAvaliandoId(null);
+                                setCandidatoConsentimentoId(null);
                                 setEstudoSelecionadoId(novoId);
                                 if (novoId !== null) {
                                     setCarregandoCandidatos(true);
@@ -438,6 +525,11 @@ function GestaoCandidatos({
                             onSelecionarCandidato={
                                 podeCadastrar
                                     ? (candidato) => setCandidatoAvaliandoId(candidato.id)
+                                    : undefined
+                            }
+                            onAbrirConsentimento={
+                                podeCadastrar
+                                    ? (candidato) => setCandidatoConsentimentoId(candidato.id)
                                     : undefined
                             }
                         />

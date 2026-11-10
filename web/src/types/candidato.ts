@@ -1,3 +1,4 @@
+import type { StatusConsentimentoApi } from "./consentimento";
 import type { EstudoApi } from "./estudo";
 
 export type StatusEstudoCandidato =
@@ -20,6 +21,7 @@ export type CandidatoApi = {
     name: string;
     age: number;
     eligibilityStatus: StatusElegibilidadeApi;
+    consentStatus?: StatusConsentimentoApi;
 };
 
 export const STATUS_ESTUDO_LABELS: Record<StatusEstudoCandidato, string> = {
