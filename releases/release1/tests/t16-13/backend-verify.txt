@@ -1,0 +1,36 @@
+[INFO] --- checkstyle:3.6.0:check (checkstyle) @ backend ---
+[INFO] --- jacoco:0.8.13:prepare-agent (prepare-agent) @ backend ---
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 39.78 s -- in clinicalstudypb.auth.AuthControllerValidationTest
+[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 187.3 s -- in clinicalstudypb.auth.AuthIntegrationTest
+[INFO] Tests run: 90, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 141.0 s -- in clinicalstudypb.auth.AuthorizationIntegrationTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 7.116 s -- in clinicalstudypb.auth.AuthServiceTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.580 s -- in clinicalstudypb.auth.JwtServiceTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 12.03 s -- in clinicalstudypb.candidates.CandidateConcurrencyIntegrationTest
+[INFO] Tests run: 13, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.44 s -- in clinicalstudypb.candidates.CandidateIntegrationTest
+[INFO] Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.982 s -- in clinicalstudypb.candidates.CandidateServiceTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.635 s -- in clinicalstudypb.candidates.EligibilityConcurrencyIntegrationTest
+[INFO] Tests run: 38, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 94.22 s -- in clinicalstudypb.candidates.EligibilityEvaluationIntegrationTest
+[INFO] Tests run: 28, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.135 s -- in clinicalstudypb.candidates.EligibilityEvaluationServiceTest
+[INFO] Tests run: 16, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 13.12 s -- in clinicalstudypb.consent.SimulatedConsentIntegrationTest
+[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.60 s -- in clinicalstudypb.criteria.StudyCriterionIntegrationTest
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.714 s -- in clinicalstudypb.criteria.StudyCriterionServiceTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 18.99 s -- in clinicalstudypb.participants.ParticipantConcurrencyIntegrationTest
+[INFO] Tests run: 24, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 31.23 s -- in clinicalstudypb.participants.ParticipantIntegrationTest
+[INFO] Tests run: 18, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.714 s -- in clinicalstudypb.participants.ParticipantServiceTest
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.773 s -- in clinicalstudypb.studies.StudyControllerTest
+[INFO] Tests run: 29, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.68 s -- in clinicalstudypb.studies.StudyIntegrationTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.511 s -- in clinicalstudypb.studies.StudyLifecycleIntegrationTest
+[INFO] Tests run: 33, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.361 s -- in clinicalstudypb.studies.StudyServiceTest
+[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.14 s -- in clinicalstudypb.studies.StudyStatusIntegrationTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.338 s -- in clinicalstudypb.support.DemoSeedIntegrationTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.677 s -- in clinicalstudypb.users.UserControllerTest
+[INFO] Tests run: 17, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 21.97 s -- in clinicalstudypb.users.UserIntegrationTest
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.088 s -- in clinicalstudypb.users.UserServiceTest
+[INFO] Tests run: 12, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 33.89 s -- in clinicalstudypb.visits.PlannedVisitIntegrationTest
+[INFO] Tests run: 450, Failures: 0, Errors: 0, Skipped: 0
+[INFO] --- jacoco:0.8.13:report (report) @ backend ---
+[INFO] --- jacoco:0.8.13:check (check) @ backend ---
+[INFO] All coverage checks have been met.
+[INFO] BUILD SUCCESS
+[INFO] Total time:  13:15 min
+[INFO] Finished at: 2026-11-09T20:40:09-03:00

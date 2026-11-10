@@ -15,7 +15,7 @@ O papel de cada integrante pode mudar entre sprints. Antes de iniciar uma altera
 
 ## Pré-requisitos
 
-- Node.js LTS e npm. O arquivo `package-lock.json` fixa a árvore de dependências; use `npm ci` para reproduzir a instalação.
+- Node.js 22 e npm (a versão do Node usada no CI). O arquivo `package-lock.json` fixa a árvore de dependências; use `npm ci` para reproduzir a instalação.
 - Android Studio e Android SDK, se for usar um emulador Android; ou um telefone Android com Expo Go compatível com Expo SDK 58.
 - Para executar o backend e validar chamadas reais, Docker Compose e as variáveis requeridas na raiz do repositório. Veja o README principal. A tarefa atual não depende do backend.
 
@@ -53,7 +53,9 @@ Também é possível iniciar apenas o servidor Metro com `npm.cmd start` e press
 2. Na pasta `mobile/`, rode `npm.cmd start`.
 3. Abra o Expo Go no telefone e leia o QR code exibido pelo terminal.
 
-Se a rede bloquear a conexão local, use `npm.cmd start -- --tunnel`; a conexão por túnel pode ser mais lenta e requer que a ferramenta de túnel esteja disponível. No Windows, use `npm.cmd` caso o PowerShell não encontre `npm` diretamente. Em macOS/Linux, os comandos equivalentes são `npm`.
+Depois da abertura, confira o título **ClinicalStudyPB**, toque em **Ver estudos**, confira a mensagem de tela provisória e toque em **Voltar ao início**. Para repetir uma instalação limpa, instale as dependências pelo lockfile em uma cópia nova do projeto; as telas iniciais não exigem `.env` nem backend ativo.
+
+Se a rede bloquear a conexão local, use `npm.cmd start -- --tunnel`; a conexão por túnel pode ser mais lenta e requer que a ferramenta de túnel esteja disponível. No Windows, use `npm.cmd` caso a política de execução bloqueie o script `npm.ps1`. Em macOS/Linux, os comandos equivalentes são `npm`.
 
 ## Configurar a URL da API
 
@@ -77,7 +79,9 @@ npx.cmd tsc --noEmit
 npx.cmd expo install --check
 ```
 
-O teste Jest cobre a navegação inicial. `tsc` verifica o TypeScript e `expo install --check` compara as dependências com o SDK do Expo. Não há script de lint mobile configurado nesta base; a configuração do ESLint e a execução no CI estão planejadas na tarefa de qualidade/DevOps da equipe.
+Os testes Jest cobrem a navegação inicial e o tratamento de erros do cliente HTTP. `tsc` verifica o TypeScript e `expo install --check` compara as dependências com o SDK do Expo. Não há script de lint mobile configurado nesta base. O CI já instala pelo lockfile e executa Jest com cobertura (`npm test -- --ci --coverage`), disponibilizando o artefato `mobile-coverage`.
+
+O comando `expo install --check` pode recomendar atualizações de pacotes dentro do mesmo SDK ao consultar o catálogo online. Registre as versões e o resultado; não atualize dependências nem o lockfile automaticamente durante a conferência de instalação. Na validação da T16.13, o catálogo recomendou atualizações do SDK 58, enquanto os testes, o TypeScript e a navegação em Android passaram com as versões fixadas. A consulta offline usa os dados locais e não substitui o diagnóstico online. Veja o [relatório da execução](../releases/release1/tests/t16-13/README.md).
 
 ### Auditoria de dependências
 

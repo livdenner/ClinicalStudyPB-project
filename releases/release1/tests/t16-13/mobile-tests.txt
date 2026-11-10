@@ -1,0 +1,21 @@
+
+> clinicalstudypb-mobile@1.0.0 test
+> jest --runInBand --ci --coverage --json --outputFile=../../logs/mobile-jest.json
+
+---------------|---------|----------|---------|---------|--------------------------
+File           | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s        
+---------------|---------|----------|---------|---------|--------------------------
+All files      |   76.47 |    58.06 |     100 |   76.47 |                          
+ app           |     100 |      100 |     100 |     100 |                          
+  index.tsx    |     100 |      100 |     100 |     100 |                          
+  studies.tsx  |     100 |      100 |     100 |     100 |                          
+ services/api  |   73.33 |    58.06 |     100 |   73.33 |                          
+  apiClient.ts |   73.33 |    58.06 |     100 |   73.33 | 43,49,57,66-67,96-97,125 
+---------------|---------|----------|---------|---------|--------------------------
+
+Test Suites: 2 passed, 2 total
+Tests:       2 passed, 2 total
+Snapshots:   0 total
+Time:        381.592 s
+Ran all test suites.
+Test results written to: ..\..\logs\mobile-jest.json
