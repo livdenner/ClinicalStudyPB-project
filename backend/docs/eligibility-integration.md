@@ -1,7 +1,11 @@
 # Elegibilidade e integração com participantes
 
-A T13.1 implementa `GET` e `PUT /api/studies/{studyId}/candidates/{candidateId}/eligibility`,
-exclusivos de `COORDINATOR`, conforme `backend/openapi.yaml`.
+A Release 1 já integra avaliação de elegibilidade (T13.1/T13.2) e inclusão de participantes
+(T15.1/T15.2). A avaliação usa `GET` e `PUT` na rota
+`/api/studies/{studyId}/candidates/{candidateId}/eligibility`, exclusivos de `COORDINATOR`.
+A inclusão usa `POST /api/studies/{studyId}/candidates/{candidateId}/inclusion`; a consulta usa
+`GET /api/studies/{studyId}/participants` e `GET /api/studies/{studyId}/participants/{participantId}`,
+conforme o [contrato OpenAPI](../openapi.yaml).
 
 O PUT substitui o conjunto completo de respostas, exige pelo menos uma e rejeita critérios
 duplicados ou de outro estudo. Enquanto existir critério sem resposta, o resultado é `PENDING`.
@@ -11,23 +15,22 @@ como previsto no contrato; o identificador do autor fica persistido internamente
 
 ## Migrações
 
-- V7, já integrada pela T9.1: respostas por candidato e critério; deve permanecer inalterada.
-- V8, já integrada à `development`: consentimento simulado.
+- V7: respostas por candidato e critério.
+- V8: consentimento simulado.
 - V9: autor e instante da última avaliação. O resultado continua em `candidates.eligibility_status`.
-- V10: estrutura compartilhada de participantes, consultada pela elegibilidade e reutilizada na T15.1.
+- V10: vínculos de participantes usados pela elegibilidade e pela inclusão já implementada.
 
-**Ordem de integração:** a atualização da T13.1 com a `development` inclui a V8 antes das V9/V10.
 O Flyway aplica a sequência V1 a V10 em banco novo e somente as versões pendentes em bancos
 atualizados pela sequência anterior. As migrações existentes mantêm sua numeração e conteúdo.
 
-## Protocolo transacional para T15.1
+## Protocolo transacional da inclusão
 
-1. A inclusão deve chamar `StudyService.lockForCandidateOperations(studyId)` dentro de sua transação.
-2. Após obter o bloqueio, validar candidato, estudo em recrutamento, elegibilidade, consentimento,
-   ausência de inclusão anterior e disponibilidade de vaga.
-3. Chamar `SimulatedConsentService.lockAfterInclusion(studyId, candidateId)` para impedir alterações
-   posteriores do consentimento, dentro dessa mesma transação.
-4. Persistir `Participant`, incluindo `includedBy` e `includedAt`, na mesma transação dessas validações.
+1. `ParticipantService` chama `StudyService.lockForCandidateOperations(studyId)` na transação
+   de inclusão e bloqueia o candidato com `CandidateService.lockForConsentUpdate`.
+2. Confere estudo em recrutamento, elegibilidade, ausência de inclusão anterior e disponibilidade de vaga.
+3. Chama `SimulatedConsentService.lockAfterInclusion(studyId, candidateId)` para exigir consentimento
+   concedido e impedir alterações posteriores, dentro dessa mesma transação.
+4. Persiste `Participant`, incluindo `includedBy` e `includedAt`, na mesma transação dessas validações.
 
 A avaliação já usa esse bloqueio antes de consultar os critérios e `ParticipantLookup`.
 A criação de critérios também bloqueia a mesma linha do estudo. Assim, inclusão, avaliação,
@@ -38,8 +41,8 @@ A T13.1 consulta inclusões reais pela existência do vínculo em `participants`
 de inclusão duplicado no candidato. A chave estrangeira composta impede vincular o candidato a
 outro estudo, e a unicidade impede duas inclusões do mesmo candidato.
 
-A T15.1 completa essa integração com `POST /api/studies/{studyId}/candidates/{candidateId}/inclusion`
-e `GET /api/studies/{studyId}/participants[/{participantId}]`. O POST é exclusivo de `COORDINATOR`;
+Os endpoints de inclusão e consulta já estão implementados em `ParticipantController`.
+O POST é exclusivo de `COORDINATOR`;
 as consultas permitem `RESEARCHER` e `COORDINATOR`. O POST retorna `201` com `Location` e não recebe corpo.
 Estudo/candidato inexistente ou candidato de outro estudo retorna `404`; pré-condições de negócio
 não atendidas retornam `409`, conforme o contrato atual.
@@ -57,6 +60,9 @@ instante, unicidade e a chave estrangeira composta necessários à inclusão.
 
 ## Validação e testes
 
-Os testes unitários, HTTP e de concorrência da T13.2 foram integrados à branch da T13.1.
-Executar `./mvnw clean verify` para verificar a suíte completa, Checkstyle e o mínimo de 80%
-de cobertura.
+Os testes unitários, HTTP e de concorrência de elegibilidade e participantes estão em
+[`candidates`](../src/test/java/clinicalstudypb/candidates) e
+[`participants`](../src/test/java/clinicalstudypb/participants). Execute `./mvnw verify`
+na pasta `backend/` (PowerShell: `.\mvnw.cmd verify`) para verificar a suíte completa,
+Checkstyle e o mínimo de 80% de cobertura. Os [resultados da Release 1](../../releases/release1/tests/README.md)
+identificam a versão validada e preservam os relatórios.

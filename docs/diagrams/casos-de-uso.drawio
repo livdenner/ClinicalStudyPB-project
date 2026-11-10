@@ -1,6 +1,7 @@
-<mxfile host="Electron">
-  <diagram name="Página-1" id="1d3eG-3Ux6JT3CCYH0Zb">
-    <mxGraphModel dx="587" dy="848" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="Electron" agent="ClinicalStudyPB" version="32.6.10">
+  <diagram name="Casos de uso RF01-RF11" id="1d3eG-3Ux6JT3CCYH0Zb">
+    <mxGraphModel dx="587" dy="848" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1280" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -61,7 +62,7 @@
         <mxCell id="gbHQEmi1ReF-uiulEzzD-59" edge="1" parent="1" source="gbHQEmi1ReF-uiulEzzD-5" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;" target="gbHQEmi1ReF-uiulEzzD-58">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="gbHQEmi1ReF-uiulEzzD-5" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;" value="Pesquisador" vertex="1">
+        <mxCell id="gbHQEmi1ReF-uiulEzzD-5" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;" value="Pesquisador&lt;br/&gt;(responsável nas alterações)" vertex="1">
           <mxGeometry height="60" width="30" x="1069" y="527" as="geometry" />
         </mxCell>
         <mxCell id="gbHQEmi1ReF-uiulEzzD-39" edge="1" parent="1" source="gbHQEmi1ReF-uiulEzzD-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=blockThin;endFill=0;">
@@ -91,41 +92,44 @@
             <mxPoint x="1046.5" y="367" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="gbHQEmi1ReF-uiulEzzD-46" parent="1" style="ellipse;whiteSpace=wrap;html=1;" value="Autenticar-se" vertex="1">
+        <mxCell id="gbHQEmi1ReF-uiulEzzD-46" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=12;" value="Autenticar-se (RF02)" vertex="1">
           <mxGeometry height="50" width="120" x="1283" y="252" as="geometry" />
         </mxCell>
-        <mxCell id="gbHQEmi1ReF-uiulEzzD-47" parent="1" style="ellipse;whiteSpace=wrap;html=1;" value="Encerrar sessão" vertex="1">
+        <mxCell id="gbHQEmi1ReF-uiulEzzD-47" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=12;" value="Encerrar sessão (RF02)" vertex="1">
           <mxGeometry height="50" width="120" x="1283" y="332" as="geometry" />
         </mxCell>
-        <mxCell id="gbHQEmi1ReF-uiulEzzD-48" parent="1" style="ellipse;whiteSpace=wrap;html=1;" value="Manter Usuários" vertex="1">
+        <mxCell id="gbHQEmi1ReF-uiulEzzD-48" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=12;" value="Gerenciar usuários (RF01)" vertex="1">
           <mxGeometry height="50" width="120" x="1283" y="432" as="geometry" />
         </mxCell>
-        <mxCell id="gbHQEmi1ReF-uiulEzzD-49" parent="1" style="ellipse;whiteSpace=wrap;html=1;" value="Manter Estudos" vertex="1">
-          <mxGeometry height="50" width="120" x="1443" y="442" as="geometry" />
+        <mxCell id="gbHQEmi1ReF-uiulEzzD-49" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=12;fontSize=11;" value="Gerenciar estudos (RF04)" vertex="1">
+          <mxGeometry height="56" width="150" x="1428" y="439.0" as="geometry" />
         </mxCell>
-        <mxCell id="gbHQEmi1ReF-uiulEzzD-54" parent="1" style="ellipse;whiteSpace=wrap;html=1;" value="Definir Critérios&lt;div&gt;de Elegibilidade&lt;/div&gt;" vertex="1">
-          <mxGeometry height="50" width="120" x="1443" y="502" as="geometry" />
+        <mxCell id="gbHQEmi1ReF-uiulEzzD-54" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=12;fontSize=11;" value="Definir critérios de inclusão e exclusão (RF05)" vertex="1">
+          <mxGeometry height="56" width="150" x="1428" y="499.0" as="geometry" />
         </mxCell>
-        <mxCell id="gbHQEmi1ReF-uiulEzzD-55" parent="1" style="ellipse;whiteSpace=wrap;html=1;verticalAlign=top;" value="&lt;font style=&quot;font-size: 11px;&quot;&gt;Definir Visitas&amp;nbsp;&lt;/font&gt;&lt;div&gt;&lt;font style=&quot;font-size: 11px;&quot;&gt;Previstas e Atividades&lt;/font&gt;&lt;/div&gt;" vertex="1">
-          <mxGeometry height="50" width="120" x="1443" y="562" as="geometry" />
+        <mxCell id="gbHQEmi1ReF-uiulEzzD-55" parent="1" style="ellipse;whiteSpace=wrap;html=1;verticalAlign=top;fontSize=12;fontSize=11;" value="Definir visitas previstas e atividades (RF06)" vertex="1">
+          <mxGeometry height="56" width="150" x="1428" y="559.0" as="geometry" />
         </mxCell>
-        <mxCell id="gbHQEmi1ReF-uiulEzzD-58" parent="1" style="ellipse;whiteSpace=wrap;html=1;" value="Alterar Estado do Estudo" vertex="1">
-          <mxGeometry height="50" width="120" x="1443" y="622" as="geometry" />
+        <mxCell id="gbHQEmi1ReF-uiulEzzD-58" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=12;fontSize=11;" value="Gerenciar estado do estudo (RF07)" vertex="1">
+          <mxGeometry height="56" width="150" x="1428" y="619.0" as="geometry" />
         </mxCell>
-        <mxCell id="gbHQEmi1ReF-uiulEzzD-60" parent="1" style="ellipse;whiteSpace=wrap;html=1;" value="Cadastrar Candidato" vertex="1">
-          <mxGeometry height="50" width="120" x="1443" y="687" as="geometry" />
+        <mxCell id="gbHQEmi1ReF-uiulEzzD-60" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=12;fontSize=11;" value="Cadastrar candidato (RF08)" vertex="1">
+          <mxGeometry height="56" width="150" x="1428" y="684.0" as="geometry" />
         </mxCell>
-        <mxCell id="gbHQEmi1ReF-uiulEzzD-62" parent="1" style="ellipse;whiteSpace=wrap;html=1;" value="Avaliar Elegibilidade" vertex="1">
-          <mxGeometry height="50" width="120" x="1443" y="747" as="geometry" />
+        <mxCell id="gbHQEmi1ReF-uiulEzzD-62" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=12;fontSize=11;" value="Avaliar elegibilidade (RF09)" vertex="1">
+          <mxGeometry height="56" width="150" x="1428" y="744.0" as="geometry" />
         </mxCell>
-        <mxCell id="gbHQEmi1ReF-uiulEzzD-63" parent="1" style="ellipse;whiteSpace=wrap;html=1;" value="Registrar Consentimento Simulado" vertex="1">
-          <mxGeometry height="50" width="120" x="1443" y="807" as="geometry" />
+        <mxCell id="gbHQEmi1ReF-uiulEzzD-63" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=12;fontSize=11;" value="Registrar consentimento simulado (RF10)" vertex="1">
+          <mxGeometry height="56" width="150" x="1428" y="804.0" as="geometry" />
         </mxCell>
-        <mxCell id="gbHQEmi1ReF-uiulEzzD-66" parent="1" style="ellipse;whiteSpace=wrap;html=1;" value="Incluir Participante&amp;nbsp;&lt;div&gt;no Estudo&lt;/div&gt;" vertex="1">
-          <mxGeometry height="50" width="120" x="1443" y="867" as="geometry" />
+        <mxCell id="gbHQEmi1ReF-uiulEzzD-66" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=12;fontSize=11;" value="Incluir participante no estudo (RF11)" vertex="1">
+          <mxGeometry height="56" width="150" x="1428" y="864.0" as="geometry" />
         </mxCell>
         <mxCell id="gbHQEmi1ReF-uiulEzzD-69" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;" value="Sistema de Gestão de Estudos Clínicos" vertex="1">
           <mxGeometry height="30" width="400" x="1210" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="release1-mobile-scope" value="RF02/RF03 integrados na web/API. O mobile da Release 1 é um esqueleto navegável.&lt;br/&gt;Pesquisador e coordenador consultam o protocolo; somente o responsável o altera.&lt;br/&gt;O coordenador consulta e conduz candidatos, elegibilidade, consentimento e inclusão." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;fontSize=12;" vertex="1" parent="1">
+          <mxGeometry x="1070" y="985" width="630" height="90" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

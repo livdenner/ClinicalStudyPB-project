@@ -1,0 +1,49 @@
+task,pbi,descricao,papel,horas_planejadas
+T9.1,PBI-09,"Critérios por estudo: migração, entidade e API",Backend,4.0
+T9.2,PBI-09,Testes das regras de critérios,Backend,1.5
+T12.1,PBI-12,"Candidatos por estudo: migração, entidade e API",Backend,4.0
+T12.2,PBI-12,Testes de cadastro de candidatos,Backend,1.5
+T13.1,PBI-13,Elegibilidade: persistência e API de avaliação,Backend,4.0
+T13.2,PBI-13,Testes de elegibilidade e respostas pendentes,Backend,2.0
+T15.1,PBI-15,"Inclusão: API, consentimento, duplicidade e limite de vagas",Backend,5.0
+T15.2,PBI-15,Testes da inclusão e falhas sem gravação parcial,Backend,2.5
+T10.1,PBI-10,"Visitas e atividades: migração, entidade e API",Gerente,4.0
+T10.2,PBI-10,Testes de visitas e atividades,Gerente,1.5
+T11.1,PBI-11,Estados do estudo: persistência e API de transição,Gerente,3.0
+T11.2,PBI-11,Testes de transição e permissões,Gerente,1.5
+T14.1,PBI-14,Consentimento simulado: persistência e API,Gerente,2.5
+T14.2,PBI-14,Testes de consentimento,Gerente,1.0
+T16.1,PBI-16,Contrato OpenAPI e regras dos RF05 a RF11,Gerente,2.0
+T16.2,PBI-16,Revisão de permissões e integração dos módulos,Gerente,2.0
+T16.15,PBI-16,"Integrar PRs; DoD, burndown, tag e GitHub Release",Gerente,2.5
+T16.10,PBI-16,Atualizar diagramas afetados pelos RF05 a RF11,Mobile,2.0
+T16.11,PBI-16,Atualizar README de instalação e demonstração,Mobile,2.0
+T16.12,PBI-16,"Documentar Release 1 com capturas, testes e cobertura",Mobile,2.5
+T16.13,PBI-16,Validar instalação limpa e app inicial,Mobile,1.5
+T16.3,PBI-16,Preparar dados fictícios repetíveis para os fluxos,QA,1.5
+T16.4,PBI-16,"Integração de critérios, visitas e estados no PostgreSQL",QA,2.0
+T16.5,PBI-16,Integração de candidatos até inclusão no PostgreSQL,QA,3.5
+T16.6,PBI-16,Concorrência: duas inclusões disputam a última vaga,QA,2.0
+T16.7,PBI-16,Smoke web automatizado do fluxo completo,QA,2.0
+T16.8,PBI-16,"Conferir CI, cobertura de 80% e relatório de testes",QA,2.0
+T9.3,PBI-09,Tela de critérios integrada à API,Web 1,4.0
+T9.4,PBI-09,Testes da tela de critérios,Web 1,1.5
+T10.3,PBI-10,Tela de visitas previstas e atividades,Web 1,4.0
+T10.4,PBI-10,Testes da tela de visitas,Web 1,1.5
+T11.3,PBI-11,Estado e ações permitidas na tela de estudos,Web 1,2.0
+T11.4,PBI-11,Testes das transições na tela,Web 1,1.0
+T16.9,PBI-16,Regressão de usuários e estudos,Web 1,1.0
+T12.3,PBI-12,Tela de candidatos com filtro por estudo,Web 2,4.0
+T12.4,PBI-12,Testes da tela de candidatos,Web 2,1.5
+T13.3,PBI-13,Tela de avaliação da elegibilidade,Web 2,4.0
+T13.4,PBI-13,Testes da tela de elegibilidade,Web 2,1.5
+T14.3,PBI-14,Tela de consentimento simulado,Web 2,2.0
+T14.4,PBI-14,Testes da tela de consentimento,Web 2,1.0
+T15.3,PBI-15,Inclusão e lista de participantes por estudo,Web 2,3.0
+T15.4,PBI-15,Testes da inclusão na tela,Web 2,1.5
+C2.1,Cerimônias,"Planning, passagem de contexto, revisões, review e retrospectiva",Gerente,2.0
+C2.2,Cerimônias,"Planning, passagem de contexto, revisões, review e retrospectiva",Backend,2.0
+C2.3,Cerimônias,"Planning, passagem de contexto, revisões, review e retrospectiva",Web 1,2.0
+C2.4,Cerimônias,"Planning, passagem de contexto, revisões, review e retrospectiva",Web 2,2.0
+C2.5,Cerimônias,"Planning, passagem de contexto, revisões, review e retrospectiva",Mobile,2.0
+C2.6,Cerimônias,"Planning, passagem de contexto, revisões, review e retrospectiva",QA,2.0

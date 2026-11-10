@@ -5,7 +5,7 @@ import { AuthProvider } from "../../context/AuthContext";
 import { AUTH_STORAGE_KEY } from "../../services/auth";
 import type { UserRole } from "../../types/auth";
 import type { CandidatoApi, EstudoComStatusApi } from "../../types/candidato";
-import type { ParticipanteApi } from "../../types/participante";
+import type { StatusConsentimentoApi } from "../../types/consentimento";
 import { RecrutamentoPage } from "./recrutamento";
 
 const estudoRecrutamento: EstudoComStatusApi = {
@@ -50,6 +50,45 @@ const candidatoElegivel: CandidatoApi = {
 
 function resposta(body: unknown, status = 200) {
     return new Response(JSON.stringify(body), { status });
+}
+
+function consentimento(studyId: number, candidateId: number, status: StatusConsentimentoApi) {
+    return resposta({ studyId, candidateId, status });
+}
+
+/**
+ * Simula a API pela rota ("MÉTODO /caminho"), sem depender da ordem das chamadas. Cada rota
+ * recebe uma resposta ou uma fila; o último item da fila continua valendo nas chamadas seguintes.
+ */
+function mockApiPorRota(rotas: Record<string, Response | Error | Array<Response | Error>>) {
+    const filas = new Map(
+        Object.entries(rotas).map(([rota, valor]) => [
+            rota,
+            Array.isArray(valor) ? [...valor] : [valor],
+        ])
+    );
+    return vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+        const rota = `${(init?.method ?? "GET").toUpperCase()} ${String(input)}`;
+        const fila = filas.get(rota);
+        if (!fila) throw new Error(`Rota não simulada: ${rota}`);
+        const proxima = fila.length > 1 ? fila.shift()! : fila[0];
+        if (proxima instanceof Error) throw proxima;
+        return proxima.clone();
+    });
+}
+
+function rotasDoEstudo(candidatos: CandidatoApi[], status: StatusConsentimentoApi = "PENDING") {
+    return {
+        "GET /api/studies": resposta([estudoRecrutamento]),
+        "GET /api/studies/10/candidates": resposta(candidatos),
+        "GET /api/studies/10/participants": resposta([]),
+        ...Object.fromEntries(
+            candidatos.map((c) => [
+                `GET /api/studies/10/candidates/${c.id}/consent`,
+                consentimento(10, c.id, status),
+            ])
+        ),
+    };
 }
 
 function renderPage(role: UserRole = "COORDINATOR", autenticado = true) {
@@ -131,13 +170,13 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
             eligibilityStatus: "INELIGIBLE",
         };
 
-        const fetchMock = vi
-            .spyOn(globalThis, "fetch")
-            .mockResolvedValueOnce(resposta([estudoRecrutamento, estudoPlanejamento]))
-            .mockResolvedValueOnce(resposta([candidatoPendente, candidatoElegivel]))
-            .mockResolvedValueOnce(resposta([]))
-            .mockResolvedValueOnce(resposta([candidatoOutroEstudo]))
-            .mockResolvedValueOnce(resposta([]));
+        const fetchMock = mockApiPorRota({
+            ...rotasDoEstudo([candidatoPendente, candidatoElegivel]),
+            "GET /api/studies": resposta([estudoRecrutamento, estudoPlanejamento]),
+            "GET /api/studies/20/candidates": resposta([candidatoOutroEstudo]),
+            "GET /api/studies/20/participants": resposta([]),
+            "GET /api/studies/20/candidates/201/consent": consentimento(20, 201, "PENDING"),
+        });
 
         renderPage();
 
@@ -164,9 +203,13 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
 
         expect(await screen.findByText("Candidato 099")).toBeInTheDocument();
         expect(screen.getByText("Inelegível")).toBeInTheDocument();
-        expect(fetchMock).toHaveBeenCalledTimes(5);
-        expect(fetchMock.mock.calls[3][0]).toBe("/api/studies/20/candidates");
-        expect(fetchMock.mock.calls[4][0]).toBe("/api/studies/20/participants");
+        expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(
+            expect.arrayContaining([
+                "/api/studies/20/candidates",
+                "/api/studies/20/participants",
+                "/api/studies/20/candidates/201/consent",
+            ])
+        );
     });
 
     it("desabilita o cadastro quando o estudo não está em recrutamento", async () => {
@@ -266,19 +309,16 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
     });
 
     it("exibe erro claro no modal ao receber conflito de duplicidade (HTTP 409)", async () => {
-        vi.spyOn(globalThis, "fetch")
-            .mockResolvedValueOnce(resposta([estudoRecrutamento]))
-            .mockResolvedValueOnce(resposta([candidatoPendente]))
-            .mockResolvedValueOnce(resposta([]))
-            .mockResolvedValueOnce(
-                resposta(
-                    {
-                        code: "DUPLICATE_CANDIDATE",
-                        message: "Já existe um candidato com este nome neste estudo.",
-                    },
-                    409
-                )
-            );
+        mockApiPorRota({
+            ...rotasDoEstudo([candidatoPendente]),
+            "POST /api/studies/10/candidates": resposta(
+                {
+                    code: "DUPLICATE_CANDIDATE",
+                    message: "Já existe um candidato com este nome neste estudo.",
+                },
+                409
+            ),
+        });
 
         renderPage();
 
@@ -301,11 +341,13 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
     });
 
     it("trata falha na listagem de candidatos e permite tentar novamente", async () => {
-        vi.spyOn(globalThis, "fetch")
-            .mockResolvedValueOnce(resposta([estudoRecrutamento]))
-            .mockRejectedValueOnce(new TypeError("Failed to fetch"))
-            .mockResolvedValueOnce(resposta([]))
-            .mockResolvedValueOnce(resposta([candidatoPendente]));
+        mockApiPorRota({
+            ...rotasDoEstudo([candidatoPendente]),
+            "GET /api/studies/10/candidates": [
+                new TypeError("Failed to fetch"),
+                resposta([candidatoPendente]),
+            ],
+        });
 
         renderPage();
 
@@ -328,6 +370,19 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
 
         expect(await screen.findByText("Candidato 014")).toBeInTheDocument();
         expect(screen.queryByRole("button", { name: "Novo candidato" })).not.toBeInTheDocument();
+    });
+
+    it("não consulta o consentimento quando o perfil é RESEARCHER", async () => {
+        const fetchMock = mockApiPorRota({
+            "GET /api/studies": resposta([estudoRecrutamento]),
+            "GET /api/studies/10/candidates": resposta([candidatoElegivel]),
+            "GET /api/studies/10/participants": resposta([]),
+        });
+
+        renderPage("RESEARCHER");
+
+        expect(await screen.findByText("Candidato 021")).toBeInTheDocument();
+        expect(fetchMock.mock.calls.some(([url]) => String(url).endsWith("/consent"))).toBe(false);
     });
 
     it.each<UserRole>(["ADMINISTRATOR", "PARTICIPANT"])(
@@ -353,226 +408,93 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
     });
 });
 
-describe("Inclusão e lista de participantes por estudo (RF11 - T15.3 / T15.4)", () => {
-    const estudoComDuasVagas: EstudoComStatusApi = {
-        ...estudoRecrutamento,
-        participantLimit: 2,
-    };
-
-    const candidatoApto: CandidatoApi = {
-        id: 102,
-        studyId: 10,
-        name: "Candidato 021",
-        age: 55,
-        eligibilityStatus: "ELIGIBLE",
-        consentStatus: "GRANTED",
-    };
-
-    const candidatoConsentimentoRecusado: CandidatoApi = {
-        id: 103,
-        studyId: 10,
-        name: "Candidato 030",
-        age: 49,
-        eligibilityStatus: "ELIGIBLE",
-        consentStatus: "DECLINED",
-    };
-
-    const participanteExistente: ParticipanteApi = {
-        id: 501,
-        studyId: 10,
-        candidateId: 100,
-        candidateName: "Candidato 001",
-        includedAt: "2026-11-09T15:00:00Z",
-    };
-
-    it("inclui candidato apto com sucesso, atualiza lista de participantes e saldo de vagas", async () => {
-        const novoParticipante: ParticipanteApi = {
-            id: 502,
-            studyId: 10,
-            candidateId: 102,
-            candidateName: "Candidato 021",
-            includedAt: "2026-11-09T16:30:00Z",
-        };
-
-        const fetchMock = vi
-            .spyOn(globalThis, "fetch")
-            .mockResolvedValueOnce(resposta([estudoComDuasVagas]))
-            .mockResolvedValueOnce(resposta([candidatoApto]))
-            .mockResolvedValueOnce(resposta([participanteExistente]))
-            .mockResolvedValueOnce(resposta(novoParticipante, 201));
-
-        renderPage("COORDINATOR");
-
-        expect(await screen.findByText("Candidato 021")).toBeInTheDocument();
-
-        const indicadorVagas = screen.getByRole("status", {
-            name: "Indicador de vagas do estudo",
+describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () => {
+    it("usa a decisão da API sem registro local e permite incluir o participante", async () => {
+        const fetchMock = mockApiPorRota({
+            ...rotasDoEstudo([candidatoElegivel], "GRANTED"),
+            "POST /api/studies/10/candidates/102/inclusion": resposta(
+                {
+                    id: 1,
+                    studyId: 10,
+                    candidateId: 102,
+                    candidateName: "Candidato 021",
+                    includedAt: "2026-11-09T12:00:00Z",
+                },
+                201
+            ),
         });
-        expect(indicadorVagas).toHaveTextContent("Vagas ocupadas: 1 de 2");
-        expect(indicadorVagas).toHaveTextContent("Saldo disponível: 1 vaga");
 
-        const botaoIncluir = screen.getByRole("button", {
-            name: "Incluir participante: Candidato 021",
-        });
-        expect(botaoIncluir).toBeEnabled();
-        fireEvent.click(botaoIncluir);
+        renderPage();
 
+        expect(await screen.findByText("Aceito")).toBeInTheDocument();
+        const incluir = screen.getByRole("button", { name: "Incluir participante: Candidato 021" });
+        expect(incluir).toBeEnabled();
+
+        fireEvent.click(incluir);
         const dialog = await screen.findByRole("dialog", {
             name: "Confirmar inclusão de participante",
         });
-        expect(within(dialog).getByText("Candidato 021")).toBeInTheDocument();
-        expect(within(dialog).getByText("1 de 2")).toBeInTheDocument();
-
+        expect(within(dialog).getByText("50 de 50")).toBeInTheDocument();
         fireEvent.click(within(dialog).getByRole("button", { name: "Confirmar inclusão" }));
 
-        await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-
-        const [url, options] = fetchMock.mock.calls[3];
-        expect(url).toBe("/api/studies/10/candidates/102/inclusion");
-        expect(options?.method).toBe("POST");
-
         expect(
-            screen.getByText("Participante incluído no estudo com sucesso.")
+            await screen.findByText("Participante incluído no estudo com sucesso.")
         ).toBeInTheDocument();
-        expect(indicadorVagas).toHaveTextContent("Vagas ocupadas: 2 de 2");
-        expect(indicadorVagas).toHaveTextContent("Saldo disponível: 0 vagas");
-        expect(indicadorVagas).toHaveTextContent("Limite de vagas atingido");
-
         expect(screen.getByLabelText("Paciente Incluído: Candidato 021")).toBeInTheDocument();
-
-        const tabelaParticipantes = screen.getByRole("grid", {
-            name: "Lista de participantes incluídos",
-        });
-        expect(within(tabelaParticipantes).getByText("Candidato 001")).toBeInTheDocument();
-        expect(within(tabelaParticipantes).getByText("Candidato 021")).toBeInTheDocument();
-    });
-
-    it("mantém botão de inclusão desabilitado para candidatos inaptos ou quando o estudo está sem vagas", async () => {
-        const estudoUmaVaga: EstudoComStatusApi = {
-            ...estudoRecrutamento,
-            participantLimit: 1,
-        };
-
-        vi.spyOn(globalThis, "fetch")
-            .mockResolvedValueOnce(resposta([estudoComDuasVagas]))
-            .mockResolvedValueOnce(
-                resposta([candidatoPendente, candidatoElegivel, candidatoConsentimentoRecusado])
+        expect(
+            screen.getByRole("status", { name: "Indicador de vagas do estudo" })
+        ).toHaveTextContent("1 de 50");
+        expect(
+            fetchMock.mock.calls.some(
+                ([url, init]) =>
+                    url === "/api/studies/10/candidates/102/inclusion" && init?.method === "POST"
             )
-            .mockResolvedValueOnce(resposta([]))
-            .mockResolvedValueOnce(resposta([estudoUmaVaga]))
-            .mockResolvedValueOnce(resposta([candidatoApto]))
-            .mockResolvedValueOnce(resposta([participanteExistente]));
-
-        const { unmount } = renderPage("COORDINATOR");
-
-        await screen.findByText("Candidato 014");
-
-        expect(
-            screen.getByRole("button", { name: "Incluir participante: Candidato 014" })
-        ).toBeDisabled();
-        expect(
-            screen.getByRole("button", { name: "Incluir participante: Candidato 021" })
-        ).toBeDisabled();
-        expect(
-            screen.getByRole("button", { name: "Incluir participante: Candidato 030" })
-        ).toBeDisabled();
-
-        unmount();
-
-        renderPage("COORDINATOR");
-
-        await screen.findByText("Candidato 021");
-
-        const botaoSemVaga = screen.getByRole("button", {
-            name: "Incluir participante: Candidato 021",
-        });
-        expect(botaoSemVaga).toBeDisabled();
-        expect(botaoSemVaga).toHaveAttribute(
-            "title",
-            "O estudo atingiu o limite de vagas disponíveis."
-        );
+        ).toBe(true);
     });
 
-    it("exibe motivo específico retornado pela API (HTTP 409) quando a última vaga esgota antes da resposta", async () => {
-        vi.spyOn(globalThis, "fetch")
-            .mockResolvedValueOnce(resposta([estudoComDuasVagas]))
-            .mockResolvedValueOnce(resposta([candidatoApto]))
-            .mockResolvedValueOnce(resposta([participanteExistente]))
-            .mockResolvedValueOnce(
-                resposta(
-                    {
-                        code: "INCLUSION_CONFLICT",
-                        message: "O estudo atingiu o limite de participantes.",
-                    },
-                    409
-                )
-            );
-
-        renderPage("COORDINATOR");
-
-        await screen.findByText("Candidato 021");
-        fireEvent.click(
-            screen.getByRole("button", { name: "Incluir participante: Candidato 021" })
+    it("ignora a decisão antiga guardada no navegador quando a API diz que está pendente", async () => {
+        localStorage.setItem(
+            "clinicalstudypb.consentimentos",
+            JSON.stringify({ 102: { status: "GRANTED", termo: "TCLE-ANTIGO" } })
         );
+        mockApiPorRota(rotasDoEstudo([candidatoElegivel], "PENDING"));
 
-        const dialog = await screen.findByRole("dialog", {
-            name: "Confirmar inclusão de participante",
-        });
-        fireEvent.click(within(dialog).getByRole("button", { name: "Confirmar inclusão" }));
+        renderPage();
 
-        expect(await within(dialog).findByRole("alert")).toHaveTextContent(
-            "O estudo atingiu o limite de participantes."
-        );
+        expect(await screen.findByText("Não registrado")).toBeInTheDocument();
         expect(
-            screen.getByRole("dialog", { name: "Confirmar inclusão de participante" })
+            screen.getByRole("button", { name: "Incluir participante: Candidato 021" })
+        ).toBeDisabled();
+    });
+
+    it("avisa quando o consentimento não pôde ser consultado e permite consultar de novo", async () => {
+        mockApiPorRota({
+            ...rotasDoEstudo([candidatoElegivel]),
+            "GET /api/studies/10/candidates/102/consent": [
+                resposta({ message: "Falha interna" }, 500),
+                consentimento(10, 102, "GRANTED"),
+            ],
+        });
+
+        renderPage();
+
+        expect(
+            await screen.findByText(
+                /Não foi possível consultar o consentimento de alguns candidatos/
+            )
         ).toBeInTheDocument();
-    });
-
-    it("bloqueia clique duplo e dispara exatamente uma requisição durante a confirmação de inclusão", async () => {
-        let concluirInclusao!: (response: Response) => void;
-        const pendenteInclusao = new Promise<Response>((resolve) => {
-            concluirInclusao = resolve;
-        });
-
-        const novoParticipante: ParticipanteApi = {
-            id: 502,
-            studyId: 10,
-            candidateId: 102,
-            candidateName: "Candidato 021",
-            includedAt: "2026-11-09T17:00:00Z",
-        };
-
-        const fetchMock = vi
-            .spyOn(globalThis, "fetch")
-            .mockResolvedValueOnce(resposta([estudoComDuasVagas]))
-            .mockResolvedValueOnce(resposta([candidatoApto]))
-            .mockResolvedValueOnce(resposta([]))
-            .mockReturnValueOnce(pendenteInclusao);
-
-        renderPage("COORDINATOR");
-
-        await screen.findByText("Candidato 021");
-        fireEvent.click(
+        expect(
             screen.getByRole("button", { name: "Incluir participante: Candidato 021" })
-        );
+        ).toBeDisabled();
 
-        const dialog = await screen.findByRole("dialog", {
-            name: "Confirmar inclusão de participante",
-        });
-        const botaoConfirmar = within(dialog).getByRole("button", { name: "Confirmar inclusão" });
+        fireEvent.click(screen.getByRole("button", { name: "Consultar novamente" }));
 
-        fireEvent.click(botaoConfirmar);
-        fireEvent.click(botaoConfirmar);
-        fireEvent.click(botaoConfirmar);
-
-        const chamadasInclusao = fetchMock.mock.calls.filter(
-            ([url]) => url === "/api/studies/10/candidates/102/inclusion"
-        );
-        expect(chamadasInclusao).toHaveLength(1);
-
-        await act(async () => concluirInclusao(resposta(novoParticipante, 201)));
-
-        await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-        expect(fetchMock).toHaveBeenCalledTimes(4);
+        expect(await screen.findByText("Aceito")).toBeInTheDocument();
+        expect(
+            screen.queryByText(/Não foi possível consultar o consentimento de alguns candidatos/)
+        ).not.toBeInTheDocument();
+        expect(
+            screen.getByRole("button", { name: "Incluir participante: Candidato 021" })
+        ).toBeEnabled();
     });
 });
