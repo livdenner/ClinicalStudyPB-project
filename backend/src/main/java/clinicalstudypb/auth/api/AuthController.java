@@ -2,6 +2,9 @@ package clinicalstudypb.auth.api;
 
 import clinicalstudypb.auth.application.AuthService;
 import clinicalstudypb.users.api.UserResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,10 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * @author Lívia
  * @since 2026-10-23
- * @version 0.0.1
+ * @version 0.0.2
  */
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Autenticação", description = "Endpoints de login e logout")
 public class AuthController {
 
     private final AuthService authService;
@@ -37,6 +41,7 @@ public class AuthController {
      * @return token e dados públicos do usuário
      */
     @PostMapping("/login")
+    @Operation(summary = "Autentica usuário e retorna JWT")
     public LoginResponse login(@Valid @RequestBody LoginRequest request) {
         AuthService.AuthenticatedUser authenticated = authService.login(request.email(), request.password());
         return new LoginResponse(
@@ -53,6 +58,8 @@ public class AuthController {
      * @return resposta HTTP 204 sem conteúdo
      */
     @PostMapping("/logout")
+    @Operation(summary = "Encerra a sessão do usuário",
+            security = @SecurityRequirement(name = "bearerAuth"))
     public ResponseEntity<Void> logout() {
         return ResponseEntity.noContent().build();
     }

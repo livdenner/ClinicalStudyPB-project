@@ -1,7 +1,9 @@
 package clinicalstudypb.visits.api;
 
-import clinicalstudypb.visits.application.PlannedVisitService;
 import clinicalstudypb.studies.domain.InvalidStudyException;
+import clinicalstudypb.visits.application.PlannedVisitService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -22,10 +24,12 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * @author Lucas N. de Araújo
  * @since 2026-11-05
- * @version 0.0.1
+ * @version 0.0.2
  */
 @RestController
 @RequestMapping("/api/studies/{studyId}/planned-visits")
+@Tag(name = "Visitas previstas", description = "Protocolo de visitas previstas e atividades")
+@SecurityRequirement(name = "bearerAuth")
 public class PlannedVisitController {
 
     private final PlannedVisitService service;

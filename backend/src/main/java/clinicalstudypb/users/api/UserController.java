@@ -1,6 +1,8 @@
 package clinicalstudypb.users.api;
 
 import clinicalstudypb.users.application.UserService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -21,11 +23,13 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * @author Lucas N. de Araújo
  * @since 2026-10-21
- * @version 0.0.1
+ * @version 0.0.2
  */
 @RestController
 @RequestMapping("/api/users")
 @PreAuthorize("hasRole('ADMINISTRATOR')")
+@Tag(name = "Usuários", description = "Operações de cadastro e manutenção de usuários")
+@SecurityRequirement(name = "bearerAuth")
 public class UserController {
 
     private final UserService userService;
