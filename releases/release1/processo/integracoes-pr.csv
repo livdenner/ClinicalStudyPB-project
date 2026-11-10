@@ -57,4 +57,7 @@ sprint_escopo,pr,titulo,autor_github,integrada_em_fortaleza,url
 2,58,"Integra critérios, visitas e estados no PostgreSQL (T16.4)",juliaPamplona,2026-11-09T21:02:53-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/58
 2,59,Feat/3446 study criteria web,Raffael-Wagner,2026-11-09T20:04:48-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/59
 2,60,Implementa tela de consentimento simulado do candidato - Task 3514 (T14.3),allangrm,2026-11-09T21:00:04-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/60
-2,61,docs: valida instalação limpa e app inicial (T16.13),livdenner,,https://github.com/livdenner/ClinicalStudyPB-project/pull/61
+2,61,docs: valida instalação limpa e app inicial (T16.13),livdenner,2026-11-09T23:05:00-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/61
+2,62,docs: atualiza diagramas e documentação da Release 1 (T16.10–T16.12),livdenner,2026-11-09T23:25:00-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/62
+2,63,feat(web): implementa inclusao e lista de participantes por estudo (#3516),allangrm,2026-11-09T22:30:00-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/63
+2,64,fix(swagger): add missing SecurityRequirement and Tag annotations to controllers,lucrasn,2026-11-09T23:14:00-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/64
