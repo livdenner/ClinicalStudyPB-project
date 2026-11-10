@@ -1,109 +1,105 @@
-<mxfile host="Electron">
-  <diagram name="Página-1" id="VaiXkv3c9DSrVsIhJqNs">
-    <mxGraphModel dx="1178" dy="2361" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2336" pageHeight="1654" math="0" shadow="0">
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="Electron" agent="ClinicalStudyPB" version="32.6.10">
+  <diagram name="Arquitetura da Release 1" id="arquitetura-release1">
+    <mxGraphModel dx="1960" dy="1190" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1960" pageHeight="1190" math="0" shadow="0" background="#ffffff">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="trmDubi-KgfYGreIzYSV-33" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;verticalAlign=top;" value="&lt;b&gt;Usuários&lt;/b&gt;" vertex="1">
-          <mxGeometry height="400" width="250" x="143" y="-1027" as="geometry" />
+        <mxCell id="users" value="&lt;b&gt;Usuários&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="30" y="140" width="190" height="600" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-34" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Administrador" vertex="1">
-          <mxGeometry height="60" width="30" x="253" y="-977" as="geometry" />
+        <mxCell id="admin" value="Administrador" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="105" y="210" width="40" height="65" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-35" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Pesquisador" vertex="1">
-          <mxGeometry height="60" width="30" x="253" y="-857" as="geometry" />
+        <mxCell id="researcher" value="Pesquisador" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="105" y="385" width="40" height="65" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-36" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" value="Coordenador do Estudo" vertex="1">
-          <mxGeometry height="60" width="30" x="253" y="-737" as="geometry" />
+        <mxCell id="coordinator" value="Coordenador" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="105" y="560" width="40" height="65" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-38" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;verticalAlign=top;align=left;spacingLeft=10;spacingTop=5;" value="&lt;b&gt;Sistema&lt;/b&gt;" vertex="1">
-          <mxGeometry height="690" width="1560" x="633" y="-1172" as="geometry" />
+        <mxCell id="web" value="&lt;b&gt;Aplicação Web&lt;/b&gt;&lt;br/&gt;React + TypeScript + Vite&lt;br/&gt;Perfis administrativos e equipe do estudo" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="275" y="330" width="245" height="160" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-39" parent="1" style="rounded=0;whiteSpace=wrap;html=1;" value="&lt;b&gt;Aplicação Web&lt;/b&gt;" vertex="1">
-          <mxGeometry height="80" width="210" x="663" y="-1042" as="geometry" />
+        <mxCell id="api" value="&lt;b&gt;API REST - monólito modular&lt;/b&gt;&lt;br/&gt;Java 21 / Spring Boot / Spring Security JWT" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;verticalAlign=top;spacingTop=12;" vertex="1" parent="1">
+          <mxGeometry x="610" y="50" width="1280" height="760" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-40" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;verticalAlign=top;align=left;spacingLeft=10;spacingTop=5;" value="&lt;b&gt;Contêiner API&lt;/b&gt;" vertex="1">
-          <mxGeometry height="240" width="1180" x="973" y="-1122" as="geometry" />
+        <mxCell id="auth" value="&lt;b&gt;auth&lt;/b&gt;&lt;hr/&gt;api → application&lt;br/&gt;domain / infrastructure" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="660" y="190" width="250" height="125" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-41" parent="1" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;" value="&lt;b&gt;Banco de Dados&lt;/b&gt;" vertex="1">
-          <mxGeometry height="120" width="230" x="1448" y="-642" as="geometry" />
+        <mxCell id="users-module" value="&lt;b&gt;users&lt;/b&gt;&lt;hr/&gt;api → application&lt;br/&gt;domain / infrastructure" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="960" y="190" width="250" height="125" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-42" parent="1" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;" value="&lt;b&gt;Aplicativo Mobile&lt;/b&gt;" vertex="1">
-          <mxGeometry height="80" width="210" x="663" y="-691" as="geometry" />
+        <mxCell id="studies" value="&lt;b&gt;studies&lt;/b&gt;&lt;hr/&gt;api → application&lt;br/&gt;domain / infrastructure" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="190" width="250" height="125" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-55" edge="1" parent="1" source="trmDubi-KgfYGreIzYSV-34" style="rounded=0;html=1;endArrow=open;endFill=0;entryX=-0.001;entryY=0.327;entryDx=0;entryDy=0;entryPerimeter=0;" target="trmDubi-KgfYGreIzYSV-38" value="administra acesso">
-          <mxGeometry relative="1" x="-0.0091" y="11" as="geometry">
-            <mxPoint as="offset" />
-          </mxGeometry>
+        <mxCell id="visits" value="&lt;b&gt;visits&lt;/b&gt;&lt;hr/&gt;api → application&lt;br/&gt;domain / infrastructure" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="1560" y="190" width="250" height="125" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-56" edge="1" parent="1" source="trmDubi-KgfYGreIzYSV-35" style="rounded=0;html=1;endArrow=open;endFill=0;" target="trmDubi-KgfYGreIzYSV-38" value="configura estudos">
-          <mxGeometry relative="1" x="-0.0095" y="11" as="geometry">
-            <mxPoint as="offset" />
-          </mxGeometry>
+        <mxCell id="candidates" value="&lt;b&gt;candidates&lt;/b&gt;&lt;hr/&gt;api → application&lt;br/&gt;domain / infrastructure" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="660" y="460" width="250" height="125" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-57" edge="1" parent="1" source="trmDubi-KgfYGreIzYSV-36" style="rounded=0;html=1;endArrow=open;endFill=0;entryX=-0.001;entryY=0.675;entryDx=0;entryDy=0;entryPerimeter=0;" target="trmDubi-KgfYGreIzYSV-38" value="conduz recrutamento">
-          <mxGeometry relative="1" x="0.0067" y="10" as="geometry">
-            <mxPoint as="offset" />
-          </mxGeometry>
+        <mxCell id="criteria" value="&lt;b&gt;criteria&lt;/b&gt;&lt;hr/&gt;api → application&lt;br/&gt;domain / infrastructure" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="960" y="460" width="250" height="125" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-59" edge="1" parent="1" source="trmDubi-KgfYGreIzYSV-39" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;endFill=0;" target="trmDubi-KgfYGreIzYSV-40" value="HTTP/JSON&lt;br&gt;REST">
-          <mxGeometry relative="1" y="20" as="geometry">
-            <mxPoint as="offset" />
-          </mxGeometry>
+        <mxCell id="consent" value="&lt;b&gt;consent&lt;/b&gt;&lt;hr/&gt;api → application&lt;br/&gt;domain / infrastructure" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="460" width="250" height="125" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-60" edge="1" parent="1" source="trmDubi-KgfYGreIzYSV-40" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;endFill=0;" target="trmDubi-KgfYGreIzYSV-41" value="SQL/JDBC&lt;br&gt;JPA/Hibernate → JDBC">
-          <mxGeometry relative="1" x="0.0032" as="geometry" />
+        <mxCell id="participants" value="&lt;b&gt;participants&lt;/b&gt;&lt;hr/&gt;api → application&lt;br/&gt;domain / infrastructure" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="1560" y="460" width="250" height="125" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-65" edge="1" parent="1" source="trmDubi-KgfYGreIzYSV-43" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;fontSize=10;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endFill=0;" target="trmDubi-KgfYGreIzYSV-45" value="consulta conta">
-          <mxGeometry relative="1" y="10" as="geometry">
-            <mxPoint as="offset" />
-          </mxGeometry>
+        <mxCell id="edge-1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;endArrow=open;" edge="1" parent="1" source="auth" target="users-module">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-66" edge="1" parent="1" source="trmDubi-KgfYGreIzYSV-47" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;endFill=0;" target="trmDubi-KgfYGreIzYSV-45" value="valida responsável">
-          <mxGeometry relative="1" y="-10" as="geometry">
-            <mxPoint as="offset" />
-          </mxGeometry>
+        <mxCell id="edge-2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;endArrow=open;" edge="1" parent="1" source="studies" target="users-module">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-67" edge="1" parent="1" source="trmDubi-KgfYGreIzYSV-49" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=open;fontSize=10;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;endFill=0;" target="trmDubi-KgfYGreIzYSV-47" value="consulta estudo">
-          <mxGeometry relative="1" y="-10" as="geometry">
-            <mxPoint as="offset" />
-          </mxGeometry>
+        <mxCell id="edge-3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;endArrow=open;" edge="1" parent="1" source="visits" target="studies">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-82" connectable="0" parent="1" style="group" value="" vertex="1">
-          <mxGeometry height="80" width="190" x="1313" y="-1042" as="geometry" />
+        <mxCell id="dependency-note" value="auth → users: consulta da conta · studies → users: responsável · visits → studies: bloqueio do protocolo" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="660" y="345" width="1150" height="60" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-45" parent="trmDubi-KgfYGreIzYSV-82" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;" value="&lt;b&gt;Users&lt;/b&gt;" vertex="1">
-          <mxGeometry height="80" width="190" as="geometry" />
+        <mxCell id="interfaces" value="&lt;b&gt;Integração entre módulos por serviços e interfaces públicas&lt;/b&gt;&lt;br/&gt;StudyReadiness (critérios e participantes) · ParticipantLookup · EligibilityResponseLookup&lt;br/&gt;CandidateService e SimulatedConsentService coordenam o recrutamento e a inclusão." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="660" y="640" width="1150" height="85" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-46" parent="trmDubi-KgfYGreIzYSV-82" style="rounded=0;whiteSpace=wrap;html=1;fontSize=9;" value="api → aplicação → domínio → infra" vertex="1">
-          <mxGeometry height="30" width="170" x="10" y="35" as="geometry" />
+        <mxCell id="shared" value="&lt;b&gt;shared&lt;/b&gt;: CurrentActor, erros HTTP e componentes técnicos compartilhados" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="660" y="740" width="1150" height="45" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-83" connectable="0" parent="1" style="group" value="" vertex="1">
-          <mxGeometry height="80" width="190" x="1003" y="-1042" as="geometry" />
+        <mxCell id="db" value="&lt;b&gt;PostgreSQL 18&lt;/b&gt;&lt;br/&gt;Persistência + migrações Flyway" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=18;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="940" width="420" height="120" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-43" parent="trmDubi-KgfYGreIzYSV-83" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;" value="&lt;b&gt;Auth&lt;/b&gt;" vertex="1">
-          <mxGeometry height="80" width="190" as="geometry" />
+        <mxCell id="edge-4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;endArrow=open;" edge="1" parent="1" source="web" target="api">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-44" parent="trmDubi-KgfYGreIzYSV-83" style="rounded=0;whiteSpace=wrap;html=1;fontSize=9;" value="api → aplicação → domínio → infra" vertex="1">
-          <mxGeometry height="30" width="170" x="10" y="35" as="geometry" />
+        <mxCell id="http-note" value="HTTP/JSON REST&lt;br/&gt;Authorization: Bearer JWT" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;align=center;" vertex="1" parent="1">
+          <mxGeometry x="275" y="240" width="245" height="65" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-84" connectable="0" parent="1" style="group" value="" vertex="1">
-          <mxGeometry height="80" width="190" x="1623" y="-1042" as="geometry" />
+        <mxCell id="edge-5" value="JPA/Hibernate e JdbcTemplate → JDBC/SQL" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;endArrow=open;" edge="1" parent="1" source="api" target="db">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-47" parent="trmDubi-KgfYGreIzYSV-84" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;" value="&lt;b&gt;Studies&lt;/b&gt;" vertex="1">
-          <mxGeometry height="80" width="190" as="geometry" />
+        <mxCell id="edge-6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;endArrow=open;" edge="1" parent="1" source="admin" target="web">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-48" parent="trmDubi-KgfYGreIzYSV-84" style="rounded=0;whiteSpace=wrap;html=1;fontSize=9;" value="api → aplicação → domínio → infra" vertex="1">
-          <mxGeometry height="30" width="170" x="10" y="35" as="geometry" />
+        <mxCell id="edge-7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;endArrow=open;" edge="1" parent="1" source="researcher" target="web">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-85" connectable="0" parent="1" style="group" value="" vertex="1">
-          <mxGeometry height="80" width="190" x="1933" y="-1042" as="geometry" />
+        <mxCell id="edge-8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;endArrow=open;" edge="1" parent="1" source="coordinator" target="web">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-49" parent="trmDubi-KgfYGreIzYSV-85" style="rounded=0;whiteSpace=wrap;html=1;verticalAlign=top;" value="&lt;b&gt;Recruitment&lt;/b&gt;" vertex="1">
-          <mxGeometry height="80" width="190" as="geometry" />
+        <mxCell id="participant" value="Participante" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="105" y="930" width="40" height="65" as="geometry" />
         </mxCell>
-        <mxCell id="trmDubi-KgfYGreIzYSV-50" parent="trmDubi-KgfYGreIzYSV-85" style="rounded=0;whiteSpace=wrap;html=1;fontSize=9;" value="api → aplicação → domínio → infra" vertex="1">
-          <mxGeometry height="30" width="170" x="10" y="35" as="geometry" />
+        <mxCell id="mobile" value="&lt;b&gt;Aplicativo Mobile&lt;/b&gt;&lt;br/&gt;React Native / Expo Router&lt;br/&gt;Início ↔ Estudos (provisório)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="275" y="900" width="245" height="145" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;endArrow=open;" edge="1" parent="1" source="participant" target="mobile">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="mobile-api-note" value="Cliente HTTP genérico preparado.&lt;br/&gt;Integração de negócio e login mobile: Sprint 3.&lt;br/&gt;Nenhum cliente acessa o banco diretamente." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="560" y="920" width="400" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="deploy" value="Docker Compose executa banco e backend. Web e mobile possuem seus próprios processos de desenvolvimento.&lt;br/&gt;O backend é uma única aplicação implantável; os módulos não são microsserviços." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="610" y="1090" width="1280" height="65" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

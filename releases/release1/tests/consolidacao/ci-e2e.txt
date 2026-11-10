@@ -1,0 +1,15 @@
+Fonte: https://github.com/livdenner/ClinicalStudyPB-project/actions/runs/42728167544
+Commit: 6ab8cba28d852f7938fa3bdd886a0912fb7acedf
+Trecho da execução do job (timestamps UTC originais):
+
+2026-11-10T00:27:23.7438589Z > playwright test
+2026-11-10T00:27:23.7438750Z 
+2026-11-10T00:27:32.0468618Z [WebServer] [plugin builtin:vite-reporter] 
+2026-11-10T00:27:32.0470125Z [WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+2026-11-10T00:27:32.0471129Z [WebServer] - Using dynamic import() to code-split the application
+2026-11-10T00:27:32.0472201Z [WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+2026-11-10T00:27:32.0473263Z [WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+2026-11-10T00:27:33.3508717Z 
+2026-11-10T00:27:33.3509680Z Running 7 tests using 1 worker
+2026-11-10T00:27:40.9318474Z ·······
+2026-11-10T00:27:40.9322765Z   7 passed (16.6s)

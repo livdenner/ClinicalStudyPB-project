@@ -67,7 +67,7 @@ Copie `.env.example` para `.env` na pasta `mobile/` somente se for desenvolver c
 
 O Expo injeta variáveis `EXPO_PUBLIC_*` no bundle do app; nunca coloque senhas, chaves privadas ou tokens nesse prefixo nem versione segredos. Reinicie o Expo depois de alterar `.env`.
 
-A integração do mobile ainda está pendente. O cliente HTTP usa `EXPO_PUBLIC_API_BASE_URL` com a base `/api`; os caminhos relativos serão `auth/login`, `studies` e os demais recursos. O [contrato OpenAPI](../backend/openapi.yaml) inclui também rotas planejadas para a Sprint 2, que só devem ser chamadas após sua implementação.
+A integração do mobile ainda está pendente. O cliente HTTP usa `EXPO_PUBLIC_API_BASE_URL` com a base `/api`; os caminhos relativos serão `auth/login`, `studies` e os demais recursos. O [contrato OpenAPI](../backend/openapi.yaml) descreve os RF01–RF11 da Release 1. A integração de login e dos fluxos mobile pertence à Sprint 3.
 
 ## Verificações locais
 
