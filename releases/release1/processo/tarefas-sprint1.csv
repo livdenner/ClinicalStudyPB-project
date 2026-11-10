@@ -1,0 +1,43 @@
+task,pbi,descricao,papel,horas_planejadas
+T1.1,PBI-01,"Criar repositório GitHub, estrutura de pastas (backend, web, mobile, releases), proteção de branch e template de PR",Gerente,1
+T1.2,PBI-01,"Definir a arquitetura e o diagrama (web, mobile, backend, banco) em Mermaid",Gerente,2
+T1.3,PBI-01,"Configurar o Azure DevOps (board, sprints, PBIs, capacidade)",Gerente,1
+T1.4,PBI-01,Docker Compose com PostgreSQL e scripts de execução,QA,2
+T1.5,PBI-01,"Pipeline de CI no GitHub Actions (build Maven, ESLint, Checkstyle, JUnit, Vitest, Jest e cobertura JaCoCo) a cada PR",QA,4
+T1.6,PBI-01,"Convenções de código (ESLint, Prettier, Checkstyle, commits, revisão)",QA,1
+T1.7,PBI-01,README principal e esqueleto de releases/release1/README.md,Web 2,2
+T2.1,PBI-02,Contrato OpenAPI dos endpoints de RF01 a RF04,Gerente,2
+T2.2,PBI-02,"Esqueleto do backend Spring Boot (camadas controller/service/repository, Swagger UI com springdoc-openapi, PostgreSQL com Flyway, tratamento global de erros)",Backend,3
+T2.3,PBI-02,"Esqueleto da web em React + TypeScript (rotas, layout, cliente HTTP)",Web 1,3
+T2.4,PBI-02,"Esqueleto do mobile em React Native + Expo (navegação, cliente HTTP)",Mobile,3
+T2.5,PBI-02,"Componentes base da web (formulários, mensagens de erro, layout compartilhado)",Web 2,2
+T3.1,PBI-03,"Entidade JPA de usuário e perfil, migração Flyway e dados fictícios",Backend,2
+T3.2,PBI-03,"API REST de usuários (CRUD, ativar/desativar, e-mail único)",Backend,3
+T3.3,PBI-03,Testes unitários das regras de usuário (JUnit e Mockito),Backend,1
+T3.4,PBI-03,"Telas web de listagem, cadastro e edição de usuários",Web 1,4
+T3.5,PBI-03,Testes de componente das telas de usuários (Vitest),Web 1,1
+T3.6,PBI-03,Testes de integração dos endpoints de usuários (Spring Boot Test),QA,1
+T4.1,PBI-04,"Endpoints de login e logout (Spring Security, BCrypt, JWT)",Gerente,3
+T4.2,PBI-04,Tela de login web e gestão de sessão,Web 2,3
+T4.3,PBI-04,Testes de integração de autenticação (Spring Boot Test),QA,1
+T5.1,PBI-05,"Autorização por perfil no backend (Spring Security, roles e @PreAuthorize)",Gerente,3
+T5.2,PBI-05,Rotas protegidas e menu por perfil na web,Web 2,3
+T5.3,PBI-05,"Testes de integração de autorização (Spring Boot Test, acesso permitido e negado)",QA,1
+T6.1,PBI-06,Entidade JPA de estudo e migração Flyway,Backend,1
+T6.2,PBI-06,"API de estudos (cadastro, edição, listagem, validação de datas e limite de participantes)",Backend,3
+T6.3,PBI-06,Testes unitários das regras de estudo (JUnit e Mockito),Backend,1
+T6.4,PBI-06,"Telas web de listagem, cadastro e edição de estudos",Web 1,4
+T6.5,PBI-06,Testes de componente das telas de estudos (Vitest),Web 1,1
+T6.6,PBI-06,Testes de integração dos endpoints de estudos (Spring Boot Test),QA,1
+T7.1,PBI-07,Protótipo web: usuários e estudos,Web 1,1
+T7.2,PBI-07,"Protótipo web: recrutamento, visitas, painel e relatórios",Web 2,4
+T7.3,PBI-07,"Protótipo mobile: login, estudos, visitas e retirada (RF17 a RF20)",Mobile,3
+T8.1,PBI-08,Plano de testes e critérios de aceite da Release 1,QA,1
+T8.2,PBI-08,Configurar E2E web (Playwright) com fluxo de login e cadastro de estudo,QA,2
+T8.3,PBI-08,Integração entre as partes e revisão dos PRs,Gerente,2
+C1,Cerimônias,"Cerimônias (planning, review, retro) e revisão cruzada de código",Gerente,2
+C2,Cerimônias,"Cerimônias (planning, review, retro) e revisão cruzada de código",Backend,2
+C3,Cerimônias,"Cerimônias (planning, review, retro) e revisão cruzada de código",Web 1,2
+C4,Cerimônias,"Cerimônias (planning, review, retro) e revisão cruzada de código",Web 2,2
+C5,Cerimônias,"Cerimônias (planning, review, retro) e revisão cruzada de código",Mobile,2
+C6,Cerimônias,"Cerimônias (planning, review, retro) e revisão cruzada de código",QA,2

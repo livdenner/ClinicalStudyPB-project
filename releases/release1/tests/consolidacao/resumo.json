@@ -1,0 +1,59 @@
+{
+  "sourceCommit": "6ab8cba28d852f7938fa3bdd886a0912fb7acedf",
+  "testedBranchCommit": "ba4bfa4",
+  "executedOn": "2026-11-09",
+  "timezone": "America/Fortaleza",
+  "backend": {
+    "tests": 487,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "jacoco": {
+      "INSTRUCTION": {
+        "missed": 175,
+        "covered": 4308
+      },
+      "BRANCH": {
+        "missed": 53,
+        "covered": 227
+      },
+      "LINE": {
+        "missed": 25,
+        "covered": 891
+      },
+      "COMPLEXITY": {
+        "missed": 59,
+        "covered": 404
+      },
+      "METHOD": {
+        "missed": 6,
+        "covered": 316
+      },
+      "CLASS": {
+        "missed": 0,
+        "covered": 87
+      }
+    }
+  },
+  "web": {
+    "testFiles": 21,
+    "tests": 166,
+    "failures": 0,
+    "lineCovered": 1134,
+    "lineTotal": 1520,
+    "linesPercent": 74.6,
+    "branchesPercent": 66.24
+  },
+  "ciRun": 42728167544,
+  "e2e": {
+    "tests": 7,
+    "result": "passed"
+  },
+  "mobile": {
+    "suites": 2,
+    "tests": 2,
+    "result": "passed",
+    "linesPercent": 76.47,
+    "branchesPercent": 58.06
+  }
+}

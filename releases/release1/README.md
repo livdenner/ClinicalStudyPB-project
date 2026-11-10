@@ -1,267 +1,75 @@
-# Release 1 — Estrutura e recrutamento
+# Release 1 — Estrutura, protocolo e recrutamento
 
-**Período previsto:** 13/10 a 09/11/2026  
-**Sprints:** Sprint 1 e Sprint 2  
-**Status:** em andamento
+Entrega das Sprints **1 (13–26/10/2026)** e **2 (27/10–09/11/2026)**. Consolidação documental sobre `development` **6ab8cba**, em 09/11/2026 (America/Fortaleza). O projeto usa dados fictícios e consentimento estritamente simulado.
 
-## Objetivo
+[Instalação e execução](../../README.md#5-instalação-e-execução) · [Diagramas](../../docs/diagrams/README.md) · [OpenAPI](../../backend/openapi.yaml) · [Capturas](images/README.md) · [Testes e cobertura](tests/README.md) · [Processo das sprints](processo/README.md) · [Azure DevOps TEAM5](https://dev.azure.com/engsw2/TEAM5)
 
-Entregar a primeira versão operacional do ClinicalStudyPB para a aplicação web: gestão de usuários, autenticação e controle de acesso, cadastro de estudos e início do recrutamento. A release também prepara a base técnica compartilhada com o aplicativo mobile.
+## Objetivo e escopo previsto
 
-## Escopo planejado
+Disponibilizar a estrutura das três aplicações, usuários/autenticação/autorização, gestão de estudos, protocolo e recrutamento dos **RF01–RF11**. A Sprint 1 estabeleceu infraestrutura e RF01–RF04; a Sprint 2 acrescentou RF05–RF11 e consolidou integração, qualidade e documentação. O mobile permanece uma estrutura navegável, com login integrado previsto para a Sprint 3. RF12–RF22 pertencem às entregas posteriores.
 
-| Sprint   | Requisitos e entregas planejadas                                                                                                                 |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Sprint 1 | Base técnica; protótipos; RF01 (usuários); recorte web/API de RF02 (autenticação) e RF03 (permissões); RF04 (estudos); estrutura inicial mobile. |
-| Sprint 2 | RF05 a RF11: critérios, visitas previstas, estados, candidatos, elegibilidade, consentimento e inclusão de participantes.                        |
+## Rastreabilidade dos requisitos
 
-## Funcionalidades e situação
+Situação avaliada na versão acima. **Concluído** indica fluxo disponível no recorte contratado; **parcial** identifica a parte implementada e a integração restante. Dos 11 RF previstos: 10 concluídos e 1 parcial; nenhum RF está inteiramente sem implementação.
 
-| Item                                                                | Situação     | Evidência                                                                                                                                                                                                        |
-| ------------------------------------------------------------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Componentes base da web                                             | Em andamento | Formulários, mensagens de erro e layout compartilhado em `web/src/components`.                                                                                                                                   |
-| Gestão de usuários (RF01)                                           | Em andamento | Rota `/usuarios` com listagem, busca, filtros, cadastro, edição e ativação/desativação integrados a `/api/users`. Acesso restrito ao Administrador. Alterações persistidas no backend.                           |
-| Autenticação web (RF02)                                             | Em andamento | Tela `/login` e gestão de sessão integradas a `/api/auth/login` e `/api/auth/logout`, conforme a development atual. Testes em `web/src/pages/login/login.test.tsx`.                                              |
-| Controle de acesso web/API (RF03)                                   | Em andamento | Autorização por perfil no backend com `@PreAuthorize` e proteção de rotas e menu na web com `ProtectedRoute`, `ForbiddenPage` e configuração de navegação.                                                       |
-| Gestão de estudos (RF04)                                            | Em andamento | Listagem, busca por título, cadastro, edição e visualização por ID integrados a `/api/studies`, com JWT e persistência no banco. Cadastro utiliza o pesquisador logado; edição preserva o responsável existente. |
-| Protótipos web de painel, recrutamento, visitas e relatórios (T7.2) | Em andamento | Telas navegáveis com dados mock locais e modais interativos em `/dashboard`, `/recrutamento`, `/visitas` e `/relatorios`, com testes em `web/src/pages/prototipos.test.tsx`.                                     |
-| Recrutamento e inclusão (RF05 a RF10)                               | Em andamento | API de critérios, visitas, estados, candidatos, elegibilidade e consentimento na `development`, com testes de integração. Na web, há telas de candidatos, estados e visitas; elegibilidade está no PR #50 e consentimento ainda não tem tela. |
-| Inclusão de participantes (RF11)                                    | Pendente     | Existem a tabela `participants` e o contrato OpenAPI, mas ainda não há endpoint de inclusão.                                                                                                                     |
+| RF | Requisito / situação | Implementação e tela | Evidência e testes | Justificativa ou pendência |
+| --- | --- | --- | --- | --- |
+| RF01 | Gestão de usuários — **concluído** | API `/api/users`; administrador em `/usuarios`: consulta, cadastro, edição e ativação. | [Sucesso](images/11-usuarios-sucesso.jpg), [validação](images/12-usuario-validacao.jpg); [UserIntegrationTest](../../backend/src/test/java/clinicalstudypb/users/UserIntegrationTest.java), [componentes](../../web/src/pages/usuarios/listagem.test.tsx). | Persistência e e-mail único; operações restritas ao administrador. |
+| RF02 | Login/logout — **concluído** | `/api/auth/login`, `/api/auth/logout`, `/login` e sessão web. | [Senha inválida](images/01-login-erro.jpg), [logout](images/13-logout.jpg); [AuthIntegrationTest](../../backend/src/test/java/clinicalstudypb/auth/AuthIntegrationTest.java), [E2E](../../web/e2e/auth/login.spec.ts). | JWT stateless; logout remove token no cliente, sem revogação antecipada no servidor. |
+| RF03 | Autorização por perfil — **concluído** | Spring Security, rotas protegidas e menu por perfil. | [403 na web](images/10-permissao-negada.jpg); [matriz HTTP](../../backend/src/test/java/clinicalstudypb/auth/AuthorizationIntegrationTest.java), [ProtectedRoute](../../web/src/components/auth/ProtectedRoute.test.tsx). | API também protege acessos diretos e verifica o responsável do estudo. |
+| RF04 | Estudos — **concluído** | `/api/studies`; listagem, cadastro, consulta e edição em `/estudos`. | [Listagem](images/02-estudos-sucesso.jpg); [StudyIntegrationTest](../../backend/src/test/java/clinicalstudypb/studies/StudyIntegrationTest.java), [E2E de cadastro](../../web/e2e/studies/create-study.spec.ts). | Valida datas, responsável e limite; limite não pode ficar abaixo das inclusões existentes. |
+| RF05 | Critérios de inclusão/exclusão — **concluído** | `/criteria`; aba Critérios do estudo; cadastro e consulta por tipo. | [Sucesso](images/05-criterios-sucesso.jpg), [erro obrigatório](images/04-criterios-validacao.jpg); [StudyCriterionIntegrationTest](../../backend/src/test/java/clinicalstudypb/criteria/StudyCriterionIntegrationTest.java), [web](../../web/src/pages/estudos/criterios.test.tsx). | Apenas responsável em estado editável; critérios são preservados para auditoria e não admitem acréscimo após respostas de elegibilidade. |
+| RF06 | Visitas previstas e atividades — **concluído** | `/planned-visits`; aba Visitas previstas, ordem e atividades do protocolo. | [Visita cadastrada](images/06-visita-sucesso.jpg); [PlannedVisitIntegrationTest](../../backend/src/test/java/clinicalstudypb/visits/PlannedVisitIntegrationTest.java), [web](../../web/src/pages/estudos/visitas-previstas.test.tsx). | Versão do estudo em `If-Match`, posição contínua, atividade mínima e edição conforme estado. |
+| RF07 | Estados do estudo — **concluído** | PATCH `/status`, GET `/status-history`; ações e selo na web. | [Protocolo incompleto](images/03-recrutamento-validacao.jpg), [recrutamento aberto](images/05-criterios-sucesso.jpg); [StudyLifecycleIntegrationTest](../../backend/src/test/java/clinicalstudypb/studies/StudyLifecycleIntegrationTest.java), [web](../../web/src/pages/estudos/visualizar.test.tsx). | Pré-condições, cancelamento justificado, restauração e conflitos são validados no backend. |
+| RF08 | Candidatos — **concluído** | `/candidates`; coordenador em `/recrutamento`, com filtro por estudo. | [Cadastro](images/07-candidato-sucesso.jpg); [CandidateIntegrationTest](../../backend/src/test/java/clinicalstudypb/candidates/CandidateIntegrationTest.java), [web](../../web/src/pages/recrutamento/recrutamento.test.tsx). | Exige recrutamento; duplicidade por nome normalizado + idade no mesmo estudo. |
+| RF09 | Elegibilidade — **concluído** | GET/PUT `/eligibility`; avaliação com critérios de inclusão/exclusão e parecer. | [Elegível após salvar](images/08-elegibilidade-sucesso.jpg); [integração](../../backend/src/test/java/clinicalstudypb/candidates/EligibilityEvaluationIntegrationTest.java), [regras](../../backend/src/test/java/clinicalstudypb/candidates/EligibilityEvaluationServiceTest.java). | Respostas incompletas mantêm `PENDING`; grava autor/instante; incluído não pode ser reavaliado. A tela foi validada na sessão real; não há suíte específica de componentes dessa avaliação nesta base. |
+| RF10 | Consentimento simulado — **concluído** | GET/PUT `/consent`; coordenador registra aceite ou recusa. | [Aceite](images/09-consentimento-sucesso.jpg); [SimulatedConsentIntegrationTest](../../backend/src/test/java/clinicalstudypb/consent/SimulatedConsentIntegrationTest.java), [bloqueio após inclusão](tests/rf11-api.json). | Decisão e horário persistem na API; identificação textual do termo e responsável exibido são dados auxiliares da interface. Sem assinatura/validade clínica; sem suíte específica de componentes do consentimento nesta base. |
+| RF11 | Inclusão de participante — **parcial** | POST `/inclusion`, GET `/participants`: API com validação atômica, lista e consulta individual. | [Sessão real HTTP](tests/rf11-api.json); [ParticipantIntegrationTest](../../backend/src/test/java/clinicalstudypb/participants/ParticipantIntegrationTest.java), [concorrência](../../backend/src/test/java/clinicalstudypb/participants/ParticipantConcurrencyIntegrationTest.java). | Backend e testes concluídos; T15.3/T15.4 completam ação/lista de inclusão na web e seus testes. A galeria não apresenta uma tela ainda não integrada. |
 
-## Cliente HTTP da web
+As rotas abreviadas acima pertencem ao estudo/candidato informado no [contrato OpenAPI](../../backend/openapi.yaml). O [resumo da API](../../backend/docs/release1-api.md) descreve permissões, estados, concorrência e respostas HTTP. A [sequência de inclusão](../../docs/diagrams/sequencia-inclusao.png) representa o fluxo efetivo do backend.
 
-A base web possui rotas com React Router, layout compartilhado e um cliente HTTP em `web/src/services/api/apiClient.ts`. Em desenvolvimento, o proxy do Vite encaminha chamadas `/api` para o backend em `http://localhost:8080`; se necessário, configure `VITE_API_BASE_URL` em `web/.env.local` para apontar para outro servidor. A tela de estudos utiliza `web/src/services/estudos.ts` para listar (`GET /api/studies`), cadastrar (`POST /api/studies`) e editar (`PUT /api/studies/{id}`); as operações exigem JWT.
+## Demonstração e capturas reais
 
-O login e o logout utilizam o mesmo cliente HTTP compartilhado, preservando a gestão de sessão existente. `VITE_API_BASE_URL` representa somente a origem do servidor, sem `/api` (por exemplo, `https://api.exemplo.com`). Os caminhos são informados nas chamadas: autenticação em `/api/auth` e estudos em `/api/studies`, conforme os controllers atuais. O proxy do Vite funciona apenas no desenvolvimento; na implantação, o servidor web precisa encaminhar `/api` ao backend, ou a API em outra origem precisa permitir CORS.
+A [galeria](images/README.md) relaciona 13 capturas a RF, pré-condições e passos de reprodução. As imagens foram obtidas com API e PostgreSQL reais e dados fictícios. O estudo da sessão tem critérios dos dois tipos, visita com atividade e recrutamento aberto; o coordenador cadastrou e avaliou um candidato, registrou consentimento e depois o incluiu pela API.
 
-## Testes de componentes de usuários (Task 3191)
+![Critérios e recrutamento](images/05-criterios-sucesso.jpg)
 
-Nos testes foram usados Vitest, React Testing Library e jsdom. Os componentes do HeroUI são renderizados de verdade; as requisições HTTP e as notificações de sucesso são simuladas. A execução local depende apenas das dependências da web, sem precisar iniciar Docker ou o backend.
+![Elegibilidade persistida](images/08-elegibilidade-sucesso.jpg)
 
-| Arquivo                                                    | Cenários cobertos                                                                                                                                                                                                                                  |
-| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `web/src/components/usuarios/BuscaFiltroUsuarios.test.tsx` | Busca, seleção dos quatro perfis, situações Ativo/Inativo e limpeza dos filtros.                                                                                                                                                                   |
-| `web/src/components/usuarios/TabelaUsuarios.test.tsx`      | Dados, perfis e situações nas linhas, usuário correto no callback de edição e estado vazio.                                                                                                                                                        |
-| `web/src/components/usuarios/ModalUsuario.test.tsx`        | Campos obrigatórios, rejeição de espaços em branco, mostrar/ocultar senha, perfil no cadastro, senha somente no cadastro, cancelamento, bloqueio durante salvamento e sessão expirada.                                                             |
-| `web/src/pages/usuarios/listagem.test.tsx`                 | Carregamento, lista vazia, filtros combinados, cadastro e edição com JWT, validações e erros por campo, ativação/desativação com confirmação, falha parcial com nova tentativa, falha de conexão, respostas 401/403 e restrição por perfil/sessão. |
+![Consentimento simulado](images/09-consentimento-sucesso.jpg)
 
-Para executar somente os testes de usuários:
+![Bloqueio de protocolo incompleto](images/03-recrutamento-validacao.jpg)
 
-```powershell
-npm --prefix web test -- src/components/usuarios src/pages/usuarios/listagem.test.tsx
-```
+O roteiro começa no [README principal](../../README.md#3-funcionalidades-e-demonstração). As três cargas `seed_demo_users.sql`, `seed_demo_studies.sql` e `seed_demo_recruitment.sql` criam cenários fictícios e repetíveis, incluindo a disputa pela última vaga. No mobile, a [T16.13](tests/t16-13/README.md) registra abertura no Android físico e navegação de ida/volta confirmadas pelo responsável pelo dispositivo.
 
-## Integração de estudos
+## Testes e cobertura
 
-O contrato implementado pelo backend recebe e devolve `title`, `objective`, `responsibleUserId`, `startDate`, `endDate` e `participantLimit`; a resposta também inclui o `id` gerado pelo banco. O nome aceita até 200 caracteres, o objetivo é obrigatório, o limite deve ser um inteiro positivo e o término não pode ser anterior ao início. O backend verifica se o responsável existe, está ativo e possui perfil pesquisador.
+| Verificação | Resultado real | Evidência |
+| --- | --- | --- |
+| Backend: Checkstyle, JUnit, integração PostgreSQL e JaCoCo | **487 testes aprovados**, cobertura **97,27%** das linhas (891/916); meta 80% atendida | [Log](tests/consolidacao/backend-verify.txt), [suítes](tests/consolidacao/backend-suites.csv), [JaCoCo CSV](tests/consolidacao/backend-coverage.csv) |
+| Web: Vitest e cobertura | **166 testes em 21 arquivos**, cobertura de linhas **74,60%** | [Log completo](tests/consolidacao/web-tests.txt) |
+| Web: formatação, ESLint, TypeScript e build | Aprovados na exportação LF dos arquivos versionados | [Log](tests/consolidacao/web-quality-build.txt) |
+| E2E web: navegador + API + PostgreSQL na CI | **7 testes aprovados** | [Log da CI](tests/consolidacao/ci-e2e.txt) |
+| Mobile: Jest e cobertura na CI | **2 testes em 2 suítes**, cobertura de linhas **76,47%** | [Log da CI](tests/consolidacao/ci-mobile.txt) |
 
-A interface usa o pesquisador logado como responsável por novos estudos. Ao editar, mantém o `responsibleUserId` retornado pela API, mesmo quando pertence a outro pesquisador. Essa é uma decisão da interface, não uma restrição adicional do contrato. O nome do usuário logado é exibido quando seu ID corresponde ao responsável; nos demais casos, aparece `Pesquisador #ID`, pois a API de estudos não retorna o nome e a consulta de usuários é restrita a administradores.
+O [relatório de testes](tests/README.md) informa versão, ambiente, comandos, cobertura de ramos, exclusões do JaCoCo, tentativa web inicial e limites dos E2E. A meta de 80% é do backend, não das três aplicações em conjunto. A [CI do commit 6ab8cba](https://github.com/livdenner/ClinicalStudyPB-project/actions/runs/42728167544) concluiu seus quatro jobs com sucesso. O [histórico anterior](tests/historico-antes-t16-12.md) preserva as medições das versões anteriores sem misturá-las à tabela atual.
 
-A ação Visualizar da tabela abre `/estudos/{id}`, que consulta `GET /api/studies/{id}` com JWT. O endereço também pode ser acessado diretamente e mostra nome, objetivo, responsável, período e limite de participantes. A página permite editar pelo mesmo modal e atualiza os detalhes com a resposta do backend. Identificadores inválidos e respostas 404 exibem estudo não encontrado; falhas de conexão permitem tentar novamente.
+## Processo das Sprints 1 e 2
 
-A integração RF07 da task 3457 prepara a web para o campo `status` previsto no OpenAPI, com selo, filtro e transição dedicada. Esse campo depende da implementação RF07 do backend; quando ausente ou desconhecido, a interface apresenta "Estado indisponível" e não presume uma transição. A quantidade atual de participantes continua fora dessa resposta: a tabela mostra somente o limite, sem calcular ocupação nem assumir contagem zero. A validação do limite contra participantes já alocados depende de suporte do backend. O formulário só fecha e a tabela só é atualizada após sucesso da API; erros mantêm os dados digitados disponíveis para correção.
+O [documento de processo](processo/README.md) reúne backlog, estimativas, papéis, contribuições com PRs, burndowns de integração com dados diários e revisão de cada sprint. Lívia foi gerente e Lucas backend na Sprint 1; na Sprint 2, Lucas assumiu gerência e Lívia backend. Os demais papéis permaneceram iguais.
 
-## Testes de componentes de estudos (Task 3148)
+![Burndown de integração — Sprint 1](processo/burndown-sprint1.png)
 
-Os testes usam Vitest, React Testing Library e jsdom, com requisições HTTP e notificações de sucesso simuladas. Os componentes de busca, tabela, modal e calendário do HeroUI são exercitados diretamente.
+![Burndown de integração — Sprint 2](processo/burndown-sprint2.png)
 
-| Arquivo                                                  | Cenários cobertos                                                                                                                                                                                               |
-| -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `web/src/components/estudos/BuscaFiltroEstudos.test.tsx` | Busca controlada, digitação e limpeza pelo callback.                                                                                                                                                            |
-| `web/src/components/estudos/TabelaEstudos.test.tsx`      | Responsáveis, limites e períodos, inclusive entre anos diferentes, callback de edição e estado vazio.                                                                                                           |
-| `web/src/components/estudos/CampoData.test.tsx`          | Segmentos acessíveis, alteração pelo teclado, bloqueio durante salvamento e erro de validação.                                                                                                                  |
-| `web/src/components/estudos/ModalEstudo.test.tsx`        | Campos obrigatórios, normalização dos dados, limites válidos e inválidos, datas iguais, preservação do responsável, cancelamento, bloqueio de envios repetidos, foco nos erros e respostas 401/403.             |
-| `web/src/components/estudos/ModalEditarEstudo.test.tsx`  | Edição pelo responsável, identificação do responsável original e bloqueio de edição por outro pesquisador ou pelo estado do estudo.                                                                             |
-| `web/src/pages/estudos/listagem.test.tsx`                | Carregamento, estado vazio, busca, cadastro e edição via API com JWT, responsável logado no cadastro, preservação do responsável na edição, cancelamento, falhas de conexão, validações e restrições de acesso. |
-| `web/src/pages/estudos/visualizar.test.tsx`              | Navegação da tabela para os detalhes, consulta por ID, retorno à listagem, edição, cancelamento de consultas pendentes, identificadores inválidos, respostas 401/403/404 e novas tentativas.                    |
+Os gráficos usam PRs restantes por data real de merge, com fonte em CSV e definição explícita no processo. Não são apontamentos de horas nem substituem o aceite funcional da matriz RF.
 
-O teste de listagem substitui o campo de data por um campo ISO simples para concentrar os cenários no fluxo da página. O calendário real é verificado nos testes de `CampoData`, `ModalEstudo` e visualização. A execução depende apenas das dependências da web, sem precisar iniciar Docker ou o backend.
+## Pendências e passagem para a próxima entrega
 
-Para executar os testes de telas e componentes de estudos:
+- Integrar a interface de inclusão e lista de participantes e os testes T15.3/T15.4; então atualizar RF11 e acrescentar as capturas correspondentes.
+- Ampliar o smoke E2E para protocolo → candidato → elegibilidade → consentimento → inclusão; os sete cenários atuais cobrem principalmente login e cadastro de estudo. Testes específicos de componentes de elegibilidade/consentimento completam a cobertura das novas telas.
+- Na interface de consentimento, a identificação do termo é auxiliar/local e o responsável exibido deriva da sessão; a API persiste `status` e `recordedAt`. Não tratar esses rótulos como auditoria persistida do termo ou da autoria.
+- A Gerência conclui revisão/integração dos PRs, DoD, tag e GitHub Release `release1` na T16.15. Este documento não declara publicação de tag/release antes desse fechamento.
+- Na Sprint 3, integrar login e fluxos mobile. Manter o esqueleto e a navegação já validados; conferir as recomendações de patches compatíveis do Expo registradas na T16.13 antes de alterar o lockfile.
 
-```powershell
-npm --prefix web test -- src/components/estudos src/pages/estudos
-```
-
-Os testes do serviço HTTP em `web/src/services/estudos.test.ts` acompanham a integração da task 3146.
-
-## Regressão de usuários e estudos (Task 3479)
-
-Verificação realizada sobre a `development` em `cf77b0d`, com as correções de regressão da branch `fix/3479-regression-users-studies`.
-
-### Escopo e correções
-
-- Atualizado o teste antigo de `ModalEditarEstudo`, que ainda dependia do modelo mockado removido e impedia o build. O teste agora usa `EstudoApi`, fornece o pesquisador e verifica a preservação do responsável.
-- Atualizadas as expectativas de bloqueio na visualização de estudos para a página 403 de `ProtectedRoute`, mantendo a verificação de que nenhuma consulta de estudo é enviada para perfis sem permissão.
-- Acrescentados cenários de acesso direto do Coordenador a `/usuarios`, `/estudos` e `/estudos/3`, verificando bloqueio, menu e ausência de chamadas à API.
-- Corrigido o README principal, que ainda descrevia a gestão de estudos como mockada.
-
-Não houve alteração dos contratos REST, das permissões ou do comportamento dos componentes de produção. Os mocks HTTP dos testes de componente continuam restritos aos testes; a verificação integrada abaixo usou a API e o PostgreSQL reais.
-
-### Resultados automatizados
-
-| Verificação                | Resultado                                                   |
-| -------------------------- | ----------------------------------------------------------- |
-| Vitest: suíte web completa | 18 arquivos, 127 testes passando, nenhum ignorado           |
-| Maven: testes do backend   | 33 testes passando, nenhum ignorado                         |
-| TypeScript e build Vite    | Aprovados; permanece o aviso existente de tamanho do bundle |
-
-Comandos executados a partir da raiz, com Java 21 configurado no terminal do backend:
-
-```powershell
-npm --prefix web test -- --maxWorkers=2
-npm --prefix web run build
-Push-Location backend
-.\mvnw.cmd test
-Pop-Location
-```
-
-O limite de dois workers foi usado nesta máquina após uma execução paralela apresentar timeouts ao iniciar processos do Vitest. Não foram ampliados timeouts dos testes nem desabilitadas verificações.
-
-### Verificação integrada com persistência real
-
-Ambiente: Edge headless, web Vite em `http://127.0.0.1:5173`, proxy `/api` para o Spring Boot em `http://localhost:8080`, Java 21 e PostgreSQL 18.6 no container local `clinicalstudypb-db-dev`. As interações foram automatizadas no navegador sem interceptar ou simular as respostas HTTP. A validação não adiciona um runner E2E ou dependências ao repositório.
-
-| Fluxo verificado                              | Resultado                                                                      |
-| --------------------------------------------- | ------------------------------------------------------------------------------ |
-| Acesso sem sessão à web e sem JWT à API       | Redirecionamento ao login e HTTP 401                                           |
-| Login com senha incorreta                     | HTTP 401 e ausência de sessão local                                            |
-| Login de Administrador e recarga              | Sessão preservada e usuários consultados pela API                              |
-| Cadastro de usuário pelo modal                | POST real e registro disponível após recarregar                                |
-| Edição e desativação de usuário               | Confirmação, PUT/PATCH reais e situação persistida                             |
-| Login de conta inativa e posterior reativação | Login negado enquanto inativa; permitido após ativação pelo modal              |
-| Administrador acessando estudos               | Bloqueado na rota e HTTP 403 na API                                            |
-| Pesquisador acessando usuários                | Bloqueado na rota e HTTP 403 na API                                            |
-| Cadastro de estudo                            | Calendário real, POST com JWT e registro disponível após recarregar            |
-| Visualização por ID e edição de estudo        | GET/PUT reais, responsável preservado e alterações disponíveis após recarregar |
-| Coordenador acessando usuários e estudos      | Rotas bloqueadas e HTTP 403 nos dois endpoints                                 |
-| Logout e retorno direto à rota protegida      | Sessão local removida e redirecionamento ao login                              |
-
-Os 12 cenários acima passaram. Também foi feita consulta direta ao PostgreSQL para confirmar os registros fictícios criados nesta execução: usuário ID **10** e estudo ID **2**, identificados pelo prefixo `Regressão 3479`. Esses registros foram mantidos no banco local para conferência; não foram alterados os dados de negócio já existentes.
-
-Para repetir a conferência manual, inicie banco, API e web conforme o README principal, carregue as contas fictícias de demonstração e execute os fluxos da tabela. Use nomes e e-mails novos com o prefixo `Regressão 3479`; confira cadastro e edição após recarregar a página e tente acessar diretamente as rotas com os três perfis.
-
-### Limitação de RF07 e conclusão dos critérios
-
-RF01 a RF04 foram verificados com o contrato disponível na execução original da regressão. Na atualização de 07/11/2026, a base da web incorporou `development` até `ca84219`, incluindo estado, transição, histórico, versão e bloqueios de edição do backend RF07.
-
-A verificação integrada com API e banco deve ser repetida nessa base, conferindo o estado inicial e a preservação do estado ao editar título, objetivo, datas e limite de participantes. Os resultados históricos acima se referem à execução original da task 3479.
-
-- [x] Fluxos web de RF01 a RF04 verificados com API e banco reais.
-- [x] Suítes automatizadas existentes passando e build aprovado.
-- [ ] Compatibilidade de cadastro e edição com RF07 validada após integração do contrato de estados.
-
-## Estados dos estudos (Task 3457)
-
-A web utiliza o contrato RF07 atualizado de `backend/openapi.yaml`. O estudo retorna `status` e `version`. A alteração de estado é enviada por `PATCH /api/studies/{id}/status`, com JWT e corpo `{"status":"RECRUITMENT","expectedStatus":"PLANNING"}`, por exemplo. `expectedStatus` representa o estado que a tela consultou. Cadastro e edição enviam os campos de `StudyWriteRequest`.
-
-- Selo de estado na listagem e nos detalhes, usando Chip do HeroUI.
-- Filtro local por estado combinado com a busca por título, pois o GET atual retorna a lista completa.
-- Nos detalhes, somente o pesquisador responsável vê as ações de avanço `PLANNING` → `RECRUITMENT` → `EXECUTION` → `CLOSED`, retorno de `RECRUITMENT` para `PLANNING` e cancelamento dos estados permitidos pela API.
-- Confirmação em Modal do HeroUI, com estado atual e destino, bloqueio de fechamento e envio durante o salvamento.
-- Estado e ação disponíveis atualizados somente após sucesso, usando o estudo devolvido pela API. Falhas preservam os dados anteriores.
-- Mensagens para 400, 401 e 403. Após HTTP 409, a web consulta o estudo para conferir estado e versão. Se os dados mudaram ou a conferência falhou, oferece "Atualizar estudo". Se continuam iguais, exibe a pendência informada pela API, como cadastrar visitas, critérios ou incluir participantes.
-
-Rótulos, cores e próximos estados ficam centralizados em `web/src/config/estados-estudo.ts`. Tipos ficam em `web/src/types/estudo.ts`, e a chamada REST em `web/src/services/estudos.ts`. Quando o backend ainda não informa um estado reconhecido, a interface mostra "Estado indisponível" e não oferece uma mudança baseada em suposição.
-
-### Permissões e dependências
-
-As decisões de negócio fornecidas pela equipe restringem edição e transição ao pesquisador responsável. A web verifica perfil e identificador do responsável: outro pesquisador consulta os dados, mas não recebe botões de edição ou mudança de estado. A edição dos dados é permitida apenas em `PLANNING` e `RECRUITMENT`; `EXECUTION`, `CLOSED` e `CANCELLED` ficam somente leitura. O modal também bloqueia o envio direto de um formulário em modo de consulta.
-
-O cancelamento exige justificativa de até 1.000 caracteres, enviada em `reason`. Para estudos em `CANCELLED`, a web consulta `GET /api/studies/{id}/status-history` e oferece restauração apenas para a origem `PLANNING` ou `RECRUITMENT`. Cancelamentos originados em `EXECUTION` não oferecem restauração. Se o histórico falhar, os dados do estudo continuam visíveis e a interface oferece uma nova tentativa da consulta ao histórico. A restauração fica indisponível até identificar um destino permitido.
-
-O backend integrado valida o pesquisador responsável e permite editar estudo e protocolo em `PLANNING` e `RECRUITMENT`. Ao abrir recrutamento, verifica visita com atividade e critérios de inclusão/exclusão. Ao iniciar execução, verifica participante incluído. A validação de critérios e inclusão depende do provedor `StudyReadiness`. Os motivos de bloqueio retornados pela API são exibidos pela web.
-
-### Verificações de RF07
-
-A revisão da PR #41 registrou 138 testes Web passando, além de ESLint, Prettier, build e checks da CI. Os testes cobrem avanço, retorno ao planejamento, justificativa obrigatória, restauração conforme histórico e distinção dos conflitos HTTP 409. O cenário de falha e recuperação do histórico foi acrescentado após essa revisão.
-
-A validação dos fluxos com API e banco reais permanece pendente.
-
-## Critérios do estudo (Task 3446) — consulta e cadastro
-
-A aba “Critérios” nos detalhes do estudo separa critérios de inclusão e exclusão. A consulta utiliza `GET /api/studies/{studyId}/criteria`. O cadastro utiliza `POST` na mesma rota com `type` (`INCLUSION` ou `EXCLUSION`) e `description`. A descrição é obrigatória, recebe remoção de espaços nas extremidades e aceita até 500 caracteres. Os dados são consultados e persistidos pela API.
-
-O cadastro fica disponível para o pesquisador responsável em `PLANNING` ou `RECRUITMENT`. Coordenadores, outros pesquisadores e estudos em estados bloqueados recebem visualização somente leitura. A API também impede adicionar critérios após a primeira resposta de elegibilidade. A web apresenta o motivo retornado e permite atualizar os dados.
-
-Após o cadastro, a tela recarrega os critérios e o estudo para sincronizar sua versão com as visitas e as ações de estado. Carregamentos, listas vazias, sucesso e falhas HTTP possuem feedback na interface.
-
-### Operações pendentes
-
-Edição e remoção aguardam os respectivos endpoints da API RF05. O contrato atual da Release 1 preserva os critérios cadastrados para manter a rastreabilidade das avaliações.
-
-A validação com API e banco reais permanece pendente.
-
-### Testes de componente (Task 3447)
-
-A suíte `web/src/pages/estudos/criterios.test.tsx` cobre nove cenários principais usando o formulário e os controles HeroUI reais, com respostas HTTP simuladas. Inclui cadastro dos dois tipos nos estados editáveis, normalização da descrição, bloqueio durante o envio, validação de campos obrigatórios e espaços em branco, erro de campo HTTP 400, conflito HTTP 409 com atualização dos dados, restrições de perfil e responsável, estado bloqueado e recuperação de falha na consulta com agrupamento de inclusão e exclusão.
-
-Os testes de edição acompanham a pendência dessa operação na task 3446. As verificações são determinísticas e executam sem backend externo.
-
-## Como executar a web
-
-Pré-requisitos: Git e Node.js 22 LTS.
-
-Na raiz do repositório:
-
-```powershell
-npm --prefix web ci
-npm --prefix web run dev
-```
-
-Para validar os componentes e gerar a build:
-
-```powershell
-npm --prefix web run test
-npm --prefix web run build
-```
-
-## Resultados da CI, testes e cobertura (T16.8)
-
-Números da [execução 42689718497 do GitHub Actions](https://github.com/livdenner/ClinicalStudyPB-project/actions/runs/42689718497), feita em 09/11/2026 no push da `development` no commit `548164d` (merge do PR #49). Os quatro jobs concluíram com sucesso.
-
-| Job                                  | O que verifica                                                                       | Resultado                                          |
-| ------------------------------------ | ------------------------------------------------------------------------------------ | -------------------------------------------------- |
-| Backend (Maven, Checkstyle, JUnit, JaCoCo) | `mvnw verify` com Testcontainers e PostgreSQL real; reprova abaixo de 80% de linhas  | 345 testes, 0 falhas, 0 erros, 0 ignorados         |
-| Web (ESLint, Vitest, build)          | Prettier, ESLint, testes com cobertura e build                                       | 20 arquivos, 157 testes passando                   |
-| E2E Web (Playwright)                 | Navegador, web, API Spring Boot e PostgreSQL em contêineres                          | 7 testes passando                                  |
-| Mobile (Jest)                        | Testes com cobertura do esqueleto do aplicativo                                      | 2 testes passando                                  |
-
-Dos 345 testes do backend, 246 são de integração.
-
-### Cobertura
-
-| Módulo  | Linhas                | Ramos            | Meta                                                   |
-| ------- | --------------------- | ---------------- | ------------------------------------------------------ |
-| Backend | **92,38%** (788/853)  | 77,44% (206/266) | 80% das linhas, verificada pelo JaCoCo no `mvnw verify` |
-| Web     | 86,55%                | 77,98%           | Sem limite mínimo configurado                          |
-| Mobile  | 76,47%                | 58,06%           | Sem limite mínimo configurado                          |
-
-O JaCoCo exclui da meta somente `ClinicalStudyPBApplication` e as classes `*Configuration` e `*Config`. Os pacotes com menor cobertura de linhas no backend são `criteria.api` (30,77%), `criteria.application` (63,16%) e `candidates.api` (68%). Os testes dos PRs #42 e #43, ainda em revisão, tratam de critérios e candidatos.
-
-### Relatórios
-
-Os relatórios ficam nos artefatos da execução, disponíveis até 07/02/2027: `jacoco-report`, `junit-report`, `web-coverage`, `mobile-coverage` e `playwright-report`.
-
-### Limitações conhecidas
-
-- As branches `development` e `main` não têm proteção de branch, então a CI reprova o PR, mas não impede o merge.
-- O merge do PR #41 deixou a CI da `development` vermelha por cerca de 30 minutos em 09/11/2026, com erro de tipos em `web/src/pages/recrutamento/recrutamento.test.tsx`. A execução seguinte, do merge do PR #44, passou.
-- A inclusão de participantes (RF11) ainda não tem endpoint, portanto esses números não cobrem esse fluxo.
-
-## Evidências a registrar no fechamento
-
-- [ ] Link do board e burndown da sprint no Azure DevOps.
-- [ ] Capturas ou demonstração dos fluxos concluídos.
-- [x] Resultados da CI, testes e cobertura.
-- [ ] Link da documentação OpenAPI/Swagger.
-- [ ] Pendências, impedimentos e ações da retrospectiva.
-- [ ] Tag e GitHub Release `release1`.
-
-## Pendências conhecidas
-
-- O login mobile integrado pertence à Sprint 3.
-- Os resultados deste documento devem ser atualizados com evidências reais; itens planejados não devem ser apresentados como entregues.
-- Pré-requisitos e comandos do backend;
-- Pré-requisitos e comandos do mobile;
-- Capturas e burndown.
+Para a equipe que continuar o projeto, o [README de instalação](../../README.md), os [diagramas editáveis e exportados](../../docs/diagrams/README.md), o [contrato da API](../../backend/openapi.yaml) e os [relatórios versionados](tests/README.md) formam a referência desta entrega.

@@ -1,0 +1,60 @@
+sprint_escopo,pr,titulo,autor_github,integrada_em_fortaleza,url
+1,1,chore: add initial repository structure,livdenner,2026-10-16T15:14:53-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/1
+1,2,refactor: Ajustando a arquitetura do projeto,livdenner,2026-10-21T00:22:35-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/2
+1,3,Adiciona componentes base e configuração de testes na Task 3128,allangrm,2026-10-22T16:24:12-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/3
+1,4,Adiciona entidade JPA e migração de estudos na Task 3142,lucrasn,2026-10-24T02:29:53-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/4
+1,5,Implementa API e testes de estudos nas Tasks 3143 e 3144,lucrasn,2026-10-24T02:30:11-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/5
+1,7,feat: adiciona contrato openAPI,livdenner,2026-10-23T11:15:29-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/7
+1,8,chore: adiciona docker compose com banco e backend,juliaPamplona,2026-10-24T12:44:34-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/8
+1,10,Adicionando endpoints de login e logout,livdenner,2026-10-24T14:38:48-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/10
+1,11,Adapta os testes de usuários à autenticação da Task 3136,lucrasn,2026-10-24T02:30:27-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/11
+1,12,Feat/3146 studies web,Raffael-Wagner,2026-10-24T14:53:09-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/12
+1,13,chore: define convenções de código e pipeline de CI,juliaPamplona,2026-10-30T13:25:01-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/13
+1,14,feat: implementa esqueleto inicial da aplicação mobile (sem integração) definido na sprint 1,julioP-dev,2026-10-24T19:30:31-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/14
+1,15,Corrige validações do backend após integração,lucrasn,2026-10-24T17:46:51-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/15
+1,16,Implementa tela de login e gestão de sessão da Task 3199,allangrm,2026-10-24T23:36:58-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/16
+1,17,Autorização por perfil no backend,livdenner,2026-10-24T22:13:12-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/17
+1,18,fix(studies): valida limite de participantes na edição,Raffael-Wagner,2026-10-25T13:28:52-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/18
+1,19,"Adiciona diagramas de casos de uso, arquitetura e sequência da Release 1",lucrasn,2026-10-24T22:27:06-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/19
+1,20,Feat/3123 web skeleton http,Raffael-Wagner,2026-10-26T18:12:54-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/20
+1,21,Feat/3192 users web,Raffael-Wagner,2026-10-26T19:12:03-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/21
+1,22,feat: adiciona diagrama de classes release 1,julioP-dev,2026-10-26T01:11:10-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/22
+1,23,Implementa rotas protegidas e menu por perfil da Task-3140,allangrm,2026-10-26T17:11:57-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/23
+1,24,Feat/3146 studies api integration,Raffael-Wagner,2026-10-26T20:16:36-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/24
+1,25,Test/3191 users components,Raffael-Wagner,2026-10-27T20:18:44-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/25
+1,26,"Implementa prototipos navegaveis de painel, recrutamento, visitas e relatórios da Task-3151",allangrm,2026-10-26T21:07:31-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/26
+1,27,Test/3148 studies components,Raffael-Wagner,2026-10-27T20:18:19-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/27
+1,29,"Testes de integração de autenticação, autorização, estudos e usuários",juliaPamplona,2026-11-03T19:53:29-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/29
+1,30,Configura E2E web com Playwright (login e cadastro de estudo),juliaPamplona,2026-11-02T15:57:10-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/30
+2,28,Fix/3479 regression users studies,Raffael-Wagner,2026-11-05T19:51:30-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/28
+2,31,feat: define contrato RF05 a RF11 e padroniza autenticação,lucrasn,2026-11-02T12:00:48-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/31
+2,32,Implementa a tela de candidatos com filtro por estudo da Task 3461,allangrm,2026-11-08T18:07:47-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/32
+2,33,feat: implementa ciclo de estados dos estudos,lucrasn,2026-11-05T15:06:34-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/33
+2,34,Ajusta acesso a candidatos e limites de idade no contrato da Release 1,lucrasn,2026-11-06T21:42:24-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/34
+2,35,Adiciona testes de transição e permissões dos estudos na T11.2,lucrasn,2026-11-08T16:30:36-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/35
+2,36,Implementa visitas previstas e amplia as regras de estado dos RF06 e RF07,lucrasn,2026-11-06T23:58:01-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/36
+2,37,Conclui entidades JPA e testes de visitas nas Tasks T10.1 e T10.2,lucrasn,2026-11-07T00:53:52-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/37
+2,38,Feat/candidates rf08 t12 1,livdenner,2026-11-08T18:05:06-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/38
+2,39,Adiciona testes referentes a implementação da tela de candidatos - Task-3462/T12.4,allangrm,2026-11-08T18:28:08-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/39
+2,40,Feat/criteria rf05 t9 1,livdenner,2026-11-08T20:12:05-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/40
+2,41,Feat/3457 study states web,Raffael-Wagner,2026-11-09T15:32:07-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/41
+2,42,Test/candidates rf08 t12 2,livdenner,2026-11-09T18:04:15-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/42
+2,43,Test/criteria rf05 t9 2,livdenner,2026-11-09T18:04:41-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/43
+2,44,"Feat(web): integra visitas previstas e atividades aos estudos (#3452, #3454)",Raffael-Wagner,2026-11-09T16:05:09-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/44
+2,45,Implementa consentimento simulado nas Tasks T14.1 e T14.2,lucrasn,2026-11-08T20:54:19-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/45
+2,46,Completa a pipeline de CI e roda o E2E na development (T16.8),juliaPamplona,2026-11-08T15:32:07-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/46
+2,47,fix(backend): corrige build Docker com Checkstyle,livdenner,2026-11-08T18:05:43-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/47
+2,48,Adiciona seed repetível de estudos de demonstração (T16.3),juliaPamplona,2026-11-09T17:05:52-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/48
+2,49,Completa a matriz de autorização com estados e visitas previstas (T16.4),juliaPamplona,2026-11-09T17:06:17-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/49
+2,50,Implementa tela de avaliacao de elegibilidade do candidato - Task 3512 (T13.3),allangrm,2026-11-09T18:38:52-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/50
+2,51,Fix/limite participantes 1000000,livdenner,2026-11-09T10:16:03-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/51
+2,52,feat(eligibility): implementa avaliação de candidatos,livdenner,2026-11-09T16:39:31-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/52
+2,53,test(eligibility): cobre regras e API de avaliação,livdenner,2026-11-09T15:48:43-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/53
+2,54,"Registra as evidências de CI, testes e cobertura da Release 1 (T16.8)",juliaPamplona,2026-11-09T20:19:53-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/54
+2,55,Completa o seed de demonstração com recrutamento e última vaga (T16.3),juliaPamplona,2026-11-09T21:25:15-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/55
+2,56,feat(participants): implementa inclusão atômica de candidatos,livdenner,2026-11-09T18:04:58-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/56
+2,57,"test(participants): cobre inclusão, concorrência e rollback",livdenner,2026-11-09T17:41:19-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/57
+2,58,"Integra critérios, visitas e estados no PostgreSQL (T16.4)",juliaPamplona,2026-11-09T21:02:53-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/58
+2,59,Feat/3446 study criteria web,Raffael-Wagner,2026-11-09T20:04:48-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/59
+2,60,Implementa tela de consentimento simulado do candidato - Task 3514 (T14.3),allangrm,2026-11-09T21:00:04-03:00,https://github.com/livdenner/ClinicalStudyPB-project/pull/60
+2,61,docs: valida instalação limpa e app inicial (T16.13),livdenner,,https://github.com/livdenner/ClinicalStudyPB-project/pull/61

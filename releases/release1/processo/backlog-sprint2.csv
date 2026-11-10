@@ -1,0 +1,10 @@
+pbi,descricao,rf,horas_planejadas,quantidade_tarefas
+PBI-09,Critérios de inclusão e exclusão,RF05,11,4
+PBI-10,Visitas previstas e atividades,RF06,11,4
+PBI-11,Estados do estudo,RF07,7.5,4
+PBI-12,Cadastro de candidatos,RF08,11,4
+PBI-13,Avaliação de elegibilidade,RF09,11.5,4
+PBI-14,Consentimento simulado,RF10,6.5,4
+PBI-15,Inclusão de participantes,RF11,12,4
+PBI-16,"Integração, qualidade e Release 1",—,28.5,14
+Cerimônias,"Planning, passagem de contexto, revisões, review e retrospectiva",—,12,6
