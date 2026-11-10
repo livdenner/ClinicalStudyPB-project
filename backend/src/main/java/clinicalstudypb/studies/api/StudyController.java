@@ -1,6 +1,8 @@
 package clinicalstudypb.studies.api;
 
 import clinicalstudypb.studies.application.StudyService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -20,10 +22,12 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * @author Lucas N. de Araújo
  * @since 2026-10-22
- * @version 0.0.1
+ * @version 0.0.2
  */
 @RestController
 @RequestMapping("/api/studies")
+@Tag(name = "Estudos", description = "Operações de cadastro, consulta, edição e transição de estudos")
+@SecurityRequirement(name = "bearerAuth")
 public class StudyController {
 
     private final StudyService studyService;
