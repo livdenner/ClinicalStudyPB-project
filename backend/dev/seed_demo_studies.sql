@@ -102,6 +102,20 @@ DECLARE
             ["Espirometria", "Prova de função pulmonar"],
             ["Consentimento dos responsáveis", "Leitura e assinatura do termo pelos responsáveis"]]}
         ]
+      },
+      {
+        "title": "Higiene do sono em trabalhadores noturnos",
+        "objective": "Avaliar o efeito de orientações de higiene do sono em quem trabalha à noite.",
+        "startDate": "2026-10-05", "endDate": "2027-06-30", "participantLimit": 3,
+        "status": "RECRUITMENT",
+        "history": [
+          {"from": "PLANNING", "to": "RECRUITMENT", "at": "2026-10-15T15:00:00-03:00"}
+        ],
+        "visits": [
+          {"name": "Avaliação do sono", "date": "2026-12-07", "activities": [
+            ["Diário do sono", "Entrega do diário para registro durante 14 dias"],
+            ["Escala de sonolência", "Aplicação da escala de sonolência de Epworth"]]}
+        ]
       }
     ]
     $json$;

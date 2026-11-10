@@ -57,7 +57,7 @@ services:
     volumes:
       - ./backend/dev:/seed:ro
     command: ["psql", "-h", "db", "-U", "clinicalstudypb", "-d", "clinicalstudypb", "-v", "ON_ERROR_STOP=1",
-              "-f", "/seed/seed_demo_users.sql", "-f", "/seed/seed_demo_studies.sql"]
+              "-f", "/seed/seed_demo_users.sql", "-f", "/seed/seed_demo_studies.sql", "-f", "/seed/seed_demo_recruitment.sql"]
     depends_on:
       backend:
         condition: service_healthy
