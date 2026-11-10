@@ -1,0 +1,10 @@
+pbi,descricao,rf,horas_planejadas,quantidade_tarefas
+PBI-01,"Repositório, arquitetura, CI e ambiente",—,13,7
+PBI-02,"Estrutura inicial de backend, web e mobile",—,13,5
+PBI-03,Cadastro e gestão de usuários,RF01,12,6
+PBI-04,Autenticação e encerramento de sessão,RF02,7,3
+PBI-05,Autorização por perfil,RF03,7,3
+PBI-06,Cadastro de estudos,RF04,11,6
+PBI-07,Protótipos navegáveis,—,8,3
+PBI-08,Qualidade e integração,—,5,3
+Cerimônias,Cerimônias e revisão cruzada,—,12,6

@@ -58,3 +58,13 @@ ios/build/
 .DS_Store
 Thumbs.db
 Desktop.ini
+.$*.bkp
+
+.ide_shared/
+/tatus
+/web/sandbox-web/
+
+# Playwright
+playwright-report/
+test-results/
+blob-report/

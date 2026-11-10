@@ -1,0 +1,144 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="Electron" agent="ClinicalStudyPB" version="32.6.10">
+  <diagram name="Estudos e protocolo" id="classes-protocolo">
+    <mxGraphModel dx="1660" dy="1240" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1660" pageHeight="1240" math="0" shadow="0" background="#ffffff">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="&lt;b&gt;ClinicalStudyPB - Estudos e protocolo (RF01, RF04-RF07)&lt;/b&gt;" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="60" y="20" width="1490" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="User" value="&lt;div style=&quot;text-align:center&quot;&gt;&lt;b&gt;User&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div&gt;- id: Long&lt;/div&gt;&lt;div&gt;- name: String&lt;/div&gt;&lt;div&gt;- email: String&lt;/div&gt;&lt;div&gt;- passwordHash: String&lt;/div&gt;&lt;div&gt;- role: UserRole&lt;/div&gt;&lt;div&gt;- active: boolean&lt;/div&gt;&lt;hr/&gt;&lt;div&gt;+ activate(): void&lt;/div&gt;&lt;div&gt;+ deactivate(): void&lt;/div&gt;&lt;div&gt;+ updateDetails(name, email): void&lt;/div&gt;&lt;div&gt;+ changeRole(role): void&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="60" y="115" width="340" height="305" as="geometry" />
+        </mxCell>
+        <mxCell id="Study" value="&lt;div style=&quot;text-align:center&quot;&gt;&lt;b&gt;Study&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div&gt;- id: Long&lt;/div&gt;&lt;div&gt;- title: String&lt;/div&gt;&lt;div&gt;- objective: String&lt;/div&gt;&lt;div&gt;- responsibleUserId: Long {FK}&lt;/div&gt;&lt;div&gt;- startDate: LocalDate&lt;/div&gt;&lt;div&gt;- endDate: LocalDate&lt;/div&gt;&lt;div&gt;- participantLimit: Integer&lt;/div&gt;&lt;div&gt;- status: StudyStatus&lt;/div&gt;&lt;div&gt;- version: Long&lt;/div&gt;&lt;div&gt;- protocolRevision: Long&lt;/div&gt;&lt;hr/&gt;&lt;div&gt;+ updateDetails(...): void&lt;/div&gt;&lt;div&gt;+ advanceStatus(status): void&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="600" y="115" width="340" height="350" as="geometry" />
+        </mxCell>
+        <mxCell id="StudyStatusHistory" value="&lt;div style=&quot;text-align:center&quot;&gt;&lt;b&gt;StudyStatusHistory&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div&gt;- id: Long&lt;/div&gt;&lt;div&gt;- studyId: Long {FK}&lt;/div&gt;&lt;div&gt;- actorUserId: Long {FK}&lt;/div&gt;&lt;div&gt;- changedAt: Instant&lt;/div&gt;&lt;div&gt;- fromStatus: StudyStatus&lt;/div&gt;&lt;div&gt;- toStatus: StudyStatus&lt;/div&gt;&lt;div&gt;- reason: String&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="115" width="340" height="280" as="geometry" />
+        </mxCell>
+        <mxCell id="StudyCriterion" value="&lt;div style=&quot;text-align:center&quot;&gt;&lt;b&gt;StudyCriterion&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div&gt;- id: Long&lt;/div&gt;&lt;div&gt;- studyId: Long {FK}&lt;/div&gt;&lt;div&gt;- type: CriterionType&lt;/div&gt;&lt;div&gt;- description: String&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="60" y="620" width="340" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="PlannedVisit" value="&lt;div style=&quot;text-align:center&quot;&gt;&lt;b&gt;PlannedVisit&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div&gt;- id: Long&lt;/div&gt;&lt;div&gt;- studyId: Long {FK}&lt;/div&gt;&lt;div&gt;- name: String&lt;/div&gt;&lt;div&gt;- plannedDate: LocalDate&lt;/div&gt;&lt;div&gt;- position: Integer&lt;/div&gt;&lt;div&gt;- activities: List&amp;lt;PlannedActivity&amp;gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="600" y="620" width="340" height="250" as="geometry" />
+        </mxCell>
+        <mxCell id="PlannedActivity" value="&lt;div style=&quot;text-align:center&quot;&gt;&lt;b&gt;PlannedActivity&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div&gt;- id: Long&lt;/div&gt;&lt;div&gt;- visit: PlannedVisit&lt;/div&gt;&lt;div&gt;- name: String&lt;/div&gt;&lt;div&gt;- nameKey: String&lt;/div&gt;&lt;div&gt;- description: String&lt;/div&gt;&lt;div&gt;- position: Integer&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="620" width="340" height="250" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-1" value="1  responsável  0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="User" target="Study">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-2" value="1  histórico  0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="Study" target="StudyStatusHistory">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-3" value="1  critérios  0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="Study" target="StudyCriterion">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="770" y="530" />
+              <mxPoint x="230" y="530" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-4" value="1  protocolo  0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="Study" target="PlannedVisit">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-5" value="1  atividades  1..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="PlannedVisit" target="PlannedActivity">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="UserRole" value="&lt;div style=&quot;text-align:center&quot;&gt;&lt;b&gt;UserRole&lt;/b&gt;&lt;br/&gt;&lt;i&gt;&amp;lt;&amp;lt;enumeration&amp;gt;&amp;gt;&lt;/i&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div&gt;RESEARCHER&lt;/div&gt;&lt;div&gt;COORDINATOR&lt;/div&gt;&lt;div&gt;ADMINISTRATOR&lt;/div&gt;&lt;div&gt;PARTICIPANT&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="60" y="990" width="340" height="174" as="geometry" />
+        </mxCell>
+        <mxCell id="StudyStatus" value="&lt;div style=&quot;text-align:center&quot;&gt;&lt;b&gt;StudyStatus&lt;/b&gt;&lt;br/&gt;&lt;i&gt;&amp;lt;&amp;lt;enumeration&amp;gt;&amp;gt;&lt;/i&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div&gt;PLANNING&lt;/div&gt;&lt;div&gt;RECRUITMENT&lt;/div&gt;&lt;div&gt;EXECUTION&lt;/div&gt;&lt;div&gt;CLOSED&lt;/div&gt;&lt;div&gt;CANCELLED&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="600" y="990" width="340" height="198" as="geometry" />
+        </mxCell>
+        <mxCell id="CriterionType" value="&lt;div style=&quot;text-align:center&quot;&gt;&lt;b&gt;CriterionType&lt;/b&gt;&lt;br/&gt;&lt;i&gt;&amp;lt;&amp;lt;enumeration&amp;gt;&amp;gt;&lt;/i&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div&gt;INCLUSION&lt;/div&gt;&lt;div&gt;EXCLUSION&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="990" width="340" height="126" as="geometry" />
+        </mxCell>
+        <mxCell id="note" value="As associações por identificadores representam chaves estrangeiras; não implicam navegação JPA entre módulos.&lt;br/&gt;actorUserId referencia User.id. O protocolo mantém posições contínuas e ao menos uma atividade por visita." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="60" y="900" width="1460" height="65" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="Recrutamento e inclusão" id="classes-recrutamento">
+    <mxGraphModel dx="1660" dy="1570" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1660" pageHeight="1570" math="0" shadow="0" background="#ffffff">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="&lt;b&gt;ClinicalStudyPB - Recrutamento e inclusão (RF08-RF11)&lt;/b&gt;" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="60" y="15" width="1490" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="StudyRef" value="&lt;div style=&quot;text-align:center&quot;&gt;&lt;b&gt;Study (referência)&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div&gt;- id: Long&lt;/div&gt;&lt;div&gt;- participantLimit: Integer&lt;/div&gt;&lt;div&gt;- status: StudyStatus&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="60" y="125" width="340" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="Candidate" value="&lt;div style=&quot;text-align:center&quot;&gt;&lt;b&gt;Candidate&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div&gt;- id: Long&lt;/div&gt;&lt;div&gt;- studyId: Long {FK}&lt;/div&gt;&lt;div&gt;- name: String&lt;/div&gt;&lt;div&gt;- nameKey: String&lt;/div&gt;&lt;div&gt;- age: Integer&lt;/div&gt;&lt;div&gt;- eligibilityStatus: EligibilityStatus&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="600" y="125" width="340" height="255" as="geometry" />
+        </mxCell>
+        <mxCell id="Participant" value="&lt;div style=&quot;text-align:center&quot;&gt;&lt;b&gt;Participant&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div&gt;- id: Long&lt;/div&gt;&lt;div&gt;- studyId: Long {FK}&lt;/div&gt;&lt;div&gt;- candidateId: Long {FK, único}&lt;/div&gt;&lt;div&gt;- includedBy: Long {FK}&lt;/div&gt;&lt;div&gt;- includedAt: Instant&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="125" width="340" height="235" as="geometry" />
+        </mxCell>
+        <mxCell id="CriterionRef" value="&lt;div style=&quot;text-align:center&quot;&gt;&lt;b&gt;StudyCriterion (referência)&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div&gt;- id: Long&lt;/div&gt;&lt;div&gt;- studyId: Long {FK}&lt;/div&gt;&lt;div&gt;- type: CriterionType&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="60" y="565" width="340" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="EligibilityAnswer" value="&lt;div style=&quot;text-align:center&quot;&gt;&lt;b&gt;EligibilityAnswer&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div&gt;- id: Long&lt;/div&gt;&lt;div&gt;- candidateId: Long {FK}&lt;/div&gt;&lt;div&gt;- criterionId: Long {FK}&lt;/div&gt;&lt;div&gt;- matches: boolean&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="600" y="565" width="340" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="EligibilityEvaluation" value="&lt;div style=&quot;text-align:center&quot;&gt;&lt;b&gt;EligibilityEvaluation&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div&gt;- candidateId: Long {PK, FK}&lt;/div&gt;&lt;div&gt;- evaluatedBy: Long {FK}&lt;/div&gt;&lt;div&gt;- evaluatedAt: Instant&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="565" width="340" height="180" as="geometry" />
+        </mxCell>
+        <mxCell id="SimulatedConsent" value="&lt;div style=&quot;text-align:center&quot;&gt;&lt;b&gt;SimulatedConsent&lt;/b&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div&gt;- candidateId: Long {PK, FK}&lt;/div&gt;&lt;div&gt;- status: ConsentDecision&lt;/div&gt;&lt;div&gt;- recordedAt: Instant&lt;/div&gt;&lt;div&gt;- lockedAfterInclusion: boolean&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="600" y="1020" width="340" height="220" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-1" value="1  candidatos  0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="StudyRef" target="Candidate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-2" value="1  inclusão  0..1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="Candidate" target="Participant">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-3" value="1  participantes  0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;exitX=0.5;exitY=0;entryX=0.5;entryY=0;" edge="1" parent="1" source="StudyRef" target="Participant">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="230" y="85" />
+              <mxPoint x="1310" y="85" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-4" value="1  respostas  0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="Candidate" target="EligibilityAnswer">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-5" value="1  respostas  0..*" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="CriterionRef" target="EligibilityAnswer">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge-6" value="1  última avaliação  0..1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;" edge="1" parent="1" source="Candidate" target="EligibilityEvaluation">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1040" y="430" />
+              <mxPoint x="1310" y="430" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge-7" value="1  consentimento  0..1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;exitX=0;exitY=0.8;entryX=0;entryY=0.5;" edge="1" parent="1" source="Candidate" target="SimulatedConsent">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="520" y="440" />
+              <mxPoint x="520" y="1120" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="EligibilityStatus" value="&lt;div style=&quot;text-align:center&quot;&gt;&lt;b&gt;EligibilityStatus&lt;/b&gt;&lt;br/&gt;&lt;i&gt;&amp;lt;&amp;lt;enumeration&amp;gt;&amp;gt;&lt;/i&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div&gt;PENDING&lt;/div&gt;&lt;div&gt;ELIGIBLE&lt;/div&gt;&lt;div&gt;INELIGIBLE&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="60" y="1020" width="340" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="ConsentDecision" value="&lt;div style=&quot;text-align:center&quot;&gt;&lt;b&gt;ConsentDecision&lt;/b&gt;&lt;br/&gt;&lt;i&gt;&amp;lt;&amp;lt;enumeration&amp;gt;&amp;gt;&lt;/i&gt;&lt;/div&gt;&lt;hr/&gt;&lt;div&gt;GRANTED&lt;/div&gt;&lt;div&gt;DECLINED&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacing=10;fillColor=#FFFFFF;strokeColor=#000000;strokeWidth=1;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="1020" width="340" height="126" as="geometry" />
+        </mxCell>
+        <mxCell id="rules" value="Respostas são únicas por (candidateId, criterionId). Cada candidato tem no máximo uma inclusão.&lt;br/&gt;evaluatedBy e includedBy referenciam User.id. StudyCriterion pertence ao mesmo estudo do candidato.&lt;br/&gt;Antes da primeira decisão, a API retorna ConsentStatus.PENDING; a ausência de linha não é uma decisão persistida.&lt;br/&gt;Inclusão exige RECRUITMENT, ELIGIBLE, consentimento GRANTED e vaga; confirmação e bloqueio do consentimento são atômicos." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="60" y="1280" width="1460" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="legend" value="Enums UserRole, StudyStatus e CriterionType e demais campos de Study estão na página Estudos e protocolo.&lt;br/&gt;ConsentStatus é a visão da API: PENDING, GRANTED ou DECLINED." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="60" y="1430" width="1460" height="65" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
