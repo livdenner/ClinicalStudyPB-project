@@ -46,7 +46,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
  *
  * @author Júlia Pamplona
  * @since 2026-10-30
- * @version 0.0.2
+ * @version 0.0.3
  */
 class AuthorizationIntegrationTest extends IntegrationTestSupport {
 
@@ -67,7 +67,7 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
             new Endpoint(HttpMethod.DELETE, "/api/users/{id}", null));
 
     /**
-     * Endpoints de estudos, estados e visitas previstas. {id} é o estudo, {visitId} a primeira
+     * Endpoints de estudos, estados, visitas previstas e critérios. {id} é o estudo, {visitId} a primeira
      * visita (com duas atividades), {otherVisitId} a segunda e {activityId}/{otherActivityId} as
      * atividades da primeira visita. As leituras (GET) são liberadas também ao coordenador.
      */
@@ -102,7 +102,11 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
                     """),
             Endpoint.versioned(HttpMethod.DELETE, "/api/studies/{id}/planned-visits/{otherVisitId}", null),
             Endpoint.versioned(HttpMethod.DELETE,
-                    "/api/studies/{id}/planned-visits/{visitId}/activities/{activityId}", null));
+                    "/api/studies/{id}/planned-visits/{visitId}/activities/{activityId}", null),
+            new Endpoint(HttpMethod.GET, "/api/studies/{id}/criteria", null),
+            new Endpoint(HttpMethod.GET, "/api/studies/{id}/criteria/{criterionId}", null),
+            new Endpoint(HttpMethod.POST, "/api/studies/{id}/criteria",
+                    "{\"type\":\"EXCLUSION\",\"description\":\"Estar em gestação\"}"));
 
     private static final List<Endpoint> CONSENT_ENDPOINTS = List.of(
             new Endpoint(HttpMethod.GET, "/api/studies/{id}/candidates/{candidateId}/consent", null),
@@ -112,7 +116,7 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
     /** Tabelas comparadas antes e depois de um acesso negado. */
     private static final List<String> SNAPSHOT_TABLES = List.of(
             "users", "studies", "study_status_history", "planned_visits", "planned_activities",
-            "simulated_consents");
+            "simulated_consents", "study_criteria");
 
     @Autowired
     private JdbcTemplate jdbc;
@@ -127,6 +131,7 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
     private Long otherVisitId;
     private Long activityId;
     private Long otherActivityId;
+    private Long criterionId;
 
     @BeforeEach
     void setUp() {
@@ -141,6 +146,8 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
         activityId = insertActivity(visitId, "Entrevista", "Histórico clínico", 1);
         otherActivityId = insertActivity(visitId, "Exame", "Exame físico", 2);
         insertActivity(otherVisitId, "Entrevista", "Encerramento", 1);
+        criterionId = jdbc.queryForObject("INSERT INTO study_criteria (study_id, type, description) "
+                + "VALUES (?, 'INCLUSION', ?) RETURNING id", Long.class, study.getId(), "Ter 18 anos ou mais");
     }
 
     static Stream<Arguments> userEndpointsForOtherRoles() {
@@ -243,6 +250,7 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
                 "id", targetId,
                 "ownerId", responsibleId(),
                 "candidateId", candidate.getId(),
+                "criterionId", criterionId,
                 "visitId", visitId,
                 "otherVisitId", otherVisitId,
                 "activityId", activityId,
