@@ -2,7 +2,7 @@
 
 Entrega das Sprints **1 (13–26/10/2026)** e **2 (27/10–09/11/2026)**. Consolidação documental sobre `development` **6ab8cba**, em 09/11/2026 (America/Fortaleza). O projeto usa dados fictícios e consentimento estritamente simulado.
 
-[Instalação e execução](../../README.md#5-instalação-e-execução) · [Diagramas](../../docs/diagrams/README.md) · [OpenAPI](../../backend/openapi.yaml) · [Capturas](images/README.md) · [Testes e cobertura](tests/README.md) · [Processo das sprints](processo/README.md) · [Azure DevOps TEAM5](https://dev.azure.com/engsw2/TEAM5)
+[Instalação e execução](../../README.md#5-instalação-e-execução) · [Diagramas](../../docs/diagrams/README.md) · [OpenAPI](../../backend/openapi.yaml) · [Capturas](images/README.md) · [Testes e cobertura](tests/README.md) · [Instalação limpa — T16.13](tests/t16-13/README.md) · [Processo das sprints](processo/README.md) · [Azure DevOps TEAM5](https://dev.azure.com/engsw2/TEAM5)
 
 ## Objetivo e escopo previsto
 
@@ -25,8 +25,47 @@ Situação avaliada na versão acima. **Concluído** indica fluxo disponível no
 | RF09 | Elegibilidade — **concluído** | GET/PUT `/eligibility`; avaliação com critérios de inclusão/exclusão e parecer. | [Elegível após salvar](images/08-elegibilidade-sucesso.jpg); [integração](../../backend/src/test/java/clinicalstudypb/candidates/EligibilityEvaluationIntegrationTest.java), [regras](../../backend/src/test/java/clinicalstudypb/candidates/EligibilityEvaluationServiceTest.java). | Respostas incompletas mantêm `PENDING`; grava autor/instante; incluído não pode ser reavaliado. A tela foi validada na sessão real; não há suíte específica de componentes dessa avaliação nesta base. |
 | RF10 | Consentimento simulado — **concluído** | GET/PUT `/consent`; coordenador registra aceite ou recusa. | [Aceite](images/09-consentimento-sucesso.jpg); [SimulatedConsentIntegrationTest](../../backend/src/test/java/clinicalstudypb/consent/SimulatedConsentIntegrationTest.java), [bloqueio após inclusão](tests/rf11-api.json). | Decisão e horário persistem na API; identificação textual do termo e responsável exibido são dados auxiliares da interface. Sem assinatura/validade clínica; sem suíte específica de componentes do consentimento nesta base. |
 | RF11 | Inclusão de participante — **parcial** | POST `/inclusion`, GET `/participants`: API com validação atômica, lista e consulta individual. | [Sessão real HTTP](tests/rf11-api.json); [ParticipantIntegrationTest](../../backend/src/test/java/clinicalstudypb/participants/ParticipantIntegrationTest.java), [concorrência](../../backend/src/test/java/clinicalstudypb/participants/ParticipantConcurrencyIntegrationTest.java). | Backend e testes concluídos; T15.3/T15.4 completam ação/lista de inclusão na web e seus testes. A galeria não apresenta uma tela ainda não integrada. |
+| Mobile | Estrutura inicial — **concluída no escopo da Release 1** | React Native/Expo Router, telas Início e Estudos provisórias e cliente HTTP genérico. | [Guia mobile](../../mobile/README.md), [Android e testes da T16.13](tests/t16-13/README.md). | Abertura e navegação validadas; login e integração de negócio mobile pertencem à Sprint 3. |
+| DevOps/Qualidade | Ambiente, seeds e CI — **concluídos no recorte verificado** | Compose, Flyway V1–V10, três cargas repetíveis e quatro jobs de CI. | [Instalação limpa](tests/t16-13/README.md), [relatórios atuais](tests/README.md), [convenções e E2E](../../CONTRIBUTING.md). | Meta de 80% de linhas backend atendida; ampliação do E2E de recrutamento e fechamento gerencial constam nas pendências. |
 
 As rotas abreviadas acima pertencem ao estudo/candidato informado no [contrato OpenAPI](../../backend/openapi.yaml). O [resumo da API](../../backend/docs/release1-api.md) descreve permissões, estados, concorrência e respostas HTTP. A [sequência de inclusão](../../docs/diagrams/sequencia-inclusao.png) representa o fluxo efetivo do backend.
+
+## Resumo técnico por frente
+
+### Backend
+
+Os RF01–RF11 têm APIs implementadas nos módulos de usuários, autenticação, estudos, critérios, visitas, candidatos, consentimento e participantes. O [contrato OpenAPI](../../backend/openapi.yaml) reúne as operações; o [resumo da API](../../backend/docs/release1-api.md) apresenta as rotas e regras. A inclusão já está integrada: `POST /api/studies/{studyId}/candidates/{candidateId}/inclusion` cria o vínculo e `GET /api/studies/{studyId}/participants` consulta a lista. O [guia de elegibilidade e participantes](../../backend/docs/eligibility-integration.md) explica bloqueios, autoria, consentimento e rollback.
+
+### Web
+
+Os RF01–RF10 possuem interface integrada. Na Sprint 2 entraram [critérios](../../web/src/pages/estudos/criterios.tsx) (RF05), [visitas previstas e atividades](../../web/src/pages/estudos/visitas-previstas.tsx) (RF06), estados do estudo (RF07), [candidatos por estudo](../../web/src/pages/recrutamento/recrutamento.tsx) (RF08), [avaliação de elegibilidade](../../web/src/components/candidatos/AvaliacaoElegibilidade.tsx) (RF09) e [consentimento simulado](../../web/src/components/candidatos/ConsentimentoSimulado.tsx) (RF10). RF11 tem backend e testes prontos, com ação/lista web atribuídas às T15.3/T15.4. A matriz acima e a [galeria](images/README.md) identificam a evidência de cada fluxo.
+
+### Mobile
+
+A entrega é a estrutura inicial navegável, com telas provisórias, cliente HTTP genérico e dois testes existentes. A execução no Android e a navegação de ida/volta estão registradas na [T16.13](tests/t16-13/README.md). O [README mobile](../../mobile/README.md) orienta instalação, execução, configuração pública de API e continuidade na Sprint 3.
+
+### Dados e seeds
+
+Após as migrações V1–V10, execute a carga manual na seguinte ordem, conforme o [comando de instalação](../../README.md#executando-com-docker-compose):
+
+1. [seed_demo_users.sql](../../backend/dev/seed_demo_users.sql): contas fictícias por perfil.
+2. [seed_demo_studies.sql](../../backend/dev/seed_demo_studies.sql): seis estudos, visitas, atividades e histórico de estados.
+3. [seed_demo_recruitment.sql](../../backend/dev/seed_demo_recruitment.sql): critérios, candidatos, respostas, consentimentos e participantes fictícios.
+
+| Estudo | Estado | Visitas | Candidatos | Participantes / vagas | Para demonstrar |
+| --- | --- | --- | --- | --- | --- |
+| Adesão ao tratamento da hipertensão arterial | `PLANNING` | 2 | 0 | 0 / 60 | Edição do protocolo e abertura do recrutamento pela API. |
+| Vacina contra influenza em idosos | `RECRUITMENT` | 3 | 8 | 2 / 120 | Candidatos em todas as situações de elegibilidade e consentimento; volta para `PLANNING` e cancelamento com justificativa. |
+| Higiene do sono em trabalhadores noturnos | `RECRUITMENT` | 1 | 4 | 2 / 3 | Última vaga, com dois candidatos elegíveis e com consentimento concedido. |
+| Controle glicêmico no diabetes tipo 2 | `EXECUTION` | 3 | 4 | 3 / 40 | Protocolo bloqueado para edição. |
+| Reabilitação motora após AVC | `CLOSED` | 2 | 3 | 3 / 30 | Estado final: nenhuma transição é aceita. |
+| Tratamento da asma em crianças | `CANCELLED` | 1 | 2 | 0 / 50 | Restauração para `RECRUITMENT`, o estado de origem. |
+
+`DemoSeedIntegrationTest` executa os três scripts em PostgreSQL real, verifica a repetição sem duplicação e a consistência dos cenários, incluindo a última vaga. Os scripts não são migrações Flyway; são cargas de demonstração executadas após a aplicação do esquema.
+
+### DevOps e qualidade
+
+A [CI](../../.github/workflows/ci.yml) verifica backend, web, E2E e mobile. O [CONTRIBUTING](../../CONTRIBUTING.md) concentra convenções, revisão e o procedimento de E2E Playwright com uma stack isolada. Os [relatórios de testes](tests/README.md) distinguem componentes com HTTP simulado, integração PostgreSQL, concorrência e demonstração real.
 
 ## Demonstração e capturas reais
 
@@ -40,7 +79,18 @@ A [galeria](images/README.md) relaciona 13 capturas a RF, pré-condições e pas
 
 ![Bloqueio de protocolo incompleto](images/03-recrutamento-validacao.jpg)
 
-O roteiro começa no [README principal](../../README.md#3-funcionalidades-e-demonstração). As três cargas `seed_demo_users.sql`, `seed_demo_studies.sql` e `seed_demo_recruitment.sql` criam cenários fictícios e repetíveis, incluindo a disputa pela última vaga. No mobile, a [T16.13](tests/t16-13/README.md) registra abertura no Android físico e navegação de ida/volta confirmadas pelo responsável pelo dispositivo.
+O [README principal](../../README.md#3-funcionalidades-e-demonstração) apresenta os perfis e o acesso inicial. As três cargas `seed_demo_users.sql`, `seed_demo_studies.sql` e `seed_demo_recruitment.sql` criam cenários fictícios e repetíveis, incluindo a disputa pela última vaga. No mobile, a [T16.13](tests/t16-13/README.md) registra abertura no Android físico e navegação de ida/volta confirmadas pelo responsável pelo dispositivo.
+
+### Roteiro de demonstração
+
+Depois da [instalação e carga das contas fictícias](../../README.md#5-instalação-e-execução), siga o roteiro:
+
+1. Administrador: entre na web, abra **Usuários**, cadastre um usuário fictício e confira as validações de campos obrigatórios.
+2. Pesquisador: abra **Estudos clínicos**, crie um estudo em planejamento, cadastre critérios dos dois tipos e uma visita com atividade. Abra o recrutamento. A tentativa sem protocolo completo deve apresentar a pendência retornada pela API.
+3. Coordenador: em **Recrutamento**, selecione o estudo, cadastre candidato fictício, responda todos os critérios e salve a avaliação. Inclusões devem ser atendidas e exclusões não devem se aplicar para obter `ELIGIBLE`.
+4. Registre o consentimento simulado como aceito. Para a inclusão via API, consulte a operação `POST /api/studies/{studyId}/candidates/{candidateId}/inclusion` no Swagger; não há corpo JSON. A listagem usa `GET /api/studies/{studyId}/participants`.
+5. Faça logout e tente acessar diretamente uma rota protegida. Uma sessão ausente leva ao login; perfil sem permissão recebe acesso negado.
+6. Mobile: abra **ClinicalStudyPB → Ver estudos → Voltar ao início** no Expo Go ou emulador.
 
 ## Testes e cobertura
 
@@ -53,6 +103,8 @@ O roteiro começa no [README principal](../../README.md#3-funcionalidades-e-demo
 | Mobile: Jest e cobertura na CI | **2 testes em 2 suítes**, cobertura de linhas **76,47%** | [Log da CI](tests/consolidacao/ci-mobile.txt) |
 
 O [relatório de testes](tests/README.md) informa versão, ambiente, comandos, cobertura de ramos, exclusões do JaCoCo, tentativa web inicial e limites dos E2E. A meta de 80% é do backend, não das três aplicações em conjunto. A [CI do commit 6ab8cba](https://github.com/livdenner/ClinicalStudyPB-project/actions/runs/42728167544) concluiu seus quatro jobs com sucesso. O [histórico anterior](tests/historico-antes-t16-12.md) preserva as medições das versões anteriores sem misturá-las à tabela atual.
+
+A [validação de instalação limpa da T16.13](tests/t16-13/README.md) e seus logs preservam os resultados do recorte `2c6e854` (450 testes backend e 157 web). A tabela acima apresenta a consolidação posterior em `6ab8cba` (487 backend e 166 web); as duas execuções permanecem identificadas por versão.
 
 ## Processo das Sprints 1 e 2
 

@@ -34,24 +34,19 @@ Os arquivos mantêm a notação UML, as cores e o modelo Draw.io preexistentes. 
 
 ## 3. Funcionalidades e demonstração
 
-| Requisitos | Fluxo e perfil |
-| --- | --- |
-| RF01–RF03 | Administrador gerencia usuários; login/logout e autorização por perfil protegem as rotas web e HTTP. |
-| RF04 | Pesquisador cadastra, consulta e edita seus estudos; coordenador consulta estudos. |
-| RF05–RF07 | Pesquisador responsável cadastra critérios de inclusão/exclusão, configura visitas/atividades e altera o estado do estudo. |
-| RF08–RF10 | Coordenador cadastra candidatos, responde critérios e registra consentimento simulado. |
-| RF11 | Coordenador inclui candidato elegível com consentimento concedido e vaga disponível, pela API de inclusão. |
+| Requisitos | Fluxo e perfil | Situação na Release 1 |
+| --- | --- | --- |
+| RF01–RF03 | Administrador gerencia usuários; login/logout e autorização por perfil protegem as rotas web e HTTP. | Backend e web concluídos. |
+| RF04 | Pesquisador cadastra, consulta e edita seus estudos; coordenador consulta estudos. | Backend e web concluídos. |
+| RF05–RF07 | Pesquisador responsável cadastra critérios de inclusão/exclusão, configura visitas/atividades e altera o estado do estudo. | Backend e web concluídos. |
+| RF08–RF10 | Coordenador cadastra candidatos, responde critérios e registra consentimento simulado. | Backend e web concluídos. |
+| RF11 | Coordenador inclui candidato elegível com consentimento concedido e vaga disponível, pela API de inclusão. | Backend concluído; interface web em integração. |
+| Mobile | Estrutura inicial com navegação Início ↔ Estudos provisórios. | Escopo inicial concluído; login integrado na Sprint 3. |
+| DevOps/Qualidade | Compose, Flyway, carga fictícia e CI de backend, web, E2E e mobile. | Ambiente e pipeline validados; relatórios na release. |
 
 O [quadro RF01–RF11 da Release 1](releases/release1/README.md#rastreabilidade-dos-requisitos) identifica implementação, testes e integração de cada tela. A navegação de painel, visitas e relatórios que ainda usa protótipos não constitui evidência de persistência dessas funcionalidades.
 
-Depois da instalação, use as contas fictícias abaixo e siga o roteiro:
-
-1. Administrador: entre na web, abra **Usuários**, cadastre um usuário fictício e confira as validações de campos obrigatórios.
-2. Pesquisador: abra **Estudos clínicos**, crie um estudo em planejamento, cadastre critérios dos dois tipos e uma visita com atividade. Abra o recrutamento. A tentativa sem protocolo completo deve apresentar a pendência retornada pela API.
-3. Coordenador: em **Recrutamento**, selecione o estudo, cadastre candidato fictício, responda todos os critérios e salve a avaliação. Inclusões devem ser atendidas e exclusões não devem se aplicar para obter `ELIGIBLE`.
-4. Registre o consentimento simulado como aceito. Para a inclusão via API, consulte a operação `POST /api/studies/{studyId}/candidates/{candidateId}/inclusion` no Swagger; não há corpo JSON. A listagem usa `GET /api/studies/{studyId}/participants`.
-5. Faça logout e tente acessar diretamente uma rota protegida. Uma sessão ausente leva ao login; perfil sem permissão recebe acesso negado.
-6. Mobile: abra **ClinicalStudyPB → Ver estudos → Voltar ao início** no Expo Go ou emulador.
+O [roteiro da Release 1](releases/release1/README.md#roteiro-de-demonstração) detalha a demonstração por perfil, do cadastro de usuários à inclusão. Para o mobile, confira **ClinicalStudyPB → Ver estudos → Voltar ao início**.
 
 ![Critérios e recrutamento pela API real](releases/release1/images/05-criterios-sucesso.jpg)
 
@@ -152,13 +147,7 @@ Para iniciar novamente sem reconstruir a imagem, use `docker compose up -d`. Dep
 
 ### Banco e usuários de demonstração
 
-O backend recebe a conexão com o PostgreSQL pelas variáveis de ambiente `DB_URL`, `DB_USER` e `DB_PASSWORD`. Cada integrante configura esses valores para seu próprio ambiente. A senha de acesso ao banco não deve ser colocada no repositório.
-
-A assinatura e a validação dos JWTs usam a variável `JWT_SECRET_BASE64`, que deve conter uma chave aleatória codificada em Base64 com pelo menos 32 bytes. Defina a mesma chave em cada instância do backend e mantenha-a fora do Git. A validade padrão é de 3600 segundos e pode ser alterada com `JWT_EXPIRATION_SECONDS`.
-
-Ao iniciar o backend, o Flyway aplica as migrações pendentes: V1 cria `users`, V2 cria `studies`, V3 adiciona o estado do estudo, V4 cria o histórico de estados, visitas previstas e atividades, V5 cria candidatos, V6 cria critérios de estudo, V7 cria respostas de elegibilidade e V8 cria consentimentos simulados. V9 registra autoria e instante da avaliação; V10 prepara os vínculos de participantes para integração com a T15.1. A sequência e o protocolo de integração estão descritos em [elegibilidade e participantes](backend/docs/eligibility-integration.md). Estudos anteriores à V3 recebem `PLANNING`. O Hibernate valida a correspondência entre as tabelas e as entidades JPA, sem criar ou alterar tabelas automaticamente.
-
-Para carregar as contas fictícias no ambiente local ou de demonstração, execute **manualmente** `backend/dev/seed_demo_users.sql` no banco `clinicalstudypb`, esquema `public`, depois da migração V1. O script pode ser executado novamente sem duplicar as contas. Ele não é uma migração Flyway e não roda na inicialização do backend.
+As contas abaixo são criadas por `backend/dev/seed_demo_users.sql`, após as migrações. Execute os três scripts na ordem do comando anterior. O Flyway aplica V1–V10 e o Hibernate valida o esquema; o [guia do backend](backend/docs/eligibility-integration.md#migrações) descreve a persistência.
 
 | Perfil | E-mail | Senha de demonstração |
 | --- | --- | --- |
@@ -169,21 +158,14 @@ Para carregar as contas fictícias no ambiente local ou de demonstração, execu
 
 Essas credenciais são apenas para demonstração e podem ser usadas para obter um token de acesso pelo endpoint de login.
 
-Depois das contas, `backend/dev/seed_demo_studies.sql` cria um estudo fictício em cada estado, todos com o Pesquisador de demonstração como responsável. Cada estudo tem visitas previstas com atividades e um histórico de estados coerente com o estado atual. Esses dados permitem demonstrar estados e bloqueios de edição; o script não cria candidatos, avaliações, consentimentos ou participantes. A carga de recrutamento descrita a seguir complementa esses registros. O seed pode ser executado novamente: um estudo só é criado se ainda não houver outro com o mesmo título.
+A carga completa cria **seis estudos**, com visitas, critérios e cenários de recrutamento, incluindo **Higiene do sono em trabalhadores noturnos** e a disputa pela última vaga. Consulte a [tabela de estudos, candidatos e participantes/vagas](releases/release1/README.md#dados-e-seeds). Os scripts são repetíveis e também são verificados por `DemoSeedIntegrationTest` e pela stack E2E.
 
-Em seguida, `backend/dev/seed_demo_recruitment.sql` acrescenta critérios, candidatos, respostas de elegibilidade, consentimentos simulados e participantes, todos fictícios. Pode ser executado novamente: um estudo só recebe esses dados se ainda não tiver critérios nem candidatos.
-
-| Estudo | Estado | Visitas | Candidatos | Participantes / vagas | Para demonstrar |
-| --- | --- | --- | --- | --- | --- |
-| Adesão ao tratamento da hipertensão arterial | `PLANNING` | 2 | 0 | 0 / 60 | Edição do protocolo e abertura do recrutamento pela API. |
-| Vacina contra influenza em idosos | `RECRUITMENT` | 3 | 8 | 2 / 120 | Candidatos em todas as situações de elegibilidade e consentimento; volta para `PLANNING` e cancelamento com justificativa. |
-| Higiene do sono em trabalhadores noturnos | `RECRUITMENT` | 1 | 4 | 2 / 3 | Última vaga, com dois candidatos elegíveis e com consentimento concedido. |
-| Controle glicêmico no diabetes tipo 2 | `EXECUTION` | 3 | 4 | 3 / 40 | Protocolo bloqueado para edição. |
-| Reabilitação motora após AVC | `CLOSED` | 2 | 3 | 3 / 30 | Estado final: nenhuma transição é aceita. |
-| Tratamento da asma em crianças | `CANCELLED` | 1 | 2 | 0 / 50 | Restauração para `RECRUITMENT`, o estado de origem. |
-
-O teste `DemoSeedIntegrationTest` executa os três scripts no PostgreSQL do Testcontainers. Assim, uma migração nova que quebre o seed falha no CI. A stack de E2E também carrega os três scripts.
-
+```text
+backend/dev/
+├── seed_demo_users.sql
+├── seed_demo_studies.sql
+└── seed_demo_recruitment.sql
+```
 
 ### Variáveis das aplicações cliente
 
@@ -206,9 +188,7 @@ npm run dev
 
 Mantenha o terminal aberto e acesse o endereço exibido pelo Vite, normalmente `http://localhost:5173`. O proxy de desenvolvimento encaminha `/api` para `http://localhost:8080`; inicie o backend antes de testar o login. Use uma das [contas fictícias](#banco-e-usuários-de-demonstração).
 
-Em outro terminal, na pasta `web/`, valide o build com `npm run build`, os testes com `npm test` e a cobertura com `npm run test:coverage`. No PowerShell, use `npm.cmd` se a política de execução impedir o uso de `npm.ps1`.
-
-Se a inicialização dos workers de teste falhar por timeout em uma máquina ocupada, encerre outras compilações e repita com `npm run test:coverage -- --maxWorkers=1`. Isso limita o paralelismo, preservando os testes e os timeouts configurados.
+No PowerShell, use `npm.cmd` se a política de execução impedir o uso de `npm.ps1`. Os comandos de validação estão na [seção de testes](#6-testes-cobertura-e-qualidade).
 
 ### Aplicativo mobile inicial
 
@@ -224,16 +204,7 @@ Para telefone Android, conecte-o à mesma rede Wi-Fi do computador, abra o Expo 
 
 Confira a tela **ClinicalStudyPB**, toque em **Ver estudos** e depois em **Voltar ao início**. Essa é a navegação provisória da Release 1: não há login, sessão ou integração de negócio mobile; o login integrado está previsto para a Sprint 3. Não é necessário configurar a URL da API para abrir essas telas.
 
-Em outro terminal, na pasta `mobile/`, execute:
-
-```bash
-npm test -- --runInBand
-npx tsc --noEmit
-npx expo install --check
-```
-
-No PowerShell, os equivalentes são `npm.cmd` e `npx.cmd`. A abertura em navegador não substitui a conferência em emulador ou dispositivo. Para configuração de API, alternativas de conexão e passagem de contexto, consulte [mobile/README.md](mobile/README.md).
-
+Para configuração de API, alternativas de conexão e passagem de contexto, consulte [mobile/README.md](mobile/README.md). Execute também os [testes e a verificação de compatibilidade](#6-testes-cobertura-e-qualidade).
 
 ### Backend fora do contêiner (alternativa)
 
@@ -243,28 +214,15 @@ O [relatório de instalação limpa](releases/release1/tests/t16-13/README.md) r
 
 ## 6. Testes, cobertura e qualidade
 
-### Testes do backend
+### Backend
 
-Na pasta `backend/`, com Java 21 e o Docker em execução:
-
-```bash
-./mvnw test
-```
-
-No PowerShell, use `.\mvnw.cmd test`. O Docker é necessário porque os testes de integração usam Testcontainers para subir um PostgreSQL descartável, removido ao final da execução. Sem ele, esses testes falham e o comando termina com erro.
-
-Para executar Checkstyle, testes e a verificação da cobertura mínima de 80%, use `./mvnw verify` (PowerShell: `.\mvnw.cmd verify`). Os relatórios ficam em `backend/target/surefire-reports/` e `backend/target/site/jacoco/index.html`. A construção da imagem Docker pula os testes e não substitui essa verificação.
-
-### Documentação Javadoc
-
-As classes Java do backend, incluindo os testes, registram autor, data de introdução (`@since`) e versão (`@version`). Para gerar a documentação das classes de produção, execute na pasta `backend/`:
+Na pasta `backend/`, com Java 21 e Docker ativo, execute Checkstyle, testes e verificação da cobertura mínima de 80%:
 
 ```bash
-./mvnw javadoc:javadoc
+./mvnw verify
 ```
 
-No Windows, use `.\mvnw.cmd javadoc:javadoc`. O resultado fica em `backend/target/reports/apidocs/index.html`. O plugin Maven Javadoc 3.12.0 valida a documentação e falha se houver avisos.
-
+No PowerShell, use `.\mvnw.cmd verify`. O Testcontainers cria um PostgreSQL descartável para os testes de integração. Os relatórios ficam em `backend/target/surefire-reports/` e `backend/target/site/jacoco/index.html`. A construção da imagem Docker pula testes e não substitui essa verificação. A [documentação Java](backend/docs/release1-api.md#documentação-java) tem instruções próprias de geração.
 
 ### Web e mobile
 
@@ -290,7 +248,7 @@ npm run test:e2e:report
 npm run e2e:stack:down
 ```
 
-No Linux, se faltarem dependências do navegador, use `npx playwright install --with-deps chromium`. A stack E2E tem banco descartável e backend próprios; não usa o volume do ambiente de desenvolvimento. O Playwright compila e serve a web com proxy para essa API. Os relatórios ficam em `web/playwright-report/` e `web/test-results/`.
+No Linux, se faltarem dependências do navegador, use `npx playwright install --with-deps chromium`. O [guia de contribuição](CONTRIBUTING.md#testes-e2e-playwright) detalha o Playwright e os padrões de qualidade. A stack E2E tem banco descartável e backend próprios; não usa o volume do ambiente de desenvolvimento. O Playwright compila e serve a web com proxy para essa API. Os relatórios ficam em `web/playwright-report/` e `web/test-results/`.
 
 Na pasta `mobile/`:
 
@@ -298,9 +256,10 @@ Na pasta `mobile/`:
 npm ci
 npm test -- --ci --runInBand --coverage
 npx tsc --noEmit
+npx expo install --check
 ```
 
-A cobertura fica em `mobile/coverage/`. Os testes de tela não substituem a abertura real no Android. A verificação de compatibilidade do Expo e suas observações ficam no [relatório da T16.13](releases/release1/tests/t16-13/README.md).
+A cobertura fica em `mobile/coverage/`. Confira também a abertura real no Android. Recomendações do Expo devem ser registradas antes de alterar o lockfile; veja o [relatório da T16.13](releases/release1/tests/t16-13/README.md).
 
 A [CI](.github/workflows/ci.yml) executa backend, web, E2E e mobile em PRs e pushes para `development` e `main`, publicando artefatos JaCoCo, JUnit, Vitest, Jest e Playwright. O JaCoCo exige **80% de linhas no backend**, com as exclusões técnicas declaradas no POM; não se aplica esse mesmo limite à cobertura web/mobile. Os [resultados versionados da Release 1](releases/release1/tests/README.md) identificam comandos, versão, contagens e evidências.
 
@@ -317,6 +276,4 @@ No PowerShell, ambos devem responder `200`:
 
 Em bash, use `curl -f http://localhost:8080/v3/api-docs`. Se a conexão falhar, consulte `docker compose ps` e `docker compose logs backend`.
 
-Faça `POST /api/auth/login` com e-mail e senha fictícios, copie `accessToken` e use **Authorize** no Swagger para enviar o JWT Bearer. Operações protegidas exigem `Authorization: Bearer <token>`. O logout `POST /api/auth/logout` confirma o encerramento; o cliente remove o token. Como a autenticação é stateless, tokens emitidos continuam válidos até expirar.
-
-As rotas usam `/api`, conforme o contrato. Gravações de visitas/atividades exigem `If-Match` com a `version` atual do estudo entre aspas; transições de estado enviam `expectedStatus`. Uma versão ou estado desatualizado recebe `409` e exige nova consulta antes de repetir. Consulte o [resumo dos contratos e regras](backend/docs/release1-api.md).
+Autentique com as credenciais fictícias em `POST /api/auth/login` e use **Authorize** com o JWT retornado. As rotas usam `/api`. Consulte operações, permissões, controle de versão e regras de negócio no [resumo da API](backend/docs/release1-api.md), incluindo `GET/POST /api/studies/{studyId}/criteria` e a inclusão de participantes.

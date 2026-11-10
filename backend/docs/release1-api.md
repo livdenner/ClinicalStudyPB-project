@@ -4,10 +4,10 @@
 
 | RF | Base HTTP | Operações |
 | --- | --- | --- |
-| RF01 | `/api/users` | GET/POST; GET/PUT `/{id}`; PATCH `/{id}/activation`. Exclusivo de administrador. |
+| RF01 | `/api/users` | GET/POST; GET/PUT/DELETE `/{id}`; PATCH `/{id}/activate` e `/{id}/deactivate`. Exclusivo de administrador. |
 | RF02–RF03 | `/api/auth` | POST `/login` e `/logout`; JWT e autorização nas rotas protegidas. |
 | RF04 | `/api/studies` | GET/POST; GET/PUT `/{id}`. Escrita pelo pesquisador responsável. |
-| RF05 | `/api/studies/{studyId}/criteria` | GET/POST; tipos `INCLUSION` e `EXCLUSION`. Critérios cadastrados são preservados para auditoria. |
+| RF05 | `/api/studies/{studyId}/criteria` | GET/POST; GET `/{criterionId}`; tipos `INCLUSION` e `EXCLUSION`. Critérios cadastrados são preservados para auditoria. |
 | RF06 | `/api/studies/{studyId}/planned-visits` | Visitas e atividades ordenadas; consultar operações e sub-rotas no OpenAPI. Escritas com `If-Match`. |
 | RF07 | `/api/studies/{id}/status` | PATCH com `status`, `expectedStatus` e, no cancelamento, `reason`; GET `/{id}/status-history`. |
 | RF08 | `/api/studies/{studyId}/candidates` | GET/POST; GET `/{candidateId}`. Cadastro exclusivo do coordenador em recrutamento. |
@@ -34,3 +34,7 @@ A inclusão exige `RECRUITMENT`, candidato `ELIGIBLE`, consentimento `GRANTED`, 
 `400`: dados inválidos; `401`: autenticação ausente/inválida; `403`: perfil ou responsável sem permissão; `404`: recurso inexistente ou fora do estudo da rota; `409`: conflito de versão ou regra de negócio. A web apresenta as mensagens retornadas e preserva o formulário após falhas.
 
 Não use credenciais pessoais ou dados de pacientes na demonstração. Os modelos `.env.example` não contêm a chave de assinatura; cada instalação gera sua própria chave.
+
+## Documentação Java
+
+Na pasta `backend/`, com JDK 21, execute `./mvnw javadoc:javadoc` (PowerShell: `.\mvnw.cmd javadoc:javadoc`). O resultado fica em `backend/target/reports/apidocs/index.html`. O plugin Maven Javadoc 3.12.0 valida a documentação e falha se houver avisos. As classes registram autor, data de introdução (`@since`) e versão (`@version`), conforme as convenções do projeto.
