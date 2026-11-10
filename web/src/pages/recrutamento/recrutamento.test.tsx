@@ -497,4 +497,136 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
             screen.getByRole("button", { name: "Incluir participante: Candidato 021" })
         ).toBeEnabled();
     });
+
+    it("mantém o botão de inclusão desabilitado quando o estudo já atingiu o limite de vagas", async () => {
+        const estudoUmaVaga: EstudoComStatusApi = {
+            ...estudoRecrutamento,
+            participantLimit: 1,
+        };
+
+        mockApiPorRota({
+            ...rotasDoEstudo([candidatoElegivel], "GRANTED"),
+            "GET /api/studies": resposta([estudoUmaVaga]),
+            "GET /api/studies/10/participants": resposta([
+                {
+                    id: 501,
+                    studyId: 10,
+                    candidateId: 100,
+                    candidateName: "Candidato 001",
+                    includedAt: "2026-11-09T10:00:00Z",
+                },
+            ]),
+        });
+
+        renderPage();
+
+        expect(await screen.findByText("Aceito")).toBeInTheDocument();
+
+        const indicadorVagas = screen.getByRole("status", {
+            name: "Indicador de vagas do estudo",
+        });
+        expect(indicadorVagas).toHaveTextContent("Vagas ocupadas: 1 de 1");
+        expect(indicadorVagas).toHaveTextContent("Saldo disponível: 0 vagas");
+        expect(indicadorVagas).toHaveTextContent("Limite de vagas atingido");
+
+        const botaoSemVaga = screen.getByRole("button", {
+            name: "Incluir participante: Candidato 021",
+        });
+        expect(botaoSemVaga).toBeDisabled();
+        expect(botaoSemVaga).toHaveAttribute(
+            "title",
+            "O estudo atingiu o limite de vagas disponíveis."
+        );
+    });
+
+    it("exibe o motivo específico retornado pela API (HTTP 409) quando a última vaga esgota antes da resposta", async () => {
+        mockApiPorRota({
+            ...rotasDoEstudo([candidatoElegivel], "GRANTED"),
+            "POST /api/studies/10/candidates/102/inclusion": resposta(
+                {
+                    code: "INCLUSION_CONFLICT",
+                    message: "O estudo atingiu o limite de participantes.",
+                },
+                409
+            ),
+        });
+
+        renderPage();
+
+        expect(await screen.findByText("Aceito")).toBeInTheDocument();
+        fireEvent.click(
+            screen.getByRole("button", { name: "Incluir participante: Candidato 021" })
+        );
+
+        const dialog = await screen.findByRole("dialog", {
+            name: "Confirmar inclusão de participante",
+        });
+        fireEvent.click(within(dialog).getByRole("button", { name: "Confirmar inclusão" }));
+
+        expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+            "O estudo atingiu o limite de participantes."
+        );
+        expect(
+            screen.getByRole("dialog", { name: "Confirmar inclusão de participante" })
+        ).toBeInTheDocument();
+    });
+
+    it("bloqueia clique duplo e dispara exatamente uma requisição durante a confirmação de inclusão", async () => {
+        let concluirInclusao!: (response: Response) => void;
+        const pendenteInclusao = new Promise<Response>((resolve) => {
+            concluirInclusao = resolve;
+        });
+
+        const rotasBase = rotasDoEstudo([candidatoElegivel], "GRANTED");
+        const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
+            const rota = `${(init?.method ?? "GET").toUpperCase()} ${String(input)}`;
+            if (rota === "POST /api/studies/10/candidates/102/inclusion") {
+                return pendenteInclusao;
+            }
+            const respostaRota = (rotasBase as Record<string, Response | undefined>)[rota];
+            if (!respostaRota) {
+                throw new Error(`Rota não simulada: ${rota}`);
+            }
+            return respostaRota.clone();
+        });
+
+        renderPage();
+
+        expect(await screen.findByText("Aceito")).toBeInTheDocument();
+        fireEvent.click(
+            screen.getByRole("button", { name: "Incluir participante: Candidato 021" })
+        );
+
+        const dialog = await screen.findByRole("dialog", {
+            name: "Confirmar inclusão de participante",
+        });
+        const botaoConfirmar = within(dialog).getByRole("button", { name: "Confirmar inclusão" });
+
+        fireEvent.click(botaoConfirmar);
+        fireEvent.click(botaoConfirmar);
+        fireEvent.click(botaoConfirmar);
+
+        const chamadasInclusao = fetchMock.mock.calls.filter(
+            ([url, init]) =>
+                url === "/api/studies/10/candidates/102/inclusion" && init?.method === "POST"
+        );
+        expect(chamadasInclusao).toHaveLength(1);
+
+        await act(async () =>
+            concluirInclusao(
+                resposta(
+                    {
+                        id: 502,
+                        studyId: 10,
+                        candidateId: 102,
+                        candidateName: "Candidato 021",
+                        includedAt: "2026-11-09T17:00:00Z",
+                    },
+                    201
+                )
+            )
+        );
+
+        await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    });
 });
