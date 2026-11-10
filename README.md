@@ -40,7 +40,7 @@ Os arquivos mantêm a notação UML, as cores e o modelo Draw.io preexistentes. 
 | RF04 | Pesquisador cadastra, consulta e edita seus estudos; coordenador consulta estudos. | Backend e web concluídos. |
 | RF05–RF07 | Pesquisador responsável cadastra critérios de inclusão/exclusão, configura visitas/atividades e altera o estado do estudo. | Backend e web concluídos. |
 | RF08–RF10 | Coordenador cadastra candidatos, responde critérios e registra consentimento simulado. | Backend e web concluídos. |
-| RF11 | Coordenador inclui candidato elegível com consentimento concedido e vaga disponível, pela API de inclusão. | Backend concluído; interface web em integração. |
+| RF11 | Coordenador inclui candidato elegível com consentimento concedido e vaga disponível, com painel de vagas e confirmação. | Backend e web concluídos. |
 | Mobile | Estrutura inicial com navegação Início ↔ Estudos provisórios. | Escopo inicial concluído; login integrado na Sprint 3. |
 | DevOps/Qualidade | Compose, Flyway, carga fictícia e CI de backend, web, E2E e mobile. | Ambiente e pipeline validados; relatórios na release. |
 
