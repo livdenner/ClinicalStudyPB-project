@@ -228,7 +228,7 @@ Para carregar as contas fictícias no ambiente local ou de demonstração, execu
 
 Essas credenciais são apenas para demonstração e podem ser usadas para obter um token de acesso pelo endpoint de login.
 
-Depois das contas, `backend/dev/seed_demo_studies.sql` cria um estudo fictício em cada estado, todos com o Pesquisador de demonstração como responsável. Cada estudo tem visitas previstas com atividades e um histórico de estados coerente com o estado atual. Esses dados permitem demonstrar estados e bloqueios de edição; o script não cria candidatos, avaliações, consentimentos ou participantes. Para demonstrar recrutamento e inclusão, cadastre os dados pelos fluxos correspondentes, respeitando as pré-condições da API. O seed pode ser executado novamente: um estudo só é criado se ainda não houver outro com o mesmo título.
+Depois das contas, `backend/dev/seed_demo_studies.sql` cria os seis estudos da tabela abaixo, com o Pesquisador de demonstração como responsável, visitas previstas com atividades e histórico de estados. A carga cobre todos os estados e acrescenta o cenário de disputa pela última vaga. O script pode ser executado novamente: um estudo só é criado se ainda não houver outro com o mesmo título.
 
 Em seguida, `backend/dev/seed_demo_recruitment.sql` acrescenta critérios, candidatos, respostas de elegibilidade, consentimentos simulados e participantes, todos fictícios. Pode ser executado novamente: um estudo só recebe esses dados se ainda não tiver critérios nem candidatos.
 
@@ -310,6 +310,8 @@ A API usa a base `/api/studies` e segue o contrato em `backend/openapi.yaml`. Pe
 | `PUT /api/studies/{id}` | Atualizar estudo | `200` |
 | `PATCH /api/studies/{id}/status` | Alterar o estado do estudo | `200` |
 | `GET /api/studies/{id}/status-history` | Consultar quem alterou o estado e quando | `200` |
+| `GET/POST /api/studies/{studyId}/criteria` | Listar ou cadastrar critérios de inclusão e exclusão | `200/201` |
+| `GET /api/studies/{studyId}/criteria/{criterionId}` | Consultar um critério do estudo | `200` |
 | `GET/POST /api/studies/{id}/planned-visits` | Listar ou cadastrar visitas previstas | `200/201` |
 | `GET/PUT/DELETE /api/studies/{id}/planned-visits/{visitId}` | Consultar, editar ou excluir uma visita | `200/200/204` |
 | `PUT /api/studies/{id}/planned-visits/order` | Reordenar visitas | `200` |
