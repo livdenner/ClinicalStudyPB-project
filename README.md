@@ -1,5 +1,22 @@
 # ClinicalStudyPB-project
 
+## Primeira execução
+
+Pré-requisitos: Git, Docker com Docker Compose e Node.js 22 com npm (a versão usada no CI). Para executar o backend fora do Docker, instale também o JDK 21; o Maven é fornecido pelo Wrapper. Para o mobile, use um telefone Android com Expo Go compatível com o SDK do projeto ou um emulador configurado no Android Studio.
+
+Em uma pasta de sua escolha, obtenha o projeto:
+
+```bash
+git clone https://github.com/livdenner/ClinicalStudyPB-project.git
+cd ClinicalStudyPB-project
+```
+
+Siga esta ordem: [configure e suba banco/backend](#executando-com-docker-compose), carregue os dados fictícios, confira o [Swagger UI](#swagger-ui-e-openapi), inicie a [web](#aplicação-web) e abra o [mobile](#aplicativo-mobile-inicial). Execute os comandos na pasta indicada; o `npm test` da raiz não executa os testes das três aplicações.
+
+O arquivo `.env` contém configurações locais e não é versionado. Não copie arquivos `.env`, `node_modules` ou dados de banco de outra instalação para validar uma instalação limpa.
+
+Os comandos, resultados e limitações da conferência estão no [relatório de instalação limpa da T16.13](releases/release1/tests/t16-13/README.md).
+
 ## Arquitetura utilizada
 
 ### Decisão arquitetural
@@ -25,7 +42,7 @@ O backend valida as requisições, aplica as regras de negócio, controla as per
 | Build do backend | Maven 3.9.9, fixado pelo Maven Wrapper (`mvnw` e `mvnw.cmd`) |
 | Banco de dados | PostgreSQL 18 |
 | Documentação da API | OpenAPI com springdoc-openapi 2.8.17 e Swagger UI |
-| Web | React 19.3.1, TypeScript 7.0.2 e Vite 8.3.5; Tailwind CSS 4.3.3, HeroUI 3.2.6 e Lucide React 1.61.0 |
+| Web | React 19.3.1, TypeScript 6.0.3 e Vite 8.3.5; Tailwind CSS 4.3.3, HeroUI 3.2.6 e Lucide React 1.61.0 |
 | Mobile | React Native 0.88.0, Expo SDK 58 (`expo ~58.0.19`) e TypeScript ~6.0.3; detalhes de instalação e handoff em [mobile/README.md](mobile/README.md) |
 
 O `backend/pom.xml` declara Java, Spring Boot e springdoc. As versões das demais dependências Java são gerenciadas pelo `spring-boot-starter-parent`. O ambiente de desenvolvimento da equipe é reproduzido com Docker Compose; veja [Executando com Docker Compose](#executando-com-docker-compose).
@@ -36,17 +53,45 @@ A aplicação web fica em `web/` e usa React com TypeScript, Vite, Tailwind CSS,
 
 ```bash
 cd web
-npm install
+npm ci
 npm run dev
 ```
 
-O build de produção pode ser validado com `npm run build` e os testes com `npm test`.
+Mantenha o terminal aberto e acesse o endereço exibido pelo Vite, normalmente `http://localhost:5173`. O proxy de desenvolvimento encaminha `/api` para `http://localhost:8080`; inicie o backend antes de testar o login. Use uma das [contas fictícias](#banco-e-usuários-de-demonstração).
 
-#### Gestão de estudos clínicos (Tarefa 3146)
+Em outro terminal, na pasta `web/`, valide o build com `npm run build`, os testes com `npm test` e a cobertura com `npm run test:coverage`. No PowerShell, use `npm.cmd` se a política de execução impedir o uso de `npm.ps1`.
 
-A rota `/estudos` disponibiliza listagem, busca por título, cadastro e edição para pesquisadores. A ação Visualizar abre `/estudos/{id}`. Os dados são consultados e persistidos pela API `/api/studies`, com JWT, e permanecem disponíveis ao recarregar a página. O contrato atual contém título, objetivo, responsável, datas e limite de participantes; ainda não contém estado do estudo ou quantidade de participantes alocados.
+Se a inicialização dos workers de teste falhar por timeout em uma máquina ocupada, encerre outras compilações e repita com `npm run test:coverage -- --maxWorkers=1`. Isso limita o paralelismo, preservando os testes e os timeouts configurados.
 
-A rota `/usuarios` permite ao administrador listar, filtrar, cadastrar, editar, ativar e desativar usuários pela API `/api/users`. Administradores não têm acesso à gestão de estudos; pesquisadores não têm acesso à gestão de usuários; coordenadores não têm acesso a essas duas áreas, conforme as permissões atuais do backend. O login e o logout utilizam `/api/v1/auth`. Os mocks dos protótipos de outras seções não são usados para persistir usuários ou estudos.
+### Aplicativo mobile inicial
+
+Abra outro terminal na raiz do repositório:
+
+```bash
+cd mobile
+npm ci
+npm start
+```
+
+Para telefone Android, conecte-o à mesma rede Wi-Fi do computador, abra o Expo Go e leia o QR code exibido pelo Expo. O Expo Go deve ser compatível com o Expo SDK 58 usado pelo projeto. Para emulador, inicie o dispositivo no Android Studio e execute `npm run android` na pasta `mobile/`, ou pressione `a` no terminal do Expo.
+
+Confira a tela **ClinicalStudyPB**, toque em **Ver estudos** e depois em **Voltar ao início**. Essa é a navegação provisória da Release 1: não há login, sessão ou integração de negócio mobile; o login integrado está previsto para a Sprint 3. Não é necessário configurar a URL da API para abrir essas telas.
+
+Em outro terminal, na pasta `mobile/`, execute:
+
+```bash
+npm test -- --runInBand
+npx tsc --noEmit
+npx expo install --check
+```
+
+No PowerShell, os equivalentes são `npm.cmd` e `npx.cmd`. A abertura em navegador não substitui a conferência em emulador ou dispositivo. Para configuração de API, alternativas de conexão e passagem de contexto, consulte [mobile/README.md](mobile/README.md).
+
+### Gestão de estudos clínicos (Tarefa 3146)
+
+A rota `/estudos` disponibiliza listagem, busca por título, cadastro e edição para pesquisadores. A ação Visualizar abre `/estudos/{id}`. Os dados são consultados e persistidos pela API `/api/studies`, com JWT, e permanecem disponíveis ao recarregar a página. A resposta inclui título, objetivo, responsável, datas, limite de participantes, `status` e `version`; não inclui a quantidade de participantes alocados.
+
+A rota `/usuarios` permite ao administrador listar, filtrar, cadastrar, editar, ativar e desativar usuários pela API `/api/users`. Administradores não têm acesso à gestão de estudos; pesquisadores e coordenadores não têm acesso à gestão de usuários. Coordenadores podem consultar estudos e visitas previstas; alterações do protocolo pertencem ao pesquisador responsável. O login e o logout utilizam `/api/auth`. Os mocks dos protótipos de outras seções não são usados para persistir usuários ou estudos.
 
 O roteiro e os resultados de regressão de RF01 a RF04 estão no [README da Release 1](releases/release1/README.md#regressão-de-usuários-e-estudos-task-3479).
 
@@ -124,7 +169,15 @@ No Windows (PowerShell): `Copy-Item .env.example .env`.
 | `JWT_SECRET_BASE64` | Sim | Chave de assinatura dos JWTs: Base64 de pelo menos 32 bytes aleatórios. Gere com `openssl rand -base64 32`. Mantenha fora do Git. |
 | `JWT_EXPIRATION_SECONDS` | Não | Validade do token em segundos. Padrão: `3600`. |
 
-Sem `openssl`, é possível gerar a chave no PowerShell: `[Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))`. Se `DB_PASSWORD` ou `JWT_SECRET_BASE64` não estiverem definidos, o Docker Compose interrompe a execução e informa qual variável falta.
+Sem `openssl`, gere uma chave com o Node.js (também funciona no PowerShell) e copie o resultado para `JWT_SECRET_BASE64` no `.env`:
+
+```bash
+node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))"
+```
+
+Substitua os valores de exemplo de `DB_PASSWORD` e `JWT_SECRET_BASE64`; o texto de exemplo da chave não é uma chave válida. Se uma dessas variáveis estiver vazia, o Docker Compose interrompe a execução e informa qual falta.
+
+Se a porta `15432` já estiver ocupada, escolha uma porta livre em `DB_HOST_PORT` antes de iniciar. A porta `8080` deve estar livre para o backend. Os nomes de contêiner definidos no Compose também precisam estar disponíveis. Não remova contêineres ou volumes de outra instalação para contornar um conflito.
 
 **3. Suba a stack** (a primeira execução constrói a imagem do backend):
 
@@ -134,7 +187,7 @@ docker compose ps
 docker compose logs -f backend
 ```
 
-O backend só inicia depois que o banco estiver saudável, e o Flyway aplica as migrações na primeira inicialização.
+O backend só inicia depois que o banco estiver saudável, e o Flyway aplica as migrações na primeira inicialização. Espere o log informar a inicialização da aplicação e confirme o Swagger UI antes de carregar o seed. Use `Ctrl+C` para sair do acompanhamento dos logs; os contêineres continuam ativos.
 
 **4. (Opcional) Carregue os dados de demonstração** (contas e estudos), depois que o backend tiver iniciado e aplicado as migrações. Os comandos funcionam no bash e no PowerShell:
 
@@ -174,7 +227,7 @@ Para carregar as contas fictícias no ambiente local ou de demonstração, execu
 
 Essas credenciais são apenas para demonstração e podem ser usadas para obter um token de acesso pelo endpoint de login.
 
-Depois das contas, `backend/dev/seed_demo_studies.sql` cria um estudo fictício em cada estado, todos com o Pesquisador de demonstração como responsável. Cada estudo tem visitas previstas com atividades e um histórico de estados coerente com o estado atual. Como a API ainda não avança um estudo além de `PLANNING` (faltam critérios e participantes), o script é hoje a forma de demonstrar os demais estados. Ele também pode ser executado novamente: um estudo só é criado se ainda não houver outro com o mesmo título.
+Depois das contas, `backend/dev/seed_demo_studies.sql` cria um estudo fictício em cada estado, todos com o Pesquisador de demonstração como responsável. Cada estudo tem visitas previstas com atividades e um histórico de estados coerente com o estado atual. Esses dados permitem demonstrar estados e bloqueios de edição; o script não cria candidatos, avaliações, consentimentos ou participantes. Para demonstrar recrutamento e inclusão, cadastre os dados pelos fluxos correspondentes, respeitando as pré-condições da API. O seed pode ser executado novamente: um estudo só é criado se ainda não houver outro com o mesmo título.
 
 | Estudo | Estado | Visitas | Para demonstrar |
 | --- | --- | --- | --- |
@@ -308,7 +361,9 @@ Na pasta `backend/`, com Java 21 e o Docker em execução:
 ./mvnw test
 ```
 
-No Windows, use `mvnw.cmd test`. O Docker é necessário porque os testes de integração usam Testcontainers para subir um PostgreSQL descartável, removido ao final da execução. Sem ele, esses testes falham e o comando termina com erro. O mesmo vale para `./mvnw verify`, que também executa os testes.
+No PowerShell, use `.\mvnw.cmd test`. O Docker é necessário porque os testes de integração usam Testcontainers para subir um PostgreSQL descartável, removido ao final da execução. Sem ele, esses testes falham e o comando termina com erro.
+
+Para executar Checkstyle, testes e a verificação da cobertura mínima de 80%, use `./mvnw verify` (PowerShell: `.\mvnw.cmd verify`). Os relatórios ficam em `backend/target/surefire-reports/` e `backend/target/site/jacoco/index.html`. A construção da imagem Docker pula os testes e não substitui essa verificação.
 
 ### Documentação Javadoc
 
@@ -332,6 +387,13 @@ curl -s -o /dev/null -w 'OpenAPI: %{http_code}\n' http://localhost:8080/v3/api-d
 ```
 
 Ambos devem retornar `200`. Se a conexão for recusada, confira se o backend continua em execução; o terminal de `./mvnw spring-boot:run` deve permanecer aberto.
+
+No PowerShell, consulte os mesmos endereços com:
+
+```powershell
+(Invoke-WebRequest -UseBasicParsing http://localhost:8080/swagger-ui/index.html).StatusCode
+(Invoke-WebRequest -UseBasicParsing http://localhost:8080/v3/api-docs).StatusCode
+```
 
 ### Estado atual
 
