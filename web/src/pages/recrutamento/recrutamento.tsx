@@ -3,7 +3,9 @@ import { Plus, Search } from "lucide-react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { AvaliacaoElegibilidade } from "../../components/candidatos/AvaliacaoElegibilidade";
 import { ConsentimentoSimulado } from "../../components/candidatos/ConsentimentoSimulado";
+import { ModalConfirmarInclusao } from "../../components/candidatos/ModalConfirmarInclusao";
 import { ModalNovoCandidato } from "../../components/candidatos/ModalNovoCandidato";
+import { PainelParticipantesVagas } from "../../components/candidatos/PainelParticipantesVagas";
 import { TabelaCandidatos } from "../../components/candidatos/TabelaCandidatos";
 import { Button } from "../../components/ui/Button";
 import { ErrorMessage } from "../../components/ui/ErrorMessage";
@@ -11,6 +13,10 @@ import { useAuth } from "../../context/AuthContext";
 import { ApiClientError } from "../../services/api/apiClient";
 import { cadastrarCandidato, listarCandidatosPorEstudo } from "../../services/candidatos";
 import { listarEstudos } from "../../services/estudos";
+import {
+    incluirParticipanteNoEstudo,
+    listarParticipantesPorEstudo,
+} from "../../services/participantes";
 import type { UserRole } from "../../types/auth";
 import {
     STATUS_ESTUDO_LABELS,
@@ -21,6 +27,7 @@ import {
     type StatusEstudoCandidato,
 } from "../../types/candidato";
 import type { StatusConsentimentoApi } from "../../types/consentimento";
+import type { ParticipanteApi } from "../../types/participante";
 
 const PERFIS_PERMITIDOS: UserRole[] = ["COORDINATOR", "RESEARCHER"];
 const CONSENTIMENTO_CACHE_KEY = "clinicalstudypb.consentimentos";
@@ -125,11 +132,17 @@ function GestaoCandidatos({
     const [erroCandidatos, setErroCandidatos] = useState("");
     const [tentativaCandidatos, setTentativaCandidatos] = useState(0);
 
+    const [participantes, setParticipantes] = useState<ParticipanteApi[]>([]);
+    const [carregandoParticipantes, setCarregandoParticipantes] = useState(false);
+    const [erroParticipantes, setErroParticipantes] = useState("");
+    const [tentativaParticipantes, setTentativaParticipantes] = useState(0);
+
     const [busca, setBusca] = useState("");
     const [modalAberto, setModalAberto] = useState(false);
     const [mensagemSucesso, setMensagemSucesso] = useState("");
     const [candidatoAvaliandoId, setCandidatoAvaliandoId] = useState<number | null>(null);
     const [candidatoConsentimentoId, setCandidatoConsentimentoId] = useState<number | null>(null);
+    const [candidatoIncluindo, setCandidatoIncluindo] = useState<CandidatoApi | null>(null);
     const [termosConsentimento, setTermosConsentimento] = useState<Record<number, string>>(() => {
         const cache = lerCacheConsentimentos();
         const inicial: Record<number, string> = {};
@@ -152,6 +165,8 @@ function GestaoCandidatos({
                 if (primeiroId !== null) {
                     setCarregandoCandidatos(true);
                     setErroCandidatos("");
+                    setCarregandoParticipantes(true);
+                    setErroParticipantes("");
                 }
             })
             .catch((error: unknown) => {
@@ -223,6 +238,46 @@ function GestaoCandidatos({
         return () => controller.abort();
     }, [estudoSelecionadoId, token, tentativaCandidatos]);
 
+    useEffect(() => {
+        if (estudoSelecionadoId === null) {
+            return;
+        }
+
+        const controller = new AbortController();
+
+        listarParticipantesPorEstudo(estudoSelecionadoId, token, controller.signal)
+            .then((dados) => {
+                if (!controller.signal.aborted) {
+                    setParticipantes(Array.isArray(dados) ? dados : []);
+                }
+            })
+            .catch((error: unknown) => {
+                if (controller.signal.aborted) return;
+                if (error instanceof ApiClientError && error.status === 401) {
+                    setErroParticipantes(
+                        "Sua sessão não é mais válida. Entre novamente para continuar."
+                    );
+                } else if (error instanceof ApiClientError && error.status === 403) {
+                    setErroParticipantes(
+                        "Você não tem permissão para consultar os participantes deste estudo."
+                    );
+                } else if (error instanceof ApiClientError && error.status === 404) {
+                    setErroParticipantes("O estudo selecionado não foi encontrado.");
+                } else {
+                    setErroParticipantes(
+                        "Não foi possível carregar os participantes do estudo. Tente novamente."
+                    );
+                }
+            })
+            .finally(() => {
+                if (!controller.signal.aborted) {
+                    setCarregandoParticipantes(false);
+                }
+            });
+
+        return () => controller.abort();
+    }, [estudoSelecionadoId, token, tentativaParticipantes]);
+
     const estudoSelecionado =
         estudoSelecionadoId !== null
             ? (estudos.find((estudo) => estudo.id === estudoSelecionadoId) ?? null)
@@ -238,12 +293,33 @@ function GestaoCandidatos({
         !carregandoEstudos &&
         !erroEstudos;
 
+    const limiteVagas = estudoSelecionado?.participantLimit ?? 0;
+    const vagasOcupadas = participantes.length;
+    const vagasDisponiveis = Math.max(0, limiteVagas - vagasOcupadas);
+    const participantesCandidatoIds = new Set(participantes.map((p) => p.candidateId));
+
     async function handleCadastrar(dados: DadosCandidatoApi) {
         if (!estudoSelecionado) return;
         const novo = await cadastrarCandidato(estudoSelecionado.id, dados, token);
         setCandidatos((atuais) => [...atuais, novo]);
         setModalAberto(false);
         setMensagemSucesso("Candidato cadastrado com sucesso.");
+    }
+
+    async function handleConfirmarInclusao() {
+        if (!estudoSelecionado || !candidatoIncluindo) return;
+        const novoParticipante = await incluirParticipanteNoEstudo(
+            estudoSelecionado.id,
+            candidatoIncluindo.id,
+            token
+        );
+        setParticipantes((atuais) =>
+            atuais.some((p) => p.id === novoParticipante.id)
+                ? atuais
+                : [...atuais, novoParticipante]
+        );
+        setCandidatoIncluindo(null);
+        setMensagemSucesso("Participante incluído no estudo com sucesso.");
     }
 
     function handleAtualizarStatusCandidato(
@@ -377,14 +453,20 @@ function GestaoCandidatos({
                                 setMensagemSucesso("");
                                 setCandidatoAvaliandoId(null);
                                 setCandidatoConsentimentoId(null);
+                                setCandidatoIncluindo(null);
                                 setEstudoSelecionadoId(novoId);
                                 if (novoId !== null) {
                                     setCarregandoCandidatos(true);
                                     setErroCandidatos("");
+                                    setCarregandoParticipantes(true);
+                                    setErroParticipantes("");
                                 } else {
                                     setCandidatos([]);
                                     setCarregandoCandidatos(false);
                                     setErroCandidatos("");
+                                    setParticipantes([]);
+                                    setCarregandoParticipantes(false);
+                                    setErroParticipantes("");
                                 }
                             }}
                             className="h-10 rounded-lg border border-[var(--color-border)] bg-white px-3 text-sm text-[var(--color-text)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] disabled:opacity-60"
@@ -522,6 +604,9 @@ function GestaoCandidatos({
                     <>
                         <TabelaCandidatos
                             candidatos={candidatosFiltrados}
+                            participantesCandidatoIds={participantesCandidatoIds}
+                            vagasDisponiveis={vagasDisponiveis}
+                            estudoEmRecrutamento={estudoEmRecrutamento}
                             onSelecionarCandidato={
                                 podeCadastrar
                                     ? (candidato) => setCandidatoAvaliandoId(candidato.id)
@@ -532,6 +617,14 @@ function GestaoCandidatos({
                                     ? (candidato) => setCandidatoConsentimentoId(candidato.id)
                                     : undefined
                             }
+                            onIncluirParticipante={
+                                podeCadastrar
+                                    ? (candidato) => {
+                                          setMensagemSucesso("");
+                                          setCandidatoIncluindo(candidato);
+                                      }
+                                    : undefined
+                            }
                         />
                         <footer className="border-t border-[var(--color-border)] px-5 py-4 text-xs text-[var(--color-muted)]">
                             Exibindo {candidatosFiltrados.length} de {candidatos.length} candidatos
@@ -540,11 +633,37 @@ function GestaoCandidatos({
                 )}
             </section>
 
+            {estudoSelecionado && !carregandoEstudos && !erroEstudos && (
+                <PainelParticipantesVagas
+                    estudoTitulo={estudoSelecionado.title}
+                    limiteVagas={limiteVagas}
+                    participantes={participantes}
+                    carregando={carregandoParticipantes}
+                    erro={erroParticipantes}
+                    onTentarNovamente={() => {
+                        setCarregandoParticipantes(true);
+                        setErroParticipantes("");
+                        setTentativaParticipantes((atual) => atual + 1);
+                    }}
+                />
+            )}
+
             {modalAberto && estudoSelecionado && (
                 <ModalNovoCandidato
                     estudoTitulo={estudoSelecionado.title}
                     onFechar={() => setModalAberto(false)}
                     onCadastrar={handleCadastrar}
+                />
+            )}
+
+            {candidatoIncluindo && estudoSelecionado && (
+                <ModalConfirmarInclusao
+                    estudoTitulo={estudoSelecionado.title}
+                    candidato={candidatoIncluindo}
+                    vagasOcupadas={vagasOcupadas}
+                    limiteVagas={limiteVagas}
+                    onFechar={() => setCandidatoIncluindo(null)}
+                    onConfirmar={handleConfirmarInclusao}
                 />
             )}
         </section>

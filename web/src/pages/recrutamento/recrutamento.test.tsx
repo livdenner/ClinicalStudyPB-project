@@ -102,6 +102,7 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
         const fetchMock = vi
             .spyOn(globalThis, "fetch")
             .mockReturnValueOnce(pendenteEstudos)
+            .mockResolvedValueOnce(resposta([]))
             .mockResolvedValueOnce(resposta([]));
 
         renderPage();
@@ -114,9 +115,10 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
         expect(await screen.findByText("Nenhum candidato encontrado")).toBeInTheDocument();
         expect(screen.getByText("Exibindo 0 de 0 candidatos")).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Novo candidato" })).toBeEnabled();
-        expect(fetchMock).toHaveBeenCalledTimes(2);
+        expect(fetchMock).toHaveBeenCalledTimes(3);
         expect(fetchMock.mock.calls[0][0]).toBe("/api/studies");
         expect(fetchMock.mock.calls[1][0]).toBe("/api/studies/10/candidates");
+        expect(fetchMock.mock.calls[2][0]).toBe("/api/studies/10/participants");
     });
 
     it("lista candidatos iniciais e consulta a API com o novo studyId ao filtrar", async () => {
@@ -132,7 +134,9 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
             .spyOn(globalThis, "fetch")
             .mockResolvedValueOnce(resposta([estudoRecrutamento, estudoPlanejamento]))
             .mockResolvedValueOnce(resposta([candidatoPendente, candidatoElegivel]))
-            .mockResolvedValueOnce(resposta([candidatoOutroEstudo]));
+            .mockResolvedValueOnce(resposta([]))
+            .mockResolvedValueOnce(resposta([candidatoOutroEstudo]))
+            .mockResolvedValueOnce(resposta([]));
 
         renderPage();
 
@@ -159,13 +163,15 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
 
         expect(await screen.findByText("Candidato 099")).toBeInTheDocument();
         expect(screen.getByText("Inelegível")).toBeInTheDocument();
-        expect(fetchMock).toHaveBeenCalledTimes(3);
-        expect(fetchMock.mock.calls[2][0]).toBe("/api/studies/20/candidates");
+        expect(fetchMock).toHaveBeenCalledTimes(5);
+        expect(fetchMock.mock.calls[3][0]).toBe("/api/studies/20/candidates");
+        expect(fetchMock.mock.calls[4][0]).toBe("/api/studies/20/participants");
     });
 
     it("desabilita o cadastro quando o estudo não está em recrutamento", async () => {
         vi.spyOn(globalThis, "fetch")
             .mockResolvedValueOnce(resposta([estudoPlanejamento]))
+            .mockResolvedValueOnce(resposta([]))
             .mockResolvedValueOnce(resposta([]));
 
         renderPage();
@@ -181,6 +187,7 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
         const fetchMock = vi
             .spyOn(globalThis, "fetch")
             .mockResolvedValueOnce(resposta([estudoRecrutamento]))
+            .mockResolvedValueOnce(resposta([]))
             .mockResolvedValueOnce(resposta([]));
 
         renderPage();
@@ -195,7 +202,7 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
             await within(dialog).findByText("Informe a identificação do candidato.")
         ).toBeInTheDocument();
         expect(within(dialog).getByText("Informe a idade do candidato.")).toBeInTheDocument();
-        expect(fetchMock).toHaveBeenCalledTimes(2);
+        expect(fetchMock).toHaveBeenCalledTimes(3);
 
         fireEvent.change(within(dialog).getByLabelText("Identificação do candidato"), {
             target: { value: "Candidato 050" },
@@ -208,7 +215,7 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
         expect(
             await within(dialog).findByText("Informe uma idade inteira válida entre 1 e 130.")
         ).toBeInTheDocument();
-        expect(fetchMock).toHaveBeenCalledTimes(2);
+        expect(fetchMock).toHaveBeenCalledTimes(3);
     });
 
     it("cadastra candidato válido e atualiza a listagem com o retorno da API", async () => {
@@ -223,6 +230,7 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
         const fetchMock = vi
             .spyOn(globalThis, "fetch")
             .mockResolvedValueOnce(resposta([estudoRecrutamento]))
+            .mockResolvedValueOnce(resposta([]))
             .mockResolvedValueOnce(resposta([]))
             .mockResolvedValueOnce(resposta(novoCandidato, 201));
 
@@ -242,7 +250,7 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
 
         await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
 
-        const [url, options] = fetchMock.mock.calls[2];
+        const [url, options] = fetchMock.mock.calls[3];
         expect(url).toBe("/api/studies/10/candidates");
         expect(options?.method).toBe("POST");
         expect(JSON.parse(String(options?.body))).toEqual({
@@ -260,6 +268,7 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
         vi.spyOn(globalThis, "fetch")
             .mockResolvedValueOnce(resposta([estudoRecrutamento]))
             .mockResolvedValueOnce(resposta([candidatoPendente]))
+            .mockResolvedValueOnce(resposta([]))
             .mockResolvedValueOnce(
                 resposta(
                     {
@@ -294,6 +303,7 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
         vi.spyOn(globalThis, "fetch")
             .mockResolvedValueOnce(resposta([estudoRecrutamento]))
             .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+            .mockResolvedValueOnce(resposta([]))
             .mockResolvedValueOnce(resposta([candidatoPendente]));
 
         renderPage();
@@ -310,7 +320,8 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
     it("permite que RESEARCHER consulte candidatos sem botão de cadastro", async () => {
         vi.spyOn(globalThis, "fetch")
             .mockResolvedValueOnce(resposta([estudoRecrutamento]))
-            .mockResolvedValueOnce(resposta([candidatoPendente]));
+            .mockResolvedValueOnce(resposta([candidatoPendente]))
+            .mockResolvedValueOnce(resposta([]));
 
         renderPage("RESEARCHER");
 
