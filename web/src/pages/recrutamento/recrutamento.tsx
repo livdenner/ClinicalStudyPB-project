@@ -12,6 +12,7 @@ import { ErrorMessage } from "../../components/ui/ErrorMessage";
 import { useAuth } from "../../context/AuthContext";
 import { ApiClientError } from "../../services/api/apiClient";
 import { cadastrarCandidato, listarCandidatosPorEstudo } from "../../services/candidatos";
+import { obterConsentimentoSimulado } from "../../services/consentimento";
 import { listarEstudos } from "../../services/estudos";
 import {
     incluirParticipanteNoEstudo,
@@ -32,10 +33,40 @@ import type { ParticipanteApi } from "../../types/participante";
 const PERFIS_PERMITIDOS: UserRole[] = ["COORDINATOR", "RESEARCHER"];
 const CONSENTIMENTO_CACHE_KEY = "clinicalstudypb.consentimentos";
 
+/**
+ * Guarda só a identificação do termo, que a API não armazena. A decisão do consentimento
+ * vem sempre da API: o cache local não vale em outro navegador nem para dados do seed.
+ */
 type CacheConsentimentoItem = {
-    status: StatusConsentimentoApi;
     termo: string;
 };
+
+/**
+ * Consulta a decisão de consentimento de cada candidato. Uma falha isolada não esconde a
+ * lista: o candidato fica sem decisão conhecida, e a inclusão continua bloqueada para ele.
+ */
+async function carregarConsentimentos(
+    studyId: number,
+    candidatos: CandidatoApi[],
+    token: string,
+    signal: AbortSignal
+): Promise<{ lista: CandidatoApi[]; falhou: boolean }> {
+    const resultados = await Promise.allSettled(
+        candidatos.map((candidato) =>
+            obterConsentimentoSimulado(studyId, candidato.id, token, signal)
+        )
+    );
+    let falhou = false;
+    const lista = candidatos.map((candidato, indice) => {
+        const resultado = resultados[indice];
+        if (resultado.status === "fulfilled") {
+            return { ...candidato, consentStatus: resultado.value.status };
+        }
+        falhou = true;
+        return candidato;
+    });
+    return { lista, falhou };
+}
 
 function lerCacheConsentimentos(): Record<number, CacheConsentimentoItem> {
     try {
@@ -47,14 +78,10 @@ function lerCacheConsentimentos(): Record<number, CacheConsentimentoItem> {
     }
 }
 
-function salvarCacheConsentimento(
-    candidateId: number,
-    status: StatusConsentimentoApi,
-    termo: string
-) {
+function salvarCacheConsentimento(candidateId: number, termo: string) {
     try {
         const atual = lerCacheConsentimentos();
-        atual[candidateId] = { status, termo };
+        atual[candidateId] = { termo };
         localStorage.setItem(CONSENTIMENTO_CACHE_KEY, JSON.stringify(atual));
     } catch {
         // Ignora falha de armazenamento local
@@ -131,6 +158,7 @@ function GestaoCandidatos({
     const [carregandoCandidatos, setCarregandoCandidatos] = useState(false);
     const [erroCandidatos, setErroCandidatos] = useState("");
     const [tentativaCandidatos, setTentativaCandidatos] = useState(0);
+    const [avisoConsentimentos, setAvisoConsentimentos] = useState("");
 
     const [participantes, setParticipantes] = useState<ParticipanteApi[]>([]);
     const [carregandoParticipantes, setCarregandoParticipantes] = useState(false);
@@ -198,18 +226,25 @@ function GestaoCandidatos({
         const controller = new AbortController();
 
         listarCandidatosPorEstudo(estudoSelecionadoId, token, controller.signal)
-            .then((dados) => {
-                if (!controller.signal.aborted) {
-                    const cache = lerCacheConsentimentos();
-                    setCandidatos(
-                        dados.map((candidato) => {
-                            const salvo = cache[candidato.id];
-                            return salvo
-                                ? { ...candidato, consentStatus: salvo.status }
-                                : candidato;
-                        })
-                    );
-                }
+            .then(async (dados) => {
+                if (controller.signal.aborted) return;
+                // Só o coordenador consulta o consentimento; para os outros perfis a API responde 403.
+                const resultado =
+                    role === "COORDINATOR"
+                        ? await carregarConsentimentos(
+                              estudoSelecionadoId,
+                              dados,
+                              token,
+                              controller.signal
+                          )
+                        : { lista: dados, falhou: false };
+                if (controller.signal.aborted) return;
+                setCandidatos(resultado.lista);
+                setAvisoConsentimentos(
+                    resultado.falhou
+                        ? "Não foi possível consultar o consentimento de alguns candidatos. A inclusão deles fica bloqueada até uma nova consulta."
+                        : ""
+                );
             })
             .catch((error: unknown) => {
                 if (controller.signal.aborted) return;
@@ -236,7 +271,7 @@ function GestaoCandidatos({
             });
 
         return () => controller.abort();
-    }, [estudoSelecionadoId, token, tentativaCandidatos]);
+    }, [estudoSelecionadoId, token, role, tentativaCandidatos]);
 
     useEffect(() => {
         if (estudoSelecionadoId === null) {
@@ -333,7 +368,7 @@ function GestaoCandidatos({
 
     const handleAtualizarConsentimentoCandidato = useCallback(
         (candidateId: number, novoStatus: StatusConsentimentoApi, termoIdentificacao: string) => {
-            salvarCacheConsentimento(candidateId, novoStatus, termoIdentificacao);
+            salvarCacheConsentimento(candidateId, termoIdentificacao);
             setCandidatos((atuais) =>
                 atuais.map((c) => (c.id === candidateId ? { ...c, consentStatus: novoStatus } : c))
             );
@@ -602,6 +637,22 @@ function GestaoCandidatos({
                     </div>
                 ) : (
                     <>
+                        {avisoConsentimentos && (
+                            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border)] px-5 py-3">
+                                <ErrorMessage message={avisoConsentimentos} />
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    onClick={() => {
+                                        setCarregandoCandidatos(true);
+                                        setAvisoConsentimentos("");
+                                        setTentativaCandidatos((atual) => atual + 1);
+                                    }}
+                                >
+                                    Consultar novamente
+                                </Button>
+                            </div>
+                        )}
                         <TabelaCandidatos
                             candidatos={candidatosFiltrados}
                             participantesCandidatoIds={participantesCandidatoIds}
