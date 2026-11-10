@@ -5,6 +5,7 @@ import { AuthProvider } from "../../context/AuthContext";
 import { AUTH_STORAGE_KEY } from "../../services/auth";
 import type { UserRole } from "../../types/auth";
 import type { CandidatoApi, EstudoComStatusApi } from "../../types/candidato";
+import type { ParticipanteApi } from "../../types/participante";
 import { RecrutamentoPage } from "./recrutamento";
 
 const estudoRecrutamento: EstudoComStatusApi = {
@@ -349,5 +350,229 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
 
         expect(screen.getByText("Tela de login")).toBeInTheDocument();
         expect(fetchMock).not.toHaveBeenCalled();
+    });
+});
+
+describe("Inclusão e lista de participantes por estudo (RF11 - T15.3 / T15.4)", () => {
+    const estudoComDuasVagas: EstudoComStatusApi = {
+        ...estudoRecrutamento,
+        participantLimit: 2,
+    };
+
+    const candidatoApto: CandidatoApi = {
+        id: 102,
+        studyId: 10,
+        name: "Candidato 021",
+        age: 55,
+        eligibilityStatus: "ELIGIBLE",
+        consentStatus: "GRANTED",
+    };
+
+    const candidatoConsentimentoRecusado: CandidatoApi = {
+        id: 103,
+        studyId: 10,
+        name: "Candidato 030",
+        age: 49,
+        eligibilityStatus: "ELIGIBLE",
+        consentStatus: "DECLINED",
+    };
+
+    const participanteExistente: ParticipanteApi = {
+        id: 501,
+        studyId: 10,
+        candidateId: 100,
+        candidateName: "Candidato 001",
+        includedAt: "2026-11-09T15:00:00Z",
+    };
+
+    it("inclui candidato apto com sucesso, atualiza lista de participantes e saldo de vagas", async () => {
+        const novoParticipante: ParticipanteApi = {
+            id: 502,
+            studyId: 10,
+            candidateId: 102,
+            candidateName: "Candidato 021",
+            includedAt: "2026-11-09T16:30:00Z",
+        };
+
+        const fetchMock = vi
+            .spyOn(globalThis, "fetch")
+            .mockResolvedValueOnce(resposta([estudoComDuasVagas]))
+            .mockResolvedValueOnce(resposta([candidatoApto]))
+            .mockResolvedValueOnce(resposta([participanteExistente]))
+            .mockResolvedValueOnce(resposta(novoParticipante, 201));
+
+        renderPage("COORDINATOR");
+
+        expect(await screen.findByText("Candidato 021")).toBeInTheDocument();
+
+        const indicadorVagas = screen.getByRole("status", {
+            name: "Indicador de vagas do estudo",
+        });
+        expect(indicadorVagas).toHaveTextContent("Vagas ocupadas: 1 de 2");
+        expect(indicadorVagas).toHaveTextContent("Saldo disponível: 1 vaga");
+
+        const botaoIncluir = screen.getByRole("button", {
+            name: "Incluir participante: Candidato 021",
+        });
+        expect(botaoIncluir).toBeEnabled();
+        fireEvent.click(botaoIncluir);
+
+        const dialog = await screen.findByRole("dialog", {
+            name: "Confirmar inclusão de participante",
+        });
+        expect(within(dialog).getByText("Candidato 021")).toBeInTheDocument();
+        expect(within(dialog).getByText("1 de 2")).toBeInTheDocument();
+
+        fireEvent.click(within(dialog).getByRole("button", { name: "Confirmar inclusão" }));
+
+        await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+
+        const [url, options] = fetchMock.mock.calls[3];
+        expect(url).toBe("/api/studies/10/candidates/102/inclusion");
+        expect(options?.method).toBe("POST");
+
+        expect(
+            screen.getByText("Participante incluído no estudo com sucesso.")
+        ).toBeInTheDocument();
+        expect(indicadorVagas).toHaveTextContent("Vagas ocupadas: 2 de 2");
+        expect(indicadorVagas).toHaveTextContent("Saldo disponível: 0 vagas");
+        expect(indicadorVagas).toHaveTextContent("Limite de vagas atingido");
+
+        expect(screen.getByLabelText("Paciente Incluído: Candidato 021")).toBeInTheDocument();
+
+        const tabelaParticipantes = screen.getByRole("grid", {
+            name: "Lista de participantes incluídos",
+        });
+        expect(within(tabelaParticipantes).getByText("Candidato 001")).toBeInTheDocument();
+        expect(within(tabelaParticipantes).getByText("Candidato 021")).toBeInTheDocument();
+    });
+
+    it("mantém botão de inclusão desabilitado para candidatos inaptos ou quando o estudo está sem vagas", async () => {
+        const estudoUmaVaga: EstudoComStatusApi = {
+            ...estudoRecrutamento,
+            participantLimit: 1,
+        };
+
+        vi.spyOn(globalThis, "fetch")
+            .mockResolvedValueOnce(resposta([estudoComDuasVagas]))
+            .mockResolvedValueOnce(
+                resposta([candidatoPendente, candidatoElegivel, candidatoConsentimentoRecusado])
+            )
+            .mockResolvedValueOnce(resposta([]))
+            .mockResolvedValueOnce(resposta([estudoUmaVaga]))
+            .mockResolvedValueOnce(resposta([candidatoApto]))
+            .mockResolvedValueOnce(resposta([participanteExistente]));
+
+        const { unmount } = renderPage("COORDINATOR");
+
+        await screen.findByText("Candidato 014");
+
+        expect(
+            screen.getByRole("button", { name: "Incluir participante: Candidato 014" })
+        ).toBeDisabled();
+        expect(
+            screen.getByRole("button", { name: "Incluir participante: Candidato 021" })
+        ).toBeDisabled();
+        expect(
+            screen.getByRole("button", { name: "Incluir participante: Candidato 030" })
+        ).toBeDisabled();
+
+        unmount();
+
+        renderPage("COORDINATOR");
+
+        await screen.findByText("Candidato 021");
+
+        const botaoSemVaga = screen.getByRole("button", {
+            name: "Incluir participante: Candidato 021",
+        });
+        expect(botaoSemVaga).toBeDisabled();
+        expect(botaoSemVaga).toHaveAttribute(
+            "title",
+            "O estudo atingiu o limite de vagas disponíveis."
+        );
+    });
+
+    it("exibe motivo específico retornado pela API (HTTP 409) quando a última vaga esgota antes da resposta", async () => {
+        vi.spyOn(globalThis, "fetch")
+            .mockResolvedValueOnce(resposta([estudoComDuasVagas]))
+            .mockResolvedValueOnce(resposta([candidatoApto]))
+            .mockResolvedValueOnce(resposta([participanteExistente]))
+            .mockResolvedValueOnce(
+                resposta(
+                    {
+                        code: "INCLUSION_CONFLICT",
+                        message: "O estudo atingiu o limite de participantes.",
+                    },
+                    409
+                )
+            );
+
+        renderPage("COORDINATOR");
+
+        await screen.findByText("Candidato 021");
+        fireEvent.click(
+            screen.getByRole("button", { name: "Incluir participante: Candidato 021" })
+        );
+
+        const dialog = await screen.findByRole("dialog", {
+            name: "Confirmar inclusão de participante",
+        });
+        fireEvent.click(within(dialog).getByRole("button", { name: "Confirmar inclusão" }));
+
+        expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+            "O estudo atingiu o limite de participantes."
+        );
+        expect(
+            screen.getByRole("dialog", { name: "Confirmar inclusão de participante" })
+        ).toBeInTheDocument();
+    });
+
+    it("bloqueia clique duplo e dispara exatamente uma requisição durante a confirmação de inclusão", async () => {
+        let concluirInclusao!: (response: Response) => void;
+        const pendenteInclusao = new Promise<Response>((resolve) => {
+            concluirInclusao = resolve;
+        });
+
+        const novoParticipante: ParticipanteApi = {
+            id: 502,
+            studyId: 10,
+            candidateId: 102,
+            candidateName: "Candidato 021",
+            includedAt: "2026-11-09T17:00:00Z",
+        };
+
+        const fetchMock = vi
+            .spyOn(globalThis, "fetch")
+            .mockResolvedValueOnce(resposta([estudoComDuasVagas]))
+            .mockResolvedValueOnce(resposta([candidatoApto]))
+            .mockResolvedValueOnce(resposta([]))
+            .mockReturnValueOnce(pendenteInclusao);
+
+        renderPage("COORDINATOR");
+
+        await screen.findByText("Candidato 021");
+        fireEvent.click(
+            screen.getByRole("button", { name: "Incluir participante: Candidato 021" })
+        );
+
+        const dialog = await screen.findByRole("dialog", {
+            name: "Confirmar inclusão de participante",
+        });
+        const botaoConfirmar = within(dialog).getByRole("button", { name: "Confirmar inclusão" });
+
+        fireEvent.click(botaoConfirmar);
+        fireEvent.click(botaoConfirmar);
+        fireEvent.click(botaoConfirmar);
+
+        const chamadasInclusao = fetchMock.mock.calls.filter(
+            ([url]) => url === "/api/studies/10/candidates/102/inclusion"
+        );
+        expect(chamadasInclusao).toHaveLength(1);
+
+        await act(async () => concluirInclusao(resposta(novoParticipante, 201)));
+
+        await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+        expect(fetchMock).toHaveBeenCalledTimes(4);
     });
 });
