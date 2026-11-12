@@ -1,12 +1,13 @@
 openapi: 3.0.3
 info:
   title: ClinicalStudyPB API
-  version: 1.3.0
+  version: 1.4.0
   description: |
     Contrato da Release 1 (RF01 a RF11) e da Release 2 em andamento. As rotas
-    de RF12 e RF13 (agendamento e desfecho de visitas) são o alvo acordado para
-    a Sprint 3; sua presença aqui não indica implementação pronta, e elas só
-    aparecem no Swagger UI gerado pela aplicação depois de implementadas.
+    da Sprint 3 (identidade, ativação e decisão de consentimento do candidato;
+    agendamento e desfecho de visitas, RF12 e RF13) são o alvo acordado; sua
+    presença aqui não indica implementação pronta, e elas só aparecem no
+    Swagger UI gerado pela aplicação depois de implementadas.
 
     Convenções acordadas:
     - Os nomes JSON usam camelCase; os nomes do banco permanecem em snake_case.
@@ -17,8 +18,11 @@ info:
     - Todas as rotas da API usam /api, inclusive autenticação em /api/auth.
     - Códigos de enumeração são estáveis em inglês; a interface traduz os rótulos.
     - RESEARCHER responsável define critérios e visitas previstas e altera o estado.
-    - COORDINATOR cadastra candidatos, avalia elegibilidade, registra o
-      consentimento simulado e inclui participantes.
+    - COORDINATOR cadastra candidatos, avalia elegibilidade e inclui participantes.
+      Desde a Sprint 3, a decisão de consentimento simulado (GRANTED/DECLINED) é
+      registrada só pelo próprio candidato autenticado (PARTICIPANT), no aplicativo.
+    - Sessão com mustChangePassword=true só acessa a troca de senha e o logout;
+      as demais rotas respondem 403 com code PASSWORD_CHANGE_REQUIRED.
     - Mudanças de estado registram ator, instante e origem/destino em histórico.
     - COORDINATOR agenda visitas e registra o desfecho; RESEARCHER consulta.
     - Erros de regra de negócio da Release 2 trazem `code` estável no ProblemDetail.
@@ -36,12 +40,16 @@ tags:
   - name: Consentimento
   - name: Participantes
   - name: Visitas agendadas
+  - name: Convites do participante
 paths:
   /api/auth/login:
     post:
       tags: [Autenticação]
       summary: Autentica um usuário
-      description: Público. Retorna um JWT para uso nas operações protegidas.
+      description: |
+        Público. Retorna um JWT para uso nas operações protegidas. A conta de um
+        candidato ainda não ativado responde 401 como usuário inativo; o primeiro
+        acesso é feito em /api/auth/activation.
       security: []
       requestBody:
         required: true
@@ -78,6 +86,91 @@ paths:
       responses:
         '204':
           description: Logout concluído pelo cliente
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/auth/activation:
+    post:
+      tags: [Autenticação]
+      summary: Primeiro acesso do candidato com o código de ativação (T17.1)
+      description: |
+        Público. O candidato informa o e-mail cadastrado pelo coordenador e o
+        código de ativação de uso único (válido por 72 horas). Com dados
+        corretos, a conta PARTICIPANT é ativada e a resposta traz uma sessão
+        restrita com user.mustChangePassword=true: até definir a senha em
+        PUT /api/auth/password, só a troca de senha e o logout são aceitos.
+
+        O código só é consumido quando a senha é definida. Se o candidato sair
+        antes disso, pode repetir esta chamada com o mesmo código enquanto ele
+        estiver válido.
+
+        Regras e erros (sem revelar se a conta existe):
+        - 400 ACTIVATION_INVALID: e-mail e código não correspondem a uma
+          ativação pendente (inclui código já consumido, substituído ou e-mail
+          inexistente).
+        - 410 ACTIVATION_EXPIRED: e-mail e código correspondem, mas o prazo de
+          72 horas passou. O candidato deve pedir um novo código ao coordenador.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivationRequest'
+            example:
+              email: ana.souza@exemplo.test
+              activationCode: K7Q2-9MXA
+      responses:
+        '200':
+          description: Conta ativada; sessão restrita até a troca de senha
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '410':
+          description: Código de ativação expirado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+
+  /api/auth/password:
+    put:
+      tags: [Autenticação]
+      summary: Define ou troca a senha do usuário autenticado (T17.1)
+      description: |
+        Requer autenticação, inclusive na sessão restrita da ativação. Com
+        mustChangePassword=true, currentPassword não é exigida (primeiro acesso);
+        caso contrário é obrigatória. Responde com um novo token sem a restrição;
+        o cliente deve descartar o token anterior.
+
+        Regras de senha: 8 a 72 caracteres, com ao menos uma letra e um número.
+
+        Regras e erros:
+        - 400 PASSWORD_POLICY: newPassword fora das regras de senha.
+        - 400 CURRENT_PASSWORD_INVALID: currentPassword ausente ou incorreta
+          quando exigida.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+            example:
+              newPassword: NovaSenha2026
+      responses:
+        '200':
+          description: Senha definida; nova sessão sem restrição
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
 
@@ -772,12 +865,31 @@ paths:
       tags: [Candidatos]
       summary: Cadastra um candidato no estudo (RF08, T12.1)
       description: |
-        Somente COORDINATOR. studyId vem da rota, não do JSON. name e age são
-        obrigatórios; age é inteiro entre 1 e 130 anos. O cadastro inicia com
-        eligibilityStatus=PENDING. A elegibilidade para participar depende dos
-        critérios de cada estudo, além da validade da idade no cadastro. O estudo
-        precisa estar em RECRUITMENT. No contrato atual, a duplicidade é definida
-        por nome sem diferença de maiúsculas/espaços e idade dentro do mesmo estudo.
+        Somente COORDINATOR. studyId vem da rota, não do JSON. name, age, email e
+        phone são obrigatórios; age é inteiro entre 1 e 130 anos. O cadastro
+        inicia com eligibilityStatus=PENDING. A elegibilidade para participar
+        depende dos critérios de cada estudo, além da validade da idade no
+        cadastro. O estudo precisa estar em RECRUITMENT.
+
+        O e-mail identifica a conta do candidato (sem diferença de maiúsculas):
+        - E-mail sem conta: cria uma conta PARTICIPANT inativa e um código de
+          ativação de uso único, válido por 72 horas. status=INVITED e a
+          resposta traz activation.activationCode.
+        - E-mail de conta PARTICIPANT ainda não ativada (convidada por outro
+          estudo): gera um novo código, e o anterior deixa de valer.
+          status=INVITED, com activation.activationCode.
+        - E-mail de conta PARTICIPANT ativa: apenas vincula, sem duplicar a conta
+          e sem código. status=ACTIVE.
+        A criação do candidato e da conta/código é atômica.
+
+        Regras e erros:
+        - 409 CANDIDATE_ALREADY_IN_STUDY: a mesma conta (e-mail) já é candidata
+          neste estudo. Substitui o critério da Release 1 (nome + idade).
+        - 409 EMAIL_BELONGS_TO_STAFF: o e-mail pertence a uma conta RESEARCHER,
+          COORDINATOR ou ADMINISTRATOR; nada é vinculado nem criado.
+        - 409 PARTICIPANT_ACCOUNT_DEACTIVATED: a conta PARTICIPANT do e-mail foi
+          desativada pelo administrador.
+        - 409 STUDY_NOT_RECRUITING: estudo fora de RECRUITMENT.
       security:
         - bearerAuth: []
       requestBody:
@@ -787,8 +899,10 @@ paths:
             schema:
               $ref: '#/components/schemas/CandidateCreateRequest'
             example:
-              name: Candidato 014
+              name: Ana Souza
               age: 42
+              email: ana.souza@exemplo.test
+              phone: '(83) 99999-0000'
       responses:
         '201':
           description: Candidato cadastrado
@@ -804,9 +918,18 @@ paths:
               example:
                 id: 14
                 studyId: 2
-                name: Candidato 014
+                name: Ana Souza
                 age: 42
+                email: ana.souza@exemplo.test
+                phone: '(83) 99999-0000'
+                userId: 31
+                status: INVITED
                 eligibilityStatus: PENDING
+                consentStatus: PENDING
+                activation:
+                  expiresAt: '2026-11-15T14:30:00-03:00'
+                  expired: false
+                  activationCode: K7Q2-9MXA
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -844,6 +967,44 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+
+  /api/studies/{studyId}/candidates/{candidateId}/activation-code:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+      - $ref: '#/components/parameters/CandidateId'
+    post:
+      tags: [Candidatos]
+      summary: Gera um novo código de ativação para o candidato (T17.1)
+      description: |
+        Somente COORDINATOR. Para candidato com status=INVITED, com código
+        pendente ou vencido. Gera um código novo, válido por 72 horas, e o
+        anterior deixa de valer imediatamente. Como a conta é única por e-mail,
+        o novo código vale para todos os estudos em que a conta é candidata.
+
+        Regras e erros:
+        - 409 CANDIDATE_ALREADY_ACTIVE: a conta do candidato já foi ativada.
+        - 409 STUDY_NOT_RECRUITING: estudo fora de RECRUITMENT.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Novo código gerado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CandidateActivation'
+              example:
+                expiresAt: '2026-11-16T09:00:00-03:00'
+                expired: false
+                activationCode: R4WN-2T8C
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
 
   /api/studies/{studyId}/candidates/{candidateId}/eligibility:
     parameters:
@@ -922,7 +1083,9 @@ paths:
       tags: [Consentimento]
       summary: Consulta o consentimento simulado (RF10, T14.1)
       description: |
-        Somente COORDINATOR. Antes do registro, retorna status PENDING sem recordedAt.
+        Somente COORDINATOR, apenas leitura. Mostra a decisão registrada pelo
+        próprio candidato no aplicativo (POST /api/me/invitations/{candidateId}/decision).
+        Antes da decisão, retorna status PENDING sem recordedAt.
         Não representa assinatura ou documento de consentimento real.
       security:
         - bearerAuth: []
@@ -941,39 +1104,21 @@ paths:
           $ref: '#/components/responses/NotFound'
     put:
       tags: [Consentimento]
-      summary: Registra a decisão simulada do candidato (RF10, T14.1)
+      deprecated: true
+      summary: Descontinuada — o coordenador não registra mais o consentimento (T17.1)
       description: |
-        Somente COORDINATOR. GRANTED ou DECLINED substitui a decisão anterior
-        durante RECRUITMENT, enquanto o candidato não foi incluído. A decisão
-        é registrada pelo backend com horário; após inclusão não pode ser
-        alterada (409). PENDING não é aceito no corpo da requisição.
+        Descontinuada na Sprint 3 por decisão da professora: a decisão de
+        consentimento passou ao candidato autenticado, em
+        POST /api/me/invitations/{candidateId}/decision. Esta rota responde 403
+        com code CONSENT_DECIDED_BY_CANDIDATE para qualquer perfil e não altera
+        nenhum dado.
       security:
         - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SimulatedConsentWriteRequest'
-            example:
-              status: GRANTED
       responses:
-        '200':
-          description: Consentimento simulado atualizado
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SimulatedConsent'
-        '400':
-          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
-        '409':
-          $ref: '#/components/responses/Conflict'
 
   /api/studies/{studyId}/candidates/{candidateId}/inclusion:
     parameters:
@@ -1296,6 +1441,116 @@ paths:
         '409':
           $ref: '#/components/responses/Conflict'
 
+  /api/me/invitations:
+    get:
+      tags: [Convites do participante]
+      summary: Lista os convites de estudo do candidato autenticado (T17.1)
+      description: |
+        Somente PARTICIPANT; outros perfis recebem 403. O candidato vem do token,
+        nunca de parâmetro. Lista as candidaturas da própria conta com status
+        CONSENT_PENDING, GRANTED ou DECLINED, da mais recente para a mais antiga.
+        Candidaturas INVITED, ACTIVE (ainda sem elegibilidade concluída como
+        ELIGIBLE) e INCLUDED não aparecem; estudos com inclusão ficam nas rotas
+        do participante da T23.1. Retorna [] quando não há convites.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filtra pela situação; CONSENT_PENDING lista só os convites aguardando decisão
+          schema:
+            type: string
+            enum: [CONSENT_PENDING, GRANTED, DECLINED]
+      responses:
+        '200':
+          description: Convites do candidato
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StudyInvitationSummary'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/me/invitations/{candidateId}:
+    parameters:
+      - $ref: '#/components/parameters/CandidateId'
+    get:
+      tags: [Convites do participante]
+      summary: Consulta o convite com os dados do estudo e o termo simulado (T17.1)
+      description: |
+        Somente PARTICIPANT. Mostra o que o app exibe antes da decisão: título,
+        objetivo, período e pesquisador responsável do estudo, visitas previstas
+        com atividades e o texto fixo do termo simulado. Candidatura de outra
+        conta, ou que não esteja em CONSENT_PENDING, GRANTED ou DECLINED,
+        responde 404, sem revelar sua existência.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Convite encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudyInvitation'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/me/invitations/{candidateId}/decision:
+    parameters:
+      - $ref: '#/components/parameters/CandidateId'
+    post:
+      tags: [Convites do participante]
+      summary: Registra o aceite ou a recusa do termo simulado (RF10, T17.1)
+      description: |
+        Somente PARTICIPANT, dono da candidatura. Única rota que registra a
+        decisão de consentimento. A decisão é registrada uma única vez, com
+        autoria e instante; não há troca posterior. Com GRANTED, o coordenador
+        pode incluir o candidato (RF11); com DECLINED, a inclusão fica bloqueada.
+
+        Regras e erros:
+        - 400: status ausente ou diferente de GRANTED e DECLINED.
+        - 404: candidatura de outra conta ou inexistente.
+        - 409 CONSENT_ALREADY_DECIDED: a decisão já foi registrada.
+        - 409 CONSENT_NOT_AVAILABLE: a candidatura não está em CONSENT_PENDING
+          (elegibilidade não concluída como ELIGIBLE, ou candidato já incluído).
+        - 409 STUDY_NOT_RECRUITING: estudo fora de RECRUITMENT.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulatedConsentWriteRequest'
+            example:
+              status: GRANTED
+      responses:
+        '200':
+          description: Decisão registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudyInvitation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -1442,6 +1697,43 @@ components:
           $ref: '#/components/schemas/UserRole'
         active:
           type: boolean
+        mustChangePassword:
+          type: boolean
+          readOnly: true
+          default: false
+          description: |
+            true na sessão aberta pela ativação do candidato, até a senha ser
+            definida em PUT /api/auth/password. Enquanto true, só a troca de
+            senha e o logout são aceitos.
+    ActivationRequest:
+      type: object
+      required: [email, activationCode]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        activationCode:
+          type: string
+          minLength: 1
+          maxLength: 32
+          writeOnly: true
+          description: Código de uso único exibido ao coordenador no cadastro do candidato
+    PasswordChangeRequest:
+      type: object
+      required: [newPassword]
+      properties:
+        currentPassword:
+          type: string
+          writeOnly: true
+          description: Obrigatória quando mustChangePassword=false
+        newPassword:
+          type: string
+          minLength: 8
+          maxLength: 72
+          pattern: '^(?=.*[A-Za-z])(?=.*[0-9]).{8,72}$'
+          writeOnly: true
+          description: 8 a 72 caracteres, com ao menos uma letra e um número
     LoginRequest:
       type: object
       required: [email, password]
@@ -1688,7 +1980,7 @@ components:
             format: int64
     CandidateCreateRequest:
       type: object
-      required: [name, age]
+      required: [name, age, email, phone]
       properties:
         name:
           type: string
@@ -1700,9 +1992,54 @@ components:
           minimum: 1
           maximum: 130
           description: Idade informada no cadastro; elegibilidade depende dos critérios do estudo
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          description: Identifica a conta PARTICIPANT do candidato; comparação sem diferença de maiúsculas
+        phone:
+          type: string
+          minLength: 8
+          maxLength: 20
+          pattern: '^\+?[0-9 ()-]{8,20}$'
+          description: Telefone fictício com DDD; aceita dígitos, espaço, parênteses, hífen e + inicial
+    CandidateStatus:
+      type: string
+      description: |
+        Andamento do candidato no fluxo de identidade e consentimento, calculado
+        pelo backend. Não substitui eligibilityStatus, que segue separado.
+        - INVITED=Convidado: conta criada, aguardando o primeiro acesso.
+        - ACTIVE=Conta ativa: conta ativa, elegibilidade ainda não ELIGIBLE.
+        - CONSENT_PENDING=Aguardando decisão: conta ativa e ELIGIBLE, sem decisão;
+          o convite aparece no app.
+        - GRANTED=Aceitou: o candidato aceitou o termo simulado.
+        - DECLINED=Recusou: o candidato recusou o termo simulado.
+        - INCLUDED=Incluído: o coordenador incluiu o candidato como participante.
+      enum: [INVITED, ACTIVE, CONSENT_PENDING, GRANTED, DECLINED, INCLUDED]
+    CandidateActivation:
+      type: object
+      required: [expiresAt, expired]
+      properties:
+        expiresAt:
+          type: string
+          format: date-time
+          description: Emissão do código + 72 horas
+        expired:
+          type: boolean
+          description: true quando o prazo passou; o coordenador pode gerar um novo código
+        activationCode:
+          type: string
+          readOnly: true
+          description: |
+            Somente demonstração (Sprint 3): exibido ao coordenador enquanto não
+            há envio por e-mail. Aparece apenas nas respostas do cadastro do
+            candidato e de geração de novo código, no momento em que o código é
+            gerado; nenhuma consulta posterior o devolve. Será removido quando o
+            código passar a ser enviado ao candidato. Não deve ser guardado nem
+            registrado em log.
     Candidate:
       type: object
-      required: [id, studyId, name, age, eligibilityStatus]
+      required: [id, studyId, name, age, email, phone, userId, status, eligibilityStatus, consentStatus]
       properties:
         id:
           type: integer
@@ -1720,8 +2057,26 @@ components:
           format: int32
           minimum: 1
           maximum: 130
+        email:
+          type: string
+          format: email
+          maxLength: 255
+        phone:
+          type: string
+          maxLength: 20
+        userId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Conta PARTICIPANT vinculada ao candidato
+        status:
+          $ref: '#/components/schemas/CandidateStatus'
         eligibilityStatus:
           $ref: '#/components/schemas/EligibilityStatus'
+        consentStatus:
+          $ref: '#/components/schemas/ConsentStatus'
+        activation:
+          $ref: '#/components/schemas/CandidateActivation'
     EligibilityStatus:
       type: string
       description: PENDING=Pendente; ELIGIBLE=Elegível; INELIGIBLE=Não elegível
@@ -1807,6 +2162,84 @@ components:
           type: string
           format: date-time
           description: Horário da decisão; ausente quando status=PENDING
+        recordedByUserId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Conta que registrou a decisão (o próprio candidato desde a Sprint 3); ausente quando status=PENDING
+    StudyInvitationSummary:
+      type: object
+      required: [candidateId, studyId, studyTitle, status]
+      properties:
+        candidateId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Candidatura da conta autenticada neste estudo
+        studyId:
+          type: integer
+          format: int64
+          readOnly: true
+        studyTitle:
+          type: string
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/CandidateStatus'
+        decidedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Instante da decisão; ausente em CONSENT_PENDING
+    StudyInvitation:
+      type: object
+      required: [candidateId, studyId, studyTitle, studyObjective, startDate, endDate,
+                 responsibleName, plannedVisits, termText, status]
+      properties:
+        candidateId:
+          type: integer
+          format: int64
+          readOnly: true
+        studyId:
+          type: integer
+          format: int64
+          readOnly: true
+        studyTitle:
+          type: string
+          readOnly: true
+        studyObjective:
+          type: string
+          readOnly: true
+        startDate:
+          type: string
+          format: date
+          readOnly: true
+        endDate:
+          type: string
+          format: date
+          readOnly: true
+        responsibleName:
+          type: string
+          readOnly: true
+          description: Nome do pesquisador responsável pelo estudo
+        plannedVisits:
+          type: array
+          readOnly: true
+          description: Visitas previstas do protocolo, na ordem, com suas atividades
+          items:
+            $ref: '#/components/schemas/PlannedVisit'
+        termText:
+          type: string
+          readOnly: true
+          description: |
+            Texto fixo do termo simulado. Deve informar que o termo é fictício,
+            sem valor legal, e que nenhum dado real é coletado.
+        status:
+          $ref: '#/components/schemas/CandidateStatus'
+        decidedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Instante da decisão; ausente em CONSENT_PENDING
     Participant:
       type: object
       required: [id, studyId, candidateId, candidateName, includedAt]
@@ -1988,7 +2421,10 @@ components:
           schema:
             $ref: '#/components/schemas/ApiError'
     Forbidden:
-      description: Perfil sem permissão para a operação
+      description: |
+        Perfil sem permissão para a operação. Casos com code próprio:
+        PASSWORD_CHANGE_REQUIRED (sessão com mustChangePassword=true) e
+        CONSENT_DECIDED_BY_CANDIDATE (rota descontinuada de consentimento do coordenador).
       content:
         application/json:
           schema:
