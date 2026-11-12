@@ -1,10 +1,12 @@
 openapi: 3.0.3
 info:
   title: ClinicalStudyPB API
-  version: 1.2.0
+  version: 1.3.0
   description: |
-    Contrato da Release 1 (RF01 a RF11). As rotas dos RF05 a RF11 são o alvo
-    acordado para a Sprint 2; sua presença aqui não indica implementação pronta.
+    Contrato da Release 1 (RF01 a RF11) e da Release 2 em andamento. As rotas
+    de RF12 e RF13 (agendamento e desfecho de visitas) são o alvo acordado para
+    a Sprint 3; sua presença aqui não indica implementação pronta, e elas só
+    aparecem no Swagger UI gerado pela aplicação depois de implementadas.
 
     Convenções acordadas:
     - Os nomes JSON usam camelCase; os nomes do banco permanecem em snake_case.
@@ -18,6 +20,8 @@ info:
     - COORDINATOR cadastra candidatos, avalia elegibilidade, registra o
       consentimento simulado e inclui participantes.
     - Mudanças de estado registram ator, instante e origem/destino em histórico.
+    - COORDINATOR agenda visitas e registra o desfecho; RESEARCHER consulta.
+    - Erros de regra de negócio da Release 2 trazem `code` estável no ProblemDetail.
 servers:
   - url: /
     description: Caminhos completos da API com prefixo /api
@@ -31,6 +35,7 @@ tags:
   - name: Elegibilidade
   - name: Consentimento
   - name: Participantes
+  - name: Visitas agendadas
 paths:
   /api/auth/login:
     post:
@@ -520,7 +525,8 @@ paths:
       summary: Lista visitas previstas com suas atividades (RF06, T10.1)
       description: |
         RESEARCHER ou COORDINATOR. São definições do protocolo; não representam
-        visitas agendadas para um participante (RF12, fora desta release).
+        visitas agendadas para um participante. O agendamento por participante
+        (RF12) fica em /api/studies/{studyId}/participants/{participantId}/visits.
       security:
         - bearerAuth: []
       responses:
@@ -688,8 +694,8 @@ paths:
       summary: Exclui uma visita prevista e suas atividades
       description: |
         RESEARCHER responsável em PLANNING ou RECRUITMENT. Em RECRUITMENT,
-        a última visita não pode ser removida. Visitas com atendimentos
-        reais associados não podem ser excluídas.
+        a última visita não pode ser removida. Visitas previstas com visitas
+        agendadas associadas (em qualquer situação) não podem ser excluídas (409).
       security:
         - bearerAuth: []
       responses:
@@ -1055,6 +1061,241 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /api/studies/{studyId}/visits:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+    get:
+      tags: [Visitas agendadas]
+      summary: Lista as visitas agendadas do estudo (RF12/RF13, T18.1)
+      description: |
+        RESEARCHER ou COORDINATOR. Inclui visitas de participantes retirados.
+        Ordenação por scheduledAt crescente. Retorna [] quando não há registros.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filtra pela situação da visita
+          schema:
+            $ref: '#/components/schemas/ScheduledVisitStatus'
+        - name: participantId
+          in: query
+          required: false
+          description: Filtra pelas visitas de um participante do estudo
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+          description: Visitas agendadas do estudo
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ScheduledVisit'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/studies/{studyId}/participants/{participantId}/visits:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+      - $ref: '#/components/parameters/ParticipantId'
+    get:
+      tags: [Visitas agendadas]
+      summary: Lista as visitas agendadas de um participante (RF12, T18.1)
+      description: |
+        RESEARCHER ou COORDINATOR. O participante deve pertencer ao estudo.
+        Ordenação por scheduledAt crescente. Retorna [] quando não há registros.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Visitas agendadas do participante
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ScheduledVisit'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Visitas agendadas]
+      summary: Agenda uma visita prevista para o participante (RF12, T18.1)
+      description: |
+        Somente COORDINATOR. Cria a visita com status SCHEDULED e version 0.
+
+        Regras e erros:
+        - 400 PLANNED_VISIT_NOT_IN_STUDY: plannedVisitId não pertence ao estudo da rota.
+        - 400 VISIT_DATE_NOT_FUTURE: scheduledAt não é posterior ao instante atual.
+        - 400 VISIT_DATE_OUTSIDE_STUDY_PERIOD: a data de scheduledAt está fora
+          do período do estudo (startDate a endDate).
+        - 409 STUDY_STATUS_DOES_NOT_ALLOW_SCHEDULING: estudo fora de RECRUITMENT
+          ou EXECUTION (PLANNING, CLOSED e CANCELLED recusam).
+        - 409 PARTICIPANT_WITHDRAWN: participante retirado (RF16).
+        - 409 VISIT_ALREADY_SCHEDULED: o participante já tem visita SCHEDULED ou
+          DONE para a mesma visita prevista. Visitas ABSENT ou CANCELLED não
+          impedem um novo agendamento.
+
+        Não há rota para remarcar: para mudar a data, registre o desfecho
+        CANCELLED com justificativa e agende de novo.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduledVisitCreateRequest'
+            example:
+              plannedVisitId: 3
+              scheduledAt: '2026-11-20T09:00:00-03:00'
+      responses:
+        '201':
+          description: Visita agendada
+          headers:
+            Location:
+              schema:
+                type: string
+              description: Caminho da visita agendada criada
+            ETag:
+              schema:
+                type: string
+              description: Versão da visita para enviar em If-Match ao registrar o desfecho
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduledVisit'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/studies/{studyId}/participants/{participantId}/visits/{visitId}:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+      - $ref: '#/components/parameters/ParticipantId'
+      - $ref: '#/components/parameters/VisitId'
+    get:
+      tags: [Visitas agendadas]
+      summary: Consulta uma visita agendada (RF12/RF13, T18.1)
+      description: |
+        RESEARCHER ou COORDINATOR. A visita deve pertencer ao participante e
+        ao estudo da rota.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Visita agendada encontrada
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Versão da visita para enviar em If-Match ao registrar o desfecho
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduledVisit'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/studies/{studyId}/participants/{participantId}/visits/{visitId}/outcome:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+      - $ref: '#/components/parameters/ParticipantId'
+      - $ref: '#/components/parameters/VisitId'
+    post:
+      tags: [Visitas agendadas]
+      parameters:
+        - $ref: '#/components/parameters/VisitVersion'
+      summary: Registra o desfecho de uma visita agendada (RF13, T18.1)
+      description: |
+        Somente COORDINATOR. Transições permitidas: SCHEDULED para DONE, ABSENT
+        ou CANCELLED. DONE, ABSENT e CANCELLED são finais e não mudam. Grava
+        autor e instante e incrementa version.
+
+        Regras e erros:
+        - 400 CANCELLATION_REASON_REQUIRED: outcome=CANCELLED sem note preenchida.
+        - 409 VERSION_MISMATCH: If-Match diferente da version atual da visita.
+          Em duas requisições concorrentes, uma é aceita e a outra recebe 409.
+        - 409 VISIT_OUTCOME_FINAL: a visita já está em DONE, ABSENT ou CANCELLED.
+        - 409 STUDY_READ_ONLY: estudo em CLOSED ou CANCELLED.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VisitOutcomeRequest'
+            examples:
+              realizada:
+                value:
+                  outcome: DONE
+              cancelada:
+                value:
+                  outcome: CANCELLED
+                  note: Participante pediu para remarcar
+      responses:
+        '200':
+          description: Desfecho registrado
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Nova versão da visita
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduledVisit'
+              example:
+                id: 12
+                studyId: 1
+                participantId: 4
+                participantName: Ana Souza
+                plannedVisitId: 3
+                plannedVisitName: Avaliação inicial
+                scheduledAt: '2026-11-20T09:00:00-03:00'
+                status: DONE
+                createdByUserId: 2
+                createdAt: '2026-11-13T14:30:00-03:00'
+                outcomeByUserId: 2
+                outcomeAt: '2026-11-20T10:05:00-03:00'
+                version: 1
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -1126,6 +1367,25 @@ components:
         type: integer
         format: int64
         minimum: 1
+    VisitId:
+      name: visitId
+      in: path
+      required: true
+      description: Identificador BIGINT da visita agendada
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    VisitVersion:
+      name: If-Match
+      in: header
+      required: true
+      description: |
+        ETag forte com ScheduledVisit.version entre aspas, por exemplo "0".
+        É a versão da visita agendada, não a do estudo. Divergência responde 409.
+      schema:
+        type: string
+        pattern: '^"[0-9]+"$'
   schemas:
     UserRole:
       type: string
@@ -1570,6 +1830,102 @@ components:
           type: string
           format: date-time
           readOnly: true
+    ScheduledVisitStatus:
+      type: string
+      description: |
+        SCHEDULED=Agendada; DONE=Realizada; ABSENT=Ausente; CANCELLED=Cancelada.
+        DONE, ABSENT e CANCELLED são finais.
+      enum: [SCHEDULED, DONE, ABSENT, CANCELLED]
+    VisitOutcome:
+      type: string
+      description: Desfecho aceito no registro; SCHEDULED não é aceito no corpo
+      enum: [DONE, ABSENT, CANCELLED]
+    ScheduledVisitCreateRequest:
+      type: object
+      required: [plannedVisitId, scheduledAt]
+      properties:
+        plannedVisitId:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Visita prevista do protocolo do mesmo estudo
+        scheduledAt:
+          type: string
+          format: date-time
+          description: |
+            Data e hora da visita, ISO 8601 com fuso (ex. 2026-11-20T09:00:00-03:00).
+            Deve ser futura e cair dentro do período do estudo.
+    VisitOutcomeRequest:
+      type: object
+      required: [outcome]
+      properties:
+        outcome:
+          $ref: '#/components/schemas/VisitOutcome'
+        note:
+          type: string
+          maxLength: 500
+          description: Observação opcional; obrigatória (justificativa) quando outcome=CANCELLED
+    ScheduledVisit:
+      type: object
+      required: [id, studyId, participantId, participantName, plannedVisitId, plannedVisitName,
+                 scheduledAt, status, createdByUserId, createdAt, version]
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        studyId:
+          type: integer
+          format: int64
+          readOnly: true
+        participantId:
+          type: integer
+          format: int64
+          readOnly: true
+        participantName:
+          type: string
+          readOnly: true
+          description: Nome do candidato incluído, para exibição em listas
+        plannedVisitId:
+          type: integer
+          format: int64
+        plannedVisitName:
+          type: string
+          readOnly: true
+          description: Nome da visita prevista no momento da consulta
+        scheduledAt:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/ScheduledVisitStatus'
+        createdByUserId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Coordenador que agendou
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        outcomeByUserId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Autor do desfecho; ausente enquanto status=SCHEDULED
+        outcomeAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Instante do desfecho; ausente enquanto status=SCHEDULED
+        outcomeNote:
+          type: string
+          readOnly: true
+          description: Observação ou justificativa do desfecho, quando houver
+        version:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Versão para If-Match; também enviada no cabeçalho ETag
     ApiError:
       type: object
       required: [code, message]
@@ -1611,6 +1967,13 @@ components:
           type: string
         instance:
           type: string
+        code:
+          type: string
+          description: |
+            Código estável da regra violada (ex. VISIT_ALREADY_SCHEDULED).
+            Presente nos erros de regra de negócio da Release 2; os erros da
+            Release 1 podem não trazê-lo.
+          example: VISIT_ALREADY_SCHEDULED
   responses:
     BadRequest:
       description: Requisição inválida ou regra de validação não atendida
