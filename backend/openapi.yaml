@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: ClinicalStudyPB API
-  version: 1.4.0
+  version: 1.5.0
   description: |
     Contrato da Release 1 (RF01 a RF11) e da Release 2 em andamento. As rotas
     da Sprint 3 (identidade, ativação e decisão de consentimento do candidato;
@@ -177,8 +177,23 @@ paths:
   /api/users:
     get:
       tags: [Usuários]
-      summary: Lista usuários
-      description: Restrito ao perfil ADMINISTRATOR.
+      summary: Lista usuários da equipe
+      description: |
+        Restrito ao perfil ADMINISTRATOR. Lista só as contas da equipe
+        (ADMINISTRATOR, COORDINATOR e RESEARCHER). Contas PARTICIPANT não
+        aparecem: nascem e são acompanhadas pelo cadastro de candidato do
+        coordenador.
+
+        Regras das rotas /api/users (Sprint 3):
+        - Contas PARTICIPANT não são criadas nem administradas aqui: perfil
+          PARTICIPANT no corpo responde 409 PARTICIPANT_ROLE_NOT_ALLOWED, e
+          /api/users/{userId} de uma conta PARTICIPANT responde 404.
+        - O administrador não desativa, não exclui e não troca o perfil da
+          própria conta: 409 SELF_ACCOUNT_CHANGE_NOT_ALLOWED. Nome e e-mail
+          da própria conta podem ser editados.
+        - O sistema nunca fica sem administrador ativo: a operação que deixaria
+          zero contas ADMINISTRATOR ativas responde 409 LAST_ACTIVE_ADMINISTRATOR,
+          inclusive em requisições concorrentes.
       security:
         - bearerAuth: []
       responses:
@@ -197,7 +212,10 @@ paths:
     post:
       tags: [Usuários]
       summary: Cadastra um usuário
-      description: Restrito ao perfil ADMINISTRATOR. A senha é armazenada como hash BCrypt e o usuário inicia ativo.
+      description: |
+        Restrito ao perfil ADMINISTRATOR. A senha é armazenada como hash BCrypt e
+        o usuário inicia ativo. role=PARTICIPANT responde 409
+        PARTICIPANT_ROLE_NOT_ALLOWED (ver regras em GET /api/users).
       security:
         - bearerAuth: []
       requestBody:
@@ -228,7 +246,7 @@ paths:
     get:
       tags: [Usuários]
       summary: Consulta um usuário
-      description: Restrito ao perfil ADMINISTRATOR.
+      description: Restrito ao perfil ADMINISTRATOR. Conta PARTICIPANT responde 404.
       security:
         - bearerAuth: []
       responses:
@@ -247,7 +265,12 @@ paths:
     put:
       tags: [Usuários]
       summary: Atualiza os dados de um usuário
-      description: Restrito ao perfil ADMINISTRATOR. O e-mail deve continuar único.
+      description: |
+        Restrito ao perfil ADMINISTRATOR. O e-mail deve continuar único. Conta
+        PARTICIPANT responde 404. Erros 409: PARTICIPANT_ROLE_NOT_ALLOWED
+        (role=PARTICIPANT), SELF_ACCOUNT_CHANGE_NOT_ALLOWED (troca do perfil
+        da própria conta) e LAST_ACTIVE_ADMINISTRATOR (tirar o perfil do último
+        administrador ativo).
       security:
         - bearerAuth: []
       requestBody:
@@ -276,7 +299,11 @@ paths:
     delete:
       tags: [Usuários]
       summary: Exclui um usuário
-      description: Restrito a ADMINISTRATOR; vínculo com estudo impede a exclusão.
+      description: |
+        Restrito a ADMINISTRATOR; vínculo com estudo impede a exclusão. Conta
+        PARTICIPANT responde 404. Erros 409 adicionais:
+        SELF_ACCOUNT_CHANGE_NOT_ALLOWED (própria conta) e
+        LAST_ACTIVE_ADMINISTRATOR (último administrador ativo).
       security:
         - bearerAuth: []
       responses:
@@ -297,7 +324,7 @@ paths:
     patch:
       tags: [Usuários]
       summary: Reativa um usuário
-      description: Restrito ao perfil ADMINISTRATOR.
+      description: Restrito ao perfil ADMINISTRATOR. Conta PARTICIPANT responde 404.
       security:
         - bearerAuth: []
       responses:
@@ -320,7 +347,10 @@ paths:
     patch:
       tags: [Usuários]
       summary: Desativa um usuário
-      description: Restrito ao perfil ADMINISTRATOR.
+      description: |
+        Restrito ao perfil ADMINISTRATOR. Conta PARTICIPANT responde 404. Erros
+        409: SELF_ACCOUNT_CHANGE_NOT_ALLOWED (própria conta) e
+        LAST_ACTIVE_ADMINISTRATOR (último administrador ativo).
       security:
         - bearerAuth: []
       responses:
@@ -336,6 +366,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
 
   /api/studies:
     get:
@@ -843,9 +875,18 @@ paths:
         Leitura por COORDINATOR ou pelo RESEARCHER indicado como responsável do
         estudo. Um pesquisador não responsável recebe 403. A filtragem é feita
         pelo studyId da rota; não mistura candidatos de estudos diferentes.
-        Retorna [] quando o estudo não tem candidatos.
+        Candidaturas canceladas (status=CANCELLED) só aparecem com
+        includeCancelled=true. Retorna [] quando o estudo não tem candidatos.
       security:
         - bearerAuth: []
+      parameters:
+        - name: includeCancelled
+          in: query
+          required: false
+          description: Inclui as candidaturas canceladas na lista
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: Candidatos do estudo
@@ -883,8 +924,10 @@ paths:
         A criação do candidato e da conta/código é atômica.
 
         Regras e erros:
-        - 409 CANDIDATE_ALREADY_IN_STUDY: a mesma conta (e-mail) já é candidata
-          neste estudo. Substitui o critério da Release 1 (nome + idade).
+        - 409 CANDIDATE_ALREADY_IN_STUDY: a mesma conta (e-mail) já tem uma
+          candidatura não cancelada neste estudo. Candidaturas CANCELLED não
+          contam, então a pessoa pode ser cadastrada de novo. Substitui o
+          critério da Release 1 (nome + idade).
         - 409 EMAIL_BELONGS_TO_STAFF: o e-mail pertence a uma conta RESEARCHER,
           COORDINATOR ou ADMINISTRATOR; nada é vinculado nem criado.
         - 409 PARTICIPANT_ACCOUNT_DEACTIVATED: a conta PARTICIPANT do e-mail foi
@@ -968,6 +1011,66 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /api/studies/{studyId}/candidates/{candidateId}/cancellation:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+      - $ref: '#/components/parameters/CandidateId'
+    post:
+      tags: [Candidatos]
+      summary: Cancela a candidatura antes da inclusão (T17.2)
+      description: |
+        Somente COORDINATOR. Para corrigir um cadastro errado (por exemplo,
+        e-mail digitado errado) ou registrar a desistência antes da inclusão.
+        Não apaga dados: a candidatura passa a status=CANCELLED, com motivo,
+        autor e instante, e as respostas de elegibilidade e a decisão de
+        consentimento já registradas são preservadas. Após a inclusão, a saída
+        do estudo é a retirada do participante (RF16).
+
+        Efeitos:
+        - A candidatura sai da lista padrão do estudo e dos convites do
+          candidato no app (/api/me/invitations).
+        - Avaliação de elegibilidade (PUT .../eligibility), decisão do candidato
+          (POST /api/me/invitations/{candidateId}/decision), inclusão e novo
+          código de ativação dessa candidatura passam a responder 409
+          CANDIDATE_CANCELLED. As consultas (GET) continuam disponíveis ao
+          coordenador, para preservar o histórico.
+        - Se a conta ainda não foi ativada e não tem outra candidatura não
+          cancelada, o código de ativação pendente deixa de valer. A conta
+          continua inativa, sem ser apagada.
+
+        Regras e erros:
+        - 409 CANDIDATE_ALREADY_INCLUDED: o candidato já é participante; use a
+          retirada (RF16).
+        - 409 CANDIDATE_ALREADY_CANCELLED: a candidatura já estava cancelada.
+        - 409 STUDY_NOT_RECRUITING: estudo fora de RECRUITMENT.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CandidateCancellationRequest'
+            example:
+              reason: E-mail cadastrado com erro de digitação
+      responses:
+        '200':
+          description: Candidatura cancelada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Candidate'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
   /api/studies/{studyId}/candidates/{candidateId}/activation-code:
     parameters:
       - $ref: '#/components/parameters/StudyId'
@@ -983,6 +1086,7 @@ paths:
 
         Regras e erros:
         - 409 CANDIDATE_ALREADY_ACTIVE: a conta do candidato já foi ativada.
+        - 409 CANDIDATE_CANCELLED: a candidatura foi cancelada.
         - 409 STUDY_NOT_RECRUITING: estudo fora de RECRUITMENT.
       security:
         - bearerAuth: []
@@ -1042,7 +1146,8 @@ paths:
         candidato é ELIGIBLE se todos os INCLUSION tiverem matches=true e todos
         os EXCLUSION tiverem matches=false; caso contrário é INELIGIBLE. Após
         inclusão do candidato, novas avaliações respondem 409. Avaliar estudo
-        sem critérios também responde 409.
+        sem critérios também responde 409. Candidatura cancelada responde 409
+        CANDIDATE_CANCELLED.
       security:
         - bearerAuth: []
       requestBody:
@@ -1133,7 +1238,8 @@ paths:
         candidato só pode ser incluído uma vez no estudo. A inclusão verifica
         participantLimit de forma atômica: duas requisições pela última vaga
         não podem criar dois participantes. Condição não atendida retorna 409
-        sem gravação parcial.
+        sem gravação parcial. Candidatura cancelada responde 409
+        CANDIDATE_CANCELLED.
       security:
         - bearerAuth: []
       responses:
@@ -1520,6 +1626,9 @@ paths:
         - 400: status ausente ou diferente de GRANTED e DECLINED.
         - 404: candidatura de outra conta ou inexistente.
         - 409 CONSENT_ALREADY_DECIDED: a decisão já foi registrada.
+        - 409 CANDIDATE_CANCELLED: a candidatura foi cancelada pelo coordenador
+          (por exemplo, enquanto o convite estava aberto no app). Tem prioridade
+          sobre CONSENT_NOT_AVAILABLE.
         - 409 CONSENT_NOT_AVAILABLE: a candidatura não está em CONSENT_PENDING
           (elegibilidade não concluída como ELIGIBLE, ou candidato já incluído).
         - 409 STUDY_NOT_RECRUITING: estudo fora de RECRUITMENT.
@@ -2015,7 +2124,18 @@ components:
         - GRANTED=Aceitou: o candidato aceitou o termo simulado.
         - DECLINED=Recusou: o candidato recusou o termo simulado.
         - INCLUDED=Incluído: o coordenador incluiu o candidato como participante.
-      enum: [INVITED, ACTIVE, CONSENT_PENDING, GRANTED, DECLINED, INCLUDED]
+        - CANCELLED=Cancelado: o coordenador cancelou a candidatura antes da
+          inclusão. É final; a pessoa pode ser cadastrada de novo no estudo.
+      enum: [INVITED, ACTIVE, CONSENT_PENDING, GRANTED, DECLINED, INCLUDED, CANCELLED]
+    CandidateCancellationRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Motivo do cancelamento; espaços nas extremidades são removidos
     CandidateActivation:
       type: object
       required: [expiresAt, expired]
@@ -2077,6 +2197,24 @@ components:
           $ref: '#/components/schemas/ConsentStatus'
         activation:
           $ref: '#/components/schemas/CandidateActivation'
+        cancellation:
+          $ref: '#/components/schemas/CandidateCancellation'
+    CandidateCancellation:
+      type: object
+      description: Presente só quando status=CANCELLED
+      required: [reason, cancelledAt, cancelledByUserId]
+      properties:
+        reason:
+          type: string
+          maxLength: 500
+        cancelledAt:
+          type: string
+          format: date-time
+          readOnly: true
+        cancelledByUserId:
+          type: integer
+          format: int64
+          readOnly: true
     EligibilityStatus:
       type: string
       description: PENDING=Pendente; ELIGIBLE=Elegível; INELIGIBLE=Não elegível
