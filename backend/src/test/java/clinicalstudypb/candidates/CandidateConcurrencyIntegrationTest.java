@@ -52,12 +52,14 @@ class CandidateConcurrencyIntegrationTest extends IntegrationTestSupport {
     private JdbcTemplate jdbc;
 
     private User researcher;
+    private User participant;
     private Study study;
     private String researcherToken;
 
     @BeforeEach
     void setUp() throws Exception {
         researcher = saveUser("Pesquisadora", "candidate.lock@test.local", UserRole.RESEARCHER);
+        participant = saveUser("Ana Silva", "candidate.lock.participant@test.local", UserRole.PARTICIPANT);
         study = studyRepository.saveAndFlush(new Study("Estudo", "Objetivo", researcher.getId(),
                 LocalDate.of(2027, 1, 1), LocalDate.of(2027, 12, 31), 20));
         researcherToken = tokenFor(researcher.getEmail());
@@ -98,7 +100,8 @@ class CandidateConcurrencyIntegrationTest extends IntegrationTestSupport {
                     return mockMvc.perform(post(CANDIDATES_URL.formatted(study.getId()))
                             .header(HttpHeaders.AUTHORIZATION, bearer(token))
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"name\":\"Ana Silva\",\"age\":42}"));
+                            .content("{\"name\":\"Ana Silva\",\"age\":42,"
+                                    + "\"email\":\"ana@test.local\",\"phone\":\"83999990000\"}"));
                 });
                 try {
                     assertTrue(requestStarted.await(5, TimeUnit.SECONDS));
@@ -141,7 +144,8 @@ class CandidateConcurrencyIntegrationTest extends IntegrationTestSupport {
     }
 
     private void insertCandidateWithAge(int age) {
-        jdbc.update("INSERT INTO candidates (study_id, name, name_key, age, eligibility_status) "
-                + "VALUES (?, ?, ?, ?, 'PENDING')", study.getId(), "Ana Silva", "ana silva", age);
+        jdbc.update("INSERT INTO candidates (study_id, name, name_key, age, email, phone, user_id, "
+                + "eligibility_status) VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING')", study.getId(),
+                "Ana Silva", "ana silva", age, participant.getEmail(), "83999990000", participant.getId());
     }
 }

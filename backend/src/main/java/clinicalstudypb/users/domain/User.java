@@ -15,7 +15,7 @@ import jakarta.persistence.Table;
  *
  * @author Lucas N. de Araújo
  * @since 2026-10-21
- * @version 0.0.1
+ * @version 0.0.2
  */
 @Entity
 @Table(name = "users")
@@ -41,6 +41,9 @@ public class User {
     @Column(nullable = false)
     private boolean active = true;
 
+    @Column(name = "activation_pending", nullable = false)
+    private boolean activationPending;
+
     /** Construtor exigido pela JPA para reconstruir a entidade do banco. */
     protected User() {
     }
@@ -58,6 +61,14 @@ public class User {
         this.email = email;
         this.passwordHash = passwordHash;
         this.role = role;
+    }
+
+    /** Cria uma conta de participante que só poderá entrar após a ativação. */
+    public static User invitedParticipant(String name, String email, String passwordHash) {
+        User user = new User(name, email, passwordHash, UserRole.PARTICIPANT);
+        user.active = false;
+        user.activationPending = true;
+        return user;
     }
 
     /**
@@ -115,14 +126,29 @@ public class User {
         return this.active;
     }
 
+    /** Informa se a conta aguarda ativação por convite. */
+    public boolean isActivationPending() {
+        return activationPending;
+    }
+
+    /** Inicia o primeiro acesso sem encerrar a obrigação de definir uma senha. */
+    public void beginActivation() {
+        if (role != UserRole.PARTICIPANT || !activationPending) {
+            throw new IllegalStateException("A conta não possui ativação pendente.");
+        }
+        this.active = true;
+    }
+
     /** Marca o usuário como ativo. */
     public void activate() {
         this.active = true;
+        this.activationPending = false;
     }
 
     /** Marca o usuário como inativo sem remover seu registro. */
     public void deactivate() {
         this.active = false;
+        this.activationPending = false;
     }
 
     /**
@@ -143,5 +169,14 @@ public class User {
      */
     public void changeRole(UserRole role) {
         this.role = role;
+    }
+
+    /**
+     * Atualiza o hash de senha do usuário.
+     *
+     * @param passwordHash hash codificado da nova senha
+     */
+    public void changePassword(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 }

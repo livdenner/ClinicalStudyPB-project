@@ -332,7 +332,10 @@ class EligibilityEvaluationIntegrationTest extends IntegrationTestSupport {
     }
 
     private Candidate saveCandidate(Study owner) {
-        return candidateRepository.saveAndFlush(new Candidate(owner.getId(), "Ana Silva", "ana silva", 42));
+        String email = "eligibility.candidate." + owner.getId() + "." + userRepository.count() + "@test.local";
+        User participant = saveUser("Ana Silva", email, UserRole.PARTICIPANT);
+        return candidateRepository.saveAndFlush(new Candidate(owner.getId(), "Ana Silva", "ana silva", 42,
+                email, "83999990000", participant.getId()));
     }
 
     private String path() {

@@ -9,6 +9,8 @@ package clinicalstudypb.candidates.domain;
  */
 public class CandidateConflictException extends RuntimeException {
 
+    private final String code;
+
     /**
      * Cria a exceção com uma mensagem para a API.
      *
@@ -16,5 +18,17 @@ public class CandidateConflictException extends RuntimeException {
      */
     public CandidateConflictException(String message) {
         super(message);
+        this.code = null;
+    }
+
+    /** Cria conflito da Release 2 com código estável para os clientes. */
+    public CandidateConflictException(String code, String message) {
+        super(message);
+        this.code = code;
+    }
+
+    /** Código estável da regra, quando definido no contrato. */
+    public String getCode() {
+        return code;
     }
 }

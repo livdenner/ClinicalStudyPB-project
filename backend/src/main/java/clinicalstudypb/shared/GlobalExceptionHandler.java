@@ -114,7 +114,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({CandidateConflictException.class, ConsentConflictException.class,
             InclusionConflictException.class})
     public ProblemDetail handleCandidateConflict(RuntimeException exception) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+        if (exception instanceof CandidateConflictException candidate && candidate.getCode() != null) {
+            problem.setProperty("code", candidate.getCode());
+        }
+        return problem;
     }
 
     /**

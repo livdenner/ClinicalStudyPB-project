@@ -36,6 +36,15 @@ public class Candidate {
     @Column(nullable = false)
     private Integer age;
 
+    @Column(nullable = false, length = 255)
+    private String email;
+
+    @Column(nullable = false, length = 20)
+    private String phone;
+
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "eligibility_status", nullable = false, length = 20)
     private EligibilityStatus eligibilityStatus = EligibilityStatus.PENDING;
@@ -52,12 +61,36 @@ public class Candidate {
      * @param nameKey nome normalizado usado para detectar duplicidade
      * @param age idade informada
      */
-    public Candidate(Long studyId, String name, String nameKey, Integer age) {
+    public Candidate(Long studyId, String name, String nameKey, Integer age,
+                     String email, String phone, Long userId) {
         this.studyId = studyId;
         this.name = name;
         this.nameKey = nameKey;
         this.age = age;
+        this.email = email;
+        this.phone = phone;
+        this.userId = userId;
         this.eligibilityStatus = EligibilityStatus.PENDING;
+    }
+
+    /** Mantém a criação em memória usada por testes de regras que não gravam candidatos. */
+    public Candidate(Long studyId, String name, String nameKey, Integer age) {
+        this(studyId, name, nameKey, age, null, null, null);
+    }
+
+    /** E-mail normalizado da conta vinculada. */
+    public String getEmail() {
+        return email;
+    }
+
+    /** Telefone informado no cadastro. */
+    public String getPhone() {
+        return phone;
+    }
+
+    /** Identificador da conta PARTICIPANT vinculada. */
+    public Long getUserId() {
+        return userId;
     }
 
     /**

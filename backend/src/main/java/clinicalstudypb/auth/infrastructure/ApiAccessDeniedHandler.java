@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 
@@ -40,7 +42,11 @@ public class ApiAccessDeniedHandler implements AccessDeniedHandler {
     ) throws IOException, ServletException {
         response.setStatus(HttpServletResponse.SC_FORBIDDEN);
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        objectMapper.writeValue(response.getOutputStream(),
-                new AuthErrorResponse("FORBIDDEN", "Perfil sem permissão para a operação."));
+        boolean passwordPending = SecurityContextHolder.getContext().getAuthentication()
+                instanceof JwtAuthenticationToken token
+                && Boolean.TRUE.equals(token.getToken().getClaim("mustChangePassword"));
+        objectMapper.writeValue(response.getOutputStream(), passwordPending
+                ? new AuthErrorResponse("PASSWORD_CHANGE_REQUIRED", "Defina sua senha para continuar.")
+                : new AuthErrorResponse("FORBIDDEN", "Perfil sem permissão para a operação."));
     }
 }

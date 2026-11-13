@@ -64,7 +64,8 @@ public class CandidateController {
                 @ApiResponse(responseCode = "404", description = "Estudo não encontrado")
             })
     public List<CandidateResponse> list(@PathVariable Long studyId) {
-        return candidateService.list(studyId).stream().map(CandidateResponse::from).toList();
+        return candidateService.list(studyId).stream()
+                .map(candidate -> CandidateResponse.from(candidateService.snapshot(candidate, null))).toList();
     }
 
     /**
@@ -90,8 +91,10 @@ public class CandidateController {
             })
     public ResponseEntity<CandidateResponse> create(@PathVariable Long studyId,
                                                     @Valid @RequestBody CandidateCreateRequest request) {
-        CandidateResponse created = CandidateResponse.from(
-                candidateService.create(studyId, request.name(), request.age()));
+        CandidateService.Registration registration = candidateService.create(
+                studyId, request.name(), request.age(), request.email(), request.phone());
+        CandidateResponse created = CandidateResponse.from(candidateService.snapshot(
+                registration.candidate(), registration.issued()));
         URI location = URI.create("/api/studies/" + studyId + "/candidates/" + created.id());
         return ResponseEntity.created(location).body(created);
     }
@@ -116,6 +119,22 @@ public class CandidateController {
                 @ApiResponse(responseCode = "404", description = "Estudo ou candidato não encontrado")
             })
     public CandidateResponse get(@PathVariable Long studyId, @PathVariable Long candidateId) {
-        return CandidateResponse.from(candidateService.get(studyId, candidateId));
+        return CandidateResponse.from(candidateService.snapshot(candidateService.get(studyId, candidateId), null));
+    }
+
+    /** Gera um novo código de ativação para um candidato convidado. */
+    @PostMapping("/{candidateId}/activation-code")
+    @PreAuthorize("hasRole('COORDINATOR')")
+    @Operation(summary = "Gera novo código de ativação para o candidato",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            responses = {
+                @ApiResponse(responseCode = "200", description = "Novo código gerado"),
+                @ApiResponse(responseCode = "401", description = "Token ausente ou inválido"),
+                @ApiResponse(responseCode = "403", description = "Perfil sem permissão"),
+                @ApiResponse(responseCode = "404", description = "Candidato não encontrado"),
+                @ApiResponse(responseCode = "409", description = "Conta ativa ou estudo fora do recrutamento")
+            })
+    public CandidateActivationResponse reissue(@PathVariable Long studyId, @PathVariable Long candidateId) {
+        return CandidateActivationResponse.from(candidateService.reissue(studyId, candidateId));
     }
 }

@@ -46,13 +46,6 @@ public interface CandidateRepository extends JpaRepository<Candidate, Long> {
     @Query("select c from Candidate c where c.id = :id and c.studyId = :studyId")
     Optional<Candidate> findForConsentUpdate(@Param("id") Long id, @Param("studyId") Long studyId);
 
-    /**
-     * Confere a chave de duplicidade antes de gravar.
-     *
-     * @param studyId identificador do estudo
-     * @param nameKey nome normalizado
-     * @param age idade informada
-     * @return verdadeiro se já existir candidato com os mesmos dados
-     */
-    boolean existsByStudyIdAndNameKeyAndAge(Long studyId, String nameKey, Integer age);
+    /** Impede vincular a mesma conta duas vezes ao mesmo estudo. */
+    boolean existsByStudyIdAndUserId(Long studyId, Long userId);
 }

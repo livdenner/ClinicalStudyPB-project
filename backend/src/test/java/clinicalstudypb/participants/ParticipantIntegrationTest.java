@@ -155,7 +155,10 @@ class ParticipantIntegrationTest extends ParticipantIntegrationSupport {
         evaluate(study.getId(), candidateId, false).andExpect(status().isConflict());
         mockMvc.perform(post(studyPath(study.getId()) + "/candidates")
                         .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Nova candidata\",\"age\":42}"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Nova candidata\",\"age\":42,"
+                                + "\"email\":\"nova.candidata@clinicalstudypb.test\","
+                                + "\"phone\":\"(83) 99999-0000\"}"))
                 .andExpect(status().isConflict());
         assertEquals(included, snapshot());
     }

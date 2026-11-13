@@ -99,7 +99,9 @@ abstract class ParticipantIntegrationSupport extends IntegrationTestSupport {
         String response = mockMvc.perform(post(studyPath(owner.getId()) + "/candidates")
                         .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(Map.of("name", name, "age", 42))))
+                        .content(objectMapper.writeValueAsString(Map.of("name", name, "age", 42,
+                                "email", "participant-candidate-" + java.util.UUID.randomUUID()
+                                        + "@clinicalstudypb.test", "phone", "(83) 99999-0000"))))
                 .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
         Long id = objectMapper.readTree(response).get("id").asLong();
         if (eligibility != EligibilityStatus.PENDING) {
