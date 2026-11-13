@@ -8,6 +8,8 @@ import clinicalstudypb.users.infrastructure.UserRepository;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.security.SecureRandom;
+import java.util.Base64;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class UserService {
+
+    private static final SecureRandom RANDOM = new SecureRandom();
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -67,7 +71,42 @@ public class UserService {
      */
     @Transactional(readOnly = true)
     public Optional<User> findByEmail(String email) {
-        return userRepository.findByEmail(email);
+        return userRepository.findByEmailIgnoreCase(email);
+    }
+
+    /**
+     * Busca e bloqueia uma conta para alterações transacionais.
+     *
+     * @param id identificador do usuário
+     * @return conta bloqueada ou {@link Optional#empty()} se não existir
+     */
+    @Transactional
+    public Optional<User> findLockedById(Long id) {
+        return userRepository.findForUpdate(id);
+    }
+
+    /**
+     * Busca e bloqueia uma conta pelo e-mail para operações transacionais de candidatura ou ativação.
+     *
+     * @param email e-mail já normalizado
+     * @return conta bloqueada ou {@link Optional#empty()} se não existir
+     */
+    @Transactional
+    public Optional<User> findLockedByEmail(String email) {
+        return userRepository.findForUpdateByEmail(email);
+    }
+
+    /** Persiste uma conta sem senha conhecida e bloqueada até a ativação. */
+    @Transactional
+    public User createInvitedParticipant(String name, String email) {
+        String normalizedEmail = normalizeEmail(email);
+        ensureEmailAvailable(normalizedEmail);
+        byte[] secret = new byte[32];
+        RANDOM.nextBytes(secret);
+        String unusablePassword = Base64.getUrlEncoder().withoutPadding().encodeToString(secret);
+        User user = User.invitedParticipant(name.strip(), normalizedEmail,
+                passwordEncoder.encode(unusablePassword));
+        return userRepository.saveAndFlush(user);
     }
 
     /**

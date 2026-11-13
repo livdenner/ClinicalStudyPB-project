@@ -1,6 +1,7 @@
 package clinicalstudypb.shared;
 
 import clinicalstudypb.candidates.domain.CandidateConflictException;
+import clinicalstudypb.candidates.domain.InvalidCandidateException;
 import clinicalstudypb.candidates.domain.InvalidEligibilityEvaluationException;
 import clinicalstudypb.consent.domain.ConsentConflictException;
 import clinicalstudypb.participants.domain.InclusionConflictException;
@@ -84,6 +85,17 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Responde com 400 para dados inválidos em operações de candidatura.
+     *
+     * @param exception validação não atendida
+     * @return detalhe HTTP da regra violada
+     */
+    @ExceptionHandler(InvalidCandidateException.class)
+    public ProblemDetail handleInvalidCandidate(InvalidCandidateException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+    }
+
+    /**
      * Responde com 409 quando o estudo não pode avançar para o estado solicitado.
      *
      * @param exception transição recusada
@@ -114,7 +126,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({CandidateConflictException.class, ConsentConflictException.class,
             InclusionConflictException.class})
     public ProblemDetail handleCandidateConflict(RuntimeException exception) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+        if (exception instanceof CandidateConflictException candidate && candidate.getCode() != null) {
+            problem.setProperty("code", candidate.getCode());
+        }
+        return problem;
     }
 
     /**

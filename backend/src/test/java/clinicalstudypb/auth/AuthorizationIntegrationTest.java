@@ -140,7 +140,9 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
         }
         study = studyRepository.save(new Study("Estudo existente", "Objetivo original",
                 users.get(UserRole.RESEARCHER).getId(), LocalDate.of(2027, 1, 1), LocalDate.of(2027, 6, 30), 40));
-        candidate = candidateRepository.save(new Candidate(study.getId(), "Candidato", "candidato", 42));
+        User candidateUser = users.get(UserRole.PARTICIPANT);
+        candidate = candidateRepository.save(new Candidate(study.getId(), "Candidato", "candidato", 42,
+                candidateUser.getEmail(), "83999990000", candidateUser.getId()));
         visitId = insertVisit("Visita inicial", LocalDate.of(2027, 2, 1), 1);
         otherVisitId = insertVisit("Visita final", LocalDate.of(2027, 6, 1), 2);
         activityId = insertActivity(visitId, "Entrevista", "Histórico clínico", 1);

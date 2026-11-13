@@ -168,7 +168,8 @@ class StudyCriterionIntegrationTest extends IntegrationTestSupport {
         StudyCriterion existingCriterion = criterionRepository.saveAndFlush(
                 new StudyCriterion(study.getId(), CriterionType.INCLUSION, "Idade mínima"));
         Candidate candidate = candidateRepository.saveAndFlush(
-                new Candidate(study.getId(), "Ana Silva", "ana silva", 42));
+                new Candidate(study.getId(), "Ana Silva", "ana silva", 42,
+                        participant.getEmail(), "83999990000", participant.getId()));
         answerRepository.saveAndFlush(new EligibilityAnswer(
                 candidate.getId(), existingCriterion.getId(), true));
 
