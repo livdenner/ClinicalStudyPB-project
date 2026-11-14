@@ -338,6 +338,20 @@ public class StudyService {
     }
 
     /**
+     * Bloqueia o estudo antes da retirada de um participante (RF16), na mesma ordem
+     * {@code study -> participant} do agendamento. Assim a retirada fica serializada com
+     * novos agendamentos e com o encerramento ou cancelamento do estudo.
+     *
+     * @param id identificador do estudo
+     * @return estudo bloqueado até o encerramento da transação
+     * @throws ResourceNotFoundException quando o estudo não existe
+     */
+    @Transactional
+    public Study lockForParticipantWithdrawal(Long id) {
+        return getStudyForUpdate(id);
+    }
+
+    /**
      * Confere a versão apresentada pelo cliente antes de alterar o protocolo.
      * Ao marcar a entidade como modificada, a JPA incrementa a versão no commit.
      *

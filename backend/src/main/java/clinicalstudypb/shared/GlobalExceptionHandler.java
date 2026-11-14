@@ -5,6 +5,8 @@ import clinicalstudypb.candidates.domain.InvalidCandidateException;
 import clinicalstudypb.candidates.domain.InvalidEligibilityEvaluationException;
 import clinicalstudypb.consent.domain.ConsentConflictException;
 import clinicalstudypb.participants.domain.InclusionConflictException;
+import clinicalstudypb.participants.domain.InvalidWithdrawalException;
+import clinicalstudypb.participants.domain.WithdrawalConflictException;
 import clinicalstudypb.scheduling.domain.InvalidScheduledVisitException;
 import clinicalstudypb.scheduling.domain.SchedulingConflictException;
 import clinicalstudypb.studies.domain.InvalidStudyException;
@@ -181,6 +183,30 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(SchedulingConflictException.class)
     public ProblemDetail handleSchedulingConflict(SchedulingConflictException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+        problem.setProperty("code", exception.getCode());
+        return problem;
+    }
+
+    /**
+     * Responde com 400 quando o motivo da retirada é inválido (RF16).
+     *
+     * @param exception erro de validação da retirada
+     * @return detalhe HTTP da validação
+     */
+    @ExceptionHandler(InvalidWithdrawalException.class)
+    public ProblemDetail handleInvalidWithdrawal(InvalidWithdrawalException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+    }
+
+    /**
+     * Responde com 409 e código estável quando o estado impede a retirada (RF16).
+     *
+     * @param exception conflito da retirada
+     * @return detalhe HTTP com propriedade {@code code}
+     */
+    @ExceptionHandler(WithdrawalConflictException.class)
+    public ProblemDetail handleWithdrawalConflict(WithdrawalConflictException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
         problem.setProperty("code", exception.getCode());
         return problem;
