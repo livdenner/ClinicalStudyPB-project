@@ -1,11 +1,12 @@
 openapi: 3.0.3
 info:
   title: ClinicalStudyPB API
-  version: 1.5.1
+  version: 1.6.0
   description: |
     Contrato da Release 1 (RF01 a RF11) e da Release 2 em andamento. As rotas
     da Sprint 3 (identidade, ativação e decisão de consentimento do candidato;
-    agendamento e desfecho de visitas, RF12 e RF13) são o alvo acordado; sua
+    agendamento e desfecho de visitas, RF12 e RF13; resultados, histórico e
+    retirada, RF14 a RF16) são o alvo acordado; sua
     presença aqui não indica implementação pronta, e elas só aparecem no
     Swagger UI gerado pela aplicação depois de implementadas.
 
@@ -25,6 +26,8 @@ info:
       as demais rotas respondem 403 com code PASSWORD_CHANGE_REQUIRED.
     - Mudanças de estado registram ator, instante e origem/destino em histórico.
     - COORDINATOR agenda visitas e registra o desfecho; RESEARCHER consulta.
+    - RESEARCHER responsável registra os resultados fictícios (RF14); COORDINATOR
+      registra a retirada (RF16); ambos consultam o histórico do participante (RF15).
     - Erros de regra de negócio da Release 2 trazem `code` estável no ProblemDetail.
 servers:
   - url: /
@@ -40,6 +43,7 @@ tags:
   - name: Consentimento
   - name: Participantes
   - name: Visitas agendadas
+  - name: Resultados
   - name: Convites do participante
 paths:
   /api/auth/login:
@@ -802,6 +806,8 @@ paths:
         RESEARCHER responsável em PLANNING ou RECRUITMENT. IDs das atividades
         existentes são preservados; atividades omitidas são excluídas.
         A ordem da lista define posições 1..N. Ao menos uma atividade permanece.
+        Omitir uma atividade que já tem resultado registrado (RF14) responde
+        409 ACTIVITY_HAS_RESULTS.
       security:
         - bearerAuth: []
       requestBody:
@@ -854,18 +860,15 @@ paths:
     parameters:
       - $ref: '#/components/parameters/StudyId'
       - $ref: '#/components/parameters/PlannedVisitId'
-      - name: activityId
-        in: path
-        required: true
-        schema:
-          type: integer
-          format: int64
+      - $ref: '#/components/parameters/ActivityId'
     delete:
       tags: [Visitas previstas]
       parameters:
         - $ref: '#/components/parameters/StudyVersion'
       summary: Exclui uma atividade da visita
-      description: RESEARCHER responsável; a última atividade recebe 409.
+      description: |
+        RESEARCHER responsável; a última atividade recebe 409. Atividade com
+        resultado registrado (RF14) responde 409 ACTIVITY_HAS_RESULTS.
       security:
         - bearerAuth: []
       responses:
@@ -1251,7 +1254,8 @@ paths:
         Somente COORDINATOR. Exige estudo em RECRUITMENT, candidato do estudo
         com eligibilityStatus=ELIGIBLE e consentimento simulado GRANTED. O
         candidato só pode ser incluído uma vez no estudo. A inclusão verifica
-        participantLimit de forma atômica: duas requisições pela última vaga
+        participantLimit de forma atômica (participantes retirados continuam
+        ocupando a vaga, por decisão da PO): duas requisições pela última vaga
         não podem criar dois participantes. Condição não atendida retorna 409
         sem gravação parcial. Candidatura cancelada responde 409
         CANDIDATE_CANCELLED.
@@ -1284,7 +1288,9 @@ paths:
     get:
       tags: [Participantes]
       summary: Lista participantes incluídos no estudo (RF11, T15.1)
-      description: RESEARCHER ou COORDINATOR. Retorna [] quando não há participantes.
+      description: |
+        RESEARCHER ou COORDINATOR. Inclui participantes retirados, identificados
+        por status=WITHDRAWN. Retorna [] quando não há participantes.
       security:
         - bearerAuth: []
       responses:
@@ -1326,6 +1332,106 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+
+  /api/studies/{studyId}/participants/{participantId}/history:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+      - $ref: '#/components/parameters/ParticipantId'
+    get:
+      tags: [Participantes]
+      summary: Consulta o histórico do participante (RF15, T20.1)
+      description: |
+        Somente leitura. RESEARCHER ou COORDINATOR; outros perfis recebem 403.
+        Participante de outro estudo, ou inexistente, responde 404.
+
+        Reúne em uma consulta a situação do participante (ativo ou retirado), a
+        inclusão, a retirada (quando houver) e as visitas agendadas em ordem
+        cronológica de scheduledAt, cada uma com o desfecho e os resultados por
+        atividade. Visitas canceladas pela retirada aparecem como CANCELLED.
+        Participante sem visitas retorna visits=[], não erro.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Histórico do participante
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParticipantHistory'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/studies/{studyId}/participants/{participantId}/withdrawal:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+      - $ref: '#/components/parameters/ParticipantId'
+    post:
+      tags: [Participantes]
+      summary: Registra a retirada do participante (RF16, T20.1)
+      description: |
+        Somente COORDINATOR. Motivo obrigatório; data e autor são gravados pelo
+        backend. Em uma única operação atômica:
+        - o participante passa a status=WITHDRAWN;
+        - as visitas SCHEDULED com scheduledAt posterior ao instante da retirada
+          passam a CANCELLED, com outcomeNote "Retirada do participante", o
+          mesmo autor e instante, e version incrementada (um desfecho enviado
+          depois com a versão antiga recebe 409 VERSION_MISMATCH ou
+          VISIT_OUTCOME_FINAL);
+        - novos agendamentos passam a responder 409 PARTICIPANT_WITHDRAWN.
+        Se o cancelamento das visitas falhar, a retirada não é gravada.
+
+        Visitas SCHEDULED já vencidas continuam aguardando desfecho, e visitas
+        realizadas antes da retirada continuam aceitando resultados (RF14). A
+        vaga não volta ao estudo e o participante não pode ser reincluído
+        (decisão da PO).
+
+        Regras e erros:
+        - 400: reason ausente ou em branco.
+        - 409 PARTICIPANT_ALREADY_WITHDRAWN: o participante já foi retirado.
+        - 409 STUDY_READ_ONLY: estudo em CLOSED ou CANCELLED.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParticipantWithdrawalRequest'
+            example:
+              reason: Participante informou que não pode mais comparecer às visitas
+      responses:
+        '200':
+          description: Retirada registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Participant'
+              example:
+                id: 4
+                studyId: 1
+                candidateId: 14
+                candidateName: Ana Souza
+                includedAt: '2026-11-13T10:00:00-03:00'
+                status: WITHDRAWN
+                withdrawal:
+                  reason: Participante informou que não pode mais comparecer às visitas
+                  withdrawnAt: '2026-11-21T15:20:00-03:00'
+                  withdrawnByUserId: 2
+                  cancelledVisitCount: 2
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
 
   /api/studies/{studyId}/visits:
     parameters:
@@ -1564,6 +1670,97 @@ paths:
         '409':
           $ref: '#/components/responses/Conflict'
 
+  /api/studies/{studyId}/participants/{participantId}/visits/{visitId}/results:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+      - $ref: '#/components/parameters/ParticipantId'
+      - $ref: '#/components/parameters/VisitId'
+    get:
+      tags: [Resultados]
+      summary: Consulta os resultados da visita por atividade (RF14, T20.1)
+      description: |
+        RESEARCHER ou COORDINATOR. Lista as atividades da visita prevista
+        correspondente, na ordem do protocolo, cada uma com o resultado
+        registrado ou result ausente. Funciona para visitas em qualquer
+        situação; só visitas DONE aceitam registro. Visita que não pertence
+        ao participante e ao estudo da rota responde 404.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Atividades da visita com os resultados registrados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisitResults'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/studies/{studyId}/participants/{participantId}/visits/{visitId}/results/{activityId}:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+      - $ref: '#/components/parameters/ParticipantId'
+      - $ref: '#/components/parameters/VisitId'
+      - $ref: '#/components/parameters/ActivityId'
+    put:
+      tags: [Resultados]
+      summary: Registra ou atualiza o resultado de uma atividade (RF14, T20.1)
+      description: |
+        Somente o RESEARCHER responsável pelo estudo; COORDINATOR e pesquisador
+        não responsável recebem 403. Registra (201) ou substitui (200) o
+        resultado fictício de uma atividade da visita. A substituição é
+        completa: note omitida na atualização apaga a observação anterior.
+        Valores são texto livre, fictícios e sem interpretação clínica; não há
+        cálculo automático. Grava autor e instante da última gravação.
+
+        Regras e erros:
+        - 400: value ausente ou em branco.
+        - 404: visita que não pertence ao participante e ao estudo da rota, ou
+          activityId que não pertence à visita prevista desta visita agendada.
+        - 409 VISIT_NOT_DONE: a visita não está em DONE (agendada, ausente ou
+          cancelada).
+        - 409 STUDY_READ_ONLY: estudo em CLOSED ou CANCELLED.
+        A retirada do participante não bloqueia resultados de visitas
+        realizadas antes dela.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivityResultWriteRequest'
+            example:
+              value: 120x80 mmHg
+              note: Medida após 5 minutos em repouso
+      responses:
+        '200':
+          description: Resultado atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityResult'
+        '201':
+          description: Resultado registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivityResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
   /api/me/invitations:
     get:
       tags: [Convites do participante]
@@ -1767,6 +1964,15 @@ components:
       schema:
         type: string
         pattern: '^"[0-9]+"$'
+    ActivityId:
+      name: activityId
+      in: path
+      required: true
+      description: Identificador BIGINT da atividade da visita prevista
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
   schemas:
     UserRole:
       type: string
@@ -2397,7 +2603,7 @@ components:
           description: Instante da decisão; ausente em CONSENT_PENDING
     Participant:
       type: object
-      required: [id, studyId, candidateId, candidateName, includedAt]
+      required: [id, studyId, candidateId, candidateName, includedAt, status]
       properties:
         id:
           type: integer
@@ -2418,6 +2624,155 @@ components:
           type: string
           format: date-time
           readOnly: true
+        status:
+          $ref: '#/components/schemas/ParticipantStatus'
+        withdrawal:
+          $ref: '#/components/schemas/ParticipantWithdrawal'
+    ParticipantStatus:
+      type: string
+      description: ACTIVE=Ativo; WITHDRAWN=Retirado (final)
+      enum: [ACTIVE, WITHDRAWN]
+    ParticipantWithdrawalRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Motivo da retirada; espaços nas extremidades são removidos
+    ParticipantWithdrawal:
+      type: object
+      description: Presente só quando status=WITHDRAWN
+      required: [reason, withdrawnAt, withdrawnByUserId, cancelledVisitCount]
+      properties:
+        reason:
+          type: string
+          maxLength: 500
+        withdrawnAt:
+          type: string
+          format: date-time
+          readOnly: true
+        withdrawnByUserId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Coordenador que registrou a retirada
+        cancelledVisitCount:
+          type: integer
+          minimum: 0
+          readOnly: true
+          description: Quantidade de visitas futuras canceladas pela retirada
+    ActivityResultWriteRequest:
+      type: object
+      required: [value]
+      properties:
+        value:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Valor fictício em texto livre (ex. "120x80 mmHg"); sem interpretação clínica
+        note:
+          type: string
+          maxLength: 500
+          description: Observação opcional
+    ActivityResult:
+      type: object
+      required: [visitId, activityId, value, recordedByUserId, recordedAt]
+      properties:
+        visitId:
+          type: integer
+          format: int64
+          readOnly: true
+        activityId:
+          type: integer
+          format: int64
+          readOnly: true
+        value:
+          type: string
+          maxLength: 200
+        note:
+          type: string
+          maxLength: 500
+        recordedByUserId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Pesquisador da última gravação
+        recordedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Instante da última gravação
+    VisitResultActivity:
+      type: object
+      required: [activityId, name, description, position]
+      properties:
+        activityId:
+          type: integer
+          format: int64
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        description:
+          type: string
+          readOnly: true
+        position:
+          type: integer
+          minimum: 1
+          readOnly: true
+          description: Ordem da atividade no protocolo
+        result:
+          $ref: '#/components/schemas/ActivityResult'
+    VisitResults:
+      type: object
+      required: [visitId, plannedVisitId, plannedVisitName, status, activities]
+      properties:
+        visitId:
+          type: integer
+          format: int64
+          readOnly: true
+        plannedVisitId:
+          type: integer
+          format: int64
+          readOnly: true
+        plannedVisitName:
+          type: string
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/ScheduledVisitStatus'
+        activities:
+          type: array
+          readOnly: true
+          description: Atividades na ordem do protocolo; result ausente quando ainda não registrado
+          items:
+            $ref: '#/components/schemas/VisitResultActivity'
+    ParticipantHistoryVisit:
+      description: Visita agendada com desfecho e resultados por atividade
+      allOf:
+        - $ref: '#/components/schemas/ScheduledVisit'
+        - type: object
+          required: [results]
+          properties:
+            results:
+              type: array
+              readOnly: true
+              description: Resultados registrados, na ordem do protocolo; [] quando não há
+              items:
+                $ref: '#/components/schemas/ActivityResult'
+    ParticipantHistory:
+      type: object
+      required: [participant, visits]
+      properties:
+        participant:
+          $ref: '#/components/schemas/Participant'
+        visits:
+          type: array
+          readOnly: true
+          description: Visitas em ordem cronológica de scheduledAt; [] quando não há
+          items:
+            $ref: '#/components/schemas/ParticipantHistoryVisit'
     ScheduledVisitStatus:
       type: string
       description: |
