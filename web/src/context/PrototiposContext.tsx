@@ -176,6 +176,7 @@ const CLASSES_ESTADOS_PROTOTIPO: Record<string, string> = {
     ),
     pendente: "bg-[var(--color-warning-soft)] text-[var(--color-warning)]",
     agendada: "bg-[var(--color-neutral-soft)] text-[var(--color-neutral)]",
+    "acompanhamento concluído": "bg-[var(--color-success-soft)] text-[var(--color-success)]",
     realizada: "bg-[var(--color-success-soft)] text-[var(--color-success)]",
     elegível: "bg-[var(--color-success-soft)] text-[var(--color-success)]",
     "não elegível": "bg-[var(--color-neutral-soft)] text-[var(--color-neutral)]",

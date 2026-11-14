@@ -452,7 +452,7 @@ function GestaoCandidatos({
             {mensagemSucesso && (
                 <div
                     role="status"
-                    className="rounded-xl border border-[#A7F3D0] bg-[#ECFDF5] px-4 py-3 text-sm font-medium text-[#065F46]"
+                    className="rounded-xl border border-[var(--color-success-border)] bg-[var(--color-success-soft)] px-4 py-3 text-sm font-medium text-[var(--color-success)]"
                 >
                     {mensagemSucesso}
                 </div>

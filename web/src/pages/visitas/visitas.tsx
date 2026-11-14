@@ -119,7 +119,8 @@ export function VisitasPage() {
                         >
                             <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--color-title)]">
                                 <span>
-                                    Resumo do acompanhamento <b className="text-[#b91c1c]">*</b>
+                                    Resumo do acompanhamento{" "}
+                                    <b className="text-[var(--color-error)]">*</b>
                                 </span>
                                 <textarea
                                     name="notes"
@@ -222,11 +223,11 @@ export function VisitasPage() {
 
                     <div className="mt-2 flex flex-col gap-2 border-t border-[#e2e8f0] pt-4 text-xs font-medium text-[var(--color-muted)]">
                         <span className="flex items-center gap-2">
-                            <i className="h-2.5 w-2.5 rounded-full bg-[#2563B8]" />
+                            <i className="h-2.5 w-2.5 rounded-full bg-[var(--color-info)]" />
                             {visits.filter((v) => v.status === "Agendada").length} agendadas
                         </span>
                         <span className="flex items-center gap-2">
-                            <i className="h-2.5 w-2.5 rounded-full bg-[#d97706]" />
+                            <i className="h-2.5 w-2.5 rounded-full bg-[var(--color-warning)]" />
                             {visits.filter((v) => v.status === "Pendente").length} pendentes
                         </span>
                         <span className="flex items-center gap-2">
@@ -356,7 +357,7 @@ function ModalAgendarVisita({
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--color-title)]">
                     <span>
-                        Estudo <b className="text-[#b91c1c]">*</b>
+                        Estudo <b className="text-[var(--color-error)]">*</b>
                     </span>
                     <select
                         value={studyId}
@@ -373,7 +374,7 @@ function ModalAgendarVisita({
 
                 <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--color-title)]">
                     <span>
-                        Participante <b className="text-[#b91c1c]">*</b>
+                        Participante <b className="text-[var(--color-error)]">*</b>
                     </span>
                     <select
                         name="participant"
@@ -391,7 +392,7 @@ function ModalAgendarVisita({
                 <div className="grid grid-cols-2 gap-3 max-[540px]:grid-cols-1">
                     <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--color-title)]">
                         <span>
-                            Data <b className="text-[#b91c1c]">*</b>
+                            Data <b className="text-[var(--color-error)]">*</b>
                         </span>
                         <input
                             name="date"
@@ -404,7 +405,7 @@ function ModalAgendarVisita({
 
                     <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--color-title)]">
                         <span>
-                            Tipo <b className="text-[#b91c1c]">*</b>
+                            Tipo <b className="text-[var(--color-error)]">*</b>
                         </span>
                         <select
                             name="type"

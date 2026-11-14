@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it } from "vitest";
 import { AuthProvider } from "../context/AuthContext";
-import { PrototiposProvider } from "../context/PrototiposContext";
+import { PrototipoBadge, PrototiposProvider } from "../context/PrototiposContext";
 import { VisaoGeralPage } from "./dashboard/visao-geral";
 import { RelatoriosPage } from "./relatorios/relatorios";
 import { VisitasPage } from "./visitas/visitas";
@@ -62,4 +62,12 @@ describe("Protótipos web de Visão geral, Visitas e Relatórios (T7.2)", () => 
         expect(screen.getByText("Situação das visitas")).toBeInTheDocument();
         expect(screen.getByText("Resumo por estudo")).toBeInTheDocument();
     });
+});
+
+it("T24.2: acompanhamento concluído usa a cor de sucesso", () => {
+    render(<PrototipoBadge>Acompanhamento concluído</PrototipoBadge>);
+    expect(screen.getByText("Acompanhamento concluído")).toHaveClass(
+        "bg-[var(--color-success-soft)]",
+        "text-[var(--color-success)]"
+    );
 });

@@ -153,7 +153,7 @@ export function VisaoGeralPage() {
                         >
                             <div className="flex items-center gap-3">
                                 <span
-                                    className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#d97706]"
+                                    className="h-2.5 w-2.5 shrink-0 rounded-full bg-[var(--color-warning)]"
                                     aria-hidden="true"
                                 />
                                 <div>
@@ -185,7 +185,7 @@ export function VisaoGeralPage() {
                         >
                             <div className="flex items-center gap-3">
                                 <span
-                                    className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#2563B8]"
+                                    className="h-2.5 w-2.5 shrink-0 rounded-full bg-[var(--color-info)]"
                                     aria-hidden="true"
                                 />
                                 <div>

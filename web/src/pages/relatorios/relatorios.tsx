@@ -154,7 +154,7 @@ export function RelatoriosPage() {
                             <span className="text-[var(--color-muted)]">Incluídos</span>
                             <div className="h-2.5 w-full overflow-hidden rounded-full bg-[#e2e8f0]">
                                 <div
-                                    className="h-full rounded-full bg-[#2563B8]"
+                                    className="h-full rounded-full bg-[var(--color-info)]"
                                     style={{ width: `${incluidosPercent}%` }}
                                 />
                             </div>
