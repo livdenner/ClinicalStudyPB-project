@@ -43,9 +43,11 @@ class ParticipantIntegrationTest extends ParticipantIntegrationSupport {
                 .andExpect(jsonPath("$.studyId").value(study.getId()))
                 .andExpect(jsonPath("$.candidateId").value(candidateId))
                 .andExpect(jsonPath("$.candidateName").value("Ana Silva"))
-                .andExpect(jsonPath("$.includedAt").value(NOW.toString()));
+                .andExpect(jsonPath("$.includedAt").value(NOW.toString()))
+                .andExpect(jsonPath("$.status").value("ACTIVE"))
+                .andExpect(jsonPath("$.withdrawal").doesNotExist());
         JsonNode payload = objectMapper.readTree(response.andReturn().getResponse().getContentAsString());
-        assertEquals(5, payload.size());
+        assertEquals(6, payload.size());
         Long id = payload.get("id").asLong();
         String location = studyPath(study.getId()) + "/participants/" + id;
         response.andExpect(header().string(HttpHeaders.LOCATION, location));
@@ -300,7 +302,13 @@ class ParticipantIntegrationTest extends ParticipantIntegrationSupport {
                         + ".post.requestBody").doesNotExist())
                 .andExpect(jsonPath("$.paths['/api/studies/{studyId}/participants'].get").exists())
                 .andExpect(jsonPath("$.paths['/api/studies/{studyId}/participants/{participantId}'].get").exists())
+                .andExpect(jsonPath("$.paths['/api/studies/{studyId}/participants/{participantId}/withdrawal']"
+                        + ".post").exists())
                 .andExpect(jsonPath("$.components.schemas.Participant.properties.candidateName").exists())
-                .andExpect(jsonPath("$.components.schemas.Participant.required.length()").value(5));
+                .andExpect(jsonPath("$.components.schemas.Participant.properties.status").exists())
+                .andExpect(jsonPath("$.components.schemas.Participant.properties.withdrawal").exists())
+                .andExpect(jsonPath("$.components.schemas.Participant.required.length()").value(6))
+                .andExpect(jsonPath("$.components.schemas.ParticipantWithdrawalRequest.required[0]")
+                        .value("reason"));
     }
 }

@@ -55,7 +55,7 @@ abstract class ParticipantIntegrationSupport extends IntegrationTestSupport {
     @Autowired
     protected JdbcTemplate jdbc;
     @MockitoBean(name = "participantClock")
-    private Clock clock;
+    protected Clock clock;
 
     protected User researcher;
     protected User coordinator;
