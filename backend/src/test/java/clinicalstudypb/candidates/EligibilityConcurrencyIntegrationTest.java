@@ -75,7 +75,9 @@ class EligibilityConcurrencyIntegrationTest extends IntegrationTestSupport {
         token = tokenFor(coordinator.getEmail());
         study = studyRepository.saveAndFlush(new Study("Concorrência", "Objetivo", researcher.getId(),
                 LocalDate.of(2027, 1, 1), LocalDate.of(2027, 12, 31), 20));
-        candidate = candidateRepository.saveAndFlush(new Candidate(study.getId(), "Ana Silva", "ana silva", 42));
+        User participant = saveUser("Ana Silva", "eligibility.lock.candidate@test.local", UserRole.PARTICIPANT);
+        candidate = candidateRepository.saveAndFlush(new Candidate(study.getId(), "Ana Silva", "ana silva", 42,
+                participant.getEmail(), "83999990000", participant.getId()));
         StudyCriterion inclusion = criterionRepository.saveAndFlush(
                 new StudyCriterion(study.getId(), CriterionType.INCLUSION, "Inclusão"));
         StudyCriterion exclusion = criterionRepository.saveAndFlush(

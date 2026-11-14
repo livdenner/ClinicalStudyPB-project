@@ -191,12 +191,17 @@ class DemoSeedIntegrationTest extends IntegrationTestSupport {
     void apiRecusaCandidatoDuplicadoDoSeed() throws Exception {
         runSeeds();
 
-        // Confere que o name_key gravado pelo script é o mesmo que a API calcula.
+        String email = jdbc.queryForObject("""
+                SELECT c.email FROM candidates c JOIN studies s ON s.id = c.study_id
+                 WHERE s.title = ? AND c.name = ?
+                """, String.class, INFLUENZA_STUDY, INCLUDED_CANDIDATE);
         mockMvc.perform(post("/api/studies/" + studyIdByTitle(INFLUENZA_STUDY) + "/candidates")
                         .header(HttpHeaders.AUTHORIZATION, bearer(demoToken(COORDINATOR_EMAIL)))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"ANTÔNIA FERREIRA LIMA\",\"age\":71}"))
-                .andExpect(status().isConflict());
+                        .content(objectMapper.writeValueAsString(Map.of("name", "ANTÔNIA FERREIRA LIMA",
+                                "age", 71, "email", email, "phone", "(83) 99999-0000"))))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CANDIDATE_ALREADY_IN_STUDY"));
     }
 
     @Test
@@ -267,10 +272,11 @@ class DemoSeedIntegrationTest extends IntegrationTestSupport {
         runSeeds();
 
         assertEquals(first, counts());
-        assertEquals(4L, first.get("users"));
+        assertEquals(25L, first.get("users"));
         assertEquals(6L, first.get("studies"));
         assertEquals(14L, first.get("criteria"));
         assertEquals(21L, first.get("candidates"));
+        assertEquals(21L, first.get("invites"));
         assertEquals(43L, first.get("answers"));
         assertEquals(19L, first.get("evaluations"));
         assertEquals(14L, first.get("consents"));
@@ -353,6 +359,7 @@ class DemoSeedIntegrationTest extends IntegrationTestSupport {
                        (SELECT COUNT(*) FROM planned_activities) AS activities,
                        (SELECT COUNT(*) FROM study_criteria) AS criteria,
                        (SELECT COUNT(*) FROM candidates) AS candidates,
+                       (SELECT COUNT(*) FROM candidate_activation_invites) AS invites,
                        (SELECT COUNT(*) FROM eligibility_answers) AS answers,
                        (SELECT COUNT(*) FROM eligibility_evaluations) AS evaluations,
                        (SELECT COUNT(*) FROM simulated_consents) AS consents,

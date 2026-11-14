@@ -21,6 +21,7 @@ import clinicalstudypb.criteria.infrastructure.StudyCriterionRepository;
 import clinicalstudypb.participants.domain.Participant;
 import clinicalstudypb.participants.infrastructure.ParticipantRepository;
 import clinicalstudypb.studies.domain.Study;
+import clinicalstudypb.studies.domain.StudyStatus;
 import clinicalstudypb.support.IntegrationTestSupport;
 import clinicalstudypb.users.domain.User;
 import clinicalstudypb.users.domain.UserRole;
@@ -299,6 +300,25 @@ class EligibilityEvaluationIntegrationTest extends IntegrationTestSupport {
     }
 
     @Test
+    void cancelledCandidateCannotBeEvaluatedAndPreservesStoredEvaluation() throws Exception {
+        study.advanceStatus(StudyStatus.RECRUITMENT);
+        studyRepository.saveAndFlush(study);
+        evaluate(body(true, true, false, false)).andExpect(status().isOk());
+        JsonNode before = currentEvaluation();
+        mockMvc.perform(post("/api/studies/{studyId}/candidates/{candidateId}/cancellation",
+                        study.getId(), candidate.getId())
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"Desistiu antes da inclusão\"}"))
+                .andExpect(status().isOk());
+
+        evaluate(body(false, true, false, false))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CANDIDATE_CANCELLED"));
+        assertEquals(before, currentEvaluation());
+    }
+
+    @Test
     void firstAnswerPreventsAddingMoreCriteriaToStudyProtocol() throws Exception {
         evaluate(objectMapper.writeValueAsString(Map.of("answers", List.of(
                 Map.of("criterionId", criteria.get(0).getId(), "matches", true)))))
@@ -332,7 +352,10 @@ class EligibilityEvaluationIntegrationTest extends IntegrationTestSupport {
     }
 
     private Candidate saveCandidate(Study owner) {
-        return candidateRepository.saveAndFlush(new Candidate(owner.getId(), "Ana Silva", "ana silva", 42));
+        String email = "eligibility.candidate." + owner.getId() + "." + userRepository.count() + "@test.local";
+        User participant = saveUser("Ana Silva", email, UserRole.PARTICIPANT);
+        return candidateRepository.saveAndFlush(new Candidate(owner.getId(), "Ana Silva", "ana silva", 42,
+                email, "83999990000", participant.getId()));
     }
 
     private String path() {

@@ -1,7 +1,7 @@
 -- Dados fictícios de recrutamento para os estudos de demonstração (T16.3): critérios, candidatos,
 -- respostas de elegibilidade, consentimento simulado e participantes.
 --
--- Pré-requisitos: migrações até a V10, backend/dev/seed_demo_users.sql e
+-- Pré-requisitos: migrações até a V11, backend/dev/seed_demo_users.sql e
 -- backend/dev/seed_demo_studies.sql, nessa ordem.
 --
 -- Repetível: um estudo só recebe dados se ainda não tiver critérios nem candidatos, então rodar o
@@ -119,6 +119,8 @@ DECLARE
     included_total INTEGER;
     new_criterion_id BIGINT;
     new_candidate_id BIGINT;
+    new_user_id BIGINT;
+    candidate_email TEXT;
     criterion_ids BIGINT[];
     computed_status TEXT;
     position_index INTEGER;
@@ -168,11 +170,24 @@ BEGIN
                 ELSE 'ELIGIBLE'
             END;
 
-            -- name_key segue a mesma normalização da API, que usa esse valor para detectar duplicidade.
-            INSERT INTO candidates (study_id, name, name_key, age, eligibility_status)
+            -- Cada identidade fictícia pode receber um novo código de ativação pela API.
+            candidate_email := 'demo-candidate-'
+                || md5((study ->> 'title') || ':' || (candidate ->> 'name'))
+                || '@clinicalstudypb.invalid';
+            INSERT INTO users (name, email, password_hash, role, active, activation_pending)
+            VALUES (candidate ->> 'name', candidate_email,
+                    '{bcrypt}$2a$10$XvTRsPld615GPVfvH3j3fuIKUt4rxnR2D5IRbtCKk/WoUOM6m7ooy',
+                    'PARTICIPANT', FALSE, TRUE)
+            RETURNING id INTO new_user_id;
+
+            -- name_key é preservado para os dados anteriores à mudança de identidade.
+            INSERT INTO candidates (study_id, name, name_key, age, email, phone, user_id, eligibility_status)
             VALUES (target_study_id, candidate ->> 'name', lower(candidate ->> 'name'),
-                    (candidate ->> 'age')::INTEGER, computed_status)
+                    (candidate ->> 'age')::INTEGER, candidate_email, '00000000', new_user_id, computed_status)
             RETURNING id INTO new_candidate_id;
+            INSERT INTO candidate_activation_invites (user_id, code_hash, created_at, expires_at)
+            VALUES (new_user_id, md5(gen_random_uuid()::text) || md5(gen_random_uuid()::text),
+                    CURRENT_TIMESTAMP - INTERVAL '73 hours', CURRENT_TIMESTAMP - INTERVAL '1 hour');
 
             IF jsonb_array_length(answer_list) > 0 THEN
                 FOR position_index IN 1 .. jsonb_array_length(answer_list) LOOP

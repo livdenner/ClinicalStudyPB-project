@@ -24,7 +24,11 @@ public interface CandidateRepository extends JpaRepository<Candidate, Long> {
      * @param studyId identificador do estudo
      * @return candidatos do estudo
      */
+    /** Lista os candidatos do estudo incluindo cancelados, na ordem de cadastro. */
     List<Candidate> findAllByStudyIdOrderByIdAsc(Long studyId);
+
+    /** Lista os candidatos não cancelados do estudo, na ordem de cadastro. */
+    List<Candidate> findAllByStudyIdAndCancelledAtIsNullOrderByIdAsc(Long studyId);
 
     /**
      * Busca um candidato somente dentro do estudo indicado.
@@ -46,13 +50,9 @@ public interface CandidateRepository extends JpaRepository<Candidate, Long> {
     @Query("select c from Candidate c where c.id = :id and c.studyId = :studyId")
     Optional<Candidate> findForConsentUpdate(@Param("id") Long id, @Param("studyId") Long studyId);
 
-    /**
-     * Confere a chave de duplicidade antes de gravar.
-     *
-     * @param studyId identificador do estudo
-     * @param nameKey nome normalizado
-     * @param age idade informada
-     * @return verdadeiro se já existir candidato com os mesmos dados
-     */
-    boolean existsByStudyIdAndNameKeyAndAge(Long studyId, String nameKey, Integer age);
+    /** Impede vincular a mesma conta duas vezes ao mesmo estudo enquanto houver candidatura não cancelada. */
+    boolean existsByStudyIdAndUserIdAndCancelledAtIsNull(Long studyId, Long userId);
+
+    /** Verifica se a conta possui alguma candidatura não cancelada em qualquer estudo. */
+    boolean existsByUserIdAndCancelledAtIsNull(Long userId);
 }

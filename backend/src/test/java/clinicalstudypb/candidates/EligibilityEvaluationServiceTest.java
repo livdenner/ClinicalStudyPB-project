@@ -183,6 +183,18 @@ class EligibilityEvaluationServiceTest {
         verifyNoInteractions(criterionService, answerRepository, evaluationRepository, currentActor);
     }
 
+    @Test
+    void cancelledCandidateCannotBeEvaluated() {
+        candidate.cancel("Desistiu do estudo", STORED_TIME, 9L);
+        when(candidateRepository.findByIdAndStudyId(5L, 3L)).thenReturn(Optional.of(candidate));
+
+        CandidateConflictException exception = assertThrows(CandidateConflictException.class,
+                () -> service.evaluate(3L, 5L, List.of(new EligibilityAnswerInput(11L, true))));
+
+        assertEquals("CANDIDATE_CANCELLED", exception.getCode());
+        verifyNoInteractions(participantLookup, criterionService, answerRepository, evaluationRepository, currentActor);
+    }
+
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
     void missingCandidateIsNotFoundForGetAndPut(boolean writing) {

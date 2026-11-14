@@ -1,6 +1,7 @@
 package clinicalstudypb.shared;
 
 import clinicalstudypb.candidates.domain.CandidateConflictException;
+import clinicalstudypb.candidates.domain.InvalidCandidateException;
 import clinicalstudypb.candidates.domain.InvalidEligibilityEvaluationException;
 import clinicalstudypb.consent.domain.ConsentConflictException;
 import clinicalstudypb.participants.domain.InclusionConflictException;
@@ -9,6 +10,7 @@ import clinicalstudypb.scheduling.domain.SchedulingConflictException;
 import clinicalstudypb.studies.domain.InvalidStudyException;
 import clinicalstudypb.studies.domain.StudyStatusConflictException;
 import clinicalstudypb.users.domain.EmailAlreadyInUseException;
+import clinicalstudypb.users.domain.ParticipantRoleNotAllowedException;
 import clinicalstudypb.visits.domain.ProtocolConflictException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -52,6 +54,14 @@ public class GlobalExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
     }
 
+    /** Responde com o código contratual quando /api/users recebe o perfil de participante. */
+    @ExceptionHandler(ParticipantRoleNotAllowedException.class)
+    public ProblemDetail handleParticipantRoleNotAllowed(ParticipantRoleNotAllowedException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+        problem.setProperty("code", "PARTICIPANT_ROLE_NOT_ALLOWED");
+        return problem;
+    }
+
     /**
      * Responde com 409 quando uma restrição de integridade do banco é violada.
      *
@@ -82,6 +92,17 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(InvalidEligibilityEvaluationException.class)
     public ProblemDetail handleInvalidEligibilityEvaluation(InvalidEligibilityEvaluationException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+    }
+
+    /**
+     * Responde com 400 para dados inválidos em operações de candidatura.
+     *
+     * @param exception validação não atendida
+     * @return detalhe HTTP da regra violada
+     */
+    @ExceptionHandler(InvalidCandidateException.class)
+    public ProblemDetail handleInvalidCandidate(InvalidCandidateException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
     }
 
@@ -120,7 +141,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({CandidateConflictException.class, ConsentConflictException.class,
             InclusionConflictException.class})
     public ProblemDetail handleCandidateConflict(RuntimeException exception) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+        if (exception instanceof CandidateConflictException candidate && candidate.getCode() != null) {
+            problem.setProperty("code", candidate.getCode());
+        }
+        return problem;
     }
 
     /**

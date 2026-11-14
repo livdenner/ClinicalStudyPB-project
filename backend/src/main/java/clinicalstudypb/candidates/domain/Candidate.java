@@ -36,9 +36,27 @@ public class Candidate {
     @Column(nullable = false)
     private Integer age;
 
+    @Column(nullable = false, length = 255)
+    private String email;
+
+    @Column(nullable = false, length = 20)
+    private String phone;
+
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "eligibility_status", nullable = false, length = 20)
     private EligibilityStatus eligibilityStatus = EligibilityStatus.PENDING;
+
+    @Column(name = "cancellation_reason", length = 500)
+    private String cancellationReason;
+
+    @Column(name = "cancelled_at")
+    private java.time.Instant cancelledAt;
+
+    @Column(name = "cancelled_by_user_id")
+    private Long cancelledByUserId;
 
     /** Construtor exigido pela JPA para reconstruir a entidade persistida. */
     protected Candidate() {
@@ -52,12 +70,36 @@ public class Candidate {
      * @param nameKey nome normalizado usado para detectar duplicidade
      * @param age idade informada
      */
-    public Candidate(Long studyId, String name, String nameKey, Integer age) {
+    public Candidate(Long studyId, String name, String nameKey, Integer age,
+                     String email, String phone, Long userId) {
         this.studyId = studyId;
         this.name = name;
         this.nameKey = nameKey;
         this.age = age;
+        this.email = email;
+        this.phone = phone;
+        this.userId = userId;
         this.eligibilityStatus = EligibilityStatus.PENDING;
+    }
+
+    /** Mantém a criação em memória usada por testes de regras que não gravam candidatos. */
+    public Candidate(Long studyId, String name, String nameKey, Integer age) {
+        this(studyId, name, nameKey, age, null, null, null);
+    }
+
+    /** E-mail normalizado da conta vinculada. */
+    public String getEmail() {
+        return email;
+    }
+
+    /** Telefone informado no cadastro. */
+    public String getPhone() {
+        return phone;
+    }
+
+    /** Identificador da conta PARTICIPANT vinculada. */
+    public Long getUserId() {
+        return userId;
     }
 
     /**
@@ -112,5 +154,38 @@ public class Candidate {
      */
     public void updateEligibilityStatus(EligibilityStatus status) {
         this.eligibilityStatus = java.util.Objects.requireNonNull(status);
+    }
+
+    /** Indica se a candidatura foi cancelada antes da inclusão. */
+    public boolean isCancelled() {
+        return cancelledAt != null;
+    }
+
+    /** Motivo informado no cancelamento, quando cancelado. */
+    public String getCancellationReason() {
+        return cancellationReason;
+    }
+
+    /** Instante em que a candidatura foi cancelada, quando cancelado. */
+    public java.time.Instant getCancelledAt() {
+        return cancelledAt;
+    }
+
+    /** Identificador do usuário autor do cancelamento, quando cancelado. */
+    public Long getCancelledByUserId() {
+        return cancelledByUserId;
+    }
+
+    /**
+     * Registra o cancelamento irreversível da candidatura antes da inclusão.
+     *
+     * @param reason motivo normalizado do cancelamento
+     * @param cancelledAt instante do cancelamento
+     * @param cancelledByUserId identificador do usuário autor
+     */
+    public void cancel(String reason, java.time.Instant cancelledAt, Long cancelledByUserId) {
+        this.cancellationReason = java.util.Objects.requireNonNull(reason);
+        this.cancelledAt = java.util.Objects.requireNonNull(cancelledAt);
+        this.cancelledByUserId = java.util.Objects.requireNonNull(cancelledByUserId);
     }
 }

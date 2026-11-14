@@ -100,6 +100,10 @@ public class EligibilityEvaluationService {
     public EligibilityEvaluationResult evaluate(Long studyId, Long candidateId, List<EligibilityAnswerInput> answers) {
         studyService.lockForCandidateOperations(studyId);
         Candidate candidate = findCandidate(studyId, candidateId);
+        if (candidate.isCancelled()) {
+            throw new CandidateConflictException("CANDIDATE_CANCELLED",
+                    "Não é possível avaliar um candidato com candidatura cancelada.");
+        }
         if (participantLookup.isIncluded(studyId, candidateId)) {
             throw new CandidateConflictException(
                     "Não é possível reavaliar um candidato já incluído como participante.");

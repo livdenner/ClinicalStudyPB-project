@@ -155,7 +155,10 @@ class ParticipantIntegrationTest extends ParticipantIntegrationSupport {
         evaluate(study.getId(), candidateId, false).andExpect(status().isConflict());
         mockMvc.perform(post(studyPath(study.getId()) + "/candidates")
                         .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
-                        .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Nova candidata\",\"age\":42}"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Nova candidata\",\"age\":42,"
+                                + "\"email\":\"nova.candidata@clinicalstudypb.test\","
+                                + "\"phone\":\"(83) 99999-0000\"}"))
                 .andExpect(status().isConflict());
         assertEquals(included, snapshot());
     }
@@ -260,6 +263,30 @@ class ParticipantIntegrationTest extends ParticipantIntegrationSupport {
         assertEquals(proposedLimit < 2 ? 2 : proposedLimit,
                 studyRepository.findById(study.getId()).orElseThrow().getParticipantLimit());
         assertEquals(before, snapshot());
+    }
+
+    @Test
+    void cancelledCandidateCannotBeIncludedAndIncludedCandidateCannotBeCancelled() throws Exception {
+        Long cancelled = candidate(study, "Carla Mendes", EligibilityStatus.ELIGIBLE, ConsentDecision.GRANTED);
+        mockMvc.perform(post(studyPath(study.getId()) + "/candidates/" + cancelled + "/cancellation")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"Desistiu do estudo\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELLED"));
+
+        mockMvc.perform(post(inclusionPath(study.getId(), cancelled))
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CANDIDATE_CANCELLED"));
+
+        includeSuccessfully(study.getId(), candidateId);
+        mockMvc.perform(post(studyPath(study.getId()) + "/candidates/" + candidateId + "/cancellation")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"Tentativa após inclusão\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CANDIDATE_ALREADY_INCLUDED"));
     }
 
     @Test

@@ -62,9 +62,11 @@ class ScheduledVisitIntegrationTest extends IntegrationTestSupport {
                 researcherId, LocalDate.of(2027, 1, 1), LocalDate.of(2027, 12, 31), 10)).getId();
         jdbc.update("UPDATE studies SET status = 'EXECUTION' WHERE id = ?", studyId);
         plannedVisitId = addPlannedVisit(1, "Visita inicial");
+        User participant = saveUser("Pessoa teste", "person.scheduling@test.local", UserRole.PARTICIPANT);
         Long candidateId = jdbc.queryForObject("INSERT INTO candidates "
-                + "(study_id, name, name_key, age) VALUES (?, 'Pessoa teste', 'pessoa teste', 35) "
-                + "RETURNING id", Long.class, studyId);
+                + "(study_id, name, name_key, age, email, phone, user_id) "
+                + "VALUES (?, 'Pessoa teste', 'pessoa teste', 35, ?, ?, ?) RETURNING id", Long.class,
+                studyId, participant.getEmail(), "(83) 99999-0000", participant.getId());
         participantId = jdbc.queryForObject("INSERT INTO participants "
                 + "(study_id, candidate_id, included_by, included_at) "
                 + "VALUES (?, ?, ?, NOW()) RETURNING id", Long.class,
