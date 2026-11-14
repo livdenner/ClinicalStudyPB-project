@@ -50,6 +50,32 @@ public interface ScheduledVisitRepository extends Repository<ScheduledVisit, Lon
                              @Param("cancelled") ScheduledVisitStatus cancelled);
 
     /**
+     * Cancela as visitas pendentes do participante com data posterior ao corte informado,
+     * incrementando a versão para invalidar ETags anteriores (RF16).
+     *
+     * @param studyId estudo do participante
+     * @param participantId participante retirado
+     * @param actorUserId autor da retirada
+     * @param occurredAt instante da retirada; também é o corte de "visita futura"
+     * @param note motivo registrado nas visitas
+     * @param scheduled estado pendente que será cancelado
+     * @param cancelled estado final aplicado
+     * @return quantidade de visitas canceladas
+     */
+    @Modifying(flushAutomatically = true)
+    @Query("UPDATE ScheduledVisit v SET v.status = :cancelled, v.outcomeByUserId = :actorUserId, "
+            + "v.outcomeAt = :occurredAt, v.outcomeNote = :note, v.version = v.version + 1 "
+            + "WHERE v.studyId = :studyId AND v.participantId = :participantId "
+            + "AND v.status = :scheduled AND v.scheduledAt > :occurredAt")
+    int cancelFutureByParticipant(@Param("studyId") Long studyId,
+                                  @Param("participantId") Long participantId,
+                                  @Param("actorUserId") Long actorUserId,
+                                  @Param("occurredAt") Instant occurredAt,
+                                  @Param("note") String note,
+                                  @Param("scheduled") ScheduledVisitStatus scheduled,
+                                  @Param("cancelled") ScheduledVisitStatus cancelled);
+
+    /**
      * Persiste e força descarga imediata para validar o índice de duplicidade ativa.
      *
      * @param scheduledVisit agendamento a persistir

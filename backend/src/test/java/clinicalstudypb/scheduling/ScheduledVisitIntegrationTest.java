@@ -156,7 +156,9 @@ class ScheduledVisitIntegrationTest extends IntegrationTestSupport {
 
     @Test
     void withdrawnParticipantCannotReceiveVisit() throws Exception {
-        jdbc.update("UPDATE participants SET status = 'WITHDRAWN' WHERE id = ?", participantId);
+        jdbc.update("UPDATE participants SET status = 'WITHDRAWN', withdrawal_reason = 'Retirada de teste', "
+                + "withdrawn_at = NOW(), withdrawn_by_user_id = included_by, "
+                + "withdrawal_cancelled_visit_count = 0 WHERE id = ?", participantId);
 
         mockMvc.perform(post(CREATE_PATH, studyId, participantId)
                         .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
