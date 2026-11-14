@@ -4,6 +4,8 @@ import clinicalstudypb.candidates.domain.CandidateConflictException;
 import clinicalstudypb.candidates.domain.InvalidEligibilityEvaluationException;
 import clinicalstudypb.consent.domain.ConsentConflictException;
 import clinicalstudypb.participants.domain.InclusionConflictException;
+import clinicalstudypb.scheduling.domain.InvalidScheduledVisitException;
+import clinicalstudypb.scheduling.domain.SchedulingConflictException;
 import clinicalstudypb.studies.domain.InvalidStudyException;
 import clinicalstudypb.studies.domain.StudyStatusConflictException;
 import clinicalstudypb.users.domain.EmailAlreadyInUseException;
@@ -91,7 +93,11 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(StudyStatusConflictException.class)
     public ProblemDetail handleStudyStatusConflict(StudyStatusConflictException exception) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+        if (exception.getCode() != null) {
+            problem.setProperty("code", exception.getCode());
+        }
+        return problem;
     }
 
     /**
@@ -127,5 +133,31 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleOptimisticConflict(ObjectOptimisticLockingFailureException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
                 "O registro mudou. Atualize os dados antes de tentar novamente.");
+    }
+
+    /**
+     * Responde com 400 e código estável quando os dados ou janela de agendamento são inválidos.
+     *
+     * @param exception erro de validação do agendamento
+     * @return detalhe HTTP com propriedade {@code code}
+     */
+    @ExceptionHandler(InvalidScheduledVisitException.class)
+    public ProblemDetail handleInvalidScheduledVisit(InvalidScheduledVisitException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+        problem.setProperty("code", exception.getCode());
+        return problem;
+    }
+
+    /**
+     * Responde com 409 e código estável quando há conflito de estado ou duplicidade no agendamento.
+     *
+     * @param exception erro de conflito do agendamento
+     * @return detalhe HTTP com propriedade {@code code}
+     */
+    @ExceptionHandler(SchedulingConflictException.class)
+    public ProblemDetail handleSchedulingConflict(SchedulingConflictException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+        problem.setProperty("code", exception.getCode());
+        return problem;
     }
 }

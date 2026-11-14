@@ -11,6 +11,7 @@ import clinicalstudypb.studies.infrastructure.StudyStatusHistoryRepository;
 import clinicalstudypb.studies.domain.StudyStatusHistory;
 import clinicalstudypb.visits.domain.ProtocolConflictException;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import clinicalstudypb.users.application.UserService;
 import clinicalstudypb.users.domain.User;
 import clinicalstudypb.users.domain.UserRole;
@@ -40,6 +41,7 @@ public class StudyService {
     private final CurrentActor currentActor;
     private final JdbcTemplate jdbc;
     private final ObjectProvider<StudyReadiness> readinessProvider;
+    private final ObjectProvider<StudySchedulingLifecycle> schedulingLifecycleProvider;
     private final ParticipantLookup participantLookup;
 
     /**
@@ -51,12 +53,14 @@ public class StudyService {
      * @param currentActor usuário autenticado
      * @param jdbc acesso às visitas previstas para validar o protocolo
      * @param readinessProvider verificação de critérios e participantes quando integrada
+     * @param schedulingLifecycleProvider integração com visitas agendadas
      * @param participantLookup contagem pública de inclusões para proteger o limite
      */
     public StudyService(StudyRepository studyRepository, UserService userService,
                         StudyStatusHistoryRepository historyRepository, CurrentActor currentActor,
                         JdbcTemplate jdbc, ObjectProvider<StudyReadiness> readinessProvider,
-                        ParticipantLookup participantLookup) {
+                        ParticipantLookup participantLookup,
+                        ObjectProvider<StudySchedulingLifecycle> schedulingLifecycleProvider) {
         this.studyRepository = studyRepository;
         this.userService = userService;
         this.historyRepository = historyRepository;
@@ -64,6 +68,7 @@ public class StudyService {
         this.jdbc = jdbc;
         this.readinessProvider = readinessProvider;
         this.participantLookup = participantLookup;
+        this.schedulingLifecycleProvider = schedulingLifecycleProvider;
     }
 
     /**
@@ -193,6 +198,13 @@ public class StudyService {
             throw new InvalidStudyException("Informe uma justificativa de até 1000 caracteres para cancelar.");
         }
         StudyStatus previous = study.getStatus();
+        StudySchedulingLifecycle schedulingLifecycle = schedulingLifecycleProvider.getIfAvailable();
+        if (previous == StudyStatus.EXECUTION && nextStatus == StudyStatus.CLOSED
+                && schedulingLifecycle != null && schedulingLifecycle.hasScheduledVisits(id)) {
+            throw new clinicalstudypb.studies.domain.StudyStatusConflictException(
+                    "STUDY_HAS_SCHEDULED_VISITS",
+                    "Registre o desfecho das visitas agendadas antes de encerrar o estudo.");
+        }
         if (previous == StudyStatus.PLANNING && nextStatus == StudyStatus.RECRUITMENT) {
             Integer visits = jdbc.queryForObject(
                     "SELECT COUNT(*) FROM planned_visits v "
@@ -229,7 +241,12 @@ public class StudyService {
         } else {
             study.advanceStatus(nextStatus);
         }
-        historyRepository.save(new StudyStatusHistory(id, currentActor.userId(), Instant.now(),
+        Instant now = Instant.now().truncatedTo(ChronoUnit.MICROS);
+        Long actorUserId = currentActor.userId();
+        if (nextStatus == StudyStatus.CANCELLED && schedulingLifecycle != null) {
+            schedulingLifecycle.cancelPendingScheduledVisits(id, actorUserId, now);
+        }
+        historyRepository.save(new StudyStatusHistory(id, actorUserId, now,
                 previous, nextStatus, nextStatus == StudyStatus.CANCELLED ? normalizedReason : null));
         return study;
     }
@@ -306,6 +323,17 @@ public class StudyService {
      */
     @Transactional
     public Study lockForCandidateOperations(Long id) {
+        return getStudyForUpdate(id);
+    }
+
+    /**
+     * Bloqueia o estudo para manter a ordem {@code study -> participant} no agendamento.
+     *
+     * @param id identificador do estudo
+     * @return estudo bloqueado para atualização
+     */
+    @Transactional
+    public Study lockForScheduling(Long id) {
         return getStudyForUpdate(id);
     }
 

@@ -1,9 +1,13 @@
 package clinicalstudypb.participants.infrastructure;
 
 import clinicalstudypb.participants.domain.Participant;
+import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 /**
  * Persistência dos vínculos de inclusão de candidatos como participantes.
@@ -47,4 +51,15 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
      * @return vínculo do estudo
      */
     Optional<Participant> findByIdAndStudyId(Long id, Long studyId);
+
+    /**
+     * Bloqueia um vínculo participante-estudo para escrita concorrente.
+     *
+     * @param id participante consultado
+     * @param studyId estudo da rota
+     * @return vínculo bloqueado no estudo
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Participant p WHERE p.id = :id AND p.studyId = :studyId")
+    Optional<Participant> findByIdAndStudyIdForUpdate(@Param("id") Long id, @Param("studyId") Long studyId);
 }

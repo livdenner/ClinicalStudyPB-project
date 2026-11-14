@@ -31,7 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @version 0.0.1
  */
 @Service
-public class ParticipantService {
+public class ParticipantService implements ParticipantSchedulingLookup {
 
     private final ParticipantRepository participantRepository;
     private final StudyService studyService;
@@ -127,5 +127,38 @@ public class ParticipantService {
                 .orElseThrow(() -> new ResourceNotFoundException("Participante não encontrado: " + participantId));
         Candidate candidate = candidateService.get(studyId, participant.getCandidateId());
         return new ParticipantResult(participant, candidate.getName());
+    }
+
+    @Override
+    @Transactional
+    public ParticipantSchedulingView lockForScheduling(Long studyId, Long participantId) {
+        Participant participant = participantRepository.findByIdAndStudyIdForUpdate(participantId, studyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Participante não encontrado: " + participantId));
+        Candidate candidate = candidateService.get(studyId, participant.getCandidateId());
+        return toSchedulingView(participant, candidate.getName());
+    }
+
+    @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+    public ParticipantSchedulingView getForScheduling(Long studyId, Long participantId) {
+        ParticipantResult result = get(studyId, participantId);
+        return toSchedulingView(result.participant(), result.candidateName());
+    }
+
+    @Override
+    @Transactional(readOnly = true, isolation = Isolation.REPEATABLE_READ)
+    public java.util.Map<Long, String> findNamesByStudy(Long studyId) {
+        return list(studyId).stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        result -> result.participant().getId(),
+                        ParticipantResult::candidateName));
+    }
+
+    private ParticipantSchedulingView toSchedulingView(Participant participant, String candidateName) {
+        return new ParticipantSchedulingView(
+                participant.getId(),
+                participant.getStudyId(),
+                candidateName,
+                participant.isWithdrawn());
     }
 }
