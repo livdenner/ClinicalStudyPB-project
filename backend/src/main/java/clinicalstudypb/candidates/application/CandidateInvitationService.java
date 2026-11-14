@@ -60,6 +60,21 @@ public class CandidateInvitationService {
         });
     }
 
+    /** Consome o convite pendente da conta quando a senha é definida. */
+    public void consume(Long userId) {
+        repository.findById(userId).ifPresent(invite -> {
+            invite.markUsed(Instant.now().truncatedTo(ChronoUnit.MICROS));
+            repository.saveAndFlush(invite);
+        });
+    }
+
+    /** Compara o código recebido com o hash salvo sem usar comparação de tempo variável. */
+    public boolean matches(CandidateActivationInvite invitation, String code) {
+        byte[] expected = HexFormat.of().parseHex(invitation.getCodeHash());
+        byte[] provided = HexFormat.of().parseHex(sha256(code));
+        return MessageDigest.isEqual(expected, provided);
+    }
+
     private String sha256(String code) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");

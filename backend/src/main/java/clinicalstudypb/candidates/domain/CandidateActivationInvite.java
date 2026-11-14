@@ -46,6 +46,11 @@ public class CandidateActivationInvite {
         usedAt = null;
     }
 
+    /** Registra o momento em que o convite foi consumido na definição da senha. */
+    public void markUsed(Instant now) {
+        usedAt = now;
+    }
+
     public Instant getExpiresAt() {
         return expiresAt;
     }

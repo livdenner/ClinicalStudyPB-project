@@ -1,10 +1,13 @@
 package clinicalstudypb.auth.api;
 
+import clinicalstudypb.auth.domain.AuthProblemException;
 import clinicalstudypb.auth.domain.InvalidCredentialsException;
 import java.util.List;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -15,7 +18,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  *
  * @author Lívia
  * @since 2026-10-23
- * @version 0.0.1
+ * @version 0.0.2
  */
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @RestControllerAdvice(assignableTypes = AuthController.class)
@@ -38,15 +41,32 @@ public class AuthExceptionHandler {
     }
 
     /**
-     * Converte falhas de validação dos dados de login em erro HTTP 400.
+     * Devolve o código estável da falha de ativação ou troca de senha no formato ProblemDetail.
+     *
+     * @param exception regra de negócio violada
+     * @return detalhe HTTP com propriedade {@code code}
+     */
+    @ExceptionHandler(AuthProblemException.class)
+    public ProblemDetail handleAuthProblem(AuthProblemException exception) {
+        ProblemDetail detail = ProblemDetail.forStatusAndDetail(exception.getStatus(), exception.getMessage());
+        detail.setProperty("code", exception.getCode());
+        return detail;
+    }
+
+    /**
+     * Converte falhas de validação do corpo em {@code 400} segundo o contrato de cada rota de autenticação.
      *
      * @param exception erros de validação do corpo da requisição
-     * @return resposta HTTP 400 com erros por campo
+     * @return resposta HTTP 400 com {@code ProblemDetail} ou erros por campo
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<AuthValidationErrorResponse> handleInvalidRequest(
-            MethodArgumentNotValidException exception
-    ) {
+    public ResponseEntity<?> handleInvalidRequest(MethodArgumentNotValidException exception) {
+        if (exception.getBindingResult().getTarget() instanceof ActivationRequest) {
+            ProblemDetail detail = ProblemDetail.forStatusAndDetail(
+                    HttpStatus.BAD_REQUEST, "E-mail ou código de ativação inválido.");
+            detail.setProperty("code", "ACTIVATION_INVALID");
+            return ResponseEntity.badRequest().contentType(MediaType.APPLICATION_PROBLEM_JSON).body(detail);
+        }
         List<AuthValidationErrorResponse.FieldErrorResponse> fieldErrors = exception.getBindingResult()
                 .getFieldErrors()
                 .stream()

@@ -75,9 +75,10 @@ public class CandidateService {
             throw new CandidateConflictException("CANDIDATE_ALREADY_IN_STUDY",
                     "O candidato já está cadastrado no estudo.");
         }
-        if (user != null && !user.isActive()) {
+        if (user != null && (!user.isActive() || user.isActivationPending())) {
             Optional<CandidateActivationInvite> invitation = invitationService.find(user.getId());
-            if (!user.isActivationPending() || (invitation.isPresent() && invitation.get().getUsedAt() != null)) {
+            if (!user.isActivationPending()
+                    || (invitation.isPresent() && invitation.get().getUsedAt() != null)) {
                 throw new CandidateConflictException("PARTICIPANT_ACCOUNT_DEACTIVATED", "Conta desativada.");
             }
         }
@@ -88,7 +89,8 @@ public class CandidateService {
         Candidate candidate = new Candidate(studyId, displayName, normalizeNameKey(displayName),
                 age, normalizedEmail, normalizedPhone, user.getId());
         candidate = candidateRepository.saveAndFlush(candidate);
-        CandidateInvitationService.IssuedCode code = user.isActive() ? null : invitationService.issue(user.getId());
+        CandidateInvitationService.IssuedCode code = user.isActivationPending()
+                ? invitationService.issue(user.getId()) : null;
         return new Registration(candidate, code);
     }
 
@@ -102,13 +104,10 @@ public class CandidateService {
             throw new CandidateConflictException("CANDIDATE_CANCELLED", "A candidatura foi cancelada.");
         }
         User user = lockUser(candidate.getUserId());
-        if (user.isActive()) {
+        if (user.isActive() && !user.isActivationPending()) {
             throw new CandidateConflictException("CANDIDATE_ALREADY_ACTIVE", "Conta já ativada.");
         }
-        Optional<CandidateActivationInvite> invitation = invitationService.find(user.getId());
-        if (!user.isActivationPending() || invitation.isEmpty() || invitation.get().getUsedAt() != null) {
-            throw new CandidateConflictException("PARTICIPANT_ACCOUNT_DEACTIVATED", "Conta desativada.");
-        }
+        requirePendingActivation(user);
         return invitationService.issue(user.getId());
     }
 
@@ -151,7 +150,8 @@ public class CandidateService {
         candidate.cancel(normalizedReason, Instant.now().truncatedTo(ChronoUnit.MICROS), currentActor.userId());
         Candidate saved = candidateRepository.saveAndFlush(candidate);
         User user = lockUser(candidate.getUserId());
-        if (!user.isActive() && !candidateRepository.existsByUserIdAndCancelledAtIsNull(user.getId())) {
+        if (user.isActivationPending()
+                && !candidateRepository.existsByUserIdAndCancelledAtIsNull(user.getId())) {
             invitationService.invalidate(user.getId());
         }
         return saved;
@@ -187,18 +187,25 @@ public class CandidateService {
             status = CandidateStatus.CANCELLED;
         } else if (included) {
             status = CandidateStatus.INCLUDED;
+        } else if (user.isActivationPending()) {
+            status = CandidateStatus.INVITED;
         } else if (consent == ConsentStatus.GRANTED) {
             status = CandidateStatus.GRANTED;
         } else if (consent == ConsentStatus.DECLINED) {
             status = CandidateStatus.DECLINED;
-        } else if (!user.isActive()) {
-            status = CandidateStatus.INVITED;
         } else if (candidate.getEligibilityStatus() == EligibilityStatus.ELIGIBLE) {
             status = CandidateStatus.CONSENT_PENDING;
         } else {
             status = CandidateStatus.ACTIVE;
         }
         return new Snapshot(candidate, status, consent, invite.orElse(null), issued);
+    }
+
+    private void requirePendingActivation(User user) {
+        Optional<CandidateActivationInvite> invitation = invitationService.find(user.getId());
+        if (!user.isActivationPending() || invitation.isEmpty() || invitation.get().getUsedAt() != null) {
+            throw new CandidateConflictException("PARTICIPANT_ACCOUNT_DEACTIVATED", "Conta desativada.");
+        }
     }
 
     private void requireRecruitment(Long studyId) {

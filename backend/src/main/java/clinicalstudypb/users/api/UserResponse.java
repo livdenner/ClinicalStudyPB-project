@@ -20,7 +20,8 @@ public record UserResponse(
         String name,
         String email,
         UserRole role,
-        boolean active
+        boolean active,
+        boolean mustChangePassword
 ) {
     /**
      * Converte uma entidade em uma resposta segura para a API.
@@ -30,6 +31,7 @@ public record UserResponse(
      */
     public static UserResponse from(User user) {
         return new UserResponse(
-                user.getId(), user.getName(), user.getEmail(), user.getRole(), user.isActive());
+                user.getId(), user.getName(), user.getEmail(), user.getRole(), user.isActive(),
+                user.isActivationPending());
     }
 }

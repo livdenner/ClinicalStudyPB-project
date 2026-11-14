@@ -131,6 +131,14 @@ public class User {
         return activationPending;
     }
 
+    /** Inicia o primeiro acesso sem encerrar a obrigação de definir uma senha. */
+    public void beginActivation() {
+        if (role != UserRole.PARTICIPANT || !activationPending) {
+            throw new IllegalStateException("A conta não possui ativação pendente.");
+        }
+        this.active = true;
+    }
+
     /** Marca o usuário como ativo. */
     public void activate() {
         this.active = true;
@@ -161,5 +169,10 @@ public class User {
      */
     public void changeRole(UserRole role) {
         this.role = role;
+    }
+
+    /** Atualiza o hash da senha do usuário. */
+    public void changePassword(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 }
