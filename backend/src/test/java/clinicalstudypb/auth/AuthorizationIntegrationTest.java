@@ -46,7 +46,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
  *
  * @author Júlia Pamplona
  * @since 2026-10-30
- * @version 0.0.3
+ * @version 0.0.4
  */
 class AuthorizationIntegrationTest extends IntegrationTestSupport {
 
@@ -108,10 +108,13 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
             new Endpoint(HttpMethod.POST, "/api/studies/{id}/criteria",
                     "{\"type\":\"EXCLUSION\",\"description\":\"Estar em gestação\"}"));
 
+    /**
+     * Só a consulta do consentimento. O PUT foi descontinuado (T17.1) e responde 403
+     * CONSENT_DECIDED_BY_CANDIDATE a todos os perfis; ele é coberto por
+     * {@code CandidateFlowPermissionMatrixIntegrationTest} (T17.5).
+     */
     private static final List<Endpoint> CONSENT_ENDPOINTS = List.of(
-            new Endpoint(HttpMethod.GET, "/api/studies/{id}/candidates/{candidateId}/consent", null),
-            new Endpoint(HttpMethod.PUT, "/api/studies/{id}/candidates/{candidateId}/consent",
-                    "{\"status\":\"GRANTED\"}"));
+            new Endpoint(HttpMethod.GET, "/api/studies/{id}/candidates/{candidateId}/consent", null));
 
     /** Tabelas comparadas antes e depois de um acesso negado. */
     private static final List<String> SNAPSHOT_TABLES = List.of(
