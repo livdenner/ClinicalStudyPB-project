@@ -86,7 +86,7 @@ export function CabecalhoEstudo({
                                 <Button
                                     variant="secondary"
                                     isDisabled={emProcessamento}
-                                    className="text-[#B42318]"
+                                    className="text-[var(--color-error)]"
                                     onPress={() => onTransicionar("CANCELLED")}
                                 >
                                     Cancelar estudo

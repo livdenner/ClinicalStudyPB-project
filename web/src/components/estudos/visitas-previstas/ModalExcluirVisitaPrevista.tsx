@@ -61,7 +61,7 @@ export function ModalExcluirVisitaPrevista({ visita, onFechar, onConfirmar, onAt
                                     ref={erroRef}
                                     role="alert"
                                     tabIndex={-1}
-                                    className="mt-4 rounded-lg bg-[#FDEAEA] p-3 text-sm text-[#B42318]"
+                                    className="mt-4 rounded-lg bg-[var(--color-error-soft)] p-3 text-sm text-[var(--color-error)]"
                                 >
                                     {erro}
                                 </p>
@@ -78,7 +78,7 @@ export function ModalExcluirVisitaPrevista({ visita, onFechar, onConfirmar, onAt
                             ) : (
                                 <Button
                                     variant="primary"
-                                    className="bg-[#B42318] text-white"
+                                    className="bg-[var(--color-error)] text-white"
                                     isPending={salvando}
                                     onPress={confirmar}
                                 >

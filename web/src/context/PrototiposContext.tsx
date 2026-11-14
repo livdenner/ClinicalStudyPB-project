@@ -1,3 +1,4 @@
+import { ESTADOS_ESTUDO } from "../config/estados-estudo";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { Check, Search, X } from "lucide-react";
 import {
@@ -148,7 +149,7 @@ export function PrototiposProvider({ children }: { children: ReactNode }) {
                     role="status"
                     className="fixed right-6 bottom-6 z-50 flex items-center gap-2.5 rounded-xl bg-[#1b2d40] px-4 py-3 text-sm font-medium text-white shadow-lg"
                 >
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#16804B] text-white">
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[var(--color-success)] text-white">
                         <Check size={14} strokeWidth={2.5} aria-hidden="true" />
                     </span>
                     {toast}
@@ -166,21 +167,32 @@ export function usePrototipos() {
     return ctx;
 }
 
-export function PrototipoBadge({ children }: { children: ReactNode }) {
-    const text = String(children).toLowerCase();
-    const classes =
-        text.includes("não") || text.includes("inativ")
-            ? "bg-[#FDEAEA] text-[#B42318]"
-            : text.includes("pend") || text.includes("recrut")
-              ? "bg-[#FEF2DA] text-[#946200]"
-              : text.includes("eleg") ||
-                  text.includes("realiz") ||
-                  text.includes("conclu") ||
-                  text.includes("encerr") ||
-                  text.includes("ativ")
-                ? "bg-[#E4F4E9] text-[#16804B]"
-                : "bg-[#E9F2FD] text-[#2563B8]";
+const CLASSES_ESTADOS_PROTOTIPO: Record<string, string> = {
+    ...Object.fromEntries(
+        Object.values(ESTADOS_ESTUDO).map(({ rotulo, classes }) => [
+            rotulo.toLocaleLowerCase("pt-BR"),
+            classes,
+        ])
+    ),
+    pendente: "bg-[var(--color-warning-soft)] text-[var(--color-warning)]",
+    agendada: "bg-[var(--color-neutral-soft)] text-[var(--color-neutral)]",
+    "acompanhamento concluído": "bg-[var(--color-success-soft)] text-[var(--color-success)]",
+    realizada: "bg-[var(--color-success-soft)] text-[var(--color-success)]",
+    elegível: "bg-[var(--color-success-soft)] text-[var(--color-success)]",
+    "não elegível": "bg-[var(--color-neutral-soft)] text-[var(--color-neutral)]",
+    inelegível: "bg-[var(--color-neutral-soft)] text-[var(--color-neutral)]",
+    incluído: "bg-[var(--color-success-soft)] text-[var(--color-success)]",
+    ativo: "bg-[var(--color-info-soft)] text-[var(--color-info)]",
+    inativo: "bg-[var(--color-neutral-soft)] text-[var(--color-neutral)]",
+    "em acompanhamento": "bg-[var(--color-info-soft)] text-[var(--color-info)]",
+    cancelada: ESTADOS_ESTUDO.CANCELLED.classes,
+};
 
+export function PrototipoBadge({ children }: { children: ReactNode }) {
+    const text = String(children).trim().toLocaleLowerCase("pt-BR");
+    const classes =
+        CLASSES_ESTADOS_PROTOTIPO[text] ??
+        "bg-[var(--color-neutral-soft)] text-[var(--color-neutral)]";
     return (
         <span
             className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${classes}`}
@@ -197,10 +209,11 @@ export function PrototipoStats({
 }) {
     const letters = ["E", "R", "P", "V"];
     const toneClasses: Record<string, string> = {
-        default: "bg-[#E9F2FD] text-[#2563B8]",
-        amber: "bg-[#FEF2DA] text-[#946200]",
-        blue: "bg-[#E6F4F2] text-[#126966]",
-        green: "bg-[#E4F4E9] text-[#16804B]",
+        default: "bg-[var(--color-info-soft)] text-[var(--color-info)]",
+        amber: "bg-[var(--color-warning-soft)] text-[var(--color-warning)]",
+        blue: "bg-[var(--color-info-soft)] text-[var(--color-info)]",
+        green: "bg-[var(--color-success-soft)] text-[var(--color-success)]",
+        recruitment: ESTADOS_ESTUDO.RECRUITMENT.classes,
     };
 
     return (
