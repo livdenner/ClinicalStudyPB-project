@@ -118,6 +118,24 @@ class ActivationIntegrationTest extends IntegrationTestSupport {
     }
 
     @Test
+    void unicodePasswordWithin72CharactersCanBeUsedForLogin() throws Exception {
+        String restrictedBody = activate(EMAIL, code)
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        String restrictedToken = objectMapper.readTree(restrictedBody).path("accessToken").asText();
+        String password = "A1" + "ç".repeat(70);
+
+        changePassword(restrictedToken, null, password)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.user.mustChangePassword").value(false));
+
+        assertTrue(userRepository.findById(invited.getId()).orElseThrow()
+                .getPasswordHash().startsWith("{bcrypt-sha256}"));
+        login(EMAIL, password).andExpect(status().isOk());
+        login(EMAIL, "A1" + "ç".repeat(69) + "a").andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void invalidInitialPasswordKeepsInvitePendingAndAllowsRetry() throws Exception {
         String restrictedBody = activate(EMAIL, code)
                 .andExpect(status().isOk())

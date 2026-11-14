@@ -147,17 +147,27 @@ class PasswordChangeServiceTest {
     }
 
     @Test
-    void passwordOver72CharactersOrUtf8BytesIsRejected() {
+    void passwordOver72CharactersIsRejected() {
         User participant = invitedStartedUser();
         when(userService.findLockedById(USER_ID)).thenReturn(Optional.of(participant));
 
         String overChars = "A1" + "a".repeat(71);
         assertEquals("PASSWORD_POLICY", assertThrows(PasswordChangeException.class,
                 () -> service.changePassword(null, overChars)).getCode());
+    }
 
-        String overBytes = "A1" + "ç".repeat(40);
-        assertEquals("PASSWORD_POLICY", assertThrows(PasswordChangeException.class,
-                () -> service.changePassword(null, overBytes)).getCode());
+    @Test
+    void unicodePasswordWithin72CharactersUsesAllItsUtf8Bytes() {
+        User participant = invitedStartedUser();
+        when(userService.findLockedById(USER_ID)).thenReturn(Optional.of(participant));
+        when(jwtService.issue(participant)).thenReturn(new JwtToken("jwt-unicode", 3600));
+        String password = "A1" + "ç".repeat(70);
+
+        service.changePassword(null, password);
+
+        assertTrue(participant.getPasswordHash().startsWith("{bcrypt-sha256}"));
+        assertTrue(passwordEncoder.matches(password, participant.getPasswordHash()));
+        assertFalse(passwordEncoder.matches("A1" + "ç".repeat(69) + "a", participant.getPasswordHash()));
     }
 
     @Test

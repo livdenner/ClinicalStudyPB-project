@@ -6,7 +6,6 @@ import clinicalstudypb.candidates.application.CandidateInvitationService;
 import clinicalstudypb.shared.CurrentActor;
 import clinicalstudypb.users.application.UserService;
 import clinicalstudypb.users.domain.User;
-import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class PasswordChangeService {
 
-    private static final int MAX_BCRYPT_BYTES = 72;
     private static final Pattern PASSWORD_PATTERN = Pattern.compile("^(?=.*[A-Za-z])(?=.*[0-9]).{8,72}$");
 
     private final CurrentActor currentActor;
@@ -37,7 +35,7 @@ public class PasswordChangeService {
      * @param currentActor leitor do identificador do usuário no JWT
      * @param userService serviço de contas para leitura com bloqueio e persistência
      * @param invitationService serviço de convites para consumo no primeiro acesso
-     * @param passwordEncoder codificador BCrypt compartilhado
+     * @param passwordEncoder codificador de senhas compartilhado
      * @param jwtService emissor do novo token irrestrito
      */
     public PasswordChangeService(
@@ -92,7 +90,6 @@ public class PasswordChangeService {
 
     private boolean satisfiesPolicy(String newPassword) {
         return newPassword != null
-                && newPassword.getBytes(StandardCharsets.UTF_8).length <= MAX_BCRYPT_BYTES
                 && PASSWORD_PATTERN.matcher(newPassword).matches();
     }
 }

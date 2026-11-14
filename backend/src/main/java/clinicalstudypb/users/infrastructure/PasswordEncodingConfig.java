@@ -20,12 +20,12 @@ public class PasswordEncodingConfig {
 
 
     /**
-     * Cria um codificador que grava novas senhas com o prefixo {@code {bcrypt}}.
+     * Cria um codificador compatível com hashes BCrypt existentes e senhas Unicode longas.
      *
      * @return codificador compartilhado pela aplicação
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+        return new Utf8SafePasswordEncoder(PasswordEncoderFactories.createDelegatingPasswordEncoder());
     }
 }
