@@ -7,7 +7,9 @@ on:
     branches: [development, main]
 
 concurrency:
-  group: ci-${{ github.ref }}
+  # PRs cancelam a execução anterior do mesmo PR. Pushes (cada integração na development
+  # ou na main) têm grupo próprio, por commit, para que todo merge gere o seu relatório.
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
   cancel-in-progress: true
 
 permissions:
@@ -43,6 +45,13 @@ jobs:
           name: junit-report
           path: backend/target/surefire-reports
           if-no-files-found: ignore
+      - name: Resultados para o relatório de execução (T25.1)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-backend
+          path: backend/target/surefire-reports/TEST-*.xml
+          if-no-files-found: ignore
 
   web:
     name: Web (ESLint, Vitest, build)
@@ -68,6 +77,13 @@ jobs:
         with:
           name: web-coverage
           path: web/coverage
+          if-no-files-found: ignore
+      - name: Resultados para o relatório de execução (T25.1)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-web
+          path: web/test-reports/vitest.json
           if-no-files-found: ignore
 
   e2e:
@@ -101,6 +117,13 @@ jobs:
             web/playwright-report
             web/test-results
           if-no-files-found: ignore
+      - name: Resultados para o relatório de execução (T25.1)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-e2e
+          path: web/test-reports/playwright.json
+          if-no-files-found: ignore
       - name: Derrubar a stack de teste
         if: always()
         run: npm run e2e:stack:down
@@ -126,7 +149,8 @@ jobs:
       - if: steps.app.outputs.exists == 'true'
         run: npm ci
       - if: steps.app.outputs.exists == 'true'
-        run: npm test -- --ci --coverage
+        # test:report cria test-reports/ (o Jest não cria a pasta do --outputFile) e grava o JSON.
+        run: npm run test:report -- --coverage
       - name: Relatório de cobertura Jest
         if: always() && steps.app.outputs.exists == 'true'
         uses: actions/upload-artifact@v4
@@ -134,3 +158,82 @@ jobs:
           name: mobile-coverage
           path: mobile/coverage
           if-no-files-found: ignore
+      - name: Resultados para o relatório de execução (T25.1)
+        if: always() && steps.app.outputs.exists == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-mobile
+          path: mobile/test-reports/jest.json
+          if-no-files-found: ignore
+
+  relatorio-testes:
+    name: Relatório de execução dos testes
+    # Roda mesmo com falhas nos outros jobs: o relatório também registra as falhas.
+    needs: [backend, web, e2e, mobile]
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # só usado para versionar o relatório nos pushes para a main e a development
+    env:
+      # Pushes na development (integrações de PR) e na main ficam versionados em
+      # docs/tests/execucoes/<branch>; execuções de PR viram só artefato.
+      VERSIONAR: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development') }}
+      SAIDA: docs/tests/execucoes/${{ github.event_name == 'push' && github.ref_name || 'pull-requests' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Testar o gerador do relatório
+        run: node --test scripts/relatorio-testes/gerar.test.mjs
+      - name: Baixar os resultados dos jobs
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: resultados-*
+          path: resultados
+      - name: Gerar o relatório
+        id: relatorio
+        env:
+          TEST_REPORT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          TEST_REPORT_BRANCH: ${{ github.head_ref || github.ref_name }}
+          # Num push, a mensagem do merge identifica o PR integrado; num PR, usa número e título.
+          TEST_REPORT_MENSAGEM: ${{ github.event.head_commit.message || github.event.pull_request.title }}
+          TEST_REPORT_PR: ${{ github.event.pull_request.number }}
+        run: >-
+          node scripts/relatorio-testes/gerar.mjs
+          --saida "$SAIDA"
+          --backend resultados/resultados-backend
+          --vitest resultados/resultados-web/vitest.json
+          --playwright resultados/resultados-e2e/playwright.json
+          --jest resultados/resultados-mobile/jest.json
+      - name: Mostrar no resumo da execução
+        run: head -c 900000 "${{ steps.relatorio.outputs.arquivo }}" >> "$GITHUB_STEP_SUMMARY"
+      - name: Publicar o relatório como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-execucao-testes
+          path: ${{ steps.relatorio.outputs.arquivo }}
+      - name: Versionar o relatório na branch
+        if: env.VERSIONAR == 'true'
+        env:
+          ARQUIVO: ${{ steps.relatorio.outputs.arquivo }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cp "$ARQUIVO" "$RUNNER_TEMP/"
+          for tentativa in 1 2 3; do
+            # Parte da ponta atual da branch (outro merge pode ter entrado durante a CI),
+            # recoloca o relatório e regenera o índice da pasta antes de enviar.
+            git fetch --depth=1 origin "$BRANCH"
+            git reset --hard "origin/$BRANCH"
+            mkdir -p "$SAIDA"
+            cp "$RUNNER_TEMP/$(basename "$ARQUIVO")" "$SAIDA/"
+            node scripts/relatorio-testes/gerar.mjs --somente-indice --saida "$SAIDA"
+            git add "$SAIDA"
+            git commit -m "docs(testes): registra execução $(basename "$ARQUIVO" .md) [skip ci]"
+            if git push origin "HEAD:$BRANCH"; then exit 0; fi
+            sleep $((tentativa * 5))
+          done
+          exit 1
