@@ -4,7 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:report": "node scripts/relatorio-testes/gerar.mjs",
+    "test:report:check": "node --test scripts/relatorio-testes/gerar.test.mjs"
   },
   "repository": {
     "type": "git",
