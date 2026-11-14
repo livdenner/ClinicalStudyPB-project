@@ -1,7 +1,9 @@
 package clinicalstudypb.users.infrastructure;
 
 import clinicalstudypb.users.domain.User;
+import clinicalstudypb.users.domain.UserRole;
 import jakarta.persistence.LockModeType;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -16,6 +18,9 @@ import org.springframework.data.repository.query.Param;
  * @version 0.0.1
  */
 public interface UserRepository extends JpaRepository<User, Long> {
+
+    /** Lista apenas as contas da equipe administradas por /api/users. */
+    List<User> findByRoleNot(UserRole role);
 
     /**
      * Bloqueia o usuário para alterações transacionais de credenciais e convites.

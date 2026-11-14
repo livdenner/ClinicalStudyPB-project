@@ -8,6 +8,7 @@ import clinicalstudypb.participants.domain.InclusionConflictException;
 import clinicalstudypb.studies.domain.InvalidStudyException;
 import clinicalstudypb.studies.domain.StudyStatusConflictException;
 import clinicalstudypb.users.domain.EmailAlreadyInUseException;
+import clinicalstudypb.users.domain.ParticipantRoleNotAllowedException;
 import clinicalstudypb.visits.domain.ProtocolConflictException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -49,6 +50,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(EmailAlreadyInUseException.class)
     public ProblemDetail handleEmailAlreadyInUse(EmailAlreadyInUseException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+    }
+
+    /** Responde com o código contratual quando /api/users recebe o perfil de participante. */
+    @ExceptionHandler(ParticipantRoleNotAllowedException.class)
+    public ProblemDetail handleParticipantRoleNotAllowed(ParticipantRoleNotAllowedException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+        problem.setProperty("code", "PARTICIPANT_ROLE_NOT_ALLOWED");
+        return problem;
     }
 
     /**
