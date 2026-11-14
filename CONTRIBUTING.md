@@ -95,3 +95,41 @@ Regras: um commit por mudança lógica; descrição de até ~72 caracteres; use 
 **Boas práticas:** revise em até 1 dia útil; comente o código, não a pessoa; diferencie o que é bloqueante do que é sugestão (prefixo `nit:` para detalhes opcionais); o autor responde a cada comentário.
 
 > Recomendação ao administrador do repositório: ativar *branch protection* em `main` e `development` exigindo PR, 1 aprovação e os checks do CI.
+
+## Cores da interface
+
+Na web, use os tokens de `web/src/styles.css`, sem repetir valores de cor nas telas. Tokens terminados em `-soft` são fundos; combine-os com o token principal de texto da mesma família.
+
+| Significado | Token de texto | Fundo | Exemplos |
+|---|---|---|---|
+| Sucesso ou etapa concluída | `--color-success` | `--color-success-soft` | Salvo com sucesso, Elegível, Aceito, Incluído, visita realizada |
+| Erro ou cancelamento | `--color-error` | `--color-error-soft` | Falha ao salvar, Cancelado |
+| Atenção ou pendência | `--color-warning` | `--color-warning-soft` | Avaliação pendente, consentimento pendente, limite de vagas atingido |
+| Informação | `--color-info` | `--color-info-soft` | Ativo, vagas disponíveis, acompanhamento |
+| Neutro | `--color-neutral` | `--color-neutral-soft` | Perfis de acesso, Inativo, Recusado, Inelegível, Agendado, Retirado |
+
+### Estados dos estudos
+
+Reutilize `ESTADOS_ESTUDO` e `SeloEstadoEstudo`, inclusive no recrutamento e nos resumos. Não mantenha uma tabela paralela de cores por tela. Os protótipos acessíveis seguem a mesma tabela, com correspondência explícita de rótulos; um rótulo desconhecido recebe estilo neutro.
+
+| Estado | Aparência | Ícone |
+|---|---|---|
+| Planejamento | Branco com contorno cinza; texto neutro | Lápis |
+| Recrutamento | Roxo: `--color-study-recruitment` e `-soft` | Pessoa com sinal de adicionar |
+| Em execução | Azul: `--color-study-execution` e `-soft` | Reprodução em círculo |
+| Encerrado | Cinza: `--color-study-closed` e `-soft` | Cadeado |
+| Cancelado | Vermelho de erro/cancelamento | X em círculo |
+
+Encerrado não significa que o sistema comprovou a conclusão de todas as atividades; por isso permanece cinza. As cores não alteram regras de negócio.
+
+### Ações e identidade
+
+Botões comuns usam a primária escura (`--color-primary`) ou estilos neutros. Botões de criação usam `button--create`: fundo branco, contorno e texto azuis, hover azul suave e foco visível. Não use verde de sucesso para destacar uma ação comum.
+
+O verde-petróleo da marca (`--color-brand`) fica na navegação selecionada, edição e foco, separado dos tokens de sucesso. Essa exceção foi solicitada no refinamento visual e ainda deve ser alinhada no aceite da T24.2; o botão de editar continua sendo uma ação comum com ícone verde-petróleo. Se o critério literal proibir qualquer verde em ações, use o token de informação também nessa ação.
+
+### Contraste e outras plataformas
+
+Texto comum exige contraste mínimo de 4,5:1 com o fundo; confira também hover, foco, mensagens e texto secundário. Mantenha o nome do estado visível e use ícones como apoio, sem depender apenas da cor. Disponibilidade de vagas não é sucesso; atingir a capacidade é atenção, não erro.
+
+Esta entrega cobre a web e este guia. A frente Mobile é responsável por criar tokens nativos equivalentes e aplicar a mesma tabela nas telas do aplicativo. O guia é a referência de alinhamento; esta task não modifica nem declara validada a implementação mobile.
