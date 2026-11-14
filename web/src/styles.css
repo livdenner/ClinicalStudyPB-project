@@ -12,7 +12,7 @@
         sans-serif;
 
     color: var(--color-text);
-    background: #f3f6f9;
+    background: var(--color-app-background);
 
     font-synthesis: none;
     text-rendering: optimizeLegibility;
@@ -21,14 +21,61 @@
 
     --color-title: #172b3c;
     --color-text: #27394a;
-    --color-muted: #6e7f8e;
+    --color-muted: #526274;
     --color-border: #dfe7ec;
-    --color-primary: #177470;
-    --color-primary-dark: #105856;
-    --color-primary-soft: #e4f3f1;
+    --color-brand: #177470;
+    --color-brand-dark: #105856;
+    --color-brand-soft: #e4f3f1;
+    --color-brand-ring: #17747040;
+    --color-row-hover: #f7faf9;
+    --color-primary: #26394e;
+    --color-primary-dark: #1b2b3d;
+    --color-primary-soft: #edf1f5;
+
+    --color-primary-foreground: #ffffff;
+    --color-neutral: #475569;
+    --color-neutral-soft: #f1f5f9;
+    --color-neutral-border: #cbd5e1;
+    --color-success: #17613a;
+    --color-success-soft: #e6f4eb;
+    --color-success-border: #a7d7b8;
+    --color-error: #a62a25;
+    --color-error-soft: #fdeae8;
+    --color-error-border: #efb6b1;
+    --color-warning: #725400;
+    --color-warning-soft: #fff3ce;
+    --color-warning-border: #e6cf83;
+
+    --color-info: #245a91;
+    --color-info-soft: #e9f2fd;
+
+    --color-surface: #ffffff;
+    --color-study-closed: #334155;
+    --color-study-closed-soft: #e2e8f0;
+
+    --color-study-recruitment: #5b3a91;
+    --color-study-recruitment-soft: #ede9fe;
+    --color-study-execution: var(--color-info);
+    --color-study-execution-soft: var(--color-info-soft);
+
+    --accent: var(--color-primary);
+    --accent-hover: var(--color-primary-dark);
+    --accent-foreground: var(--color-primary-foreground);
+    --accent-soft: var(--color-primary-soft);
+    --accent-soft-hover: var(--color-hover);
+    --accent-soft-foreground: var(--color-primary);
+
+    --color-app-background: #f1f5f8;
+    --color-sidebar: #14313d;
+    --color-sidebar-text: #e5edf2;
+    --color-sidebar-muted: #b5c8d2;
+    --color-sidebar-border: #3c5662;
+    --color-sidebar-hover: #224550;
+    --color-sidebar-selected: #177470;
+    --color-sidebar-selected-text: #ffffff;
 
     --sidebar-width: 252px;
-    --color-hover: #e6f4f2;
+    --color-hover: #e4eaf0;
 }
 
 * {
@@ -55,17 +102,19 @@ a {
 
 @layer components {
     .button--primary {
-        background-color: #177470;
-        color: #ffffff;
+        background-color: var(--color-primary);
+        color: var(--color-primary-foreground);
     }
 
     .button--primary:hover {
-        background-color: #105856;
+        background-color: var(--color-primary-dark);
     }
 }
 
-a {
-    color: inherit;
+@layer base {
+    a {
+        color: inherit;
+    }
 }
 
 .form-field {
@@ -82,12 +131,12 @@ a {
 }
 
 .input-error {
-    border-color: #b91c1c;
+    border-color: var(--color-error);
 }
 
 .error-message {
     margin: 0;
-    color: #b91c1c;
+    color: var(--color-error);
     font-size: 0.875rem;
 }
 
@@ -100,17 +149,17 @@ a {
 
 .btn-primary {
     background: var(--color-primary);
-    color: white;
+    color: var(--color-primary-foreground);
 }
 
 .btn-secondary {
-    background: #64748b;
-    color: white;
+    background: var(--color-neutral);
+    color: var(--color-primary-foreground);
 }
 
 .btn-danger {
-    background: #b91c1c;
-    color: white;
+    background: var(--color-error);
+    color: var(--color-primary-foreground);
 }
 
 .btn:disabled {
@@ -138,4 +187,31 @@ a {
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     clip-path: inset(50%);
+}
+
+.button--create {
+    --button-bg: #ffffff;
+    --button-bg-hover: var(--color-info-soft);
+    --button-bg-pressed: var(--color-info-soft);
+    --button-fg: var(--color-info);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    padding: 0.65rem 1.25rem;
+    border: 1px solid var(--color-info);
+    border-radius: 999px;
+    background: #ffffff;
+    color: var(--color-info);
+    font-weight: 600;
+}
+
+.button--create:hover:not(:disabled):not([data-disabled="true"]) {
+    background: var(--color-info-soft);
+}
+
+.button--create:focus-visible {
+    outline: 2px solid var(--color-info);
+    outline-offset: 3px;
 }
