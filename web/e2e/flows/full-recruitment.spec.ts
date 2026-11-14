@@ -59,7 +59,10 @@ async function selectStudy(page: Page, title: string) {
 }
 
 test.describe("fluxo completo da Release 1", () => {
-    test("configura o estudo, abre o recrutamento e inclui um participante", async ({
+    // Desativado até a T17.11: o PBI-17 mudou o fluxo da Release 1 (cadastro com e-mail e
+    // telefone na T17.2; decisão de consentimento pelo candidato na T17.4). A T17.11
+    // reescreve este teste para o fluxo novo e remove o fixme.
+    test.fixme("configura o estudo, abre o recrutamento e inclui um participante", async ({
         page,
         browser,
     }) => {

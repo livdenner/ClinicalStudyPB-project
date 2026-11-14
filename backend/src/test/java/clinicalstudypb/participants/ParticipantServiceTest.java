@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 
 import clinicalstudypb.candidates.application.CandidateService;
 import clinicalstudypb.candidates.domain.Candidate;
+import clinicalstudypb.candidates.domain.CandidateConflictException;
 import clinicalstudypb.candidates.domain.EligibilityStatus;
 import clinicalstudypb.consent.application.SimulatedConsentService;
 import clinicalstudypb.consent.domain.ConsentConflictException;
@@ -122,6 +123,18 @@ class ParticipantServiceTest {
         when(repository.existsByStudyIdAndCandidateId(3L, 7L)).thenReturn(true);
         assertThrows(InclusionConflictException.class, () -> service.include(3L, 7L));
         verify(repository, never()).countByStudyId(3L);
+        assertNoWrite();
+    }
+
+    @Test
+    void rejectsCancelledCandidateBeforeOtherInclusionChecks() {
+        candidate.cancel("Candidatura cancelada", STORED_TIME, 9L);
+        prepareInclusion(StudyStatus.RECRUITMENT);
+        CandidateConflictException exception = assertThrows(
+                CandidateConflictException.class,
+                () -> service.include(3L, 7L));
+        assertEquals("CANDIDATE_CANCELLED", exception.getCode());
+        verify(repository, never()).existsByStudyIdAndCandidateId(3L, 7L);
         assertNoWrite();
     }
 

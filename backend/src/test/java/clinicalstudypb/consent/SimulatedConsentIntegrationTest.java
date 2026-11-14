@@ -80,7 +80,9 @@ class SimulatedConsentIntegrationTest extends IntegrationTestSupport {
                 LocalDate.of(2027, 1, 1), LocalDate.of(2027, 12, 31), 20));
         studyId = study.getId();
         jdbc.update("UPDATE studies SET status = 'RECRUITMENT' WHERE id = ?", studyId);
-        Candidate candidate = candidateRepository.save(new Candidate(studyId, "Candidato", "candidato", 42));
+        User participant = saveUser("Candidato", "consent.candidate@test.local", UserRole.PARTICIPANT);
+        Candidate candidate = candidateRepository.save(new Candidate(studyId, "Candidato", "candidato", 42,
+                participant.getEmail(), "83999990000", participant.getId()));
         candidateId = candidate.getId();
         coordinatorToken = tokenFor(coordinator.getEmail());
         researcherToken = tokenFor(researcher.getEmail());
@@ -250,6 +252,24 @@ class SimulatedConsentIntegrationTest extends IntegrationTestSupport {
         assertThrows(
                 ConsentConflictException.class,
                 () -> consentService.lockAfterInclusion(studyId, candidateId));
+    }
+
+    @Test
+    void cancelledCandidateRejectsConsentChangesAndPreservesHistory() throws Exception {
+        write("GRANTED").andExpect(status().isOk());
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post(
+                                "/api/studies/" + studyId + "/candidates/" + candidateId + "/cancellation")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"Desistência antes da inclusão\"}"))
+                .andExpect(status().isOk());
+
+        write("DECLINED")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CANDIDATE_CANCELLED"));
+        mockMvc.perform(get(path()).header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("GRANTED"));
     }
 
     private String path() {
