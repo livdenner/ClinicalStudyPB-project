@@ -13,6 +13,7 @@ import clinicalstudypb.shared.ResourceNotFoundException;
 import clinicalstudypb.participants.application.ParticipantLookup;
 import clinicalstudypb.shared.CurrentActor;
 import clinicalstudypb.studies.application.StudyService;
+import clinicalstudypb.studies.application.StudySchedulingLifecycle;
 import clinicalstudypb.studies.application.StudyReadiness;
 import clinicalstudypb.studies.domain.InvalidStudyException;
 import clinicalstudypb.studies.domain.Study;
@@ -73,6 +74,12 @@ class StudyServiceTest {
     private ObjectProvider<StudyReadiness> readinessProvider;
 
     @Mock
+    private ObjectProvider<StudySchedulingLifecycle> schedulingLifecycleProvider;
+
+    @Mock
+    private StudySchedulingLifecycle schedulingLifecycle;
+
+    @Mock
     private StudyReadiness readiness;
 
     @Mock
@@ -83,7 +90,7 @@ class StudyServiceTest {
     @BeforeEach
     void setUp() {
         studyService = new StudyService(studyRepository, userService, historyRepository,
-                currentActor, jdbc, readinessProvider, participantLookup);
+                currentActor, jdbc, readinessProvider, participantLookup, schedulingLifecycleProvider);
         org.mockito.Mockito.lenient().when(currentActor.userId()).thenReturn(7L);
     }
 
@@ -240,6 +247,39 @@ class StudyServiceTest {
                 3L, StudyStatus.CLOSED, StudyStatus.EXECUTION, null));
         assertEquals(StudyStatus.CLOSED, study.getStatus());
         verify(studyRepository, never()).save(any(Study.class));
+    }
+
+    @Test
+    void closedStudyRequiresEveryScheduledVisitToHaveAnOutcome() {
+        Study study = study("Estudo", 10);
+        study.advanceStatus(StudyStatus.RECRUITMENT);
+        study.advanceStatus(StudyStatus.EXECUTION);
+        when(studyRepository.findByIdForUpdate(3L)).thenReturn(Optional.of(study));
+        when(schedulingLifecycleProvider.getIfAvailable()).thenReturn(schedulingLifecycle);
+        when(schedulingLifecycle.hasScheduledVisits(3L)).thenReturn(true);
+
+        StudyStatusConflictException conflict = assertThrows(StudyStatusConflictException.class,
+                () -> studyService.advanceStatus(3L, StudyStatus.CLOSED, StudyStatus.EXECUTION, null));
+
+        assertEquals("STUDY_HAS_SCHEDULED_VISITS", conflict.getCode());
+        assertEquals(StudyStatus.EXECUTION, study.getStatus());
+        verifyNoInteractions(historyRepository);
+        verify(schedulingLifecycle, never()).cancelPendingScheduledVisits(any(), any(), any());
+    }
+
+    @Test
+    void cancellationDelegatesPendingVisitsWithinStatusTransaction() {
+        Study study = study("Estudo", 10);
+        study.advanceStatus(StudyStatus.RECRUITMENT);
+        when(studyRepository.findByIdForUpdate(3L)).thenReturn(Optional.of(study));
+        when(schedulingLifecycleProvider.getIfAvailable()).thenReturn(schedulingLifecycle);
+
+        studyService.advanceStatus(3L, StudyStatus.CANCELLED, StudyStatus.RECRUITMENT, "Interrompido");
+
+        assertEquals(StudyStatus.CANCELLED, study.getStatus());
+        verify(schedulingLifecycle).cancelPendingScheduledVisits(
+                org.mockito.ArgumentMatchers.eq(3L), org.mockito.ArgumentMatchers.eq(7L), any());
+        verify(historyRepository).save(any(StudyStatusHistory.class));
     }
 
     @Test

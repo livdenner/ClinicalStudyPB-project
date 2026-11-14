@@ -9,6 +9,8 @@ package clinicalstudypb.studies.domain;
  */
 public class StudyStatusConflictException extends RuntimeException {
 
+    private final String code;
+
     /**
      * Descreve a transição recusada.
      *
@@ -17,6 +19,7 @@ public class StudyStatusConflictException extends RuntimeException {
      */
     public StudyStatusConflictException(StudyStatus current, StudyStatus requested) {
         super("Transição de estado não permitida: " + current + " -> " + requested + ".");
+        this.code = null;
     }
 
     /**
@@ -26,5 +29,26 @@ public class StudyStatusConflictException extends RuntimeException {
      */
     public StudyStatusConflictException(String message) {
         super(message);
+        this.code = null;
+    }
+
+    /**
+     * Descreve um conflito de estado com código estável para a API.
+     *
+     * @param code código do conflito
+     * @param message motivo do conflito
+     */
+    public StudyStatusConflictException(String code, String message) {
+        super(message);
+        this.code = code;
+    }
+
+    /**
+     * Retorna o código estável, quando definido.
+     *
+     * @return código do conflito ou {@code null}
+     */
+    public String getCode() {
+        return code;
     }
 }

@@ -2,6 +2,8 @@ package clinicalstudypb.participants.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -36,6 +38,10 @@ public class Participant {
     @Column(name = "included_at", nullable = false)
     private Instant includedAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private ParticipantStatus status;
+
     /** Construtor exigido pela JPA. */
     protected Participant() {
     }
@@ -53,6 +59,7 @@ public class Participant {
         this.candidateId = candidateId;
         this.includedBy = includedBy;
         this.includedAt = includedAt;
+        this.status = ParticipantStatus.ACTIVE;
     }
 
     /**
@@ -98,5 +105,14 @@ public class Participant {
      */
     public Instant getIncludedAt() {
         return includedAt;
+    }
+
+    /**
+     * Indica se o participante foi retirado do estudo.
+     *
+     * @return {@code true} quando o estado é {@link ParticipantStatus#WITHDRAWN}
+     */
+    public boolean isWithdrawn() {
+        return status == ParticipantStatus.WITHDRAWN;
     }
 }
