@@ -1,6 +1,7 @@
 package clinicalstudypb.candidates.api;
 
 import clinicalstudypb.candidates.application.CandidateService;
+import clinicalstudypb.candidates.domain.Candidate;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -63,8 +65,9 @@ public class CandidateController {
                 @ApiResponse(responseCode = "403", description = "Perfil sem permissão"),
                 @ApiResponse(responseCode = "404", description = "Estudo não encontrado")
             })
-    public List<CandidateResponse> list(@PathVariable Long studyId) {
-        return candidateService.list(studyId).stream()
+    public List<CandidateResponse> list(@PathVariable Long studyId,
+                                        @RequestParam(defaultValue = "false") boolean includeCancelled) {
+        return candidateService.list(studyId, includeCancelled).stream()
                 .map(candidate -> CandidateResponse.from(candidateService.snapshot(candidate, null))).toList();
     }
 
@@ -136,5 +139,33 @@ public class CandidateController {
             })
     public CandidateActivationResponse reissue(@PathVariable Long studyId, @PathVariable Long candidateId) {
         return CandidateActivationResponse.from(candidateService.reissue(studyId, candidateId));
+    }
+
+    /**
+     * Cancela a candidatura antes da inclusão, preservando o histórico no estudo.
+     *
+     * @param studyId identificador do estudo
+     * @param candidateId identificador do candidato
+     * @param request justificativa do cancelamento
+     * @return candidato atualizado com os metadados do cancelamento
+     */
+    @PostMapping("/{candidateId}/cancellation")
+    @PreAuthorize("hasRole('COORDINATOR')")
+    @Operation(summary = "Cancela a candidatura antes da inclusão (T17.2)",
+            description = "Somente COORDINATOR.",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            responses = {
+                @ApiResponse(responseCode = "200", description = "Candidatura cancelada",
+                        content = @Content(schema = @Schema(implementation = CandidateResponse.class))),
+                @ApiResponse(responseCode = "400", description = "Motivo ausente ou inválido"),
+                @ApiResponse(responseCode = "401", description = "Token ausente ou inválido"),
+                @ApiResponse(responseCode = "403", description = "Perfil sem permissão"),
+                @ApiResponse(responseCode = "404", description = "Estudo ou candidato não encontrado"),
+                @ApiResponse(responseCode = "409", description = "Estudo fora de recrutamento ou candidato bloqueado")
+            })
+    public CandidateResponse cancel(@PathVariable Long studyId, @PathVariable Long candidateId,
+                                    @Valid @RequestBody CandidateCancellationRequest request) {
+        Candidate cancelled = candidateService.cancel(studyId, candidateId, request.reason());
+        return CandidateResponse.from(candidateService.snapshot(cancelled, null));
     }
 }

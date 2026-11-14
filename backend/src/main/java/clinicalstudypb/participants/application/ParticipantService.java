@@ -2,6 +2,7 @@ package clinicalstudypb.participants.application;
 
 import clinicalstudypb.candidates.application.CandidateService;
 import clinicalstudypb.candidates.domain.Candidate;
+import clinicalstudypb.candidates.domain.CandidateConflictException;
 import clinicalstudypb.candidates.domain.EligibilityStatus;
 import clinicalstudypb.consent.application.SimulatedConsentService;
 import clinicalstudypb.participants.domain.InclusionConflictException;
@@ -75,6 +76,10 @@ public class ParticipantService {
         Candidate candidate = candidateService.lockForConsentUpdate(studyId, candidateId);
         if (study.getStatus() != StudyStatus.RECRUITMENT) {
             throw new InclusionConflictException("A inclusão só é permitida durante o recrutamento.");
+        }
+        if (candidate.isCancelled()) {
+            throw new CandidateConflictException("CANDIDATE_CANCELLED",
+                    "Não é possível incluir um candidato com candidatura cancelada.");
         }
         if (participantRepository.existsByStudyIdAndCandidateId(studyId, candidateId)) {
             throw new InclusionConflictException("O candidato já foi incluído neste estudo.");

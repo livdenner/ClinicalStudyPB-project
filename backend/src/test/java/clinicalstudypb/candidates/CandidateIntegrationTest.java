@@ -152,6 +152,14 @@ class CandidateIntegrationTest extends IntegrationTestSupport {
         create(study.getId(), "{\"name\":\"Ana\",\"age\":42,"
                 + "\"email\":\"ana@test.local\",\"phone\":\"123\"}")
                 .andExpect(status().isBadRequest());
+        create(study.getId(), "{\"name\":\"Ana\",\"age\":42,"
+                + "\"email\":\"ana@test.local\",\"phone\":\"+        \"}")
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON));
+        create(study.getId(), "{\"name\":\"Ana\",\"age\":42,"
+                + "\"email\":\"ana@test.local\",\"phone\":\"--------\"}")
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON));
         assertEquals(beforeUsers, userRepository.count());
         assertEquals(0, candidateRepository.count());
     }
@@ -344,6 +352,132 @@ class CandidateIntegrationTest extends IntegrationTestSupport {
                 .andExpect(status().isUnauthorized());
 
         assertEquals(0, candidateRepository.count());
+    }
+
+    @Test
+    void cancelUpdatesStatusInvalidatesInviteAndAllowsReregistration() throws Exception {
+        ResultActions created = create(study.getId(), "{\"name\":\"Ana Silva\",\"age\":42}")
+                .andExpect(status().isCreated());
+        long firstCandidateId = candidateId(created);
+        Long userId = candidateRepository.findById(firstCandidateId).orElseThrow().getUserId();
+        assertTrue(invitationRepository.existsById(userId));
+
+        mockMvc.perform(post(candidatesUrl(study.getId()) + "/" + firstCandidateId + "/cancellation")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"  E-mail errado  \"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELLED"))
+                .andExpect(jsonPath("$.activation").doesNotExist())
+                .andExpect(jsonPath("$.cancellation.reason").value("E-mail errado"))
+                .andExpect(jsonPath("$.cancellation.cancelledAt").isString())
+                .andExpect(jsonPath("$.cancellation.cancelledByUserId").value(coordinator.getId()));
+
+        User user = userRepository.findById(userId).orElseThrow();
+        assertFalse(user.isActive());
+        assertTrue(user.isActivationPending());
+        assertFalse(invitationRepository.existsById(userId));
+
+        mockMvc.perform(get(candidatesUrl(study.getId()))
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+
+        mockMvc.perform(get(candidatesUrl(study.getId()) + "?includeCancelled=true")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(firstCandidateId))
+                .andExpect(jsonPath("$[0].status").value("CANCELLED"));
+
+        mockMvc.perform(get(candidatesUrl(study.getId()) + "/" + firstCandidateId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELLED"))
+                .andExpect(jsonPath("$.cancellation.reason").value("E-mail errado"));
+
+        mockMvc.perform(post(candidatesUrl(study.getId()) + "/" + firstCandidateId + "/activation-code")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CANDIDATE_CANCELLED"));
+
+        mockMvc.perform(post(candidatesUrl(study.getId()) + "/" + firstCandidateId + "/cancellation")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"Nova tentativa\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CANDIDATE_ALREADY_CANCELLED"));
+
+        ResultActions reregistered = create(study.getId(), "{\"name\":\"Ana Silva\",\"age\":42}")
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.status").value("INVITED"))
+                .andExpect(jsonPath("$.activation.activationCode").isString())
+                .andExpect(jsonPath("$.cancellation").doesNotExist());
+        long secondCandidateId = candidateId(reregistered);
+        assertNotEquals(firstCandidateId, secondCandidateId);
+        assertTrue(invitationRepository.existsById(userId));
+        assertEquals(2, candidateRepository.findAllByStudyIdOrderByIdAsc(study.getId()).size());
+        assertEquals(1, candidateRepository.findAllByStudyIdAndCancelledAtIsNullOrderByIdAsc(study.getId()).size());
+    }
+
+    @Test
+    void cancelPreservesInviteWhenInactiveUserHasAnotherActiveCandidacy() throws Exception {
+        Study otherStudy = saveStudy(StudyStatus.RECRUITMENT);
+        long firstId = candidateId(create(study.getId(), "{\"name\":\"Ana Silva\",\"age\":42}")
+                .andExpect(status().isCreated()));
+        create(otherStudy.getId(), "{\"name\":\"Ana Silva\",\"age\":42}")
+                .andExpect(status().isCreated());
+        Long userId = candidateRepository.findById(firstId).orElseThrow().getUserId();
+
+        mockMvc.perform(post(candidatesUrl(study.getId()) + "/" + firstId + "/cancellation")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"Desistiu só deste estudo\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELLED"));
+
+        assertTrue(invitationRepository.existsById(userId));
+    }
+
+    @Test
+    void cancelValidatesReasonScopePermissionsAndStudyStatus() throws Exception {
+        long candidateId = candidateId(create(study.getId(), "{\"name\":\"Ana Silva\",\"age\":42}")
+                .andExpect(status().isCreated()));
+        String path = candidatesUrl(study.getId()) + "/" + candidateId + "/cancellation";
+
+        mockMvc.perform(post(path).header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(post(path).header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"reason\":\"   \"}"))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(post(path).header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"" + "x".repeat(501) + "\"}"))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(post(path).contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"Sem autenticação\"}"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post(path).header(HttpHeaders.AUTHORIZATION, bearer(researcherToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"Sem permissão\"}"))
+                .andExpect(status().isForbidden());
+
+        Study otherStudy = saveStudy(StudyStatus.RECRUITMENT);
+        mockMvc.perform(post(candidatesUrl(otherStudy.getId()) + "/" + candidateId + "/cancellation")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"Estudo diferente\"}"))
+                .andExpect(status().isNotFound());
+
+        study.advanceStatus(StudyStatus.CANCELLED);
+        studyRepository.saveAndFlush(study);
+        mockMvc.perform(post(path).header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"Estudo fechado\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("STUDY_NOT_RECRUITING"));
     }
 
     private Study saveStudy(StudyStatus status) {

@@ -2,6 +2,7 @@ package clinicalstudypb.users.application;
 
 import clinicalstudypb.shared.ResourceNotFoundException;
 import clinicalstudypb.users.domain.EmailAlreadyInUseException;
+import clinicalstudypb.users.domain.ParticipantRoleNotAllowedException;
 import clinicalstudypb.users.domain.User;
 import clinicalstudypb.users.domain.UserRole;
 import clinicalstudypb.users.infrastructure.UserRepository;
@@ -20,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * @author Lucas N. de Araújo
  * @since 2026-10-21
- * @version 0.0.2
+ * @version 0.0.1
  */
 @Service
 public class UserService {
@@ -42,12 +43,12 @@ public class UserService {
     }
 
     /**
-     * Lista os usuários cadastrados.
+     * Lista apenas as contas da equipe administradas pelo administrador.
      *
      * @return usuários encontrados
      */
     public List<User> listUsers() {
-        return userRepository.findAll();
+        return userRepository.findByRoleNot(UserRole.PARTICIPANT);
     }
 
     /**
@@ -63,6 +64,15 @@ public class UserService {
                         "Usuário não encontrado: " + id));
     }
 
+    /** Busca uma conta da equipe para as rotas administrativas. */
+    public User getStaffUser(Long id) {
+        User user = getUser(id);
+        if (user.getRole() == UserRole.PARTICIPANT) {
+            throw new ResourceNotFoundException("Usuário não encontrado: " + id);
+        }
+        return user;
+    }
+
     /**
      * Localiza uma conta pelo e-mail para integração com outros módulos.
      *
@@ -75,7 +85,7 @@ public class UserService {
     }
 
     /**
-     * Busca e bloqueia uma conta para atualização transacional de senha.
+     * Busca e bloqueia uma conta para alterações transacionais.
      *
      * @param id identificador do usuário
      * @return conta bloqueada ou {@link Optional#empty()} se não existir
@@ -121,6 +131,7 @@ public class UserService {
      */
     @Transactional
     public User createUser(String name, String email, String password, UserRole role) {
+        rejectParticipantRole(role);
         String normalizedEmail = normalizeEmail(email);
         ensureEmailAvailable(normalizedEmail);
         User user = new User(name.strip(), normalizedEmail, passwordEncoder.encode(password), role);
@@ -141,7 +152,8 @@ public class UserService {
      */
     @Transactional
     public User updateUser(Long id, String name, String email, UserRole role) {
-        User user = getUser(id);
+        User user = getStaffUser(id);
+        rejectParticipantRole(role);
         String normalizedEmail = normalizeEmail(email);
         if (!user.getEmail().equalsIgnoreCase(normalizedEmail)) {
             ensureEmailAvailable(normalizedEmail);
@@ -160,7 +172,7 @@ public class UserService {
      */
     @Transactional
     public User activateUser(Long id) {
-        User user = getUser(id);
+        User user = getStaffUser(id);
         user.activate();
         return user;
     }
@@ -174,7 +186,7 @@ public class UserService {
      */
     @Transactional
     public User deactivateUser(Long id) {
-        User user = getUser(id);
+        User user = getStaffUser(id);
         user.deactivate();
         return user;
     }
@@ -187,7 +199,13 @@ public class UserService {
      */
     @Transactional
     public void deleteUser(Long id) {
-        userRepository.delete(getUser(id));
+        userRepository.delete(getStaffUser(id));
+    }
+
+    private void rejectParticipantRole(UserRole role) {
+        if (role == UserRole.PARTICIPANT) {
+            throw new ParticipantRoleNotAllowedException();
+        }
     }
 
     private void ensureEmailAvailable(String email) {

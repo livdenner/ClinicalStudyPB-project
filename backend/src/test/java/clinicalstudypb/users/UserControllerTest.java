@@ -93,7 +93,7 @@ class UserControllerTest {
 
     @Test
     void missingUserIsReportedAsNotFound() throws Exception {
-        when(userService.getUser(99L)).thenThrow(new ResourceNotFoundException("Usuário não encontrado: 99"));
+        when(userService.getStaffUser(99L)).thenThrow(new ResourceNotFoundException("Usuário não encontrado: 99"));
 
         mockMvc.perform(get("/api/users/99"))
                 .andExpect(status().isNotFound());

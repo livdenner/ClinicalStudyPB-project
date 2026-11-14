@@ -21,6 +21,7 @@ import clinicalstudypb.criteria.infrastructure.StudyCriterionRepository;
 import clinicalstudypb.participants.domain.Participant;
 import clinicalstudypb.participants.infrastructure.ParticipantRepository;
 import clinicalstudypb.studies.domain.Study;
+import clinicalstudypb.studies.domain.StudyStatus;
 import clinicalstudypb.support.IntegrationTestSupport;
 import clinicalstudypb.users.domain.User;
 import clinicalstudypb.users.domain.UserRole;
@@ -296,6 +297,25 @@ class EligibilityEvaluationIntegrationTest extends IntegrationTestSupport {
         assertEquals(candidate.getId(), saved.getCandidateId());
         assertEquals(coordinator.getId(), saved.getIncludedBy());
         assertEquals(NOW, saved.getIncludedAt());
+    }
+
+    @Test
+    void cancelledCandidateCannotBeEvaluatedAndPreservesStoredEvaluation() throws Exception {
+        study.advanceStatus(StudyStatus.RECRUITMENT);
+        studyRepository.saveAndFlush(study);
+        evaluate(body(true, true, false, false)).andExpect(status().isOk());
+        JsonNode before = currentEvaluation();
+        mockMvc.perform(post("/api/studies/{studyId}/candidates/{candidateId}/cancellation",
+                        study.getId(), candidate.getId())
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"Desistiu antes da inclusão\"}"))
+                .andExpect(status().isOk());
+
+        evaluate(body(false, true, false, false))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CANDIDATE_CANCELLED"));
+        assertEquals(before, currentEvaluation());
     }
 
     @Test

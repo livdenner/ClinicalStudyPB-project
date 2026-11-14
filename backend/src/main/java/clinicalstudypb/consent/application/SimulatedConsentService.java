@@ -1,6 +1,8 @@
 package clinicalstudypb.consent.application;
 
 import clinicalstudypb.candidates.application.CandidateService;
+import clinicalstudypb.candidates.domain.Candidate;
+import clinicalstudypb.candidates.domain.CandidateConflictException;
 import clinicalstudypb.consent.domain.ConsentConflictException;
 import clinicalstudypb.consent.domain.ConsentDecision;
 import clinicalstudypb.consent.domain.SimulatedConsent;
@@ -65,9 +67,13 @@ public class SimulatedConsentService {
     @Transactional
     public SimulatedConsent record(Long studyId, Long candidateId, ConsentDecision decision) {
         Study study = studyService.lockForCandidateRegistration(studyId);
-        candidateService.lockForConsentUpdate(studyId, candidateId);
+        Candidate candidate = candidateService.lockForConsentUpdate(studyId, candidateId);
         if (study.getStatus() != StudyStatus.RECRUITMENT) {
             throw new ConsentConflictException("O consentimento só pode mudar durante o recrutamento.");
+        }
+        if (candidate.isCancelled()) {
+            throw new CandidateConflictException("CANDIDATE_CANCELLED",
+                    "Não é possível registrar consentimento de uma candidatura cancelada.");
         }
         Instant now = Instant.now();
         SimulatedConsent consent = consentRepository.findById(candidateId).orElse(null);

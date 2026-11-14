@@ -85,12 +85,12 @@ class UserIntegrationTest extends IntegrationTestSupport {
 
     @Test
     void emailIsStoredInLowerCase() throws Exception {
-        Long id = idOf(create(new CreateUserBody("Participante", "Participante@ClinicalStudyPB.TEST",
-                        NEW_PASSWORD, "PARTICIPANT"))
+        Long id = idOf(create(new CreateUserBody("Pesquisadora", "Pesquisadora@ClinicalStudyPB.TEST",
+                        NEW_PASSWORD, "RESEARCHER"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.email").value("participante@clinicalstudypb.test")));
+                .andExpect(jsonPath("$.email").value("pesquisadora@clinicalstudypb.test")));
 
-        assertEquals("participante@clinicalstudypb.test", userRepository.findById(id).orElseThrow().getEmail());
+        assertEquals("pesquisadora@clinicalstudypb.test", userRepository.findById(id).orElseThrow().getEmail());
     }
 
     @Test
@@ -130,6 +130,64 @@ class UserIntegrationTest extends IntegrationTestSupport {
                 .andExpect(jsonPath("$[*].email", containsInAnyOrder(ADMIN_EMAIL, RESEARCHER_EMAIL)))
                 .andExpect(jsonPath("$[0].passwordHash").doesNotExist())
                 .andExpect(jsonPath("$[1].passwordHash").doesNotExist());
+    }
+
+    @Test
+    void listExcludesParticipantAccounts() throws Exception {
+        User participant = saveUser("Participante", "participante@clinicalstudypb.test", UserRole.PARTICIPANT);
+
+        mockMvc.perform(get(USERS_URL).header(HttpHeaders.AUTHORIZATION, bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[*].email", containsInAnyOrder(ADMIN_EMAIL, RESEARCHER_EMAIL)));
+
+        assertTrue(userRepository.existsById(participant.getId()));
+    }
+
+    @Test
+    void createAndUpdateRejectParticipantRoleWithoutChangingUsers() throws Exception {
+        create(new CreateUserBody("Participante", "novo.participante@clinicalstudypb.test",
+                        NEW_PASSWORD, "PARTICIPANT"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("PARTICIPANT_ROLE_NOT_ALLOWED"));
+
+        update(researcher.getId(), new UpdateUserBody("Nome alterado", "alterado@clinicalstudypb.test",
+                        "PARTICIPANT"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("PARTICIPANT_ROLE_NOT_ALLOWED"));
+
+        assertEquals(2, userRepository.count());
+        User unchanged = userRepository.findById(researcher.getId()).orElseThrow();
+        assertEquals("Pesquisador Teste", unchanged.getName());
+        assertEquals(RESEARCHER_EMAIL, unchanged.getEmail());
+        assertEquals(UserRole.RESEARCHER, unchanged.getRole());
+    }
+
+    @Test
+    void participantAccountIsNotAccessibleThroughAdministrativeRoutes() throws Exception {
+        User participant = userRepository.save(User.invitedParticipant("Participante",
+                "convidado@clinicalstudypb.test", "{bcrypt}senha-inutilizavel"));
+        Long id = participant.getId();
+
+        mockMvc.perform(get(USERS_URL + "/{id}", id).header(HttpHeaders.AUTHORIZATION, bearer(token)))
+                .andExpect(status().isNotFound());
+        update(id, new UpdateUserBody("Outro nome", "outro@clinicalstudypb.test", "RESEARCHER"))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(patch(USERS_URL + "/{id}/activate", id)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(token)))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(patch(USERS_URL + "/{id}/deactivate", id)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(token)))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(delete(USERS_URL + "/{id}", id).header(HttpHeaders.AUTHORIZATION, bearer(token)))
+                .andExpect(status().isNotFound());
+
+        User unchanged = userRepository.findById(id).orElseThrow();
+        assertEquals("Participante", unchanged.getName());
+        assertEquals("convidado@clinicalstudypb.test", unchanged.getEmail());
+        assertEquals(UserRole.PARTICIPANT, unchanged.getRole());
+        assertFalse(unchanged.isActive());
+        assertTrue(unchanged.isActivationPending());
     }
 
     @Test

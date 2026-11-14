@@ -15,7 +15,7 @@ import jakarta.persistence.Table;
  *
  * @author Lucas N. de Araújo
  * @since 2026-10-21
- * @version 0.0.2
+ * @version 0.0.1
  */
 @Entity
 @Table(name = "users")
@@ -171,11 +171,7 @@ public class User {
         this.role = role;
     }
 
-    /**
-     * Atualiza o hash de senha do usuário.
-     *
-     * @param passwordHash hash codificado da nova senha
-     */
+    /** Atualiza o hash da senha do usuário. */
     public void changePassword(String passwordHash) {
         this.passwordHash = passwordHash;
     }

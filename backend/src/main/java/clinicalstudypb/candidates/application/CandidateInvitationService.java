@@ -46,6 +46,20 @@ public class CandidateInvitationService {
         return repository.findById(userId);
     }
 
+    /**
+     * Remove o convite ainda não utilizado da conta sem apagar o usuário.
+     * Apagar o registro em vez de recuar o prazo faz o fluxo de ativação devolver
+     * {@code ACTIVATION_INVALID}, e não {@code ACTIVATION_EXPIRED}.
+     */
+    public void invalidate(Long userId) {
+        repository.findById(userId).ifPresent(invite -> {
+            if (invite.getUsedAt() == null) {
+                repository.delete(invite);
+                repository.flush();
+            }
+        });
+    }
+
     /** Consome o convite pendente da conta quando a senha é definida. */
     public void consume(Long userId) {
         repository.findById(userId).ifPresent(invite -> {

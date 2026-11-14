@@ -13,7 +13,8 @@ import java.time.Instant;
 public record CandidateResponse(Long id, Long studyId, String name, Integer age,
                                 String email, String phone, Long userId, CandidateStatus status,
                                 EligibilityStatus eligibilityStatus, ConsentStatus consentStatus,
-                                CandidateActivationResponse activation) {
+                                CandidateActivationResponse activation,
+                                CandidateCancellationResponse cancellation) {
 
     /** Monta a resposta com a situação atual do candidato e do convite. */
     public static CandidateResponse from(CandidateService.Snapshot snapshot) {
@@ -26,6 +27,7 @@ public record CandidateResponse(Long id, Long studyId, String name, Integer age,
         }
         return new CandidateResponse(candidate.getId(), candidate.getStudyId(), candidate.getName(),
                 candidate.getAge(), candidate.getEmail(), candidate.getPhone(), candidate.getUserId(),
-                snapshot.status(), candidate.getEligibilityStatus(), snapshot.consent(), activation);
+                snapshot.status(), candidate.getEligibilityStatus(), snapshot.consent(), activation,
+                CandidateCancellationResponse.from(candidate));
     }
 }
