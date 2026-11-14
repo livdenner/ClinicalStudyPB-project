@@ -126,7 +126,7 @@ Encerrado não significa que o sistema comprovou a conclusão de todas as ativid
 
 Botões comuns usam a primária escura (`--color-primary`) ou estilos neutros. Botões de criação usam `button--create`: fundo branco, contorno e texto azuis, hover azul suave e foco visível. Não use verde de sucesso para destacar uma ação comum.
 
-O verde-petróleo da marca (`--color-brand`) fica na navegação selecionada, edição e foco, separado dos tokens de sucesso. Essa exceção foi solicitada no refinamento visual e ainda deve ser alinhada no aceite da T24.2; o botão de editar continua sendo uma ação comum com ícone verde-petróleo. Se o critério literal proibir qualquer verde em ações, use o token de informação também nessa ação.
+O verde-petróleo da marca (`--color-brand`) é usado na navegação selecionada, edição e foco, separado dos tokens de sucesso. Botões de criação usam contorno azul; verde de sucesso fica reservado a resultados e etapas concluídas.
 
 ### Contraste e outras plataformas
 
