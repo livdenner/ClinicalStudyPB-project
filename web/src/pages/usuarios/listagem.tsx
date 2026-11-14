@@ -139,7 +139,7 @@ function GestaoUsuarios({ token }: { token: string }) {
                         Gerencie os usuários e seus perfis de acesso.
                     </p>
                 </div>
-                <Button variant="primary" onPress={() => setModal({})}>
+                <Button variant="primary" className="button--create" onPress={() => setModal({})}>
                     <Plus aria-hidden="true" size={20} /> Novo usuário
                 </Button>
             </header>

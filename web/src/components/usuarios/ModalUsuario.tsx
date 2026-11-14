@@ -166,7 +166,7 @@ export function ModalUsuario({ usuario, onFechar, onSalvar }: Props) {
                                     <div
                                         ref={errorRef}
                                         tabIndex={-1}
-                                        className="rounded-lg bg-[#FDEAEA] p-3 focus-visible:outline-2"
+                                        className="rounded-lg bg-[var(--color-error-soft)] p-3 focus-visible:outline-2"
                                     >
                                         <ErrorMessage message={erro} />
                                     </div>
