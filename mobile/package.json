@@ -42,7 +42,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "test:report": "node -e \"require('fs').mkdirSync('test-reports',{recursive:true})\" && jest --ci --json --outputFile=test-reports/jest.json"
   },
   "private": true,
   "jest": {

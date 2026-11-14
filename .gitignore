@@ -68,3 +68,8 @@ Desktop.ini
 playwright-report/
 test-results/
 blob-report/
+
+# Relatórios brutos dos testes (JSON/XML); o consolidado fica em docs/tests/execucoes
+test-reports/
+docs/tests/execucoes/local/
+docs/tests/execucoes/pull-requests/
