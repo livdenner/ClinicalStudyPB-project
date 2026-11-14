@@ -29,9 +29,12 @@ type Props = {
 };
 
 const PARECER_CARD_CLASSES: Record<StatusElegibilidadeApi, string> = {
-    PENDING: "border-[#FDE68A] bg-[#FFFBEB] text-[#92400E]",
-    ELIGIBLE: "border-[#A7F3D0] bg-[#ECFDF5] text-[#065F46]",
-    INELIGIBLE: "border-[#FECACA] bg-[#FEF2F2] text-[#991B1B]",
+    PENDING:
+        "border-[var(--color-warning-border)] bg-[var(--color-warning-soft)] text-[var(--color-warning)]",
+    ELIGIBLE:
+        "border-[var(--color-success-border)] bg-[var(--color-success-soft)] text-[var(--color-success)]",
+    INELIGIBLE:
+        "border-[var(--color-neutral-border)] bg-[var(--color-neutral-soft)] text-[var(--color-neutral)]",
 };
 
 const PARECER_DESCRICOES: Record<StatusElegibilidadeApi, string> = {
@@ -294,7 +297,7 @@ export function AvaliacaoElegibilidade({
             {role === "COORDINATOR" && !estudoEmRecrutamento && (
                 <p
                     role="note"
-                    className="rounded-xl border border-[#FDE68A] bg-[#FFFBEB] px-4 py-3 text-xs font-medium text-[#92400E]"
+                    className="rounded-xl border border-[var(--color-warning-border)] bg-[var(--color-warning-soft)] px-4 py-3 text-xs font-medium text-[var(--color-warning)]"
                 >
                     O estudo está em <strong>{STATUS_ESTUDO_LABELS[statusEstudo]}</strong>. O
                     registro ou alteração de respostas de elegibilidade só é permitido com o estudo
@@ -305,14 +308,14 @@ export function AvaliacaoElegibilidade({
             {mensagemSucesso && (
                 <div
                     role="status"
-                    className="rounded-xl border border-[#A7F3D0] bg-[#ECFDF5] px-4 py-3 text-sm font-medium text-[#065F46]"
+                    className="rounded-xl border border-[var(--color-success-border)] bg-[var(--color-success-soft)] px-4 py-3 text-sm font-medium text-[var(--color-success)]"
                 >
                     {mensagemSucesso}
                 </div>
             )}
 
             {erroSalvar && (
-                <div className="rounded-xl border border-[#FECACA] bg-[#FDEAEA] p-3.5 text-sm text-[#B42318]">
+                <div className="rounded-xl border border-[var(--color-error-border)] bg-[var(--color-error-soft)] p-3.5 text-sm text-[var(--color-error)]">
                     <ErrorMessage message={erroSalvar} />
                 </div>
             )}
@@ -342,15 +345,15 @@ export function AvaliacaoElegibilidade({
                 <section
                     role="note"
                     aria-labelledby="aviso-sem-criterios-heading"
-                    className="flex flex-col gap-2 rounded-xl border border-[#FDE68A] bg-[#FFFBEB] p-6"
+                    className="flex flex-col gap-2 rounded-xl border border-[var(--color-warning-border)] bg-[var(--color-warning-soft)] p-6"
                 >
                     <h2
                         id="aviso-sem-criterios-heading"
-                        className="text-base font-bold text-[#92400E]"
+                        className="text-base font-bold text-[var(--color-warning)]"
                     >
                         Estudo sem critérios cadastrados
                     </h2>
-                    <p className="text-sm text-[#92400E]">
+                    <p className="text-sm text-[var(--color-warning)]">
                         Este estudo ainda não possui critérios de inclusão ou exclusão definidos no
                         protocolo. Para avaliar a elegibilidade do candidato, solicite ao
                         pesquisador responsável o cadastro dos critérios do estudo.
@@ -381,7 +384,7 @@ export function AvaliacaoElegibilidade({
                                     >
                                         Critérios de inclusão
                                     </h2>
-                                    <span className="rounded-full bg-[#E4F4E9] px-2.5 py-0.5 text-xs font-bold text-[#16804B]">
+                                    <span className="rounded-full bg-[var(--color-neutral-soft)] px-2.5 py-0.5 text-xs font-bold text-[var(--color-neutral)]">
                                         {criteriosInclusao.length}
                                     </span>
                                 </div>
@@ -415,10 +418,10 @@ export function AvaliacaoElegibilidade({
                                                     <span
                                                         className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
                                                             semResposta
-                                                                ? "bg-[#FEF3C7] text-[#92400E]"
+                                                                ? "bg-[var(--color-warning-soft)] text-[var(--color-warning)]"
                                                                 : valor
-                                                                  ? "bg-[#E4F4E9] text-[#16804B]"
-                                                                  : "bg-[#FDEAEA] text-[#B42318]"
+                                                                  ? "bg-[var(--color-success-soft)] text-[var(--color-success)]"
+                                                                  : "bg-[var(--color-neutral-soft)] text-[var(--color-neutral)]"
                                                         }`}
                                                     >
                                                         {semResposta
@@ -472,7 +475,7 @@ export function AvaliacaoElegibilidade({
                                     >
                                         Critérios de exclusão
                                     </h2>
-                                    <span className="rounded-full bg-[#FDEAEA] px-2.5 py-0.5 text-xs font-bold text-[#B42318]">
+                                    <span className="rounded-full bg-[var(--color-neutral-soft)] px-2.5 py-0.5 text-xs font-bold text-[var(--color-neutral)]">
                                         {criteriosExclusao.length}
                                     </span>
                                 </div>
@@ -507,10 +510,10 @@ export function AvaliacaoElegibilidade({
                                                     <span
                                                         className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
                                                             semResposta
-                                                                ? "bg-[#FEF3C7] text-[#92400E]"
+                                                                ? "bg-[var(--color-warning-soft)] text-[var(--color-warning)]"
                                                                 : valor
-                                                                  ? "bg-[#FDEAEA] text-[#B42318]"
-                                                                  : "bg-[#E4F4E9] text-[#16804B]"
+                                                                  ? "bg-[var(--color-neutral-soft)] text-[var(--color-neutral)]"
+                                                                  : "bg-[var(--color-success-soft)] text-[var(--color-success)]"
                                                         }`}
                                                     >
                                                         {semResposta

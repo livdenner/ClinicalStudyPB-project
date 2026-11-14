@@ -137,7 +137,7 @@ export function ModalNovoCandidato({ estudoTitulo, onFechar, onCadastrar }: Prop
 
                 <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-4 p-5">
                     {erro && (
-                        <div className="rounded-lg bg-[#FDEAEA] p-3 text-sm text-[#B42318]">
+                        <div className="rounded-lg bg-[var(--color-error-soft)] p-3 text-sm text-[var(--color-error)]">
                             <ErrorMessage message={erro} />
                         </div>
                     )}

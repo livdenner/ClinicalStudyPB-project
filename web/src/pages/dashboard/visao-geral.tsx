@@ -41,7 +41,7 @@ export function VisaoGeralPage() {
                     {
                         label: "Em recrutamento",
                         value: studies.filter((s) => s.status === "Recrutamento").length,
-                        tone: "amber",
+                        tone: "recruitment",
                     },
                     {
                         label: "Participantes",
@@ -51,7 +51,7 @@ export function VisaoGeralPage() {
                     {
                         label: "Visitas pendentes",
                         value: visits.filter((v) => v.status !== "Realizada").length,
-                        tone: "green",
+                        tone: "amber",
                     },
                 ]}
             />

@@ -1,3 +1,4 @@
+import { SeloEstadoEstudo } from "../../components/estudos/SeloEstadoEstudo";
 import { useCallback, useEffect, useState } from "react";
 import { Plus, Search } from "lucide-react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
@@ -87,14 +88,6 @@ function salvarCacheConsentimento(candidateId: number, termo: string) {
         // Ignora falha de armazenamento local
     }
 }
-
-const STATUS_ESTUDO_CLASSES: Record<StatusEstudoCandidato, string> = {
-    PLANNING: "bg-[#FEF3C7] text-[#92400E]",
-    RECRUITMENT: "bg-[#E4F4E9] text-[#16804B]",
-    EXECUTION: "bg-[#E9F2FD] text-[#245A91]",
-    CLOSED: "bg-[#F1F5F9] text-[#475569]",
-    CANCELLED: "bg-[#FDEAEA] text-[#B42318]",
-};
 
 export function RecrutamentoPage() {
     const { session, logout } = useAuth();
@@ -448,7 +441,7 @@ function GestaoCandidatos({
                             setMensagemSucesso("");
                             setModalAberto(true);
                         }}
-                        className="btn btn-primary inline-flex items-center gap-2 font-semibold transition hover:bg-[var(--color-primary-dark)]"
+                        className="btn button--create"
                     >
                         <Plus aria-hidden="true" size={18} />
                         Novo candidato
@@ -523,11 +516,7 @@ function GestaoCandidatos({
                             <span className="text-xs font-medium text-[var(--color-muted)]">
                                 Estado do estudo:
                             </span>
-                            <span
-                                className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${STATUS_ESTUDO_CLASSES[statusEstudo]}`}
-                            >
-                                {STATUS_ESTUDO_LABELS[statusEstudo]}
-                            </span>
+                            <SeloEstadoEstudo estado={statusEstudo} />
                         </div>
                     )}
 
@@ -552,7 +541,7 @@ function GestaoCandidatos({
                 {estudoSelecionado && !estudoEmRecrutamento && podeCadastrar && (
                     <p
                         role="note"
-                        className="rounded-lg border border-[#FDE68A] bg-[#FFFBEB] px-3.5 py-2.5 text-xs font-medium text-[#92400E]"
+                        className="rounded-lg border border-[var(--color-warning-border)] bg-[var(--color-warning-soft)] px-3.5 py-2.5 text-xs font-medium text-[var(--color-warning)]"
                     >
                         O cadastro de novos candidatos só é permitido quando o estudo está em
                         recrutamento. Estado atual:{" "}

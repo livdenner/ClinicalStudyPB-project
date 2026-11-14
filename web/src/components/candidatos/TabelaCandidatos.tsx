@@ -18,15 +18,15 @@ type Props = {
 };
 
 const ELEGIBILIDADE_CLASSES: Record<StatusElegibilidadeApi, string> = {
-    PENDING: "bg-[#FEF3C7] text-[#92400E]",
-    ELIGIBLE: "bg-[#E4F4E9] text-[#16804B]",
-    INELIGIBLE: "bg-[#FDEAEA] text-[#B42318]",
+    PENDING: "bg-[var(--color-warning-soft)] text-[var(--color-warning)]",
+    ELIGIBLE: "bg-[var(--color-success-soft)] text-[var(--color-success)]",
+    INELIGIBLE: "bg-[var(--color-neutral-soft)] text-[var(--color-neutral)]",
 };
 
 const CONSENTIMENTO_CLASSES: Record<StatusConsentimentoApi, string> = {
-    PENDING: "bg-[#F1F5F9] text-[#475569]",
-    GRANTED: "bg-[#E4F4E9] text-[#16804B]",
-    DECLINED: "bg-[#FDEAEA] text-[#B42318]",
+    PENDING: "bg-[var(--color-warning-soft)] text-[var(--color-warning)]",
+    GRANTED: "bg-[var(--color-success-soft)] text-[var(--color-success)]",
+    DECLINED: "bg-[var(--color-neutral-soft)] text-[var(--color-neutral)]",
 };
 
 const CONSENTIMENTO_TABELA_LABELS: Record<StatusConsentimentoApi, string> = {
@@ -205,7 +205,7 @@ export function TabelaCandidatos({
                                                     (candidatoJaIncluido ? (
                                                         <span
                                                             aria-label={`Paciente Incluído: ${candidato.name}`}
-                                                            className="inline-flex cursor-default select-none items-center gap-1.5 rounded-lg border border-[#A7F3D0] bg-[#ECFDF5] px-3 py-1.5 text-xs font-semibold text-[#065F46]"
+                                                            className="inline-flex cursor-default select-none items-center gap-1.5 rounded-lg border border-[var(--color-success-border)] bg-[var(--color-success-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--color-success)]"
                                                         >
                                                             <CheckCircle2
                                                                 size={15}

@@ -230,7 +230,7 @@ export function VisitasPage() {
                             {visits.filter((v) => v.status === "Pendente").length} pendentes
                         </span>
                         <span className="flex items-center gap-2">
-                            <i className="h-2.5 w-2.5 rounded-full bg-[#16804B]" />
+                            <i className="h-2.5 w-2.5 rounded-full bg-[var(--color-success)]" />
                             {visits.filter((v) => v.status === "Realizada").length} realizadas
                         </span>
                     </div>

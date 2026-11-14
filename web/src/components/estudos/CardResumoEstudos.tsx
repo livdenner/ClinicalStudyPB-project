@@ -1,5 +1,6 @@
+import { ESTADOS_ESTUDO } from "../../config/estados-estudo";
 import { Card } from "@heroui/react";
-import { ClipboardList, Users, Activity, CheckCircle } from "lucide-react";
+import { ClipboardList, Users, Activity, Lock } from "lucide-react";
 
 type TipoCardResumo = "total" | "recrutamento" | "execucao" | "encerrado";
 
@@ -13,14 +14,14 @@ const icones = {
     total: ClipboardList,
     recrutamento: Users,
     execucao: Activity,
-    encerrado: CheckCircle,
+    encerrado: Lock,
 };
 
 const cores = {
-    total: "bg-[#E9F2FD] text-[#2563B8]",
-    recrutamento: "bg-[#FEF2DA] text-[#946200]",
-    execucao: "bg-[#E6F4F2] text-[#126966]",
-    encerrado: "bg-[#E4F4E9] text-[#16804B]",
+    total: "bg-[var(--color-info-soft)] text-[var(--color-info)]",
+    recrutamento: ESTADOS_ESTUDO.RECRUITMENT.classes,
+    execucao: ESTADOS_ESTUDO.EXECUTION.classes,
+    encerrado: ESTADOS_ESTUDO.CLOSED.classes,
 };
 
 export function CardResumoEstudos({ titulo, quantidade, tipo }: CardResumoEstudosProps) {

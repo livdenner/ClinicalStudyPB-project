@@ -106,17 +106,17 @@ export function RelatoriosPage() {
                     {
                         label: "Inclusões",
                         value: ps.length,
-                        tone: "amber",
+                        tone: "green",
                     },
                     {
                         label: "Visitas realizadas",
                         value: vs.filter((v) => v.status === "Realizada").length,
-                        tone: "blue",
+                        tone: "green",
                     },
                     {
                         label: "Visitas programadas",
                         value: vs.filter((v) => v.status !== "Realizada").length,
-                        tone: "green",
+                        tone: "blue",
                     },
                 ]}
             />
@@ -143,7 +143,7 @@ export function RelatoriosPage() {
                             <span className="text-[var(--color-muted)]">Elegíveis</span>
                             <div className="h-2.5 w-full overflow-hidden rounded-full bg-[#e2e8f0]">
                                 <div
-                                    className="h-full rounded-full bg-[#16804B]"
+                                    className="h-full rounded-full bg-[var(--color-success)]"
                                     style={{ width: `${elegiveisPercent}%` }}
                                 />
                             </div>
