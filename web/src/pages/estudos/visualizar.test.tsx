@@ -44,6 +44,12 @@ function renderPage(path = "/estudos/3", role: UserRole = "RESEARCHER", autentic
     );
 }
 
+async function encontrarAcaoEstado(nome: string) {
+    const abrir = await screen.findByRole("button", { name: "Alterar estado" });
+    if (abrir.getAttribute("aria-expanded") !== "true") fireEvent.click(abrir);
+    return screen.findByRole("menuitem", { name: nome });
+}
+
 beforeEach(() => {
     localStorage.clear();
     vi.spyOn(toast, "success").mockReturnValue("toast-teste");
@@ -149,7 +155,7 @@ describe("visualização de estudos", () => {
             expect(screen.getByRole("button", { name: "Editar estudo" })).toBeEnabled()
         );
         expect(screen.getByRole("button", { name: "Nova visita" })).toBeDisabled();
-        fireEvent.click(screen.getByRole("button", { name: "Atualizar" }));
+        fireEvent.click(screen.getByRole("button", { name: "Atualizar visitas previstas" }));
         await waitFor(() =>
             expect(screen.getByRole("button", { name: "Nova visita" })).toBeEnabled()
         );
@@ -165,12 +171,12 @@ describe("visualização de estudos", () => {
             .mockResolvedValueOnce(resposta(proprio))
             .mockResolvedValueOnce(resposta({ ...proprio, status: "RECRUITMENT" }));
         renderPage();
-        fireEvent.click(await screen.findByRole("button", { name: "Abrir recrutamento" }));
+        fireEvent.click(await encontrarAcaoEstado("Abrir recrutamento"));
         const dialog = await screen.findByRole("dialog", { name: "Abrir recrutamento" });
         expect(fetchMock).toHaveBeenCalledTimes(1);
         fireEvent.click(within(dialog).getByRole("button", { name: "Abrir recrutamento" }));
-        await screen.findByRole("button", { name: "Iniciar execução" });
-        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+        await encontrarAcaoEstado("Iniciar execução");
+        expect(dialog).not.toBeInTheDocument();
         const [url, options] = fetchMock.mock.calls[1];
         expect(url).toBe("/api/studies/3/status");
         expect(options?.method).toBe("PATCH");
@@ -191,7 +197,7 @@ describe("visualização de estudos", () => {
             .mockResolvedValueOnce(resposta({ ...proprio, status: "RECRUITMENT" }))
             .mockResolvedValueOnce(resposta({ ...proprio, status: "RECRUITMENT" }));
         renderPage();
-        fireEvent.click(await screen.findByRole("button", { name: "Abrir recrutamento" }));
+        fireEvent.click(await encontrarAcaoEstado("Abrir recrutamento"));
         const dialog = await screen.findByRole("dialog", { name: "Abrir recrutamento" });
         fireEvent.click(within(dialog).getByRole("button", { name: "Abrir recrutamento" }));
 
@@ -204,8 +210,8 @@ describe("visualização de estudos", () => {
         expect(fetchMock).toHaveBeenCalledTimes(3);
 
         fireEvent.click(within(dialog).getByRole("button", { name: "Atualizar estudo" }));
-        await screen.findByRole("button", { name: "Iniciar execução" });
-        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+        await encontrarAcaoEstado("Iniciar execução");
+        expect(dialog).not.toBeInTheDocument();
         expect(fetchMock).toHaveBeenCalledTimes(4);
         expect(fetchMock.mock.calls[3][0]).toBe("/api/studies/3");
     });
@@ -217,11 +223,11 @@ describe("visualização de estudos", () => {
             .mockResolvedValueOnce(resposta(proprio))
             .mockResolvedValueOnce(resposta({ ...proprio, status: "PLANNING" }));
         renderPage();
-        fireEvent.click(await screen.findByRole("button", { name: "Voltar ao planejamento" }));
+        fireEvent.click(await encontrarAcaoEstado("Voltar ao planejamento"));
         const dialog = await screen.findByRole("dialog", { name: "Voltar ao planejamento" });
         expect(fetchMock).toHaveBeenCalledTimes(1);
         fireEvent.click(within(dialog).getByRole("button", { name: "Voltar ao planejamento" }));
-        await screen.findByRole("button", { name: "Abrir recrutamento" });
+        await encontrarAcaoEstado("Abrir recrutamento");
         expect(JSON.parse(String(fetchMock.mock.calls[1][1]?.body))).toEqual({
             status: "PLANNING",
             expectedStatus: "RECRUITMENT",
@@ -238,7 +244,7 @@ describe("visualização de estudos", () => {
                 resposta([{ id: 20, fromStatus: "PLANNING", toStatus: "CANCELLED" }])
             );
         renderPage();
-        fireEvent.click(await screen.findByRole("button", { name: "Cancelar estudo" }));
+        fireEvent.click(await encontrarAcaoEstado("Cancelar estudo"));
         const dialog = await screen.findByRole("dialog", { name: "Cancelar estudo" });
         fireEvent.click(within(dialog).getByRole("button", { name: "Cancelar estudo" }));
         expect(
@@ -255,7 +261,7 @@ describe("visualização de estudos", () => {
             expectedStatus: "PLANNING",
             reason: "Estudo suspenso pelo patrocinador.",
         });
-        expect(await screen.findByRole("button", { name: "Restaurar estudo" })).toBeInTheDocument();
+        expect(await encontrarAcaoEstado("Restaurar estudo")).toBeInTheDocument();
     });
 
     it.each(["PLANNING", "RECRUITMENT"])(
@@ -270,7 +276,7 @@ describe("visualização de estudos", () => {
                 )
                 .mockResolvedValueOnce(resposta({ ...proprio, status: origem }));
             renderPage();
-            fireEvent.click(await screen.findByRole("button", { name: "Restaurar estudo" }));
+            fireEvent.click(await encontrarAcaoEstado("Restaurar estudo"));
             const dialog = await screen.findByRole("dialog", { name: "Restaurar estudo" });
             fireEvent.click(within(dialog).getByRole("button", { name: "Restaurar estudo" }));
             await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
@@ -313,7 +319,7 @@ describe("visualização de estudos", () => {
         await act(async () =>
             concluirHistorico(resposta([{ id: 20, fromStatus: "PLANNING", toStatus: "CANCELLED" }]))
         );
-        expect(await screen.findByRole("button", { name: "Restaurar estudo" })).toBeInTheDocument();
+        expect(await encontrarAcaoEstado("Restaurar estudo")).toBeInTheDocument();
         expect(screen.queryByRole("alert")).not.toBeInTheDocument();
         expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
             "/api/studies/3",
@@ -354,7 +360,7 @@ describe("visualização de estudos", () => {
             .mockResolvedValueOnce(resposta({ detail: motivo }, 409))
             .mockResolvedValueOnce(resposta(proprio));
         renderPage();
-        fireEvent.click(await screen.findByRole("button", { name: "Abrir recrutamento" }));
+        fireEvent.click(await encontrarAcaoEstado("Abrir recrutamento"));
         const dialog = await screen.findByRole("dialog", { name: "Abrir recrutamento" });
         fireEvent.click(within(dialog).getByRole("button", { name: "Abrir recrutamento" }));
         expect(await within(dialog).findByRole("alert")).toHaveTextContent(motivo);
@@ -486,3 +492,25 @@ it("carrega participantes apenas ao abrir a aba do estudo", async () => {
     expect(await screen.findByText("Nenhum participante incluído")).toBeInTheDocument();
     expect(fetchMock.mock.calls[1][0]).toBe("/api/studies/3/participants");
 });
+
+it.each(["Visão geral", "Critérios", "Visitas previstas", "Participantes"])(
+    "T24.1: mantém no máximo uma ação primária na aba %s",
+    async (aba) => {
+        vi.spyOn(Tabs, "Indicator").mockImplementation(() => <span aria-hidden="true" />);
+        vi.spyOn(globalThis, "fetch").mockImplementation(async (url) =>
+            resposta(String(url) === "/api/studies/3" ? { ...estudo, responsibleUserId: 7 } : [])
+        );
+        renderPage();
+        await screen.findByRole("heading", { name: estudo.title });
+        fireEvent.click(screen.getByRole("tab", { name: aba }));
+        if (aba === "Critérios") await screen.findByRole("button", { name: "Novo critério" });
+        if (aba === "Visitas previstas") await screen.findByRole("button", { name: "Nova visita" });
+        if (aba === "Participantes") await screen.findByText("Nenhum participante incluído");
+        const editar = screen.getByRole("button", { name: "Editar estudo" });
+        expect(editar.classList.contains("button--primary")).toBe(true);
+        expect(
+            screen.getAllByRole("button").filter((b) => b.classList.contains("button--primary"))
+                .length
+        ).toBeLessThanOrEqual(1);
+    }
+);

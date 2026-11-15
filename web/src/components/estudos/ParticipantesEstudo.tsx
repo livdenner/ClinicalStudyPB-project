@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button, Chip, Spinner } from "@heroui/react";
-import { RefreshCw } from "lucide-react";
+import { BotaoAtualizar } from "../ui/BotaoAtualizar";
 import { listarParticipantesPorEstudo } from "../../services/participantes";
 import type { ParticipanteApi } from "../../types/participante";
 import { obterMensagemErroApi } from "../../utils/erros-api";
@@ -51,9 +51,11 @@ export function ParticipantesEstudo({ estudoId, token }: { estudoId: number; tok
                         Consulte as inclusões e a situação dos participantes deste estudo.
                     </p>
                 </div>
-                <Button variant="secondary" isDisabled={carregando} onPress={atualizar}>
-                    <RefreshCw size={17} aria-hidden="true" /> Atualizar participantes
-                </Button>
+                <BotaoAtualizar
+                    rotulo="Atualizar participantes"
+                    desabilitado={carregando}
+                    onAtualizar={atualizar}
+                />
             </header>
             {carregando ? (
                 <div role="status" className="flex items-center justify-center gap-3 p-8">
