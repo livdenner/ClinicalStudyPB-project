@@ -37,7 +37,12 @@ const candidatoPendente: CandidatoApi = {
     studyId: 10,
     name: "Candidato 014",
     age: 42,
+    email: "candidato014@exemplo.test",
+    phone: "(83) 99999-0014",
+    userId: 201,
+    status: "ACTIVE",
     eligibilityStatus: "PENDING",
+    consentStatus: "PENDING",
 };
 
 const candidatoElegivel: CandidatoApi = {
@@ -45,7 +50,12 @@ const candidatoElegivel: CandidatoApi = {
     studyId: 10,
     name: "Candidato 021",
     age: 55,
+    email: "candidato021@exemplo.test",
+    phone: "(83) 99999-0021",
+    userId: 202,
+    status: "CONSENT_PENDING",
     eligibilityStatus: "ELIGIBLE",
+    consentStatus: "PENDING",
 };
 
 function resposta(body: unknown, status = 200) {
@@ -167,7 +177,12 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
             studyId: 20,
             name: "Candidato 099",
             age: 31,
+            email: "candidato099@exemplo.test",
+            phone: "(83) 99999-0099",
+            userId: 203,
+            status: "ACTIVE",
             eligibilityStatus: "INELIGIBLE",
+            consentStatus: "PENDING",
         };
 
         const fetchMock = mockApiPorRota({
@@ -242,13 +257,11 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
         const dialog = await screen.findByRole("dialog", { name: "Novo candidato" });
         fireEvent.click(within(dialog).getByRole("button", { name: "Cadastrar candidato" }));
 
-        expect(
-            await within(dialog).findByText("Informe a identificação do candidato.")
-        ).toBeInTheDocument();
+        expect(await within(dialog).findByText("Informe o nome do candidato.")).toBeInTheDocument();
         expect(within(dialog).getByText("Informe a idade do candidato.")).toBeInTheDocument();
         expect(fetchMock).toHaveBeenCalledTimes(3);
 
-        fireEvent.change(within(dialog).getByLabelText("Identificação do candidato"), {
+        fireEvent.change(within(dialog).getByLabelText("Nome do candidato"), {
             target: { value: "Candidato 050" },
         });
         fireEvent.change(within(dialog).getByLabelText("Idade"), {
@@ -268,7 +281,12 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
             studyId: 10,
             name: "Candidato 050",
             age: 38,
+            email: "candidato050@exemplo.test",
+            phone: "(83) 99999-0050",
+            userId: 204,
+            status: "ACTIVE",
             eligibilityStatus: "PENDING",
+            consentStatus: "PENDING",
         };
 
         const fetchMock = vi
@@ -284,14 +302,21 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
         fireEvent.click(screen.getByRole("button", { name: "Novo candidato" }));
 
         const dialog = await screen.findByRole("dialog", { name: "Novo candidato" });
-        fireEvent.change(within(dialog).getByLabelText("Identificação do candidato"), {
+        fireEvent.change(within(dialog).getByLabelText("Nome do candidato"), {
             target: { value: "  Candidato 050  " },
         });
         fireEvent.change(within(dialog).getByLabelText("Idade"), {
             target: { value: "38" },
         });
+        fireEvent.change(within(dialog).getByLabelText("E-mail"), {
+            target: { value: "candidato050@exemplo.test" },
+        });
+        fireEvent.change(within(dialog).getByLabelText("Telefone"), {
+            target: { value: "(83) 99999-0050" },
+        });
         fireEvent.click(within(dialog).getByRole("button", { name: "Cadastrar candidato" }));
 
+        fireEvent.click(await screen.findByRole("button", { name: "Concluir cadastro" }));
         await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
 
         const [url, options] = fetchMock.mock.calls[3];
@@ -300,9 +325,13 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
         expect(JSON.parse(String(options?.body))).toEqual({
             name: "Candidato 050",
             age: 38,
+            email: "candidato050@exemplo.test",
+            phone: "(83) 99999-0050",
         });
 
-        expect(screen.getByText("Candidato cadastrado com sucesso.")).toBeInTheDocument();
+        expect(
+            screen.getByText("Candidato cadastrado. Vinculado a conta existente.")
+        ).toBeInTheDocument();
         expect(screen.getByText("Candidato 050")).toBeInTheDocument();
         expect(screen.getByText("38 anos")).toBeInTheDocument();
         expect(screen.getByText("Exibindo 1 de 1 candidatos")).toBeInTheDocument();
@@ -313,8 +342,8 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
             ...rotasDoEstudo([candidatoPendente]),
             "POST /api/studies/10/candidates": resposta(
                 {
-                    code: "DUPLICATE_CANDIDATE",
-                    message: "Já existe um candidato com este nome neste estudo.",
+                    code: "CANDIDATE_ALREADY_IN_STUDY",
+                    message: "O candidato já está cadastrado no estudo.",
                 },
                 409
             ),
@@ -326,16 +355,22 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
         fireEvent.click(screen.getByRole("button", { name: "Novo candidato" }));
 
         const dialog = await screen.findByRole("dialog", { name: "Novo candidato" });
-        fireEvent.change(within(dialog).getByLabelText("Identificação do candidato"), {
+        fireEvent.change(within(dialog).getByLabelText("Nome do candidato"), {
             target: { value: "Candidato 014" },
         });
         fireEvent.change(within(dialog).getByLabelText("Idade"), {
             target: { value: "42" },
         });
+        fireEvent.change(within(dialog).getByLabelText("E-mail"), {
+            target: { value: candidatoPendente.email },
+        });
+        fireEvent.change(within(dialog).getByLabelText("Telefone"), {
+            target: { value: candidatoPendente.phone },
+        });
         fireEvent.click(within(dialog).getByRole("button", { name: "Cadastrar candidato" }));
 
         expect(await within(dialog).findByRole("alert")).toHaveTextContent(
-            "Já existe um candidato com este nome neste estudo."
+            "O candidato já está cadastrado no estudo."
         );
         expect(screen.getByRole("dialog", { name: "Novo candidato" })).toBeInTheDocument();
     });

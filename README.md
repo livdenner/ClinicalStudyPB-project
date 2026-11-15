@@ -212,6 +212,16 @@ Inicie somente o banco com `docker compose up -d db`. Exporte no terminal `DB_UR
 
 O [relatório de instalação limpa](releases/release1/tests/t16-13/README.md) registra os comandos conferidos, as migrações V1–V10, a repetição dos seeds e a navegação Android.
 
+### Cadastro de candidatos na Sprint 3 (T17.6)
+
+Em `/recrutamento`, o coordenador informa nome, e-mail, telefone e idade inteira entre 1 e 130 anos. Todos os campos são obrigatórios. O telefone recebe uma máscara simples quando é informado com DDD no formato brasileiro; números internacionais com `+` continuam aceitos conforme o contrato. O cadastro usa `POST /api/studies/{studyId}/candidates` e apresenta os erros gerais e de campo recebidos da API sem substituir suas mensagens.
+
+A confirmação distingue **Vinculado a conta existente** de **Convite emitido**. Um e-mail de participante ativo é vinculado ao estudo; uma conta nova ou com ativação pendente recebe um código. A mesma conta não pode ter duas candidaturas não canceladas no mesmo estudo. E-mail existente em outro estudo não é, por si só, um erro.
+
+O código de ativação é um **recurso de demonstração**, apresentado somente ao coordenador na confirmação do cadastro, com opção de copiar e horário de validade. Ele fica apenas na confirmação aberta, não é salvo em armazenamento do navegador nem mantido na listagem, e é descartado ao fechar. O candidato usa o e-mail e o código no primeiro acesso; o backend só consome o código quando a definição da senha é concluída. A validade é de 72 horas, conforme o OpenAPI. Não há envio por e-mail nesta etapa.
+
+O formulário usa o modal acessível já adotado no Web, com foco inicial, navegação por teclado, erros associados aos campos e apresentação responsiva. Os novos cenários automatizados do cadastro e do convite pertencem à T17.8; o andamento posterior do convite e da decisão pertence à T17.7. A validação completa no aplicativo depende da integração mobile da T17.9.
+
 ## 6. Testes, cobertura e qualidade
 
 ### Backend
