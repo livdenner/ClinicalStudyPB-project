@@ -43,3 +43,5 @@ export const ROLE_LABELS: Record<UserRole, string> = {
     ADMINISTRATOR: "Administrador",
     PARTICIPANT: "Participante",
 };
+
+export const PERFIS_EQUIPE = ["ADMINISTRATOR", "COORDINATOR", "RESEARCHER"] as const;

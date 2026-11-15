@@ -13,7 +13,7 @@ import {
 } from "@heroui/react";
 import { Eye, EyeOff, X } from "lucide-react";
 import { ApiClientError } from "../../services/api/apiClient";
-import { ROLE_LABELS, type UserRole } from "../../types/auth";
+import { PERFIS_EQUIPE, ROLE_LABELS, type UserRole } from "../../types/auth";
 import type { DadosCadastroUsuario, Usuario } from "../../types/usuario";
 import { obterErrosCampos, obterMensagemErroAcesso } from "../../utils/erros-api";
 import { focarPrimeiroCampoInvalido } from "../../utils/formularios";
@@ -21,17 +21,18 @@ import { ErrorMessage } from "../ui/ErrorMessage";
 
 type Props = {
     usuario?: Usuario;
+    usuarioLogadoId?: number;
     onFechar: () => void;
     onSalvar: (dados: DadosCadastroUsuario, ativo?: boolean) => Promise<void>;
 };
 
-export function ModalUsuario({ usuario, onFechar, onSalvar }: Props) {
+export function ModalUsuario({ usuario, usuarioLogadoId, onFechar, onSalvar }: Props) {
     const formRef = useRef<HTMLFormElement>(null);
     const errorRef = useRef<HTMLDivElement>(null);
     const voltarRef = useRef<HTMLButtonElement>(null);
     const [name, setName] = useState(usuario?.name ?? "");
     const [email, setEmail] = useState(usuario?.email ?? "");
-    const [role, setRole] = useState<UserRole>(usuario?.role ?? "PARTICIPANT");
+    const [role, setRole] = useState<UserRole>(usuario?.role ?? "RESEARCHER");
     const [password, setPassword] = useState("");
     const [mostrarSenha, setMostrarSenha] = useState(false);
     const [salvando, setSalvando] = useState(false);
@@ -39,6 +40,7 @@ export function ModalUsuario({ usuario, onFechar, onSalvar }: Props) {
     const [confirmandoSituacao, setConfirmandoSituacao] = useState(false);
     const [erro, setErro] = useState("");
     const [errosCampos, setErrosCampos] = useState<Record<string, string>>({});
+    const propriaConta = usuario !== undefined && usuario.id === usuarioLogadoId;
     const ocupado = salvando;
     const camposBloqueados = salvando || confirmandoSituacao;
 
@@ -223,7 +225,7 @@ export function ModalUsuario({ usuario, onFechar, onSalvar }: Props) {
                                         if (valor !== null) setRole(valor as UserRole);
                                     }}
                                     isRequired
-                                    isDisabled={camposBloqueados}
+                                    isDisabled={camposBloqueados || propriaConta}
                                     className="flex flex-col gap-1"
                                 >
                                     <Label className="text-sm font-medium text-[var(--color-text)]">
@@ -235,22 +237,26 @@ export function ModalUsuario({ usuario, onFechar, onSalvar }: Props) {
                                     </Select.Trigger>
                                     <Select.Popover>
                                         <ListBox>
-                                            {(Object.keys(ROLE_LABELS) as UserRole[]).map(
-                                                (perfil) => (
-                                                    <ListBox.Item
-                                                        key={perfil}
-                                                        id={perfil}
-                                                        textValue={ROLE_LABELS[perfil]}
-                                                    >
-                                                        {ROLE_LABELS[perfil]}
-                                                        <ListBox.ItemIndicator />
-                                                    </ListBox.Item>
-                                                )
-                                            )}
+                                            {PERFIS_EQUIPE.map((perfil) => (
+                                                <ListBox.Item
+                                                    key={perfil}
+                                                    id={perfil}
+                                                    textValue={ROLE_LABELS[perfil]}
+                                                >
+                                                    {ROLE_LABELS[perfil]}
+                                                    <ListBox.ItemIndicator />
+                                                </ListBox.Item>
+                                            ))}
                                         </ListBox>
                                     </Select.Popover>
                                     <FieldError className="text-sm text-[var(--color-error)]" />
                                 </Select>
+                                {propriaConta && (
+                                    <p className="text-sm text-[var(--color-muted)]">
+                                        O perfil e a situação da sua própria conta não podem ser
+                                        alterados.
+                                    </p>
+                                )}
                                 {usuario && (
                                     <section
                                         aria-labelledby="situacao-usuario-titulo"
@@ -265,7 +271,7 @@ export function ModalUsuario({ usuario, onFechar, onSalvar }: Props) {
                                         <Switch
                                             isSelected={ativo}
                                             onChange={setAtivo}
-                                            isDisabled={camposBloqueados}
+                                            isDisabled={camposBloqueados || propriaConta}
                                         >
                                             <Switch.Content>
                                                 <Switch.Control>
