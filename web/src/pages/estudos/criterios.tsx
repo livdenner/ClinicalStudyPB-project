@@ -142,6 +142,7 @@ export function CriteriosEstudo({
                 {editavel && (
                     <Button
                         variant="primary"
+                        className="button--create"
                         isDisabled={acoesBloqueadas}
                         onPress={() => setModalAberto(true)}
                     >

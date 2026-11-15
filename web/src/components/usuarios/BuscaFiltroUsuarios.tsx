@@ -20,7 +20,7 @@ export function BuscaFiltroUsuarios({
     aoMudarSituacao,
 }: BuscaFiltroUsuariosProps) {
     const filtroClass =
-        "h-11 rounded-lg border border-[var(--color-border)] bg-white px-3 text-sm text-[var(--color-text)] shadow-none focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]";
+        "h-11 rounded-lg border border-[var(--color-border)] bg-white px-3 text-sm text-[var(--color-text)] shadow-none focus:border-[var(--color-brand)] focus-visible:border-[var(--color-brand)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-brand)] focus-visible:ring-4 focus-visible:ring-[var(--color-brand-ring)]";
 
     return (
         <div className="grid grid-cols-[2fr_1fr_1fr] gap-3 max-[900px]:grid-cols-1">

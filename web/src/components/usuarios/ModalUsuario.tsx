@@ -166,7 +166,7 @@ export function ModalUsuario({ usuario, onFechar, onSalvar }: Props) {
                                     <div
                                         ref={errorRef}
                                         tabIndex={-1}
-                                        className="rounded-lg bg-[#FDEAEA] p-3 focus-visible:outline-2"
+                                        className="rounded-lg bg-[var(--color-error-soft)] p-3 focus-visible:outline-2"
                                     >
                                         <ErrorMessage message={erro} />
                                     </div>
@@ -189,7 +189,7 @@ export function ModalUsuario({ usuario, onFechar, onSalvar }: Props) {
                                         Nome
                                     </Label>
                                     <Input className={inputClass} required />
-                                    <FieldError className="text-sm text-[#b91c1c]" />
+                                    <FieldError className="text-sm text-[var(--color-error)]" />
                                 </TextField>
                                 <TextField
                                     id="usuario-email"
@@ -213,7 +213,7 @@ export function ModalUsuario({ usuario, onFechar, onSalvar }: Props) {
                                         E-mail
                                     </Label>
                                     <Input className={inputClass} required />
-                                    <FieldError className="text-sm text-[#b91c1c]" />
+                                    <FieldError className="text-sm text-[var(--color-error)]" />
                                 </TextField>
                                 <Select
                                     id="usuario-perfil"
@@ -249,7 +249,7 @@ export function ModalUsuario({ usuario, onFechar, onSalvar }: Props) {
                                             )}
                                         </ListBox>
                                     </Select.Popover>
-                                    <FieldError className="text-sm text-[#b91c1c]" />
+                                    <FieldError className="text-sm text-[var(--color-error)]" />
                                 </Select>
                                 {usuario && (
                                     <section
@@ -323,7 +323,7 @@ export function ModalUsuario({ usuario, onFechar, onSalvar }: Props) {
                                                 )}
                                             </Button>
                                         </div>
-                                        <FieldError className="text-sm text-[#b91c1c]" />
+                                        <FieldError className="text-sm text-[var(--color-error)]" />
                                     </TextField>
                                 )}
                             </Modal.Body>

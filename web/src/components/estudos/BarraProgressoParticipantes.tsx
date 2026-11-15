@@ -13,8 +13,7 @@ export function BarraProgressoParticipantes({
 }: BarraProgressoParticipantesProps) {
     const percentual = calcularOcupacao(participantes, limite);
 
-    const corBarra =
-        percentual >= 80 ? "bg-[#B43F40]" : percentual >= 50 ? "bg-[#D39042]" : "bg-[#1B8784]";
+    const corBarra = percentual >= 100 ? "bg-[var(--color-warning)]" : "bg-[var(--color-info)]";
 
     return (
         <div className="participant-count">

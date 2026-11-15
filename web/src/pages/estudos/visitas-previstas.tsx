@@ -183,7 +183,7 @@ export function VisitasPrevistasEstudo({
                     {editavel && (
                         <Button
                             variant="primary"
-                            className="min-h-11"
+                            className="button--create"
                             isDisabled={acoesBloqueadas}
                             onPress={() => setModal({})}
                         >
