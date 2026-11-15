@@ -185,7 +185,7 @@ export function VisitasPrevistasEstudo({
                             isDisabled={acoesBloqueadas}
                             onPress={() => setModal({})}
                         >
-                            <Plus size={18} aria-hidden="true" /> Nova visita
+                            <Plus size={18} aria-hidden="true" /> Cadastrar visita
                         </Button>
                     )}
                 </div>

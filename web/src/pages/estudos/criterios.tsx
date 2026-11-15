@@ -147,7 +147,7 @@ export function CriteriosEstudo({
                         onPress={() => setModalAberto(true)}
                     >
                         <Plus size={18} aria-hidden="true" />
-                        Novo critério
+                        Cadastrar critério
                     </Button>
                 )}
             </header>

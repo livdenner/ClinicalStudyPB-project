@@ -154,10 +154,10 @@ describe("visualização de estudos", () => {
         await waitFor(() =>
             expect(screen.getByRole("button", { name: "Editar estudo" })).toBeEnabled()
         );
-        expect(screen.getByRole("button", { name: "Nova visita" })).toBeDisabled();
+        expect(screen.getByRole("button", { name: "Cadastrar visita" })).toBeDisabled();
         fireEvent.click(screen.getByRole("button", { name: "Atualizar visitas previstas" }));
         await waitFor(() =>
-            expect(screen.getByRole("button", { name: "Nova visita" })).toBeEnabled()
+            expect(screen.getByRole("button", { name: "Cadastrar visita" })).toBeEnabled()
         );
         expect(
             screen.getByRole("heading", { name: "Nenhuma visita prevista" })
@@ -493,25 +493,89 @@ it("carrega participantes apenas ao abrir a aba do estudo", async () => {
     expect(fetchMock.mock.calls[1][0]).toBe("/api/studies/3/participants");
 });
 
-it.each(["Visão geral", "Critérios", "Visitas previstas", "Participantes"])(
-    "T24.1: mantém no máximo uma ação primária na aba %s",
-    async (aba) => {
+const cenariosAcoes = [
+    { status: "PLANNING", protocoloEditavel: true },
+    { status: "RECRUITMENT", protocoloEditavel: true },
+    { status: "EXECUTION", protocoloEditavel: false },
+    { status: "CLOSED", protocoloEditavel: false },
+    { status: "CANCELLED", protocoloEditavel: false },
+].flatMap(({ status, protocoloEditavel }) =>
+    [
+        { papel: "responsável", role: "RESEARCHER" as const, responsavel: true },
+        { papel: "outro pesquisador", role: "RESEARCHER" as const, responsavel: false },
+        { papel: "coordenador", role: "COORDINATOR" as const, responsavel: false },
+    ].map((perfil) => ({
+        ...perfil,
+        status,
+        editavel: perfil.responsavel && protocoloEditavel,
+    }))
+);
+
+it.each(cenariosAcoes)(
+    "T24.1: ações e limite de uma primária nas quatro abas em $status para $papel",
+    async ({ status, role, responsavel, editavel }) => {
         vi.spyOn(Tabs, "Indicator").mockImplementation(() => <span aria-hidden="true" />);
-        vi.spyOn(globalThis, "fetch").mockImplementation(async (url) =>
-            resposta(String(url) === "/api/studies/3" ? { ...estudo, responsibleUserId: 7 } : [])
-        );
-        renderPage();
+        const atual = { ...estudo, status, responsibleUserId: responsavel ? 7 : 11 };
+        vi.spyOn(globalThis, "fetch").mockImplementation(async (url) => {
+            if (String(url) === "/api/studies/3") return resposta(atual);
+            if (String(url).endsWith("/status-history"))
+                return resposta([{ id: 20, fromStatus: "PLANNING", toStatus: "CANCELLED" }]);
+            return resposta([]);
+        });
+        renderPage("/estudos/3", role);
         await screen.findByRole("heading", { name: estudo.title });
-        fireEvent.click(screen.getByRole("tab", { name: aba }));
-        if (aba === "Critérios") await screen.findByRole("button", { name: "Novo critério" });
-        if (aba === "Visitas previstas") await screen.findByRole("button", { name: "Nova visita" });
-        if (aba === "Participantes") await screen.findByText("Nenhum participante incluído");
-        const editar = screen.getByRole("button", { name: "Editar estudo" });
-        expect(editar.classList.contains("button--primary")).toBe(true);
-        expect(
-            screen.getAllByRole("button").filter((b) => b.classList.contains("button--primary"))
-                .length
-        ).toBeLessThanOrEqual(1);
+
+        for (const aba of ["Visão geral", "Critérios", "Visitas previstas", "Participantes"]) {
+            fireEvent.click(screen.getByRole("tab", { name: aba }));
+            if (aba === "Critérios")
+                await screen.findByText("Nenhum critério de inclusão cadastrado.");
+            if (aba === "Visitas previstas")
+                await screen.findByRole("heading", { name: "Nenhuma visita prevista" });
+            if (aba === "Participantes") await screen.findByText("Nenhum participante incluído");
+
+            const editar = screen.queryByRole("button", { name: "Editar estudo" });
+            if (editavel) {
+                expect(editar).toHaveClass("button--primary");
+                await waitFor(() => expect(editar).toBeEnabled());
+            } else {
+                expect(editar).not.toBeInTheDocument();
+            }
+
+            if (aba === "Critérios" || aba === "Visitas previstas") {
+                const criar = screen.queryByRole("button", {
+                    name: aba === "Critérios" ? "Cadastrar critério" : "Cadastrar visita",
+                });
+                if (editavel) {
+                    expect(criar).toBeEnabled();
+                    expect(criar).not.toHaveClass("button--primary");
+                } else {
+                    expect(criar).not.toBeInTheDocument();
+                    expect(
+                        within(
+                            screen.getByRole("region", {
+                                name:
+                                    aba === "Critérios"
+                                        ? "Critérios do estudo"
+                                        : "Visitas previstas",
+                            })
+                        ).getByText("Somente leitura")
+                    ).toBeVisible();
+                }
+            }
+
+            const candidatos = screen.queryByRole("link", { name: "Gerenciar candidatos" });
+            if (role === "COORDINATOR" && status === "RECRUITMENT")
+                expect(candidatos).toHaveAttribute("href", "/recrutamento?studyId=3");
+            else expect(candidatos).not.toBeInTheDocument();
+
+            const controles = [
+                ...screen.queryAllByRole("button"),
+                ...screen.queryAllByRole("link"),
+            ];
+            expect(
+                controles.filter((controle) => controle.classList.contains("button--primary"))
+            ).toHaveLength(editavel ? 1 : 0);
+        }
     }
 );
 
