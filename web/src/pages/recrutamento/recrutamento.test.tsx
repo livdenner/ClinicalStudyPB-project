@@ -419,6 +419,7 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
                     candidateId: 102,
                     candidateName: "Candidato 021",
                     includedAt: "2026-11-09T12:00:00Z",
+                    status: "ACTIVE",
                 },
                 201
             ),
@@ -514,6 +515,7 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
                     candidateId: 100,
                     candidateName: "Candidato 001",
                     includedAt: "2026-11-09T10:00:00Z",
+                    status: "ACTIVE",
                 },
             ]),
         });
@@ -621,6 +623,7 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
                         candidateId: 102,
                         candidateName: "Candidato 021",
                         includedAt: "2026-11-09T17:00:00Z",
+                        status: "ACTIVE",
                     },
                     201
                 )

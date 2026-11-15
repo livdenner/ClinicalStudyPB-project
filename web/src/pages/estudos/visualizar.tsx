@@ -1,3 +1,4 @@
+import { ParticipantesEstudo } from "../../components/estudos/ParticipantesEstudo";
 import { useState } from "react";
 import { Button, Card, Link, Spinner, Tabs, Surface } from "@heroui/react";
 import { ArrowLeft, Info } from "lucide-react";
@@ -106,6 +107,7 @@ function DetalhesEstudo({
         transicionar,
         atualizarEstudo,
     } = useDetalhesEstudo({ id, token, pesquisador });
+    const [participantesMontados, setParticipantesMontados] = useState(false);
     const [criteriosMontados, setCriteriosMontados] = useState(false);
     const [criteriosEmProcessamento, setCriteriosEmProcessamento] = useState(false);
     const [visitasMontadas, setVisitasMontadas] = useState(false);
@@ -230,6 +232,7 @@ function DetalhesEstudo({
                 variant="secondary"
                 defaultSelectedKey="visao-geral"
                 onSelectionChange={(aba) => {
+                    if (aba === "participantes") setParticipantesMontados(true);
                     if (aba === "criterios") setCriteriosMontados(true);
                     if (aba === "visitas-previstas") setVisitasMontadas(true);
                 }}
@@ -258,6 +261,13 @@ function DetalhesEstudo({
                         className="min-h-12 w-auto shrink-0 rounded-none px-1 text-sm font-medium data-[selected=true]:text-[var(--color-primary)]"
                     >
                         Visitas previstas
+                        <Tabs.Indicator className="top-auto bottom-0 h-0.5 rounded-none bg-[var(--color-primary)] shadow-none" />
+                    </Tabs.Tab>
+                    <Tabs.Tab
+                        id="participantes"
+                        className="min-h-12 w-auto shrink-0 rounded-none px-1 text-sm font-medium data-[selected=true]:text-[var(--color-primary)]"
+                    >
+                        Participantes
                         <Tabs.Indicator className="top-auto bottom-0 h-0.5 rounded-none bg-[var(--color-primary)] shadow-none" />
                     </Tabs.Tab>
                 </Tabs.List>
@@ -310,6 +320,17 @@ function DetalhesEstudo({
                         token={token}
                         onAtualizarEstudo={sincronizarEstudo}
                         onProcessamentoChange={setVisitasEmProcessamento}
+                    />
+                </Tabs.Panel>
+                <Tabs.Panel
+                    id="participantes"
+                    shouldForceMount={participantesMontados}
+                    className="m-0 p-0 data-[inert=true]:hidden"
+                >
+                    <ParticipantesEstudo
+                        key={`${estudo.id}:${token}`}
+                        estudoId={estudo.id}
+                        token={token}
                     />
                 </Tabs.Panel>
             </Tabs>

@@ -472,3 +472,17 @@ describe("visualização de estudos", () => {
         expect(fetchMock).not.toHaveBeenCalled();
     });
 });
+
+it("carrega participantes apenas ao abrir a aba do estudo", async () => {
+    vi.spyOn(Tabs, "Indicator").mockImplementation(() => <span aria-hidden="true" />);
+    const fetchMock = vi
+        .spyOn(globalThis, "fetch")
+        .mockResolvedValueOnce(resposta(estudo))
+        .mockResolvedValueOnce(resposta([]));
+    renderPage();
+    await screen.findByRole("heading", { name: estudo.title });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole("tab", { name: "Participantes" }));
+    expect(await screen.findByText("Nenhum participante incluído")).toBeInTheDocument();
+    expect(fetchMock.mock.calls[1][0]).toBe("/api/studies/3/participants");
+});
