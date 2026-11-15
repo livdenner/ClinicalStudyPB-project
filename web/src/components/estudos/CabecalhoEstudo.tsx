@@ -12,6 +12,12 @@ type Props = {
     alteracaoEstadoPermitida: boolean;
     origemCancelamento: EstadoEstudo | null;
     proximaTransicao: { estado: EstadoEstudo; rotulo: string | null } | null;
+    requisitosTransicao: {
+        motivo: string | null;
+        falhou: boolean;
+        onMenuChange: (aberto: boolean) => void;
+        onReverificar: () => void;
+    };
     onEditar: () => void;
     onTransicionar: (estado: EstadoEstudo) => void;
 };
@@ -25,6 +31,7 @@ export function CabecalhoEstudo({
     proximaTransicao,
     alteracaoEstadoPermitida,
     origemCancelamento,
+    requisitosTransicao,
     onEditar,
     onTransicionar,
 }: Props) {
@@ -73,7 +80,7 @@ export function CabecalhoEstudo({
                         </div>
                     )}
                     {acoes.length > 0 && (
-                        <Dropdown>
+                        <Dropdown onOpenChange={requisitosTransicao.onMenuChange}>
                             <Dropdown.Trigger
                                 className="button button--secondary button--create group"
                                 isDisabled={emProcessamento}
@@ -88,7 +95,7 @@ export function CabecalhoEstudo({
                             </Dropdown.Trigger>
                             <Dropdown.Popover
                                 placement="bottom end"
-                                className="min-w-56 rounded-xl border border-[var(--color-border)]"
+                                className="min-w-56 max-w-[calc(100vw-2rem)] rounded-xl border border-[var(--color-border)]"
                             >
                                 <Dropdown.Menu aria-label="Transições do estudo">
                                     {acoes.map((acao) => (
@@ -96,13 +103,47 @@ export function CabecalhoEstudo({
                                             key={acao.estado}
                                             id={acao.estado}
                                             textValue={acao.rotulo}
-                                            isDisabled={emProcessamento}
+                                            aria-label={acao.rotulo}
+                                            aria-describedby={
+                                                acao.estado === proximaTransicao?.estado &&
+                                                requisitosTransicao.motivo
+                                                    ? "motivo-bloqueio-transicao"
+                                                    : undefined
+                                            }
+                                            isDisabled={
+                                                emProcessamento ||
+                                                (acao.estado === proximaTransicao?.estado &&
+                                                    Boolean(requisitosTransicao.motivo))
+                                            }
                                             onAction={() => onTransicionar(acao.estado)}
-                                            className={`min-h-11 ${acao.estado === "CANCELLED" ? "border-t border-[var(--color-border)] text-[var(--color-error)]" : ""}`}
+                                            className={`min-h-11 whitespace-normal data-[disabled=true]:opacity-100 ${acao.estado === "CANCELLED" ? "border-t border-[var(--color-border)] text-[var(--color-error)]" : ""}`}
                                         >
-                                            {acao.rotulo}
+                                            <span className="flex max-w-72 flex-col gap-1">
+                                                <span>{acao.rotulo}</span>
+                                                {acao.estado === proximaTransicao?.estado &&
+                                                    requisitosTransicao.motivo && (
+                                                        <span
+                                                            id="motivo-bloqueio-transicao"
+                                                            className="text-xs leading-relaxed text-[var(--color-muted)]"
+                                                            aria-live="polite"
+                                                        >
+                                                            {requisitosTransicao.motivo}
+                                                        </span>
+                                                    )}
+                                            </span>
                                         </Dropdown.Item>
                                     ))}
+                                    {requisitosTransicao.falhou && (
+                                        <Dropdown.Item
+                                            id="verificar-requisitos"
+                                            textValue="Verificar requisitos novamente"
+                                            shouldCloseOnSelect={false}
+                                            onAction={requisitosTransicao.onReverificar}
+                                            className="min-h-11"
+                                        >
+                                            Verificar requisitos novamente
+                                        </Dropdown.Item>
+                                    )}
                                 </Dropdown.Menu>
                             </Dropdown.Popover>
                         </Dropdown>

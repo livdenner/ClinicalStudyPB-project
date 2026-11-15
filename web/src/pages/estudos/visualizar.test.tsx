@@ -2,6 +2,7 @@ import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testi
 import { MemoryRouter } from "react-router-dom";
 import { Tabs, toast } from "@heroui/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import * as requisitosTransicao from "../../services/requisitos-transicao";
 import { App } from "../../main";
 import { AuthProvider } from "../../context/AuthContext";
 import { AUTH_STORAGE_KEY } from "../../services/auth";
@@ -47,10 +48,13 @@ function renderPage(path = "/estudos/3", role: UserRole = "RESEARCHER", autentic
 async function encontrarAcaoEstado(nome: string) {
     const abrir = await screen.findByRole("button", { name: "Alterar estado" });
     if (abrir.getAttribute("aria-expanded") !== "true") fireEvent.click(abrir);
-    return screen.findByRole("menuitem", { name: nome });
+    const acao = await screen.findByRole("menuitem", { name: nome });
+    await waitFor(() => expect(acao).not.toHaveAttribute("aria-disabled", "true"));
+    return acao;
 }
 
 beforeEach(() => {
+    vi.spyOn(requisitosTransicao, "verificarRequisitosTransicao").mockResolvedValue(null);
     localStorage.clear();
     vi.spyOn(toast, "success").mockReturnValue("toast-teste");
 });

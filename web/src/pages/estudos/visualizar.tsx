@@ -13,6 +13,7 @@ import { ErrorMessage } from "../../components/ui/ErrorMessage";
 import type { AuthenticatedUser } from "../../types/auth";
 import type { EstadoEstudo } from "../../types/estudo";
 import { podeEditarEstudo, podeAlterarEstadoEstudo } from "../../utils/estudos";
+import { useRequisitosTransicao } from "./useRequisitosTransicao";
 import { useDetalhesEstudo } from "./useDetalhesEstudo";
 import { CriteriosEstudo } from "./criterios";
 import { VisitasPrevistasEstudo } from "./visitas-previstas";
@@ -112,6 +113,11 @@ function DetalhesEstudo({
     const [criteriosEmProcessamento, setCriteriosEmProcessamento] = useState(false);
     const [visitasMontadas, setVisitasMontadas] = useState(false);
     const [visitasEmProcessamento, setVisitasEmProcessamento] = useState(false);
+    const requisitosTransicao = useRequisitosTransicao(
+        estudo,
+        token,
+        estudo !== null && podeAlterarEstadoEstudo(estudo, pesquisador)
+    );
 
     if (carregando) {
         return (
@@ -188,6 +194,7 @@ function DetalhesEstudo({
                         ? { estado: estado.proximo, rotulo: estado.acao }
                         : null
                 }
+                requisitosTransicao={requisitosTransicao}
                 onEditar={() => setEditando(true)}
                 onTransicionar={setTransicao}
             />

@@ -38,6 +38,12 @@ function montar(
             proximaTransicao={
                 config.proximo ? { estado: config.proximo, rotulo: config.acao } : null
             }
+            requisitosTransicao={{
+                motivo: null,
+                falhou: false,
+                onMenuChange: vi.fn(),
+                onReverificar: vi.fn(),
+            }}
             onEditar={vi.fn()}
             onTransicionar={onTransicionar}
         />
