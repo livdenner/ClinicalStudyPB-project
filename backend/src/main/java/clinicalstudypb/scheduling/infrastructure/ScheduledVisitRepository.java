@@ -36,6 +36,8 @@ public interface ScheduledVisitRepository extends Repository<ScheduledVisit, Lon
      * @param actorUserId autor da mudança
      * @param occurredAt instante da mudança
      * @param note motivo registrado nas visitas
+     * @param scheduled estado pendente que será cancelado
+     * @param cancelled estado final aplicado após o cancelamento
      * @return quantidade de visitas canceladas
      */
     @Modifying(flushAutomatically = true)

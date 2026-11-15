@@ -56,7 +56,12 @@ public class GlobalExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
     }
 
-    /** Responde com o código contratual quando /api/users recebe o perfil de participante. */
+    /**
+     * Responde com o código contratual quando /api/users recebe o perfil de participante.
+     *
+     * @param exception erro disparado pelo uso indevido do perfil de participante
+     * @return detalhe HTTP de conflito com propriedade {@code code}
+     */
     @ExceptionHandler(ParticipantRoleNotAllowedException.class)
     public ProblemDetail handleParticipantRoleNotAllowed(ParticipantRoleNotAllowedException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());

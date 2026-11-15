@@ -9,6 +9,7 @@ package clinicalstudypb.studies.domain;
  */
 public class StudyStatusConflictException extends RuntimeException {
 
+    /** Código estável do conflito de estado, quando definido. */
     private final String code;
 
     /**

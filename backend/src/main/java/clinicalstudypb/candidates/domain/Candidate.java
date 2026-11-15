@@ -63,12 +63,15 @@ public class Candidate {
     }
 
     /**
-     * Cria um candidato vinculado ao estudo informado.
+     * Cria um candidato vinculado ao estudo e à conta de participante informados.
      *
      * @param studyId identificador do estudo
      * @param name nome exibido
      * @param nameKey nome normalizado usado para detectar duplicidade
      * @param age idade informada
+     * @param email e-mail normalizado da conta vinculada
+     * @param phone telefone informado no cadastro
+     * @param userId identificador da conta PARTICIPANT vinculada
      */
     public Candidate(Long studyId, String name, String nameKey, Integer age,
                      String email, String phone, Long userId) {
@@ -82,22 +85,41 @@ public class Candidate {
         this.eligibilityStatus = EligibilityStatus.PENDING;
     }
 
-    /** Mantém a criação em memória usada por testes de regras que não gravam candidatos. */
+    /**
+     * Mantém a criação em memória usada por testes de regras que não gravam candidatos.
+     *
+     * @param studyId identificador do estudo
+     * @param name nome exibido
+     * @param nameKey nome normalizado do candidato
+     * @param age idade informada
+     */
     public Candidate(Long studyId, String name, String nameKey, Integer age) {
         this(studyId, name, nameKey, age, null, null, null);
     }
 
-    /** E-mail normalizado da conta vinculada. */
+    /**
+     * Retorna o e-mail normalizado da conta vinculada.
+     *
+     * @return endereço de e-mail da conta
+     */
     public String getEmail() {
         return email;
     }
 
-    /** Telefone informado no cadastro. */
+    /**
+     * Retorna o telefone informado no cadastro.
+     *
+     * @return número de telefone com DDD
+     */
     public String getPhone() {
         return phone;
     }
 
-    /** Identificador da conta PARTICIPANT vinculada. */
+    /**
+     * Retorna o identificador da conta PARTICIPANT vinculada.
+     *
+     * @return identificador do usuário associado
+     */
     public Long getUserId() {
         return userId;
     }
@@ -156,22 +178,38 @@ public class Candidate {
         this.eligibilityStatus = java.util.Objects.requireNonNull(status);
     }
 
-    /** Indica se a candidatura foi cancelada antes da inclusão. */
+    /**
+     * Indica se a candidatura foi cancelada antes da inclusão.
+     *
+     * @return {@code true} quando há data de cancelamento registrada
+     */
     public boolean isCancelled() {
         return cancelledAt != null;
     }
 
-    /** Motivo informado no cancelamento, quando cancelado. */
+    /**
+     * Retorna o motivo informado no cancelamento, quando cancelado.
+     *
+     * @return justificativa do cancelamento ou {@code null}
+     */
     public String getCancellationReason() {
         return cancellationReason;
     }
 
-    /** Instante em que a candidatura foi cancelada, quando cancelado. */
+    /**
+     * Retorna o instante em que a candidatura foi cancelada, quando cancelado.
+     *
+     * @return instante do cancelamento ou {@code null}
+     */
     public java.time.Instant getCancelledAt() {
         return cancelledAt;
     }
 
-    /** Identificador do usuário autor do cancelamento, quando cancelado. */
+    /**
+     * Retorna o identificador do usuário autor do cancelamento, quando cancelado.
+     *
+     * @return identificador do autor ou {@code null}
+     */
     public Long getCancelledByUserId() {
         return cancelledByUserId;
     }
