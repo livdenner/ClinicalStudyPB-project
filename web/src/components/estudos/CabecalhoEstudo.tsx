@@ -1,11 +1,13 @@
 import { Button, Dropdown } from "@heroui/react";
-import { ArrowRightLeft, ChevronDown, LockKeyhole, Pencil } from "lucide-react";
+import { ArrowRightLeft, ChevronDown, LockKeyhole, Pencil, Users } from "lucide-react";
+import { Link as RouterLink } from "react-router-dom";
 import type { EstadoEstudo, EstudoApi } from "../../types/estudo";
 
 type Props = {
     estudo: EstudoApi;
     edicaoPermitida: boolean;
     mensagemBloqueio: string;
+    recrutamentoHref?: string;
     emProcessamento: boolean;
     alteracaoEstadoPermitida: boolean;
     origemCancelamento: EstadoEstudo | null;
@@ -18,6 +20,7 @@ export function CabecalhoEstudo({
     estudo,
     edicaoPermitida,
     mensagemBloqueio,
+    recrutamentoHref,
     emProcessamento,
     proximaTransicao,
     alteracaoEstadoPermitida,
@@ -52,6 +55,11 @@ export function CabecalhoEstudo({
             </div>
             <div className="flex max-w-full flex-col items-end gap-3 max-[600px]:w-full max-[600px]:items-stretch">
                 <div className="flex flex-wrap items-end justify-end gap-4 max-[600px]:justify-start">
+                    {recrutamentoHref && (
+                        <RouterLink to={recrutamentoHref} className="button button--create">
+                            <Users size={18} aria-hidden="true" /> Gerenciar candidatos
+                        </RouterLink>
+                    )}
                     {edicaoPermitida && (
                         <div className="flex flex-col gap-1.5">
                             <Button
@@ -101,8 +109,8 @@ export function CabecalhoEstudo({
                     )}
                 </div>
                 {!edicaoPermitida && (
-                    <p className="flex max-w-sm items-start gap-2 rounded-lg border border-[var(--color-border)] bg-slate-50 px-3 py-2 text-sm font-medium text-[var(--color-text)]">
-                        <LockKeyhole size={18} aria-hidden="true" className="mt-0.5 shrink-0" />
+                    <p className="flex max-w-sm items-start gap-1.5 text-sm text-[var(--color-muted)]">
+                        <LockKeyhole size={15} aria-hidden="true" className="mt-0.5 shrink-0" />
                         {mensagemBloqueio}
                     </p>
                 )}

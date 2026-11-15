@@ -514,3 +514,45 @@ it.each(["Visão geral", "Critérios", "Visitas previstas", "Participantes"])(
         ).toBeLessThanOrEqual(1);
     }
 );
+
+it("T24.1: coordenador abre o recrutamento com o estudo atual selecionado", async () => {
+    vi.spyOn(Tabs, "Indicator").mockImplementation(() => <span aria-hidden="true" />);
+    const atual = { ...estudo, status: "RECRUITMENT" };
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async (url) => {
+        if (String(url) === "/api/studies/3") return resposta(atual);
+        if (String(url) === "/api/studies") return resposta([{ ...estudo, id: 99 }, atual]);
+        return resposta([]);
+    });
+    renderPage("/estudos/3", "COORDINATOR");
+    const link = await screen.findByRole("link", { name: "Gerenciar candidatos" });
+    expect(link).toHaveAttribute("href", "/recrutamento?studyId=3");
+    const cabecalho = screen.getByRole("heading", { name: estudo.title }).closest("header")!;
+    expect(within(cabecalho).getByRole("link", { name: "Gerenciar candidatos" })).toBe(link);
+    const sobre = screen.getByRole("region", { name: "Sobre o estudo" });
+    expect(
+        within(sobre).queryByRole("link", { name: "Gerenciar candidatos" })
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Recrutar" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: "Participantes" }));
+    await screen.findByText("Nenhum participante incluído");
+    expect(within(cabecalho).getByRole("link", { name: "Gerenciar candidatos" })).toBe(link);
+    fireEvent.click(link);
+    await screen.findByText("Nenhum candidato encontrado");
+    expect(screen.getByLabelText("Estudo clínico")).toHaveValue("3");
+    expect(fetchMock.mock.calls.some(([url]) => String(url).startsWith("/api/studies/99/"))).toBe(
+        false
+    );
+});
+
+it.each<[UserRole, EstudoApi["status"]]>([
+    ["COORDINATOR", "PLANNING"],
+    ["COORDINATOR", "EXECUTION"],
+    ["COORDINATOR", "CLOSED"],
+    ["COORDINATOR", "CANCELLED"],
+    ["RESEARCHER", "RECRUITMENT"],
+])("T24.1: não oferece Gerenciar candidatos para %s em %s", async (role, status) => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(resposta({ ...estudo, status }));
+    renderPage("/estudos/3", role);
+    await screen.findByRole("heading", { name: estudo.title });
+    expect(screen.queryByRole("link", { name: "Gerenciar candidatos" })).not.toBeInTheDocument();
+});

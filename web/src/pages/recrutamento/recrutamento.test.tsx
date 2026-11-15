@@ -91,7 +91,7 @@ function rotasDoEstudo(candidatos: CandidatoApi[], status: StatusConsentimentoAp
     };
 }
 
-function renderPage(role: UserRole = "COORDINATOR", autenticado = true) {
+function renderPage(role: UserRole = "COORDINATOR", autenticado = true, path = "/recrutamento") {
     if (autenticado) {
         localStorage.setItem(
             AUTH_STORAGE_KEY,
@@ -112,7 +112,7 @@ function renderPage(role: UserRole = "COORDINATOR", autenticado = true) {
 
     return render(
         <AuthProvider>
-            <MemoryRouter initialEntries={["/recrutamento"]}>
+            <MemoryRouter initialEntries={[path]}>
                 <Routes>
                     <Route path="/recrutamento" element={<RecrutamentoPage />} />
                     <Route path="/login" element={<p>Tela de login</p>} />
@@ -633,3 +633,35 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
         await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     });
 });
+
+it("T24.1: seleciona o estudo da URL mesmo quando não é o primeiro da lista", async () => {
+    const fetchMock = mockApiPorRota({
+        ...rotasDoEstudo([]),
+        "GET /api/studies": resposta([estudoPlanejamento, estudoRecrutamento]),
+    });
+    renderPage("COORDINATOR", true, "/recrutamento?studyId=10");
+    await screen.findByText("Nenhum candidato encontrado");
+    expect(screen.getByLabelText("Estudo clínico")).toHaveValue("10");
+    expect(fetchMock.mock.calls.some(([url]) => String(url) === "/api/studies/10/candidates")).toBe(
+        true
+    );
+    expect(fetchMock.mock.calls.some(([url]) => String(url).startsWith("/api/studies/20/"))).toBe(
+        false
+    );
+});
+
+it.each(["999", "abc", "0", "1e1"])(
+    "T24.1: não consulta outro estudo silenciosamente para studyId=%s",
+    async (id) => {
+        const fetchMock = mockApiPorRota(rotasDoEstudo([]));
+        renderPage("COORDINATOR", true, `/recrutamento?studyId=${id}`);
+        expect(await screen.findByRole("alert")).toHaveTextContent(
+            "O estudo solicitado não está disponível."
+        );
+        expect(screen.getByLabelText("Estudo clínico")).toHaveValue("");
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        fireEvent.change(screen.getByLabelText("Estudo clínico"), { target: { value: "10" } });
+        await screen.findByText("Nenhum candidato encontrado");
+        expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    }
+);

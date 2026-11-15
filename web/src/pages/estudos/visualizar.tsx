@@ -175,6 +175,11 @@ function DetalhesEstudo({
                 estudo={estudo}
                 edicaoPermitida={edicaoPermitida}
                 mensagemBloqueio={mensagemBloqueio}
+                recrutamentoHref={
+                    pesquisador.role === "COORDINATOR" && estudo.status === "RECRUITMENT"
+                        ? "/recrutamento?studyId=" + estudo.id
+                        : undefined
+                }
                 emProcessamento={visitasEmProcessamento || criteriosEmProcessamento}
                 alteracaoEstadoPermitida={podeAlterarEstadoEstudo(estudo, pesquisador)}
                 origemCancelamento={origemCancelamento}
