@@ -69,7 +69,7 @@ playwright-report/
 test-results/
 blob-report/
 
-# Relatórios brutos dos testes (JSON/XML); o consolidado fica em docs/tests/execucoes
+# Relatórios brutos dos testes (JSON/XML); o consolidado fica em docs/test-ci
 test-reports/
-docs/tests/execucoes/local/
-docs/tests/execucoes/pull-requests/
+docs/test-ci/local/
+docs/test-ci/pull-requests/

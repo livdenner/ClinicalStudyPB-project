@@ -176,9 +176,9 @@ jobs:
       contents: write # só usado para versionar o relatório nos pushes para a main e a development
     env:
       # Pushes na development (integrações de PR) e na main ficam versionados em
-      # docs/tests/execucoes/<branch>; execuções de PR viram só artefato.
+      # docs/test-ci/<branch>; execuções de PR viram só artefato.
       VERSIONAR: ${{ github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/development') }}
-      SAIDA: docs/tests/execucoes/${{ github.event_name == 'push' && github.ref_name || 'pull-requests' }}
+      SAIDA: docs/test-ci/${{ github.event_name == 'push' && github.ref_name || 'pull-requests' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

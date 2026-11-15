@@ -10,7 +10,7 @@
  *
  * Saída: `<pasta>/AAAA-MM-DD_HH-mm_<sha>.md`, com uma linha por teste, e o índice
  * `<pasta>/README.md`, que aponta para a última execução. Na CI, a pasta é
- * `docs/tests/execucoes/<branch>` (main ou development); localmente, `docs/tests/execucoes/local`.
+ * `docs/test-ci/<branch>` (main ou development); localmente, `docs/test-ci/local`.
  * Quando o commit testado é o merge de um PR, o relatório identifica a integração (PR, branch e título).
  * Uso e opções: `node scripts/relatorio-testes/gerar.mjs --ajuda`.
  */
@@ -622,7 +622,7 @@ Opções (caminhos relativos à raiz do repositório):
   --vitest <json>         JSON do Vitest            (padrão: web/test-reports/vitest.json)
   --playwright <json>     JSON do Playwright        (padrão: web/test-reports/playwright.json)
   --jest <json>           JSON do Jest (mobile)     (padrão: mobile/test-reports/jest.json)
-  --saida <pasta>         pasta das execuções       (padrão: docs/tests/execucoes/local, ignorada pelo git)
+  --saida <pasta>         pasta das execuções       (padrão: docs/test-ci/local, ignorada pelo git)
   --sha <commit>          commit testado            (padrão: TEST_REPORT_SHA, GITHUB_SHA ou HEAD)
   --branch <nome>         branch testada            (padrão: TEST_REPORT_BRANCH, GITHUB_REF_NAME ou atual)
   --exigir-todas          termina com erro se algum relatório não for encontrado
@@ -638,7 +638,7 @@ export function lerArgumentos(argv) {
         vitest: "web/test-reports/vitest.json",
         playwright: "web/test-reports/playwright.json",
         jest: "mobile/test-reports/jest.json",
-        saida: "docs/tests/execucoes/local",
+        saida: "docs/test-ci/local",
         sha: "",
         branch: "",
         exigirTodas: false,

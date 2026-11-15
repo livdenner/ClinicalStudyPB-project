@@ -46,10 +46,10 @@ cd backend
 ```
 
 ### Relatório de execução dos testes
-Cada execução da CI é registrada em [docs/tests/execucoes](docs/tests/execucoes/README.md) como um Markdown `AAAA-MM-DD_HH-mm_<commit>.md` (horário de America/Fortaleza), com **uma linha por teste**: suíte, teste, resultado, duração e origem (Backend · JUnit, Web · Vitest, Web E2E · Playwright, Mobile · Jest). Falhas, testes ignorados e instáveis (que passaram só depois de nova tentativa) também aparecem numa seção própria no início. Há um histórico por branch, cada um com um `README.md` de índice que aponta a última execução:
+Cada execução da CI é registrada em [docs/test-ci](docs/test-ci/README.md) como um Markdown `AAAA-MM-DD_HH-mm_<commit>.md` (horário de America/Fortaleza), com **uma linha por teste**: suíte, teste, resultado, duração e origem (Backend · JUnit, Web · Vitest, Web E2E · Playwright, Mobile · Jest). Falhas, testes ignorados e instáveis (que passaram só depois de nova tentativa) também aparecem numa seção própria no início. Há um histórico por branch, cada um com um `README.md` de índice que aponta a última execução:
 
-- [development](docs/tests/execucoes/development/README.md): uma execução por **integração**. Cada relatório identifica o PR integrado (número, branch e título), lido da mensagem do merge.
-- [main](docs/tests/execucoes/main/README.md): uma execução por push na `main`.
+- [development](docs/test-ci/development/README.md): uma execução por **integração**. Cada relatório identifica o PR integrado (número, branch e título), lido da mensagem do merge.
+- [main](docs/test-ci/main/README.md): uma execução por push na `main`.
 
 Cada branch só escreve na própria pasta, então o merge da `development` na `main` não gera conflito e leva junto o histórico das integrações.
 
@@ -69,10 +69,10 @@ Para gerar localmente, rode as suítes e depois o gerador na raiz do repositóri
 (cd web && npm test -- --maxWorkers=1)
 (cd web && npm run e2e:stack:up && npm run test:e2e && npm run e2e:stack:down)
 (cd mobile && npm run test:report)
-npm run test:report                                 # gera docs/tests/execucoes/local/<data>_<commit>.md e o índice
+npm run test:report                                 # gera docs/test-ci/local/<data>_<commit>.md e o índice
 ```
 
-Uma suíte que não rodou aparece no relatório como **não executada**; use `npm run test:report -- --exigir-todas` para que o comando falhe nesse caso. Outras opções em `npm run test:report -- --ajuda`. Na CI, o job **Relatório de execução dos testes** gera o arquivo em todo PR e push (artefato `relatorio-execucao-testes` e resumo da execução). Nos pushes para a `development` e para a `main`, o mesmo job faz o commit do arquivo em `docs/tests/execucoes/<branch>`. Os pushes não se cancelam entre si, então todo merge ganha o seu relatório. A pasta `docs/tests/execucoes/local` é ignorada pelo git e serve só para conferência. Não copie relatórios locais para as pastas das branches: elas são escritas apenas pela CI. As rodadas manuais de cada tarefa continuam em [docs/test-runs](docs/test-runs/README.md). O gerador remove tokens, credenciais, CPFs e e-mails que não sejam de domínios fictícios (`.test`, `example.com`) das mensagens de falha. Mesmo assim, os testes devem usar apenas dados fictícios.
+Uma suíte que não rodou aparece no relatório como **não executada**; use `npm run test:report -- --exigir-todas` para que o comando falhe nesse caso. Outras opções em `npm run test:report -- --ajuda`. Na CI, o job **Relatório de execução dos testes** gera o arquivo em todo PR e push (artefato `relatorio-execucao-testes` e resumo da execução). Nos pushes para a `development` e para a `main`, o mesmo job faz o commit do arquivo em `docs/test-ci/<branch>`. Os pushes não se cancelam entre si, então todo merge ganha o seu relatório. A pasta `docs/test-ci/local` é ignorada pelo git e serve só para conferência. Não copie relatórios locais para as pastas das branches: elas são escritas apenas pela CI. As rodadas manuais de cada tarefa continuam em [docs/test-runs](docs/test-runs/README.md). O gerador remove tokens, credenciais, CPFs e e-mails que não sejam de domínios fictícios (`.test`, `example.com`) das mensagens de falha. Mesmo assim, os testes devem usar apenas dados fictícios.
 
 ## 2. Commits
 
