@@ -10,7 +10,8 @@
  *
  * Saída: `<pasta>/AAAA-MM-DD_HH-mm_<sha>.md`, com uma linha por teste, e o índice
  * `<pasta>/README.md`, que aponta para a última execução. Na CI, a pasta é
- * `docs/test-ci/<branch>` (main ou development); localmente, `docs/test-ci/local`.
+ * `docs/test-ci/<branch>` (main ou development) ou `docs/test-ci/pull-requests/<número>`;
+ * localmente, `docs/test-ci/local`.
  * Quando o commit testado é o merge de um PR, o relatório identifica a integração (PR, branch e título).
  * Uso e opções: `node scripts/relatorio-testes/gerar.mjs --ajuda`.
  */
