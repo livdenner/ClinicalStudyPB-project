@@ -2,6 +2,7 @@ package clinicalstudypb.participants;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -12,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import clinicalstudypb.candidates.domain.EligibilityStatus;
 import clinicalstudypb.consent.domain.ConsentDecision;
+import clinicalstudypb.participants.application.ParticipantWithdrawalVisits;
 import clinicalstudypb.studies.domain.Study;
 import clinicalstudypb.studies.domain.StudyStatus;
 import clinicalstudypb.users.domain.User;
@@ -30,13 +32,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.transaction.IllegalTransactionStateException;
 
 /**
- * Verifica a retirada do participante (RF16, T22.1) sobre PostgreSQL real: auditoria, cancelamento
- * das visitas futuras na mesma transação, bloqueio de novos agendamentos, vaga e concorrência.
+ * Verifica a retirada do participante (RF16, T22.1 e T22.2) sobre PostgreSQL real: auditoria,
+ * cancelamento das visitas futuras na mesma transação (atomicidade nos dois sentidos), bloqueio de
+ * novos agendamentos (RF12), vaga e concorrência.
  *
  * @author Allan Guilherme
  * @since 2026-11-14
@@ -46,6 +51,9 @@ class ParticipantWithdrawalIntegrationTest extends ParticipantIntegrationSupport
 
     private static final Instant WITHDRAWN_AT = Instant.parse("2027-03-01T12:00:00Z");
     private static final String WITHDRAWAL_NOTE = "Retirada do participante";
+
+    @Autowired
+    private ParticipantWithdrawalVisits withdrawalVisits;
 
     @Test
     void withdrawalCancelsOnlyFutureScheduledVisitsAndRecordsAudit() throws Exception {
@@ -256,6 +264,87 @@ class ParticipantWithdrawalIntegrationTest extends ParticipantIntegrationSupport
     }
 
     @Test
+    void failureWhileCancellingFutureVisitsRollsBackWithdrawal() throws Exception {
+        Long participantId = includeAndStartExecution();
+        Long firstVisit = schedule(participantId, addPlannedVisit(2, "Retorno"), "2027-06-01T09:00:00-03:00");
+        Long secondVisit = schedule(participantId, addPlannedVisit(3, "Final"), "2027-09-01T09:00:00-03:00");
+        when(clock.instant()).thenReturn(WITHDRAWN_AT);
+        // Falha depois de o UPDATE das visitas ter alterado as duas linhas, antes da gravação da retirada.
+        jdbc.execute("""
+                CREATE FUNCTION test_fail_visit_cancellation() RETURNS trigger LANGUAGE plpgsql AS $$
+                BEGIN
+                    RAISE EXCEPTION 'falha simulada no cancelamento das visitas' USING ERRCODE = 'check_violation';
+                END $$""");
+        jdbc.execute("CREATE TRIGGER test_fail_visit_cancellation AFTER UPDATE ON scheduled_visits "
+                + "FOR EACH STATEMENT EXECUTE FUNCTION test_fail_visit_cancellation()");
+        try {
+            withdraw(participantId, coordinatorToken, "{\"reason\":\"Motivo\"}")
+                    .andExpect(status().isConflict())
+                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON));
+        } finally {
+            jdbc.execute("DROP TRIGGER test_fail_visit_cancellation ON scheduled_visits");
+            jdbc.execute("DROP FUNCTION test_fail_visit_cancellation()");
+        }
+
+        assertActive(participantId);
+        for (Long visitId : List.of(firstVisit, secondVisit)) {
+            assertScheduledAndUntouched(visitId);
+        }
+        when(clock.instant()).thenReturn(WITHDRAWN_AT.plusSeconds(60));
+        withdraw(participantId, coordinatorToken, "{\"reason\":\"Motivo\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.withdrawal.cancelledVisitCount").value(2));
+    }
+
+    @Test
+    void visitScheduledExactlyAtWithdrawalInstantIsNotFutureAndStaysScheduled() throws Exception {
+        Long participantId = includeAndStartExecution();
+        Long atInstant = schedule(participantId, addPlannedVisit(2, "Retorno"), "2027-03-01T09:00:00-03:00");
+        Long oneSecondLater = schedule(participantId, addPlannedVisit(3, "Final"), "2027-03-01T09:00:01-03:00");
+        when(clock.instant()).thenReturn(WITHDRAWN_AT);
+
+        withdraw(participantId, coordinatorToken, "{\"reason\":\"Motivo\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.withdrawal.cancelledVisitCount").value(1));
+
+        assertScheduledAndUntouched(atInstant);
+        Map<String, Object> cancelled = visit(oneSecondLater);
+        assertEquals("CANCELLED", cancelled.get("status"));
+        assertEquals(WITHDRAWAL_NOTE, cancelled.get("outcome_note"));
+    }
+
+    @Test
+    void withdrawalCancelsOnlyVisitsOfTheWithdrawnParticipant() throws Exception {
+        Long carla = candidate(study, "Carla Lima", EligibilityStatus.ELIGIBLE, ConsentDecision.GRANTED);
+        Long otherParticipant = includeSuccessfully(study.getId(), carla).get("id").asLong();
+        Long participantId = includeAndStartExecution();
+        Long returnVisit = addPlannedVisit(2, "Retorno");
+        Long withdrawnVisit = schedule(participantId, returnVisit, "2027-06-01T09:00:00-03:00");
+        Long otherVisit = schedule(otherParticipant, returnVisit, "2027-06-01T10:00:00-03:00");
+        when(clock.instant()).thenReturn(WITHDRAWN_AT);
+
+        withdraw(participantId, coordinatorToken, "{\"reason\":\"Motivo\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.withdrawal.cancelledVisitCount").value(1));
+
+        assertEquals("CANCELLED", visit(withdrawnVisit).get("status"));
+        assertScheduledAndUntouched(otherVisit);
+        assertActive(otherParticipant);
+    }
+
+    @Test
+    void visitCancellationOutsideWithdrawalTransactionIsRefused() throws Exception {
+        Long participantId = includeAndStartExecution();
+        Long visitId = schedule(participantId, addPlannedVisit(2, "Retorno"), "2027-06-01T09:00:00-03:00");
+
+        assertThrows(IllegalTransactionStateException.class, () -> withdrawalVisits.cancelFutureScheduledVisits(
+                study.getId(), participantId, coordinator.getId(), WITHDRAWN_AT));
+
+        assertScheduledAndUntouched(visitId);
+        assertActive(participantId);
+    }
+
+    @Test
     void simultaneousWithdrawalsRecordOnlyOneAndCancelVisitsOnce() throws Exception {
         Long participantId = includeAndStartExecution();
         Long visit = schedule(participantId, addPlannedVisit(2, "Retorno"), "2027-06-01T09:00:00-03:00");
@@ -351,6 +440,15 @@ class ParticipantWithdrawalIntegrationTest extends ParticipantIntegrationSupport
     private long countVisits(Long participantId) {
         return jdbc.queryForObject("SELECT COUNT(*) FROM scheduled_visits WHERE participant_id = ?",
                 Long.class, participantId);
+    }
+
+    private void assertScheduledAndUntouched(Long visitId) {
+        Map<String, Object> visit = visit(visitId);
+        assertEquals("SCHEDULED", visit.get("status"));
+        assertNull(visit.get("outcome_note"));
+        assertNull(visit.get("outcome_at"));
+        assertNull(visit.get("outcome_by_user_id"));
+        assertEquals(0L, visit.get("version"));
     }
 
     private void assertActive(Long participantId) {
