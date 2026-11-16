@@ -271,13 +271,10 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
             eligibilityStatus: "PENDING",
         };
 
-        const fetchMock = vi
-            .spyOn(globalThis, "fetch")
-            .mockResolvedValueOnce(resposta([estudoRecrutamento]))
-            .mockResolvedValueOnce(resposta([]))
-            .mockResolvedValueOnce(resposta([]))
-            .mockResolvedValueOnce(resposta(novoCandidato, 201));
-
+        const fetchMock = mockApiPorRota({
+            ...rotasDoEstudo([]),
+            "POST /api/studies/10/candidates": resposta(novoCandidato, 201),
+        });
         renderPage();
 
         await screen.findByText("Nenhum candidato encontrado");
@@ -294,7 +291,9 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
 
         await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
 
-        const [url, options] = fetchMock.mock.calls[3];
+        const cadastro = fetchMock.mock.calls.find(([, options]) => options?.method === "POST");
+        expect(cadastro).toBeDefined();
+        const [url, options] = cadastro!;
         expect(url).toBe("/api/studies/10/candidates");
         expect(options?.method).toBe("POST");
         expect(JSON.parse(String(options?.body))).toEqual({
@@ -303,7 +302,7 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
         });
 
         expect(screen.getByText("Candidato cadastrado com sucesso.")).toBeInTheDocument();
-        expect(screen.getByText("Candidato 050")).toBeInTheDocument();
+        expect(await screen.findByText("Candidato 050")).toBeInTheDocument();
         expect(screen.getByText("38 anos")).toBeInTheDocument();
         expect(screen.getByText("Exibindo 1 de 1 candidatos")).toBeInTheDocument();
     });
