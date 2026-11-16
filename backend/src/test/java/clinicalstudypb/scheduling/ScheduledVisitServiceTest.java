@@ -2,6 +2,7 @@ package clinicalstudypb.scheduling;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -15,6 +16,7 @@ import clinicalstudypb.scheduling.domain.InvalidScheduledVisitException;
 import clinicalstudypb.scheduling.domain.ScheduledVisit;
 import clinicalstudypb.scheduling.domain.ScheduledVisitStatus;
 import clinicalstudypb.scheduling.domain.SchedulingConflictException;
+import clinicalstudypb.scheduling.domain.VisitOutcome;
 import clinicalstudypb.scheduling.infrastructure.ScheduledVisitRepository;
 import clinicalstudypb.shared.CurrentActor;
 import clinicalstudypb.studies.application.StudyService;
@@ -32,6 +34,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * Exercita limites temporais e rejeições do agendamento sem banco.
@@ -158,6 +161,100 @@ class ScheduledVisitServiceTest {
 
         assertEquals("STUDY_STATUS_DOES_NOT_ALLOW_SCHEDULING", error.getCode());
         verify(repository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void recordsFinalOutcomeWithNormalizedNoteAndAuthor() {
+        ScheduledVisit visit = pendingVisit();
+        allowOutcome(visit, StudyStatus.EXECUTION);
+        when(actor.userId()).thenReturn(7L);
+        when(repository.saveAndFlush(visit)).thenReturn(visit);
+        when(plannedVisits.findNameByStudyAndId(STUDY_ID, PLANNED_VISIT_ID))
+                .thenReturn(Optional.of("Visita final"));
+
+        ScheduledVisitResult result = service.recordOutcome(
+                STUDY_ID, PARTICIPANT_ID, 8L, 0L, VisitOutcome.CANCELLED, "  Imprevisto  ");
+
+        assertEquals(ScheduledVisitStatus.CANCELLED, result.visit().getStatus());
+        assertEquals("Imprevisto", result.visit().getOutcomeNote());
+        assertEquals(7L, result.visit().getOutcomeByUserId());
+        assertEquals(NOW, result.visit().getOutcomeAt());
+    }
+
+    @Test
+    void rejectsCancellationWithoutReasonBeforeSaving() {
+        InvalidScheduledVisitException error = assertThrows(InvalidScheduledVisitException.class,
+                () -> service.recordOutcome(STUDY_ID, PARTICIPANT_ID, 8L, 0L,
+                        VisitOutcome.CANCELLED, "   "));
+
+        assertEquals("CANCELLATION_REASON_REQUIRED", error.getCode());
+        verify(repository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void checksVersionBeforeAlreadyFinalOutcome() {
+        ScheduledVisit visit = pendingVisit();
+        visit.registerOutcome(ScheduledVisitStatus.DONE, 7L, NOW, null);
+        allowOutcome(visit, StudyStatus.EXECUTION);
+
+        SchedulingConflictException outdated = assertThrows(SchedulingConflictException.class,
+                () -> service.recordOutcome(STUDY_ID, PARTICIPANT_ID, 8L, 1L,
+                        VisitOutcome.ABSENT, null));
+        SchedulingConflictException finalOutcome = assertThrows(SchedulingConflictException.class,
+                () -> service.recordOutcome(STUDY_ID, PARTICIPANT_ID, 8L, 0L,
+                        VisitOutcome.ABSENT, null));
+
+        assertEquals("VERSION_MISMATCH", outdated.getCode());
+        assertEquals("VISIT_OUTCOME_FINAL", finalOutcome.getCode());
+        verify(repository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void rejectsReadOnlyStudyBeforeCheckingVersion() {
+        ScheduledVisit visit = pendingVisit();
+        allowOutcome(visit, StudyStatus.CANCELLED);
+
+        SchedulingConflictException error = assertThrows(SchedulingConflictException.class,
+                () -> service.recordOutcome(STUDY_ID, PARTICIPANT_ID, 8L, 2L,
+                        VisitOutcome.DONE, null));
+
+        assertEquals("STUDY_READ_ONLY", error.getCode());
+        verify(repository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void allowsOutcomeForWithdrawnParticipantStillHoldingPendingVisit() {
+        ScheduledVisit visit = pendingVisit();
+        Study study = mock(Study.class);
+        when(study.getStatus()).thenReturn(StudyStatus.EXECUTION);
+        when(studyService.lockForScheduling(STUDY_ID)).thenReturn(study);
+        when(participants.lockForScheduling(STUDY_ID, PARTICIPANT_ID))
+                .thenReturn(new ParticipantSchedulingView(PARTICIPANT_ID, STUDY_ID, "Pessoa teste", true));
+        when(repository.findByIdAndStudyIdAndParticipantIdForUpdate(8L, STUDY_ID, PARTICIPANT_ID))
+                .thenReturn(Optional.of(visit));
+        when(actor.userId()).thenReturn(7L);
+        when(repository.saveAndFlush(visit)).thenReturn(visit);
+
+        ScheduledVisitResult result = service.recordOutcome(
+                STUDY_ID, PARTICIPANT_ID, 8L, 0L, VisitOutcome.ABSENT, null);
+
+        assertEquals(ScheduledVisitStatus.ABSENT, result.visit().getStatus());
+    }
+
+    private ScheduledVisit pendingVisit() {
+        ScheduledVisit visit = new ScheduledVisit(STUDY_ID, PARTICIPANT_ID, PLANNED_VISIT_ID,
+                Instant.parse("2027-06-01T12:00:00Z"), 6L, NOW);
+        ReflectionTestUtils.setField(visit, "version", 0L);
+        return visit;
+    }
+
+    private void allowOutcome(ScheduledVisit visit, StudyStatus status) {
+        Study study = mock(Study.class);
+        when(study.getStatus()).thenReturn(status);
+        when(studyService.lockForScheduling(STUDY_ID)).thenReturn(study);
+        when(participants.lockForScheduling(STUDY_ID, PARTICIPANT_ID)).thenReturn(activeParticipant());
+        when(repository.findByIdAndStudyIdAndParticipantIdForUpdate(8L, STUDY_ID, PARTICIPANT_ID))
+                .thenReturn(Optional.of(visit));
     }
 
     private void allowStudyAndParticipant(ParticipantSchedulingView participant) {

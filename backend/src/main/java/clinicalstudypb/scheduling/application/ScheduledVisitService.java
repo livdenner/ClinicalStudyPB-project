@@ -6,6 +6,7 @@ import clinicalstudypb.scheduling.domain.InvalidScheduledVisitException;
 import clinicalstudypb.scheduling.domain.ScheduledVisit;
 import clinicalstudypb.scheduling.domain.ScheduledVisitStatus;
 import clinicalstudypb.scheduling.domain.SchedulingConflictException;
+import clinicalstudypb.scheduling.domain.VisitOutcome;
 import clinicalstudypb.scheduling.infrastructure.ScheduledVisitRepository;
 import clinicalstudypb.shared.CurrentActor;
 import clinicalstudypb.shared.ResourceNotFoundException;
@@ -106,6 +107,60 @@ public class ScheduledVisitService {
                 currentActor.userId(),
                 now);
         ScheduledVisit saved = persistWithConflictTranslation(visit);
+        return new ScheduledVisitResult(saved, participant.candidateName(), plannedVisitName);
+    }
+
+    /**
+     * Registra o desfecho uma única vez, serializando a alteração com mudanças no estudo e no participante.
+     *
+     * @param studyId identificador do estudo
+     * @param participantId identificador do participante
+     * @param visitId identificador do agendamento
+     * @param expectedVersion versão da visita enviada em If-Match
+     * @param outcome desfecho final
+     * @param note observação ou justificativa de cancelamento
+     * @return visita atualizada com nomes públicos
+     */
+    @Transactional
+    public ScheduledVisitResult recordOutcome(Long studyId,
+                                              Long participantId,
+                                              Long visitId,
+                                              Long expectedVersion,
+                                              VisitOutcome outcome,
+                                              String note) {
+        if (outcome == null) {
+            throw new InvalidScheduledVisitException("INVALID_VISIT_OUTCOME", "Informe o desfecho da visita.");
+        }
+        String normalizedNote = note == null || note.strip().isEmpty() ? null : note.strip();
+        if (normalizedNote != null && normalizedNote.length() > 500) {
+            throw new InvalidScheduledVisitException(
+                    "INVALID_OUTCOME_NOTE", "A observação deve ter até 500 caracteres.");
+        }
+        if (outcome == VisitOutcome.CANCELLED && normalizedNote == null) {
+            throw new InvalidScheduledVisitException(
+                    "CANCELLATION_REASON_REQUIRED", "O cancelamento exige uma justificativa.");
+        }
+        Study study = studyService.lockForScheduling(studyId);
+        ParticipantSchedulingView participant =
+                participantSchedulingLookup.lockForScheduling(studyId, participantId);
+        ScheduledVisit visit = scheduledVisitRepository
+                .findByIdAndStudyIdAndParticipantIdForUpdate(visitId, studyId, participantId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Agendamento não encontrado: " + visitId));
+        if (study.getStatus() == StudyStatus.CLOSED || study.getStatus() == StudyStatus.CANCELLED) {
+            throw new SchedulingConflictException("STUDY_READ_ONLY", "O estudo não aceita desfechos de visitas.");
+        }
+        if (expectedVersion == null || !expectedVersion.equals(visit.getVersion())) {
+            throw new SchedulingConflictException("VERSION_MISMATCH", "A versão da visita está desatualizada.");
+        }
+        if (visit.getStatus() != ScheduledVisitStatus.SCHEDULED) {
+            throw new SchedulingConflictException("VISIT_OUTCOME_FINAL", "A visita já possui desfecho final.");
+        }
+        visit.registerOutcome(outcome.toStatus(), currentActor.userId(),
+                clock.instant().truncatedTo(ChronoUnit.MICROS), normalizedNote);
+        ScheduledVisit saved = scheduledVisitRepository.saveAndFlush(visit);
+        String plannedVisitName = plannedVisitLookup
+                .findNameByStudyAndId(studyId, saved.getPlannedVisitId()).orElse("");
         return new ScheduledVisitResult(saved, participant.candidateName(), plannedVisitName);
     }
 

@@ -197,4 +197,30 @@ public class ScheduledVisit {
     public Long getVersion() {
         return version;
     }
+
+    /**
+     * Registra uma única transição de visita agendada para um desfecho final.
+     *
+     * @param nextStatus estado final da visita
+     * @param actorUserId usuário que registrou o desfecho
+     * @param occurredAt instante atribuído pelo servidor
+     * @param note observação normalizada, quando houver
+     */
+    public void registerOutcome(ScheduledVisitStatus nextStatus,
+                                Long actorUserId,
+                                Instant occurredAt,
+                                String note) {
+        if (status != ScheduledVisitStatus.SCHEDULED) {
+            throw new SchedulingConflictException("VISIT_OUTCOME_FINAL", "A visita já possui desfecho final.");
+        }
+        if (nextStatus != ScheduledVisitStatus.DONE
+                && nextStatus != ScheduledVisitStatus.ABSENT
+                && nextStatus != ScheduledVisitStatus.CANCELLED) {
+            throw new InvalidScheduledVisitException("INVALID_VISIT_OUTCOME", "Informe um desfecho final válido.");
+        }
+        status = nextStatus;
+        outcomeByUserId = actorUserId;
+        outcomeAt = occurredAt;
+        outcomeNote = note;
+    }
 }
