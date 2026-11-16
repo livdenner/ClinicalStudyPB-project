@@ -1,0 +1,56 @@
+name: Publicar relatórios de testes
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+concurrency:
+  group: publicador-relatorios
+  cancel-in-progress: false
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verificar se a execução produziu relatório
+        id: artefato
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          if [ "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/artifacts" --jq '[.artifacts[] | select(.name == "relatorio-execucao-testes" and .expired == false)] | length')" -gt 0 ]; then
+            echo 'disponivel=true' >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.artefato.outputs.disponivel == 'true'
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        if: steps.artefato.outputs.disponivel == 'true'
+        with:
+          name: relatorio-execucao-testes
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/relatorio
+      - uses: actions/create-github-app-token@v2
+        id: app
+        if: steps.artefato.outputs.disponivel == 'true'
+        with:
+          app-id: ${{ vars.CI_REPORTS_APP_ID }}
+          private-key: ${{ secrets.CI_REPORTS_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ClinicalStudyPB-project
+      - name: Versionar relatório ou atualizar PR do bot
+        if: steps.artefato.outputs.disponivel == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          RELATORIO_DIR: ${{ runner.temp }}/relatorio
+          APP_LOGIN: clinicalstudypb-ci-reports[bot]
+        run: |
+          gh auth setup-git
+          python3 scripts/relatorio-testes/publicar.py
