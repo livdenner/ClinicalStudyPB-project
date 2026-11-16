@@ -141,13 +141,13 @@ export function CriteriosEstudo({
                 </div>
                 {editavel && (
                     <Button
-                        variant="primary"
+                        variant="secondary"
                         className="button--create"
                         isDisabled={acoesBloqueadas}
                         onPress={() => setModalAberto(true)}
                     >
                         <Plus size={18} aria-hidden="true" />
-                        Novo critério
+                        Cadastrar critério
                     </Button>
                 )}
             </header>

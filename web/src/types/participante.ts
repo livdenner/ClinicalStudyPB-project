@@ -4,4 +4,5 @@ export interface ParticipanteApi {
     candidateId: number;
     candidateName: string;
     includedAt: string;
+    status: "ACTIVE" | "WITHDRAWN";
 }

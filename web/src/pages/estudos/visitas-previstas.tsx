@@ -1,6 +1,7 @@
+import { BotaoAtualizar } from "../../components/ui/BotaoAtualizar";
 import { useEffect, useRef, useState } from "react";
 import { Button, Chip, Spinner, toast } from "@heroui/react";
-import { ListOrdered, LockKeyhole, Plus, RefreshCw } from "lucide-react";
+import { ListOrdered, LockKeyhole, Plus } from "lucide-react";
 import { ListaVisitasPrevistas } from "../../components/estudos/visitas-previstas/ListaVisitasPrevistas";
 import { ModalVisitaPrevista } from "../../components/estudos/visitas-previstas/ModalVisitaPrevista";
 import { ModalExcluirVisitaPrevista } from "../../components/estudos/visitas-previstas/ModalExcluirVisitaPrevista";
@@ -172,22 +173,19 @@ export function VisitasPrevistasEstudo({
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                    <Button
-                        variant="ghost"
-                        className="min-h-11 text-[var(--color-primary)]"
-                        isDisabled={emProcessamento}
-                        onPress={atualizar}
-                    >
-                        <RefreshCw size={17} aria-hidden="true" /> Atualizar
-                    </Button>
+                    <BotaoAtualizar
+                        rotulo="Atualizar visitas previstas"
+                        desabilitado={emProcessamento}
+                        onAtualizar={atualizar}
+                    />
                     {editavel && (
                         <Button
-                            variant="primary"
+                            variant="secondary"
                             className="button--create"
                             isDisabled={acoesBloqueadas}
                             onPress={() => setModal({})}
                         >
-                            <Plus size={18} aria-hidden="true" /> Nova visita
+                            <Plus size={18} aria-hidden="true" /> Cadastrar visita
                         </Button>
                     )}
                 </div>
