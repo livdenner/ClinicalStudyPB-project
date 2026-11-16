@@ -13,6 +13,7 @@ import clinicalstudypb.studies.domain.InvalidStudyException;
 import clinicalstudypb.studies.domain.StudyStatusConflictException;
 import clinicalstudypb.users.domain.EmailAlreadyInUseException;
 import clinicalstudypb.users.domain.ParticipantRoleNotAllowedException;
+import clinicalstudypb.users.domain.UserConflictException;
 import clinicalstudypb.visits.domain.ProtocolConflictException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -26,7 +27,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  *
  * @author Lucas N. de Araújo
  * @since 2026-10-21
- * @version 0.0.1
+ * @version 0.0.2
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -207,6 +208,19 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(WithdrawalConflictException.class)
     public ProblemDetail handleWithdrawalConflict(WithdrawalConflictException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+        problem.setProperty("code", exception.getCode());
+        return problem;
+    }
+
+    /**
+     * Responde com 409 e código estável quando uma proteção administrativa de conta é violada.
+     *
+     * @param exception conflito de proteção de conta administrativa
+     * @return detalhe HTTP com propriedade {@code code}
+     */
+    @ExceptionHandler(UserConflictException.class)
+    public ProblemDetail handleUserConflict(UserConflictException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
         problem.setProperty("code", exception.getCode());
         return problem;

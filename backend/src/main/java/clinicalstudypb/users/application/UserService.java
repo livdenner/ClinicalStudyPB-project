@@ -1,13 +1,16 @@
 package clinicalstudypb.users.application;
 
+import clinicalstudypb.shared.CurrentActor;
 import clinicalstudypb.shared.ResourceNotFoundException;
 import clinicalstudypb.users.domain.EmailAlreadyInUseException;
 import clinicalstudypb.users.domain.ParticipantRoleNotAllowedException;
 import clinicalstudypb.users.domain.User;
+import clinicalstudypb.users.domain.UserConflictException;
 import clinicalstudypb.users.domain.UserRole;
 import clinicalstudypb.users.infrastructure.UserRepository;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 import java.security.SecureRandom;
 import java.util.Base64;
@@ -21,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * @author Lucas N. de Araújo
  * @since 2026-10-21
- * @version 0.0.1
+ * @version 0.0.2
  */
 @Service
 public class UserService {
@@ -30,16 +33,19 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final CurrentActor currentActor;
 
     /**
-     * Recebe as dependências de persistência e codificação de senha.
+     * Recebe as dependências de persistência, codificação de senha e ator autenticado.
      *
      * @param userRepository repositório de usuários
      * @param passwordEncoder codificador compartilhado de senhas
+     * @param currentActor ator autenticado na requisição atual
      */
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, CurrentActor currentActor) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.currentActor = currentActor;
     }
 
     /**
@@ -154,12 +160,17 @@ public class UserService {
     public User updateUser(Long id, String name, String email, UserRole role) {
         User user = getStaffUser(id);
         rejectParticipantRole(role);
+        if (role != user.getRole()) {
+            rejectSelfAccountChange(user.getId(), "O administrador não pode alterar o perfil da própria conta.");
+            ensureNotLastActiveAdministrator(user);
+        }
         String normalizedEmail = normalizeEmail(email);
         if (!user.getEmail().equalsIgnoreCase(normalizedEmail)) {
             ensureEmailAvailable(normalizedEmail);
         }
         user.updateDetails(name.strip(), normalizedEmail);
         user.changeRole(role);
+        userRepository.flush();
         return user;
     }
 
@@ -187,7 +198,10 @@ public class UserService {
     @Transactional
     public User deactivateUser(Long id) {
         User user = getStaffUser(id);
+        rejectSelfAccountChange(user.getId(), "O administrador não pode desativar a própria conta.");
+        ensureNotLastActiveAdministrator(user);
         user.deactivate();
+        userRepository.flush();
         return user;
     }
 
@@ -199,7 +213,31 @@ public class UserService {
      */
     @Transactional
     public void deleteUser(Long id) {
-        userRepository.delete(getStaffUser(id));
+        User user = getStaffUser(id);
+        rejectSelfAccountChange(user.getId(), "O administrador não pode excluir a própria conta.");
+        ensureNotLastActiveAdministrator(user);
+        userRepository.delete(user);
+        userRepository.flush();
+    }
+
+    private void rejectSelfAccountChange(Long targetUserId, String message) {
+        if (targetUserId != null && Objects.equals(targetUserId, currentActor.userId())) {
+            throw new UserConflictException(UserConflictException.SELF_ACCOUNT_CHANGE_NOT_ALLOWED, message);
+        }
+    }
+
+    private void ensureNotLastActiveAdministrator(User target) {
+        if (target.getRole() != UserRole.ADMINISTRATOR || !target.isActive()) {
+            return;
+        }
+        List<User> activeAdmins = userRepository.lockActiveByRoleOrderByIdAsc(UserRole.ADMINISTRATOR);
+        boolean anotherActiveAdminExists = activeAdmins.stream()
+                .anyMatch(admin -> !Objects.equals(admin.getId(), target.getId()));
+        if (!anotherActiveAdminExists) {
+            throw new UserConflictException(
+                    UserConflictException.LAST_ACTIVE_ADMINISTRATOR,
+                    "O sistema deve manter pelo menos um administrador ativo.");
+        }
     }
 
     private void rejectParticipantRole(UserRole role) {
