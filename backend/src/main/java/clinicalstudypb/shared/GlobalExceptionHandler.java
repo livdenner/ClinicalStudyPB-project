@@ -4,6 +4,7 @@ import clinicalstudypb.candidates.domain.CandidateConflictException;
 import clinicalstudypb.candidates.domain.InvalidCandidateException;
 import clinicalstudypb.candidates.domain.InvalidEligibilityEvaluationException;
 import clinicalstudypb.consent.domain.ConsentConflictException;
+import clinicalstudypb.consent.domain.ConsentDecidedByCandidateException;
 import clinicalstudypb.participants.domain.InclusionConflictException;
 import clinicalstudypb.participants.domain.InvalidWithdrawalException;
 import clinicalstudypb.participants.domain.WithdrawalConflictException;
@@ -147,7 +148,22 @@ public class GlobalExceptionHandler {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
         if (exception instanceof CandidateConflictException candidate && candidate.getCode() != null) {
             problem.setProperty("code", candidate.getCode());
+        } else if (exception instanceof ConsentConflictException consent && consent.getCode() != null) {
+            problem.setProperty("code", consent.getCode());
         }
+        return problem;
+    }
+
+    /**
+     * Responde com 403 e código contratual quando a rota descontinuada de consentimento é chamada.
+     *
+     * @param exception tentativa de registro fora do fluxo do candidato
+     * @return detalhe HTTP com propriedade {@code code}
+     */
+    @ExceptionHandler(ConsentDecidedByCandidateException.class)
+    public ProblemDetail handleConsentDecidedByCandidate(ConsentDecidedByCandidateException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, exception.getMessage());
+        problem.setProperty("code", exception.getCode());
         return problem;
     }
 

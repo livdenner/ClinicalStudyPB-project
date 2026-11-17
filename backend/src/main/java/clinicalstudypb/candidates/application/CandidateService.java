@@ -165,6 +165,30 @@ public class CandidateService {
                 .orElseThrow(() -> new ResourceNotFoundException("Candidato não encontrado: " + candidateId));
     }
 
+    /**
+     * Lista todas as candidaturas vinculadas à conta participante da mais recente para a mais antiga.
+     *
+     * @param userId identificador da conta participante
+     * @return candidaturas da conta autenticada
+     */
+    @Transactional(readOnly = true)
+    public List<Candidate> listByUser(Long userId) {
+        return candidateRepository.findAllByUserIdOrderByIdDesc(userId);
+    }
+
+    /**
+     * Consulta uma candidatura garantindo que pertença à conta participante informada.
+     *
+     * @param candidateId identificador da candidatura
+     * @param userId identificador da conta participante
+     * @return candidatura vinculada à conta
+     */
+    @Transactional(readOnly = true)
+    public Candidate getByIdAndUser(Long candidateId, Long userId) {
+        return candidateRepository.findByIdAndUserId(candidateId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Convite não encontrado: " + candidateId));
+    }
+
     /** Bloqueia candidato durante atualização do consentimento ou inclusão. */
     @Transactional
     public Candidate lockForConsentUpdate(Long studyId, Long candidateId) {

@@ -32,35 +32,37 @@ public class SimulatedConsent {
     @Column(name = "locked_after_inclusion", nullable = false)
     private boolean lockedAfterInclusion;
 
+    @Column(name = "recorded_by_user_id")
+    private Long recordedByUserId;
+
     /** Construtor usado pela JPA. */
     protected SimulatedConsent() {
     }
 
     /**
-     * Cria uma decisão inicial.
+     * Cria uma decisão inicial sem autoria explícita para compatibilidade interna e testes legados.
      *
      * @param candidateId candidato ao qual pertence
      * @param status decisão simulada
      * @param recordedAt horário atribuído pelo servidor
      */
     public SimulatedConsent(Long candidateId, ConsentDecision status, Instant recordedAt) {
-        this.candidateId = candidateId;
-        this.status = status;
-        this.recordedAt = recordedAt;
+        this(candidateId, status, recordedAt, null);
     }
 
     /**
-     * Substitui uma decisão anterior enquanto não houve inclusão.
+     * Cria a decisão única registrada pelo próprio candidato autenticado.
      *
-     * @param nextStatus nova decisão
-     * @param when horário da substituição
+     * @param candidateId candidato ao qual pertence
+     * @param status decisão simulada
+     * @param recordedAt horário atribuído pelo servidor
+     * @param recordedByUserId identificador da conta participante autora da decisão
      */
-    public void replace(ConsentDecision nextStatus, Instant when) {
-        if (lockedAfterInclusion) {
-            throw new ConsentConflictException("O consentimento não pode mudar após a inclusão.");
-        }
-        status = nextStatus;
-        recordedAt = when;
+    public SimulatedConsent(Long candidateId, ConsentDecision status, Instant recordedAt, Long recordedByUserId) {
+        this.candidateId = candidateId;
+        this.status = status;
+        this.recordedAt = recordedAt;
+        this.recordedByUserId = recordedByUserId;
     }
 
     /** Impede alterações posteriores à inclusão do candidato. */
@@ -105,5 +107,14 @@ public class SimulatedConsent {
      */
     public boolean isLockedAfterInclusion() {
         return lockedAfterInclusion;
+    }
+
+    /**
+     * Consulta o identificador da conta participante autora da decisão.
+     *
+     * @return identificador do usuário que registrou a decisão ou {@code null}
+     */
+    public Long getRecordedByUserId() {
+        return recordedByUserId;
     }
 }

@@ -200,9 +200,11 @@ BEGIN
             END IF;
 
             IF candidate ? 'consent' THEN
-                INSERT INTO simulated_consents (candidate_id, status, recorded_at, locked_after_inclusion)
+                INSERT INTO simulated_consents (
+                    candidate_id, status, recorded_at, locked_after_inclusion, recorded_by_user_id
+                )
                 VALUES (new_candidate_id, candidate ->> 'consent', (study ->> 'consentAt')::TIMESTAMPTZ,
-                        COALESCE((candidate ->> 'included')::BOOLEAN, FALSE));
+                        COALESCE((candidate ->> 'included')::BOOLEAN, FALSE), new_user_id);
             END IF;
 
             IF COALESCE((candidate ->> 'included')::BOOLEAN, FALSE) THEN
