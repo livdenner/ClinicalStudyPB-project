@@ -1,12 +1,13 @@
 openapi: 3.0.3
 info:
   title: ClinicalStudyPB API
-  version: 1.6.0
+  version: 1.7.0
   description: |
     Contrato da Release 1 (RF01 a RF11) e da Release 2 em andamento. As rotas
     da Sprint 3 (identidade, ativação e decisão de consentimento do candidato;
     agendamento e desfecho de visitas, RF12 e RF13; resultados, histórico e
-    retirada, RF14 a RF16) são o alvo acordado; sua
+    retirada, RF14 a RF16; estudos e visitas do participante no app, RF17 e
+    RF18) são o alvo acordado; sua
     presença aqui não indica implementação pronta, e elas só aparecem no
     Swagger UI gerado pela aplicação depois de implementadas.
 
@@ -28,6 +29,8 @@ info:
     - COORDINATOR agenda visitas e registra o desfecho; RESEARCHER consulta.
     - RESEARCHER responsável registra os resultados fictícios (RF14); COORDINATOR
       registra a retirada (RF16); ambos consultam o histórico do participante (RF15).
+    - PARTICIPANT consulta só os próprios estudos e visitas em /api/me (RF17/RF18);
+      a conta vem do token, nunca de parâmetro, e os demais perfis recebem 403.
     - Erros de regra de negócio da Release 2 trazem `code` estável no ProblemDetail.
 servers:
   - url: /
@@ -45,6 +48,7 @@ tags:
   - name: Visitas agendadas
   - name: Resultados
   - name: Convites do participante
+  - name: Dados do participante
 paths:
   /api/auth/login:
     post:
@@ -1770,8 +1774,8 @@ paths:
         nunca de parâmetro. Lista as candidaturas da própria conta com status
         CONSENT_PENDING, GRANTED ou DECLINED, da mais recente para a mais antiga.
         Candidaturas INVITED, ACTIVE (ainda sem elegibilidade concluída como
-        ELIGIBLE) e INCLUDED não aparecem; estudos com inclusão ficam nas rotas
-        do participante da T23.1. Retorna [] quando não há convites.
+        ELIGIBLE) e INCLUDED não aparecem; estudos com inclusão ficam em
+        GET /api/me/studies (T23.1). Retorna [] quando não há convites.
       security:
         - bearerAuth: []
       parameters:
@@ -1873,6 +1877,97 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+
+  /api/me/studies:
+    get:
+      tags: [Dados do participante]
+      summary: Lista os estudos do participante autenticado (RF17, T23.1)
+      description: |
+        Somente PARTICIPANT; outros perfis recebem 403. A conta vem do token,
+        nunca de parâmetro, e só as participações da própria conta aparecem.
+        Lista os estudos em que a conta foi incluída, com participação ativa
+        (ACTIVE) ou retirada (WITHDRAWN), da inclusão mais recente para a mais
+        antiga. Estudos encerrados ou cancelados continuam na lista, com
+        studyStatus atualizado. Candidaturas ainda não incluídas ficam em
+        /api/me/invitations. Retorna [] quando a conta não tem inclusão.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Estudos do participante
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ParticipantStudy'
+              example:
+                - participantId: 4
+                  studyId: 1
+                  studyTitle: Acompanhamento de hipertensão
+                  studyObjective: Avaliar a adesão ao acompanhamento fictício
+                  studyStatus: EXECUTION
+                  startDate: '2027-01-01'
+                  endDate: '2027-12-31'
+                  responsibleName: Paula Pesquisadora
+                  participationStatus: ACTIVE
+                  includedAt: '2026-11-10T14:00:00Z'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/me/visits:
+    get:
+      tags: [Dados do participante]
+      summary: Lista as visitas do participante autenticado (RF18, T23.1)
+      description: |
+        Somente PARTICIPANT; outros perfis recebem 403. A conta vem do token,
+        nunca de parâmetro, e só as visitas das participações da própria conta
+        aparecem, de todos os seus estudos (inclusive de participação retirada).
+        - upcoming: visitas SCHEDULED, aguardando desfecho, por scheduledAt
+          crescente (a mais próxima primeiro). Inclui visita cuja data já passou
+          e que ainda não teve o desfecho registrado.
+        - history: visitas com desfecho DONE, ABSENT ou CANCELLED, por
+          scheduledAt decrescente (a mais recente primeiro).
+        Empates na mesma data seguem o id da visita. As duas listas vêm vazias
+        quando a conta não tem visita. Observações da equipe sobre visitas
+        realizadas ou ausências não são expostas; em CANCELLED, a justificativa
+        vem em cancellationReason.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Próximas visitas e histórico de desfechos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParticipantVisits'
+              example:
+                upcoming:
+                  - id: 15
+                    studyId: 1
+                    studyTitle: Acompanhamento de hipertensão
+                    participantId: 4
+                    plannedVisitId: 3
+                    plannedVisitName: Retorno
+                    scheduledAt: '2027-03-10T12:00:00Z'
+                    status: SCHEDULED
+                history:
+                  - id: 12
+                    studyId: 1
+                    studyTitle: Acompanhamento de hipertensão
+                    participantId: 4
+                    plannedVisitId: 2
+                    plannedVisitName: Avaliação inicial
+                    scheduledAt: '2027-02-01T12:00:00Z'
+                    status: CANCELLED
+                    outcomeAt: '2027-01-20T13:00:00Z'
+                    cancellationReason: Participante pediu para remarcar
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
 
 components:
   securitySchemes:
@@ -2601,6 +2696,114 @@ components:
           format: date-time
           readOnly: true
           description: Instante da decisão; ausente em CONSENT_PENDING
+    ParticipantStudy:
+      type: object
+      description: Estudo em que a conta autenticada participa (RF17)
+      required: [participantId, studyId, studyTitle, studyObjective, studyStatus, startDate,
+                 endDate, responsibleName, participationStatus, includedAt]
+      properties:
+        participantId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Participação da conta neste estudo
+        studyId:
+          type: integer
+          format: int64
+          readOnly: true
+        studyTitle:
+          type: string
+          readOnly: true
+        studyObjective:
+          type: string
+          readOnly: true
+        studyStatus:
+          $ref: '#/components/schemas/StudyStatus'
+        startDate:
+          type: string
+          format: date
+          readOnly: true
+        endDate:
+          type: string
+          format: date
+          readOnly: true
+        responsibleName:
+          type: string
+          readOnly: true
+          description: Nome do pesquisador responsável pelo estudo
+        participationStatus:
+          $ref: '#/components/schemas/ParticipantStatus'
+        includedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        withdrawnAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: |
+            Instante da retirada; ausente quando participationStatus=ACTIVE. O
+            motivo e a autoria da retirada não são expostos ao participante.
+    ParticipantVisit:
+      type: object
+      description: Visita agendada da conta autenticada (RF18)
+      required: [id, studyId, studyTitle, participantId, plannedVisitId, plannedVisitName,
+                 scheduledAt, status]
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        studyId:
+          type: integer
+          format: int64
+          readOnly: true
+        studyTitle:
+          type: string
+          readOnly: true
+        participantId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Participação da conta no estudo da visita
+        plannedVisitId:
+          type: integer
+          format: int64
+          readOnly: true
+        plannedVisitName:
+          type: string
+          readOnly: true
+          description: Nome da visita prevista no protocolo
+        scheduledAt:
+          type: string
+          format: date-time
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/ScheduledVisitStatus'
+        outcomeAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Instante do desfecho; ausente em SCHEDULED
+        cancellationReason:
+          type: string
+          readOnly: true
+          description: Justificativa do cancelamento; presente só em CANCELLED
+    ParticipantVisits:
+      type: object
+      description: Visitas da conta autenticada separadas em próximas e histórico (RF18)
+      required: [upcoming, history]
+      properties:
+        upcoming:
+          type: array
+          description: Visitas SCHEDULED, por scheduledAt crescente
+          items:
+            $ref: '#/components/schemas/ParticipantVisit'
+        history:
+          type: array
+          description: Visitas DONE, ABSENT ou CANCELLED, por scheduledAt decrescente
+          items:
+            $ref: '#/components/schemas/ParticipantVisit'
     Participant:
       type: object
       required: [id, studyId, candidateId, candidateName, includedAt, status]

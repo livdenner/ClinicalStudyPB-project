@@ -19,6 +19,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
@@ -315,6 +316,21 @@ public class ScheduledVisitService {
             }
             throw exception;
         }
+    }
+
+    /**
+     * Lista, sem filtro de estudo, os agendamentos das participações informadas (RF18, T23.1).
+     * Quem chama garante que as participações pertencem à conta autenticada.
+     *
+     * @param participantIds participações da conta autenticada
+     * @return agendamentos ordenados por instante e identificador; vazio sem participações
+     */
+    @Transactional(readOnly = true)
+    public List<ScheduledVisit> listByParticipants(Collection<Long> participantIds) {
+        if (participantIds.isEmpty()) {
+            return List.of();
+        }
+        return scheduledVisitRepository.findByParticipantIdInOrderByScheduledAtAscIdAsc(participantIds);
     }
 
     private List<ScheduledVisit> findStudyVisits(Long studyId,

@@ -1,11 +1,14 @@
 package clinicalstudypb.participants.application;
 
+import clinicalstudypb.participants.domain.Participant;
 import clinicalstudypb.participants.infrastructure.ParticipantRepository;
+import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Consulta inclusões reais para proteger alterações posteriores de elegibilidade.
+ * Consulta inclusões reais para proteger alterações posteriores de elegibilidade e lista as
+ * participações da conta autenticada (RF17).
  *
  * @author Lívia
  * @since 2026-11-08
@@ -37,5 +40,16 @@ public class ParticipantQueryService implements ParticipantLookup {
     @Transactional(readOnly = true)
     public long countIncluded(Long studyId) {
         return participantRepository.countByStudyId(studyId);
+    }
+
+    /**
+     * Lista as participações da conta autenticada, ativas ou retiradas (RF17, T23.1).
+     *
+     * @param userId conta dona das candidaturas, vinda do token
+     * @return participações da inclusão mais recente para a mais antiga
+     */
+    @Transactional(readOnly = true)
+    public List<Participant> listByAccount(Long userId) {
+        return participantRepository.findAllByAccountOrderByIncludedAtDesc(userId);
     }
 }
