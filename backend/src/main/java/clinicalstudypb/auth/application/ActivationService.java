@@ -11,7 +11,13 @@ import java.util.Locale;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Valida o convite e inicia o primeiro acesso do participante. */
+/**
+ * Valida o convite e inicia o primeiro acesso do participante.
+ *
+ * @author Lucas N. de Araújo
+ * @since 2026-11-13
+ * @version 0.0.1
+ */
 @Service
 public class ActivationService {
 
@@ -19,6 +25,13 @@ public class ActivationService {
     private final CandidateInvitationService invitationService;
     private final JwtService jwtService;
 
+    /**
+     * Inicializa os colaboradores necessários para validar convites e emitir sessão.
+     *
+     * @param userService serviço de consulta e bloqueio de contas
+     * @param invitationService serviço de verificação dos códigos de convite
+     * @param jwtService emissor de tokens JWT para a sessão inicial
+     */
     public ActivationService(UserService userService, CandidateInvitationService invitationService,
                              JwtService jwtService) {
         this.userService = userService;
@@ -26,7 +39,13 @@ public class ActivationService {
         this.jwtService = jwtService;
     }
 
-    /** Ativa a conta e emite uma sessão que exige definição de senha. */
+    /**
+     * Ativa a conta e emite uma sessão que exige definição de senha.
+     *
+     * @param email e-mail da conta convidada
+     * @param code código de ativação informado pelo participante
+     * @return sessão autenticada associada à conta ativada
+     */
     @Transactional
     public AuthService.AuthenticatedUser activate(String email, String code) {
         User user = userService.findLockedByEmail(email.strip().toLowerCase(Locale.ROOT))

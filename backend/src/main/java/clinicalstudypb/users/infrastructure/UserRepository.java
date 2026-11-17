@@ -19,7 +19,12 @@ import org.springframework.data.repository.query.Param;
  */
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    /** Lista apenas as contas da equipe administradas por /api/users. */
+    /**
+     * Lista apenas as contas da equipe administradas por /api/users.
+     *
+     * @param role perfil excluído da listagem
+     * @return usuários cujo perfil é diferente do informado
+     */
     List<User> findByRoleNot(UserRole role);
 
     /**
@@ -61,7 +66,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
      */
     Optional<User> findByEmail(String email);
 
-    /** Localiza a identidade sem diferenciar maiúsculas e minúsculas. */
+    /**
+     * Localiza a identidade sem diferenciar maiúsculas e minúsculas.
+     *
+     * @param email endereço de e-mail consultado
+     * @return usuário encontrado ou vazio
+     */
     Optional<User> findByEmailIgnoreCase(String email);
 
     /**
