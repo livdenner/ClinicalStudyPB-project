@@ -27,7 +27,7 @@ function resposta(body: unknown, status = 200) {
 
 function renderPage(path = "/estudos/3", role: UserRole = "RESEARCHER", autenticado = true) {
     if (autenticado)
-        localStorage.setItem(
+        sessionStorage.setItem(
             AUTH_STORAGE_KEY,
             JSON.stringify({
                 accessToken: "token-pesquisador",
@@ -56,12 +56,14 @@ async function encontrarAcaoEstado(nome: string) {
 beforeEach(() => {
     vi.spyOn(requisitosTransicao, "verificarRequisitosTransicao").mockResolvedValue(null);
     localStorage.clear();
+    sessionStorage.clear();
     vi.spyOn(toast, "success").mockReturnValue("toast-teste");
 });
 
 afterEach(() => {
     cleanup();
     localStorage.clear();
+    sessionStorage.clear();
     vi.restoreAllMocks();
 });
 

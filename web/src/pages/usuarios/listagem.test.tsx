@@ -25,7 +25,7 @@ function resposta(body: unknown, status = 200) {
 
 function renderPage(role: UserRole = "ADMINISTRATOR", autenticado = true) {
     if (autenticado)
-        localStorage.setItem(
+        sessionStorage.setItem(
             AUTH_STORAGE_KEY,
             JSON.stringify({
                 accessToken: "token-admin",
@@ -54,12 +54,14 @@ function renderPage(role: UserRole = "ADMINISTRATOR", autenticado = true) {
 
 beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     vi.spyOn(toast, "success").mockReturnValue("toast-teste");
 });
 
 afterEach(() => {
     cleanup();
     localStorage.clear();
+    sessionStorage.clear();
     vi.restoreAllMocks();
 });
 
