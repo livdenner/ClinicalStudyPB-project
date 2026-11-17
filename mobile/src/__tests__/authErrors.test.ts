@@ -1,6 +1,7 @@
 import { ApiError } from '../services/api/apiClient';
 import {
   AUTH_MESSAGES,
+  AuthFlowError,
   getAuthErrorMessage,
 } from '../services/auth/authErrors';
 
@@ -98,5 +99,17 @@ describe('mensagens de erro de autenticação', () => {
     expect(getAuthErrorMessage(new Error('erro interno'), 'login')).toBe(
       AUTH_MESSAGES.unexpected,
     );
+  });
+
+  it('keeps the safe message of an application flow error', () => {
+    expect(
+      getAuthErrorMessage(new AuthFlowError('ROLE_NOT_ALLOWED'), 'login'),
+    ).toBe(AUTH_MESSAGES.forbidden);
+    expect(
+      getAuthErrorMessage(new AuthFlowError('SESSION_EXPIRED'), 'password'),
+    ).toBe(AUTH_MESSAGES.sessionExpired);
+    expect(
+      getAuthErrorMessage(new AuthFlowError('INVALID_RESPONSE'), 'login'),
+    ).toBe(AUTH_MESSAGES.unexpected);
   });
 });

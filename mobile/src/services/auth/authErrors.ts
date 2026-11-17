@@ -3,6 +3,12 @@ import { ApiError } from '../api/apiClient';
 /** Tela ou operação que originou o erro de autenticação. */
 export type AuthErrorContext = 'login' | 'activation' | 'password' | 'session';
 
+/** Falhas detectadas pelo próprio aplicativo antes ou depois da API. */
+export type AuthFlowErrorCode =
+  | 'ROLE_NOT_ALLOWED'
+  | 'SESSION_EXPIRED'
+  | 'INVALID_RESPONSE';
+
 /**
  * Mensagens genéricas exibidas pelo aplicativo. Nenhuma delas revela a
  * existência de uma conta, detalhes internos ou o conteúdo do token.
@@ -25,8 +31,31 @@ export const AUTH_MESSAGES = {
     'O serviço está indisponível no momento. Tente novamente.',
   network:
     'Não foi possível conectar ao serviço. Verifique sua internet e tente novamente.',
+  sessionRestoreFailed:
+    'Não foi possível restaurar a sua sessão. Entre novamente.',
+  persistenceFailed:
+    'A sessão não pôde ser salva no dispositivo. Se fechar o aplicativo, será necessário entrar novamente.',
   unexpected: 'Não foi possível concluir a operação. Tente novamente.',
 } as const;
+
+function messageForFlowError(code: AuthFlowErrorCode): string {
+  switch (code) {
+    case 'ROLE_NOT_ALLOWED':
+      return AUTH_MESSAGES.forbidden;
+    case 'SESSION_EXPIRED':
+      return AUTH_MESSAGES.sessionExpired;
+    default:
+      return AUTH_MESSAGES.unexpected;
+  }
+}
+
+/** Erro de fluxo de autenticação com mensagem segura para a interface. */
+export class AuthFlowError extends Error {
+  constructor(readonly code: AuthFlowErrorCode) {
+    super(messageForFlowError(code));
+    this.name = 'AuthFlowError';
+  }
+}
 
 /**
  * Traduz um erro de autenticação para uma mensagem segura e acionável.
@@ -39,6 +68,10 @@ export function getAuthErrorMessage(
   error: unknown,
   context: AuthErrorContext,
 ): string {
+  if (error instanceof AuthFlowError) {
+    return error.message;
+  }
+
   if (error instanceof ApiError) {
     switch (error.code) {
       case 'INVALID_CREDENTIALS':
