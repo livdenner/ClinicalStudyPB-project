@@ -109,9 +109,17 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
                     "{\"type\":\"EXCLUSION\",\"description\":\"Estar em gestação\"}"));
 
     private static final List<Endpoint> CONSENT_ENDPOINTS = List.of(
-            new Endpoint(HttpMethod.GET, "/api/studies/{id}/candidates/{candidateId}/consent", null),
-            new Endpoint(HttpMethod.PUT, "/api/studies/{id}/candidates/{candidateId}/consent",
-                    "{\"status\":\"GRANTED\"}"));
+            new Endpoint(HttpMethod.GET, "/api/studies/{id}/candidates/{candidateId}/consent", null));
+
+    private static final Endpoint DEPRECATED_CONSENT_ENDPOINT = new Endpoint(
+            HttpMethod.PUT,
+            "/api/studies/{id}/candidates/{candidateId}/consent",
+            "{\"status\":\"GRANTED\"}");
+
+    private static final List<Endpoint> INVITATION_ENDPOINTS = List.of(
+            new Endpoint(HttpMethod.GET, "/api/me/invitations", null),
+            new Endpoint(HttpMethod.GET, "/api/me/invitations/{candidateId}", null),
+            new Endpoint(HttpMethod.POST, "/api/me/invitations/{candidateId}/decision", "{\"status\":\"GRANTED\"}"));
 
     /** Tabelas comparadas antes e depois de um acesso negado. */
     private static final List<String> SNAPSHOT_TABLES = List.of(
@@ -180,6 +188,10 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
         return combine(CONSENT_ENDPOINTS, UserRole.COORDINATOR);
     }
 
+    static Stream<Arguments> invitationEndpointsForOtherRoles() {
+        return combine(INVITATION_ENDPOINTS, UserRole.PARTICIPANT);
+    }
+
     @ParameterizedTest(name = "{0}: {1}")
     @MethodSource("userEndpointsForOtherRoles")
     void onlyAdministratorManagesUsers_otherRolesAreForbiddenWithoutSideEffects(UserRole role, Endpoint endpoint)
@@ -200,6 +212,26 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
     @MethodSource("consentEndpointsForOtherRoles")
     void onlyCoordinatorAccessesConsent_otherRolesAreForbiddenWithoutSideEffects(UserRole role, Endpoint endpoint)
             throws Exception {
+        assertForbiddenWithoutSideEffects(role, endpoint, study.getId());
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @EnumSource(UserRole.class)
+    void deprecatedPutConsentReturnsForbiddenConsentDecidedByCandidateForAllRoles(UserRole role) throws Exception {
+        List<String> before = databaseSnapshot();
+
+        mockMvc.perform(toRequest(DEPRECATED_CONSENT_ENDPOINT, role, study.getId()))
+                .andExpect(status().isForbidden())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.code").value("CONSENT_DECIDED_BY_CANDIDATE"));
+
+        assertEquals(before, databaseSnapshot());
+    }
+
+    @ParameterizedTest(name = "{0}: {1}")
+    @MethodSource("invitationEndpointsForOtherRoles")
+    void onlyParticipantAccessesInvitations_otherRolesAreForbiddenWithoutSideEffects(
+            UserRole role, Endpoint endpoint) throws Exception {
         assertForbiddenWithoutSideEffects(role, endpoint, study.getId());
     }
 

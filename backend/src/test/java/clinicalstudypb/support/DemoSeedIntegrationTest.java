@@ -179,7 +179,8 @@ class DemoSeedIntegrationTest extends IntegrationTestSupport {
                         .header(HttpHeaders.AUTHORIZATION, token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(JSON_DECLINED))
-                .andExpect(status().isConflict());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("CONSENT_DECIDED_BY_CANDIDATE"));
         mockMvc.perform(put("/api/studies/" + study + "/candidates/" + candidate + "/eligibility")
                         .header(HttpHeaders.AUTHORIZATION, token)
                         .contentType(MediaType.APPLICATION_JSON)
