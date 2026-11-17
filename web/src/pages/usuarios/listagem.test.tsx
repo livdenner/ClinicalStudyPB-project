@@ -102,7 +102,7 @@ describe("Gestão de usuários", () => {
                     id: 4,
                     name: "Bruno Lima",
                     email: "bruno@example.test",
-                    role: "PARTICIPANT",
+                    role: "RESEARCHER",
                 },
             ])
         );
@@ -355,7 +355,7 @@ describe("Gestão de usuários", () => {
             id: 3,
             name: "Maria Santos",
             email: "maria@example.test",
-            role: "PARTICIPANT",
+            role: "RESEARCHER",
         };
         const fetchMock = vi
             .spyOn(globalThis, "fetch")

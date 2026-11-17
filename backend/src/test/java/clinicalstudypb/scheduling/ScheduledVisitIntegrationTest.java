@@ -4,6 +4,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -52,6 +53,7 @@ class ScheduledVisitIntegrationTest extends IntegrationTestSupport {
     private static final String COORDINATOR_EMAIL = "coordinator.scheduling@test.local";
     private static final String PARTICIPANT_EMAIL = "person.scheduling@test.local";
     private static final String CREATE_PATH = "/api/studies/{studyId}/participants/{participantId}/visits";
+    private static final String OUTCOME_PATH = CREATE_PATH + "/{visitId}/outcome";
 
     @Autowired
     private JdbcTemplate jdbc;
@@ -259,6 +261,220 @@ class ScheduledVisitIntegrationTest extends IntegrationTestSupport {
             release.countDown();
             executor.shutdownNow();
         }
+    }
+
+    @Test
+    void outcomeDonePersistsAuthorInstantNoteAndNewVersion() throws Exception {
+        Long visitId = schedule(plannedVisitId);
+
+        mockMvc.perform(post(OUTCOME_PATH, studyId, participantId, visitId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .header(HttpHeaders.IF_MATCH, "\"0\"")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"DONE\",\"note\":\"  Atendimento concluído  \"}"))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.ETAG, "\"1\""))
+                .andExpect(jsonPath("$.status").value("DONE"))
+                .andExpect(jsonPath("$.version").value(1))
+                .andExpect(jsonPath("$.outcomeNote").value("Atendimento concluído"));
+
+        assertEquals("DONE", jdbc.queryForObject(
+                "SELECT status FROM scheduled_visits WHERE id = ?", String.class, visitId));
+        assertEquals("Atendimento concluído", jdbc.queryForObject(
+                "SELECT outcome_note FROM scheduled_visits WHERE id = ?", String.class, visitId));
+        assertEquals(jdbc.queryForObject(
+                "SELECT id FROM users WHERE email = ?", Long.class, COORDINATOR_EMAIL), jdbc.queryForObject(
+                "SELECT outcome_by_user_id FROM scheduled_visits WHERE id = ?", Long.class, visitId));
+        assertNotNull(jdbc.queryForObject(
+                "SELECT outcome_at FROM scheduled_visits WHERE id = ?", java.time.OffsetDateTime.class, visitId));
+        assertEquals(1L, jdbc.queryForObject(
+                "SELECT version FROM scheduled_visits WHERE id = ?", Long.class, visitId));
+    }
+
+    @Test
+    void absentWithoutNoteIsAcceptedAndCanBeRescheduled() throws Exception {
+        Long visitId = schedule(plannedVisitId);
+        mockMvc.perform(post(OUTCOME_PATH, studyId, participantId, visitId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .header(HttpHeaders.IF_MATCH, "\"0\"")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"ABSENT\",\"note\":\"   \"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("ABSENT"))
+                .andExpect(jsonPath("$.outcomeNote").doesNotExist());
+        assertNull(jdbc.queryForObject(
+                "SELECT outcome_note FROM scheduled_visits WHERE id = ?", String.class, visitId));
+        Long nextVisitId = schedule(plannedVisitId);
+        org.junit.jupiter.api.Assertions.assertNotEquals(visitId, nextVisitId);
+    }
+
+    @Test
+    void cancellationRequiresReasonAndStoresNormalizedReason() throws Exception {
+        Long visitId = schedule(plannedVisitId);
+        mockMvc.perform(post(OUTCOME_PATH, studyId, participantId, visitId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .header(HttpHeaders.IF_MATCH, "\"0\"")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"CANCELLED\",\"note\":\"   \"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("CANCELLATION_REASON_REQUIRED"));
+        assertEquals("SCHEDULED", jdbc.queryForObject(
+                "SELECT status FROM scheduled_visits WHERE id = ?", String.class, visitId));
+
+        mockMvc.perform(post(OUTCOME_PATH, studyId, participantId, visitId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .header(HttpHeaders.IF_MATCH, "\"0\"")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"CANCELLED\",\"note\":\"  Imprevisto  \"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.outcomeNote").value("Imprevisto"));
+    }
+
+    @Test
+    void outdatedVersionAndFinalOutcomeHaveDifferentConflictCodes() throws Exception {
+        Long visitId = schedule(plannedVisitId);
+        mockMvc.perform(post(OUTCOME_PATH, studyId, participantId, visitId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .header(HttpHeaders.IF_MATCH, "\"0\"")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"DONE\"}"))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post(OUTCOME_PATH, studyId, participantId, visitId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .header(HttpHeaders.IF_MATCH, "\"0\"")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"ABSENT\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("VERSION_MISMATCH"));
+        mockMvc.perform(post(OUTCOME_PATH, studyId, participantId, visitId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .header(HttpHeaders.IF_MATCH, "\"1\"")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"ABSENT\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("VISIT_OUTCOME_FINAL"));
+        assertEquals("DONE", jdbc.queryForObject(
+                "SELECT status FROM scheduled_visits WHERE id = ?", String.class, visitId));
+    }
+
+    @Test
+    void invalidOutcomeNoteAndVersionLeaveScheduledVisitUntouched() throws Exception {
+        Long visitId = schedule(plannedVisitId);
+        String tooLong = "x".repeat(501);
+        for (String body : List.of("{\"outcome\":\"SCHEDULED\"}",
+                "{\"outcome\":\"DONE\",\"note\":\"" + tooLong + "\"}")) {
+            mockMvc.perform(post(OUTCOME_PATH, studyId, participantId, visitId)
+                            .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                            .header(HttpHeaders.IF_MATCH, "\"0\"")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(body))
+                    .andExpect(status().isBadRequest());
+        }
+        mockMvc.perform(post(OUTCOME_PATH, studyId, participantId, visitId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .header(HttpHeaders.IF_MATCH, "W/\"0\"")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"DONE\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_IF_MATCH"));
+        assertEquals(0L, jdbc.queryForObject(
+                "SELECT version FROM scheduled_visits WHERE id = ?", Long.class, visitId));
+    }
+
+    @Test
+    void outcomeChecksStudyAndParticipantScopeAndStudyReadOnly() throws Exception {
+        Long visitId = schedule(plannedVisitId);
+        mockMvc.perform(post(OUTCOME_PATH, studyId, participantId + 1, visitId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .header(HttpHeaders.IF_MATCH, "\"0\"")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"DONE\"}"))
+                .andExpect(status().isNotFound());
+        jdbc.update("UPDATE studies SET status = 'CLOSED' WHERE id = ?", studyId);
+        mockMvc.perform(post(OUTCOME_PATH, studyId, participantId, visitId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .header(HttpHeaders.IF_MATCH, "\"0\"")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"DONE\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("STUDY_READ_ONLY"));
+        assertEquals("SCHEDULED", jdbc.queryForObject(
+                "SELECT status FROM scheduled_visits WHERE id = ?", String.class, visitId));
+    }
+
+    @Test
+    void onlyCoordinatorCanRegisterOutcome() throws Exception {
+        Long visitId = schedule(plannedVisitId);
+        mockMvc.perform(post(OUTCOME_PATH, studyId, participantId, visitId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(researcherToken))
+                        .header(HttpHeaders.IF_MATCH, "\"0\"")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"DONE\"}"))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post(OUTCOME_PATH, studyId, participantId, visitId)
+                        .header(HttpHeaders.IF_MATCH, "\"0\"")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"DONE\"}"))
+                .andExpect(status().isUnauthorized());
+        assertEquals("SCHEDULED", jdbc.queryForObject(
+                "SELECT status FROM scheduled_visits WHERE id = ?", String.class, visitId));
+    }
+
+    @Test
+    void withdrawnParticipantCanReceiveOutcomeForVisitThatRemainedPending() throws Exception {
+        Long visitId = schedule(plannedVisitId);
+        jdbc.update("UPDATE participants SET status = 'WITHDRAWN', withdrawal_reason = 'Retirada', "
+                + "withdrawn_at = NOW(), withdrawn_by_user_id = included_by, "
+                + "withdrawal_cancelled_visit_count = 0 WHERE id = ?", participantId);
+        mockMvc.perform(post(OUTCOME_PATH, studyId, participantId, visitId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .header(HttpHeaders.IF_MATCH, "\"0\"")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"ABSENT\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("ABSENT"));
+    }
+
+    @Test
+    void simultaneousOutcomesAcceptOneAndRejectStaleVersion() throws Exception {
+        Long visitId = schedule(plannedVisitId);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        CountDownLatch ready = new CountDownLatch(2);
+        CountDownLatch release = new CountDownLatch(1);
+        try {
+            List<Future<String>> responses = List.of(
+                    executor.submit(() -> concurrentOutcome(visitId, ready, release)),
+                    executor.submit(() -> concurrentOutcome(visitId, ready, release)));
+            org.junit.jupiter.api.Assertions.assertTrue(ready.await(10, TimeUnit.SECONDS));
+            release.countDown();
+            List<String> results = List.of(responses.get(0).get(30, TimeUnit.SECONDS),
+                    responses.get(1).get(30, TimeUnit.SECONDS));
+            assertEquals(1L, results.stream().filter("200"::equals).count());
+            assertEquals(1L, results.stream().filter("409 VERSION_MISMATCH"::equals).count());
+            assertEquals(1L, jdbc.queryForObject(
+                    "SELECT version FROM scheduled_visits WHERE id = ?", Long.class, visitId));
+        } finally {
+            release.countDown();
+            executor.shutdownNow();
+        }
+    }
+
+    private String concurrentOutcome(Long visitId, CountDownLatch ready, CountDownLatch release) throws Exception {
+        ready.countDown();
+        if (!release.await(10, TimeUnit.SECONDS)) {
+            throw new IllegalStateException("A requisição concorrente não foi liberada.");
+        }
+        var response = mockMvc.perform(post(OUTCOME_PATH, studyId, participantId, visitId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .header(HttpHeaders.IF_MATCH, "\"0\"")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"DONE\"}"))
+                .andReturn().getResponse();
+        if (response.getStatus() == 200) {
+            return "200";
+        }
+        return response.getStatus() + " " + objectMapper.readTree(response.getContentAsString()).path("code").asText();
     }
 
     private int concurrentSchedule(CountDownLatch ready, CountDownLatch release) throws Exception {

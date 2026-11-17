@@ -1,5 +1,5 @@
 import { Input, Label, ListBox, Select, TextField } from "@heroui/react";
-import { ROLE_LABELS, type UserRole } from "../../types/auth";
+import { PERFIS_EQUIPE, ROLE_LABELS, type UserRole } from "../../types/auth";
 import type { FiltroSituacaoUsuario } from "../../types/usuario";
 
 type BuscaFiltroUsuariosProps = {
@@ -55,7 +55,7 @@ export function BuscaFiltroUsuarios({
                             Todos os perfis
                             <ListBox.ItemIndicator />
                         </ListBox.Item>
-                        {(Object.keys(ROLE_LABELS) as UserRole[]).map((item) => (
+                        {PERFIS_EQUIPE.map((item) => (
                             <ListBox.Item key={item} id={item} textValue={ROLE_LABELS[item]}>
                                 {ROLE_LABELS[item]}
                                 <ListBox.ItemIndicator />

@@ -34,10 +34,16 @@ export function ListagemUsuariosPage() {
             </section>
         );
     }
-    return <GestaoUsuarios key={session.accessToken} token={session.accessToken} />;
+    return (
+        <GestaoUsuarios
+            key={session.accessToken}
+            token={session.accessToken}
+            usuarioLogadoId={session.user.id}
+        />
+    );
 }
 
-function GestaoUsuarios({ token }: { token: string }) {
+function GestaoUsuarios({ token, usuarioLogadoId }: { token: string; usuarioLogadoId: number }) {
     const [usuarios, setUsuarios] = useState<Usuario[]>([]);
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState("");
@@ -196,6 +202,7 @@ function GestaoUsuarios({ token }: { token: string }) {
             {modal && (
                 <ModalUsuario
                     usuario={modal.usuario}
+                    usuarioLogadoId={usuarioLogadoId}
                     onFechar={() => setModal(null)}
                     onSalvar={salvar}
                 />

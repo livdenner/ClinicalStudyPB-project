@@ -22,5 +22,8 @@ export default defineConfig({
         globals: true,
         // Testes de tela com popovers do HeroUI passam de 5 s quando a suíte roda em paralelo.
         testTimeout: 15_000,
+        // O JSON alimenta o relatório de execução dos testes (scripts/relatorio-testes, T25.1).
+        reporters: ["default", "json"],
+        outputFile: { json: "test-reports/vitest.json" },
     },
 });

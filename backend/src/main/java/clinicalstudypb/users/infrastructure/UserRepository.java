@@ -15,7 +15,7 @@ import org.springframework.data.repository.query.Param;
  *
  * @author Lucas N. de Araújo
  * @since 2026-10-21
- * @version 0.0.1
+ * @version 0.0.2
  */
 public interface UserRepository extends JpaRepository<User, Long> {
 
@@ -46,6 +46,17 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT u FROM User u WHERE LOWER(u.email) = LOWER(:email)")
     Optional<User> findForUpdateByEmail(@Param("email") String email);
+
+    /**
+     * Bloqueia todas as contas ativas de um perfil em ordem crescente de identificador para
+     * serializar operações concorrentes que reduzem o número de administradores ativos.
+     *
+     * @param role perfil administrativo a bloquear
+     * @return contas ativas com o perfil informado, bloqueadas em ordem crescente de id
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT u FROM User u WHERE u.role = :role AND u.active = true ORDER BY u.id ASC")
+    List<User> lockActiveByRoleOrderByIdAsc(@Param("role") UserRole role);
 
     /**
      * Localiza um usuário pelo e-mail informado.

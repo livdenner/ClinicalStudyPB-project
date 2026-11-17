@@ -107,7 +107,7 @@ function renderVisitas(atual: EstudoApi = estudo, usuario: AuthenticatedUser = p
 }
 
 async function abrirCadastro() {
-    const botao = await screen.findByRole("button", { name: "Nova visita" });
+    const botao = await screen.findByRole("button", { name: "Cadastrar visita" });
     await waitFor(() => expect(botao).toBeEnabled());
     fireEvent.click(botao);
     return screen.findByRole("dialog", { name: "Nova visita prevista" });
@@ -266,11 +266,16 @@ describe("visitas previstas e atividades — RF06", () => {
             usuario: { ...pesquisador, role: "COORDINATOR" } as AuthenticatedUser,
         },
         { motivo: "outro pesquisador", atual: estudo, usuario: { ...pesquisador, id: 8 } },
+        {
+            motivo: "cancelado",
+            atual: { ...estudo, status: "CANCELLED" } as EstudoApi,
+            usuario: pesquisador,
+        },
     ])("permite apenas consulta para $motivo", async ({ atual, usuario }) => {
         const fetchMock = prepararConsulta([visita], atual);
         renderVisitas(atual, usuario);
         expect(await screen.findByRole("heading", { name: visita.name })).toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: "Nova visita" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: "Cadastrar visita" })).not.toBeInTheDocument();
         expect(screen.queryByRole("button", { name: /^Editar visita:/ })).not.toBeInTheDocument();
         expect(screen.queryByRole("button", { name: /^Excluir visita:/ })).not.toBeInTheDocument();
         fireEvent.click(screen.getByRole("button", { expanded: false }));

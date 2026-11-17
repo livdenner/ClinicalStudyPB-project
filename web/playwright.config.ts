@@ -15,9 +15,13 @@ export default defineConfig({
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,
     workers: process.env.CI ? 1 : undefined,
-    reporter: process.env.CI
-        ? [["github"], ["html", { open: "never" }]]
-        : [["list"], ["html", { open: "never" }]],
+    // O JSON alimenta o relatório de execução dos testes (scripts/relatorio-testes, T25.1).
+    // Fica fora de test-results/, que o Playwright limpa a cada execução.
+    reporter: [
+        process.env.CI ? ["github"] : ["list"],
+        ["html", { open: "never" }],
+        ["json", { outputFile: "test-reports/playwright.json" }],
+    ],
     use: {
         baseURL,
         trace: "on-first-retry",
