@@ -11,6 +11,7 @@ import clinicalstudypb.users.domain.UserRole;
  * @param email e-mail cadastrado
  * @param role perfil de acesso
  * @param active situação de ativação
+ * @param mustChangePassword indica se a conta ainda exige definição inicial de senha
  * @author Lucas N. de Araújo
  * @since 2026-10-21
  * @version 0.0.1

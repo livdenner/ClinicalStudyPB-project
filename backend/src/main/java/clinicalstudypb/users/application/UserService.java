@@ -70,7 +70,13 @@ public class UserService {
                         "Usuário não encontrado: " + id));
     }
 
-    /** Busca uma conta da equipe para as rotas administrativas. */
+    /**
+     * Busca uma conta da equipe para as rotas administrativas.
+     *
+     * @param id identificador do usuário
+     * @return conta da equipe encontrada
+     * @throws ResourceNotFoundException se o usuário não existir ou for participante
+     */
     public User getStaffUser(Long id) {
         User user = getUser(id);
         if (user.getRole() == UserRole.PARTICIPANT) {
@@ -112,7 +118,13 @@ public class UserService {
         return userRepository.findForUpdateByEmail(email);
     }
 
-    /** Persiste uma conta sem senha conhecida e bloqueada até a ativação. */
+    /**
+     * Persiste uma conta sem senha conhecida e bloqueada até a ativação.
+     *
+     * @param name nome de exibição do participante
+     * @param email endereço de e-mail da conta convidada
+     * @return usuário participante persistido com ativação pendente
+     */
     @Transactional
     public User createInvitedParticipant(String name, String email) {
         String normalizedEmail = normalizeEmail(email);

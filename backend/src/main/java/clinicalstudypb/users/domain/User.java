@@ -63,7 +63,14 @@ public class User {
         this.role = role;
     }
 
-    /** Cria uma conta de participante que só poderá entrar após a ativação. */
+    /**
+     * Cria uma conta de participante que só poderá entrar após a ativação.
+     *
+     * @param name nome do participante
+     * @param email e-mail normalizado da conta
+     * @param passwordHash hash aleatório inutilizável até a ativação
+     * @return nova conta participante inativa e pendente de ativação
+     */
     public static User invitedParticipant(String name, String email, String passwordHash) {
         User user = new User(name, email, passwordHash, UserRole.PARTICIPANT);
         user.active = false;
@@ -126,7 +133,11 @@ public class User {
         return this.active;
     }
 
-    /** Informa se a conta aguarda ativação por convite. */
+    /**
+     * Informa se a conta aguarda ativação por convite.
+     *
+     * @return {@code true} enquanto a ativação inicial estiver pendente
+     */
     public boolean isActivationPending() {
         return activationPending;
     }
@@ -171,7 +182,11 @@ public class User {
         this.role = role;
     }
 
-    /** Atualiza o hash da senha do usuário. */
+    /**
+     * Atualiza o hash da senha do usuário.
+     *
+     * @param passwordHash novo hash codificado da senha
+     */
     public void changePassword(String passwordHash) {
         this.passwordHash = passwordHash;
     }

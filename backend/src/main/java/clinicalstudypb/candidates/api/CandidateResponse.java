@@ -8,7 +8,26 @@ import clinicalstudypb.consent.domain.ConsentStatus;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.time.Instant;
 
-/** Representação pública de um candidato, sem hash ou senha da conta. */
+/**
+ * Representação pública de um candidato, sem hash ou senha da conta.
+ *
+ * @param id identificador do candidato
+ * @param studyId identificador do estudo associado
+ * @param name nome de exibição do candidato
+ * @param age idade cadastrada
+ * @param email endereço de e-mail da conta vinculada
+ * @param phone telefone de contato informado
+ * @param userId identificador da conta de usuário vinculada
+ * @param status estado geral do candidato no fluxo de recrutamento
+ * @param eligibilityStatus resultado da avaliação de elegibilidade
+ * @param consentStatus estado do consentimento simulado
+ * @param activation metadados do convite quando pendente de ativação
+ * @param cancellation metadados do cancelamento, quando cancelado
+ * @author Lívia
+ * @author Lucas N. de Araújo
+ * @since 2026-11-06
+ * @version 0.0.1
+ */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record CandidateResponse(Long id, Long studyId, String name, Integer age,
                                 String email, String phone, Long userId, CandidateStatus status,
@@ -16,7 +35,12 @@ public record CandidateResponse(Long id, Long studyId, String name, Integer age,
                                 CandidateActivationResponse activation,
                                 CandidateCancellationResponse cancellation) {
 
-    /** Monta a resposta com a situação atual do candidato e do convite. */
+    /**
+     * Monta a resposta com a situação atual do candidato e do convite.
+     *
+     * @param snapshot fotografia consistente do candidato, status, consentimento e convite
+     * @return representação pública serializável do candidato
+     */
     public static CandidateResponse from(CandidateService.Snapshot snapshot) {
         Candidate candidate = snapshot.candidate();
         CandidateActivationResponse activation = null;
