@@ -269,21 +269,23 @@ class ParticipantWithdrawalIntegrationTest extends ParticipantIntegrationSupport
         Long firstVisit = schedule(participantId, addPlannedVisit(2, "Retorno"), "2027-06-01T09:00:00-03:00");
         Long secondVisit = schedule(participantId, addPlannedVisit(3, "Final"), "2027-09-01T09:00:00-03:00");
         when(clock.instant()).thenReturn(WITHDRAWN_AT);
-        // Falha depois de o UPDATE das visitas ter alterado as duas linhas, antes da gravação da retirada.
-        jdbc.execute("""
-                CREATE FUNCTION test_fail_visit_cancellation() RETURNS trigger LANGUAGE plpgsql AS $$
-                BEGIN
-                    RAISE EXCEPTION 'falha simulada no cancelamento das visitas' USING ERRCODE = 'check_violation';
-                END $$""");
-        jdbc.execute("CREATE TRIGGER test_fail_visit_cancellation AFTER UPDATE ON scheduled_visits "
-                + "FOR EACH STATEMENT EXECUTE FUNCTION test_fail_visit_cancellation()");
         try {
+            // Falha depois de o UPDATE das visitas ter alterado as duas linhas, antes da gravação da retirada.
+            jdbc.execute("""
+                    CREATE FUNCTION test_fail_visit_cancellation() RETURNS trigger LANGUAGE plpgsql AS $$
+                    BEGIN
+                        RAISE EXCEPTION 'falha simulada no cancelamento das visitas' USING ERRCODE = 'check_violation';
+                    END $$""");
+            jdbc.execute("CREATE TRIGGER test_fail_visit_cancellation AFTER UPDATE ON scheduled_visits "
+                    + "FOR EACH STATEMENT EXECUTE FUNCTION test_fail_visit_cancellation()");
+
             withdraw(participantId, coordinatorToken, "{\"reason\":\"Motivo\"}")
                     .andExpect(status().isConflict())
                     .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON));
         } finally {
-            jdbc.execute("DROP TRIGGER test_fail_visit_cancellation ON scheduled_visits");
-            jdbc.execute("DROP FUNCTION test_fail_visit_cancellation()");
+            // IF EXISTS: limpa mesmo quando a preparação falhou no meio.
+            jdbc.execute("DROP TRIGGER IF EXISTS test_fail_visit_cancellation ON scheduled_visits");
+            jdbc.execute("DROP FUNCTION IF EXISTS test_fail_visit_cancellation()");
         }
 
         assertActive(participantId);
