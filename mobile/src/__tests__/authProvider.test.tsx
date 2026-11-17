@@ -15,6 +15,7 @@ import type {
 } from '../services/auth/authTypes';
 
 jest.mock('../services/auth/authApi', () => ({
+  activateAccountWithCode: jest.fn(),
   loginWithPassword: jest.fn(),
   changeAccountPassword: jest.fn(),
   logoutSession: jest.fn(),
@@ -183,6 +184,94 @@ describe('AuthProvider', () => {
       expect.objectContaining({ accessToken: 'novo.token.assinatura' }),
     );
     expect(result.current.persistenceWarning).toBeNull();
+  });
+
+  it('ativa o primeiro acesso com o código e mantém a sessão restrita', async () => {
+    api.activateAccountWithCode.mockResolvedValue(
+      loginResponse('PARTICIPANT', true),
+    );
+    const storage = createStorage();
+    const { result } = await renderAuth(storage);
+
+    await waitFor(() => expect(result.current.status).toBe('anonymous'));
+
+    let activated: AuthSession | null = null;
+    await act(async () => {
+      activated = await result.current.activateAccount({
+        email: 'candidato@exemplo.test',
+        activationCode: 'K7Q2-9MXA',
+      });
+    });
+
+    expect(activated).not.toBeNull();
+    expect((activated as AuthSession | null)?.user.mustChangePassword).toBe(
+      true,
+    );
+    expect(result.current.status).toBe('authenticated');
+    expect(api.activateAccountWithCode).toHaveBeenCalledWith({
+      email: 'candidato@exemplo.test',
+      activationCode: 'K7Q2-9MXA',
+    });
+    expect(storage.save).toHaveBeenCalledWith(
+      expect.objectContaining({ accessToken: 'novo.token.assinatura' }),
+    );
+    expect(result.current.persistenceWarning).toBeNull();
+  });
+
+  it('não mantém a sessão quando a ativação devolve outro perfil', async () => {
+    api.activateAccountWithCode.mockResolvedValue(
+      loginResponse('COORDINATOR', true),
+    );
+    const storage = createStorage();
+    const { result } = await renderAuth(storage);
+
+    await waitFor(() => expect(result.current.status).toBe('anonymous'));
+
+    let caught: unknown = null;
+    await act(async () => {
+      try {
+        await result.current.activateAccount({
+          email: 'coordenador@exemplo.test',
+          activationCode: 'K7Q2-9MXA',
+        });
+      } catch (error) {
+        caught = error;
+      }
+    });
+
+    expect(caught).toBeInstanceOf(AuthFlowError);
+    expect((caught as AuthFlowError).code).toBe('ROLE_NOT_ALLOWED');
+    expect(result.current.status).toBe('anonymous');
+    expect(result.current.session).toBeNull();
+    expect(storage.save).not.toHaveBeenCalled();
+  });
+
+  it('converte uma resposta inválida de ativação em erro seguro', async () => {
+    api.activateAccountWithCode.mockResolvedValue({
+      ...loginResponse('PARTICIPANT', true),
+      accessToken: '   ',
+    });
+    const storage = createStorage();
+    const { result } = await renderAuth(storage);
+
+    await waitFor(() => expect(result.current.status).toBe('anonymous'));
+
+    let caught: unknown = null;
+    await act(async () => {
+      try {
+        await result.current.activateAccount({
+          email: 'candidato@exemplo.test',
+          activationCode: 'K7Q2-9MXA',
+        });
+      } catch (error) {
+        caught = error;
+      }
+    });
+
+    expect(caught).toBeInstanceOf(AuthFlowError);
+    expect((caught as AuthFlowError).code).toBe('INVALID_RESPONSE');
+    expect(result.current.status).toBe('anonymous');
+    expect(storage.save).not.toHaveBeenCalled();
   });
 
   it('não mantém sessão de um perfil que não é participante', async () => {

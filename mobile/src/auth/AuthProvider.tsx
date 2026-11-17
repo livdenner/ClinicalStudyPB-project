@@ -13,11 +13,13 @@ import {
   AuthFlowError,
 } from '../services/auth/authErrors';
 import {
+  activateAccountWithCode,
   changeAccountPassword,
   loginWithPassword,
   logoutSession,
 } from '../services/auth/authApi';
 import type {
+  ActivationRequest,
   LoginRequest,
   LoginResponse,
   PasswordChangeRequest,
@@ -51,6 +53,7 @@ interface AuthState {
 
 export interface AuthContextValue extends AuthState {
   signIn(credentials: LoginRequest): Promise<AuthSession>;
+  activateAccount(input: ActivationRequest): Promise<AuthSession>;
   signOut(): Promise<void>;
   changePassword(input: PasswordChangeRequest): Promise<AuthSession>;
   clearNotice(): void;
@@ -200,9 +203,8 @@ export function AuthProvider({
     };
   }, [storage]);
 
-  const signIn = useCallback(
-    async (credentials: LoginRequest): Promise<AuthSession> => {
-      const response = await loginWithPassword(credentials);
+  const completeAuthentication = useCallback(
+    async (response: LoginResponse): Promise<AuthSession> => {
       const newSession = toSession(response);
 
       if (!isParticipant(newSession)) {
@@ -222,6 +224,18 @@ export function AuthProvider({
       return newSession;
     },
     [storage],
+  );
+
+  const signIn = useCallback(
+    async (credentials: LoginRequest): Promise<AuthSession> =>
+      completeAuthentication(await loginWithPassword(credentials)),
+    [completeAuthentication],
+  );
+
+  const activateAccount = useCallback(
+    async (input: ActivationRequest): Promise<AuthSession> =>
+      completeAuthentication(await activateAccountWithCode(input)),
+    [completeAuthentication],
   );
 
   const signOut = useCallback(async (): Promise<void> => {
@@ -294,11 +308,12 @@ export function AuthProvider({
     () => ({
       ...state,
       signIn,
+      activateAccount,
       signOut,
       changePassword,
       clearNotice,
     }),
-    [state, signIn, signOut, changePassword, clearNotice],
+    [state, signIn, activateAccount, signOut, changePassword, clearNotice],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

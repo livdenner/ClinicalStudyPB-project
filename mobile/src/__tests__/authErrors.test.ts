@@ -70,6 +70,9 @@ describe('mensagens de erro de autenticação', () => {
       getAuthErrorMessage(new ApiError('detalhe interno', 401), 'login'),
     ).toBe(AUTH_MESSAGES.invalidCredentials);
     expect(
+      getAuthErrorMessage(new ApiError('detalhe interno', 401), 'activation'),
+    ).toBe(AUTH_MESSAGES.activationInvalid);
+    expect(
       getAuthErrorMessage(new ApiError('detalhe interno', 401), 'session'),
     ).toBe(AUTH_MESSAGES.sessionExpired);
   });

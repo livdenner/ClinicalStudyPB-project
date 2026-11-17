@@ -1,5 +1,6 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import {
   hasLoginFormErrors,
@@ -148,6 +149,17 @@ export default function LoginScreen() {
             void submit();
           }}
         />
+
+        <View style={styles.firstAccess}>
+          <Text style={styles.firstAccessText}>Primeiro acesso?</Text>
+          <Pressable
+            accessibilityRole="link"
+            hitSlop={8}
+            onPress={() => router.push('/activation')}
+          >
+            <Text style={styles.link}>Ativar conta</Text>
+          </Pressable>
+        </View>
       </View>
 
       <Text style={styles.help}>
@@ -189,5 +201,21 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     textAlign: 'center',
+  },
+  firstAccess: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    gap: spacing.xs,
+    justifyContent: 'center',
+  },
+  firstAccessText: {
+    color: colors.textMuted,
+    fontSize: 14,
+  },
+  link: {
+    color: colors.brandDark,
+    fontSize: 14,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
 });

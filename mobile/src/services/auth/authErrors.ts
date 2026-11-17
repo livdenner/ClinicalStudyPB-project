@@ -95,9 +95,13 @@ export function getAuthErrorMessage(
     }
 
     if (error.status === 401) {
-      return context === 'login' || context === 'activation'
-        ? AUTH_MESSAGES.invalidCredentials
-        : AUTH_MESSAGES.sessionExpired;
+      if (context === 'login') {
+        return AUTH_MESSAGES.invalidCredentials;
+      }
+      if (context === 'activation') {
+        return AUTH_MESSAGES.activationInvalid;
+      }
+      return AUTH_MESSAGES.sessionExpired;
     }
     if (error.status === 403) {
       return AUTH_MESSAGES.forbidden;

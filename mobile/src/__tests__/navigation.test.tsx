@@ -9,11 +9,14 @@ import {
 } from 'expo-router/testing-library';
 import * as SecureStore from 'expo-secure-store';
 
+import ActivationScreen from '../app/activation';
 import ChangePasswordScreen from '../app/change-password';
 import HomeScreen from '../app/index';
 import LoginScreen from '../app/login';
 import RootLayout from '../app/_layout';
 import StudiesScreen from '../app/studies';
+import { ACTIVATION_MESSAGES } from '../auth/activationForm';
+import { ApiError } from '../services/api/apiClient';
 import { AUTH_MESSAGES } from '../services/auth/authErrors';
 import * as authApi from '../services/auth/authApi';
 import type { LoginResponse, UserRole } from '../services/auth/authTypes';
@@ -26,6 +29,7 @@ jest.mock('expo-secure-store', () => ({
 }));
 
 jest.mock('../services/auth/authApi', () => ({
+  activateAccountWithCode: jest.fn(),
   loginWithPassword: jest.fn(),
   changeAccountPassword: jest.fn(),
   logoutSession: jest.fn(),
@@ -37,6 +41,7 @@ const api = authApi as jest.Mocked<typeof authApi>;
 let storedValue: string | null = null;
 
 beforeEach(() => {
+  api.activateAccountWithCode.mockReset();
   api.loginWithPassword.mockReset();
   api.changeAccountPassword.mockReset();
   api.logoutSession.mockReset();
@@ -110,6 +115,7 @@ async function renderApp(initialUrl = '/') {
     {
       _layout: RootLayout,
       login: LoginScreen,
+      activation: ActivationScreen,
       index: HomeScreen,
       studies: StudiesScreen,
       'change-password': ChangePasswordScreen,
@@ -128,6 +134,21 @@ async function fillLogin(
   );
   await fireEvent.changeText(screen.getByLabelText('Senha'), password);
   await fireEvent.press(screen.getByText('Entrar'));
+}
+
+async function fillActivation(
+  email = 'candidato@exemplo.test',
+  activationCode = 'K7Q2-9MXA',
+): Promise<void> {
+  await fireEvent.changeText(
+    screen.getByLabelText('E-mail cadastrado'),
+    email,
+  );
+  await fireEvent.changeText(
+    screen.getByLabelText('Código de ativação'),
+    activationCode,
+  );
+  await fireEvent.press(screen.getByText('Ativar minha conta'));
 }
 
 describe('navegação autenticada do participante', () => {
@@ -156,6 +177,110 @@ describe('navegação autenticada do participante', () => {
     ).toBeTruthy();
     expect(screen.getByText('Informe a senha.')).toBeTruthy();
     expect(api.loginWithPassword).not.toHaveBeenCalled();
+  });
+
+  it('abre o primeiro acesso a partir do login', async () => {
+    await renderApp('/');
+    await screen.findByText('Login');
+
+    await fireEvent.press(screen.getByText('Ativar conta'));
+
+    expect(await screen.findByText('Primeiro acesso')).toBeTruthy();
+    await waitFor(() => expect(screen).toHavePathname('/activation'));
+  });
+
+  it('valida o formulário de ativação antes de chamar a API', async () => {
+    await renderApp('/activation');
+    await screen.findByText('Primeiro acesso');
+
+    await fireEvent.press(screen.getByText('Ativar minha conta'));
+
+    expect(
+      await screen.findByText(ACTIVATION_MESSAGES.emailRequired),
+    ).toBeTruthy();
+    expect(
+      screen.getByText(ACTIVATION_MESSAGES.codeRequired),
+    ).toBeTruthy();
+    expect(api.activateAccountWithCode).not.toHaveBeenCalled();
+  });
+
+  it('ativa a conta e encaminha para a definição da senha inicial', async () => {
+    api.activateAccountWithCode.mockResolvedValue(
+      loginResponse('PARTICIPANT', true),
+    );
+    await renderApp('/activation');
+    await screen.findByText('Primeiro acesso');
+
+    await fillActivation('  candidato@exemplo.test  ', '  K7Q2-9MXA  ');
+
+    expect(await screen.findByText('Defina sua nova senha')).toBeTruthy();
+    await waitFor(() =>
+      expect(screen).toHavePathname('/change-password'),
+    );
+    expect(api.activateAccountWithCode).toHaveBeenCalledWith({
+      email: 'candidato@exemplo.test',
+      activationCode: 'K7Q2-9MXA',
+    });
+    await waitFor(() =>
+      expect(JSON.parse(String(storedValue))).toMatchObject({
+        user: { mustChangePassword: true },
+      }),
+    );
+  });
+
+  it('explica quando o código de ativação expirou', async () => {
+    api.activateAccountWithCode.mockRejectedValue(
+      new ApiError('detalhe interno', 410, 'ACTIVATION_EXPIRED'),
+    );
+    await renderApp('/activation');
+    await screen.findByText('Primeiro acesso');
+
+    await fillActivation();
+
+    expect(
+      await screen.findByText(AUTH_MESSAGES.activationExpired),
+    ).toBeTruthy();
+    await waitFor(() => expect(screen).toHavePathname('/activation'));
+    expect(storedValue).toBeNull();
+  });
+
+  it('mostra a mensagem genérica para um código inválido', async () => {
+    api.activateAccountWithCode.mockRejectedValue(
+      new ApiError('detalhe interno', 400, 'ACTIVATION_INVALID'),
+    );
+    await renderApp('/activation');
+    await screen.findByText('Primeiro acesso');
+
+    await fillActivation();
+
+    expect(
+      await screen.findByText(AUTH_MESSAGES.activationInvalid),
+    ).toBeTruthy();
+    await waitFor(() => expect(screen).toHavePathname('/activation'));
+    expect(storedValue).toBeNull();
+  });
+
+  it('não mantém a sessão quando a ativação devolve outro perfil', async () => {
+    api.activateAccountWithCode.mockResolvedValue(
+      loginResponse('COORDINATOR', true),
+    );
+    await renderApp('/activation');
+    await screen.findByText('Primeiro acesso');
+
+    await fillActivation('coordenador@exemplo.test');
+
+    expect(await screen.findByText(AUTH_MESSAGES.forbidden)).toBeTruthy();
+    await waitFor(() => expect(screen).toHavePathname('/activation'));
+    expect(storedValue).toBeNull();
+  });
+
+  it('bloqueia a ativação quando já existe sessão ativa', async () => {
+    storeSession();
+
+    await renderApp('/activation');
+
+    expect(await screen.findByText(/Olá, Raffael!/)).toBeTruthy();
+    await waitFor(() => expect(screen).toHavePathname('/'));
   });
 
   it('entra como participante e acessa os estudos', async () => {
