@@ -4,6 +4,7 @@ import clinicalstudypb.candidates.domain.CandidateConflictException;
 import clinicalstudypb.candidates.domain.InvalidCandidateException;
 import clinicalstudypb.candidates.domain.InvalidEligibilityEvaluationException;
 import clinicalstudypb.consent.domain.ConsentConflictException;
+import clinicalstudypb.consent.domain.ConsentDecidedByCandidateException;
 import clinicalstudypb.participants.domain.InclusionConflictException;
 import clinicalstudypb.participants.domain.InvalidWithdrawalException;
 import clinicalstudypb.participants.domain.WithdrawalConflictException;
@@ -13,6 +14,7 @@ import clinicalstudypb.studies.domain.InvalidStudyException;
 import clinicalstudypb.studies.domain.StudyStatusConflictException;
 import clinicalstudypb.users.domain.EmailAlreadyInUseException;
 import clinicalstudypb.users.domain.ParticipantRoleNotAllowedException;
+import clinicalstudypb.users.domain.UserConflictException;
 import clinicalstudypb.visits.domain.ProtocolConflictException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -26,7 +28,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  *
  * @author Lucas N. de Araújo
  * @since 2026-10-21
- * @version 0.0.1
+ * @version 0.0.2
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -56,7 +58,12 @@ public class GlobalExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
     }
 
-    /** Responde com o código contratual quando /api/users recebe o perfil de participante. */
+    /**
+     * Responde com o código contratual quando /api/users recebe o perfil de participante.
+     *
+     * @param exception erro disparado pelo uso indevido do perfil de participante
+     * @return detalhe HTTP de conflito com propriedade {@code code}
+     */
     @ExceptionHandler(ParticipantRoleNotAllowedException.class)
     public ProblemDetail handleParticipantRoleNotAllowed(ParticipantRoleNotAllowedException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
@@ -146,7 +153,22 @@ public class GlobalExceptionHandler {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
         if (exception instanceof CandidateConflictException candidate && candidate.getCode() != null) {
             problem.setProperty("code", candidate.getCode());
+        } else if (exception instanceof ConsentConflictException consent && consent.getCode() != null) {
+            problem.setProperty("code", consent.getCode());
         }
+        return problem;
+    }
+
+    /**
+     * Responde com 403 e código contratual quando a rota descontinuada de consentimento é chamada.
+     *
+     * @param exception tentativa de registro fora do fluxo do candidato
+     * @return detalhe HTTP com propriedade {@code code}
+     */
+    @ExceptionHandler(ConsentDecidedByCandidateException.class)
+    public ProblemDetail handleConsentDecidedByCandidate(ConsentDecidedByCandidateException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, exception.getMessage());
+        problem.setProperty("code", exception.getCode());
         return problem;
     }
 
@@ -207,6 +229,19 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(WithdrawalConflictException.class)
     public ProblemDetail handleWithdrawalConflict(WithdrawalConflictException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+        problem.setProperty("code", exception.getCode());
+        return problem;
+    }
+
+    /**
+     * Responde com 409 e código estável quando uma proteção administrativa de conta é violada.
+     *
+     * @param exception conflito de proteção de conta administrativa
+     * @return detalhe HTTP com propriedade {@code code}
+     */
+    @ExceptionHandler(UserConflictException.class)
+    public ProblemDetail handleUserConflict(UserConflictException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
         problem.setProperty("code", exception.getCode());
         return problem;

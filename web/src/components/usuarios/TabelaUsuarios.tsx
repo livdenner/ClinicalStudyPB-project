@@ -1,17 +1,9 @@
 import { Button, Chip, Table } from "@heroui/react";
-import { Pencil } from "lucide-react";
-import { ROLE_LABELS } from "../../types/auth";
-import type { UserRole } from "../../types/auth";
+import { Circle, Pause, Pencil } from "lucide-react";
+import { SeloPerfil } from "./SeloPerfil";
 import type { Usuario } from "../../types/usuario";
 
 type Props = { usuarios: Usuario[]; onEditar: (usuario: Usuario) => void };
-
-const ROLE_CHIP_CLASSES: Record<UserRole, string> = {
-    ADMINISTRATOR: "bg-[#EDE9FE] text-[#5B3A91]",
-    COORDINATOR: "bg-[#FCE7F3] text-[#943E73]",
-    RESEARCHER: "bg-[#F2ECE6] text-[#75513A]",
-    PARTICIPANT: "bg-[#E9F2FD] text-[#245A91]",
-};
 
 export function TabelaUsuarios({ usuarios, onEditar }: Props) {
     if (usuarios.length === 0) {
@@ -37,7 +29,7 @@ export function TabelaUsuarios({ usuarios, onEditar }: Props) {
                                 key={titulo}
                                 id={titulo}
                                 isRowHeader={titulo === "Nome"}
-                                className="rounded-none bg-[var(--color-primary)] px-5 py-3.5 font-semibold text-white after:hidden"
+                                className="rounded-none border-b border-[var(--color-border)] bg-[var(--color-neutral-soft)] px-5 py-3 font-semibold text-[var(--color-neutral)] after:hidden"
                             >
                                 {titulo}
                             </Table.Column>
@@ -50,41 +42,45 @@ export function TabelaUsuarios({ usuarios, onEditar }: Props) {
                                 textValue={usuario.name}
                                 className="group border-b border-[var(--color-border)]"
                             >
-                                <Table.Cell className="break-words border-[var(--color-border)] px-5 py-4 font-semibold text-[var(--color-title)] group-hover:bg-slate-50">
+                                <Table.Cell className="break-words border-[var(--color-border)] px-5 py-2.5 font-semibold text-[var(--color-title)] group-hover:bg-[var(--color-row-hover)]">
                                     {usuario.name}
                                 </Table.Cell>
-                                <Table.Cell className="break-all border-[var(--color-border)] px-5 py-4 text-[var(--color-text)] group-hover:bg-slate-50">
+                                <Table.Cell className="break-all border-[var(--color-border)] px-5 py-2.5 text-[var(--color-neutral)] group-hover:bg-[var(--color-row-hover)]">
                                     {usuario.email}
                                 </Table.Cell>
-                                <Table.Cell className="border-[var(--color-border)] px-5 py-4 text-[var(--color-text)] group-hover:bg-slate-50">
-                                    <Chip
-                                        size="sm"
-                                        variant="soft"
-                                        className={`font-semibold ${ROLE_CHIP_CLASSES[usuario.role]}`}
-                                    >
-                                        <Chip.Label>{ROLE_LABELS[usuario.role]}</Chip.Label>
-                                    </Chip>
+                                <Table.Cell className="border-[var(--color-border)] px-5 py-2.5 text-[var(--color-text)] group-hover:bg-[var(--color-row-hover)]">
+                                    <SeloPerfil perfil={usuario.role} />
                                 </Table.Cell>
-                                <Table.Cell className="border-[var(--color-border)] px-5 py-4 group-hover:bg-slate-50">
+                                <Table.Cell className="border-[var(--color-border)] px-5 py-2.5 group-hover:bg-[var(--color-row-hover)]">
                                     <Chip
                                         size="sm"
                                         variant="soft"
-                                        color={usuario.active ? "success" : "danger"}
-                                        className={`font-semibold ${usuario.active ? "bg-[#E4F4E9] text-[#16804B]" : "bg-[#FDEAEA] text-[#B42318]"}`}
+                                        className={`font-semibold ${usuario.active ? "bg-[var(--color-info-soft)] text-[var(--color-info)]" : "bg-[var(--color-neutral-soft)] text-[var(--color-neutral)]"}`}
                                     >
                                         <Chip.Label>
-                                            {usuario.active ? "Ativo" : "Inativo"}
+                                            <span className="inline-flex items-center gap-1.5">
+                                                {usuario.active ? (
+                                                    <Circle
+                                                        size={7}
+                                                        fill="currentColor"
+                                                        aria-hidden="true"
+                                                    />
+                                                ) : (
+                                                    <Pause size={12} aria-hidden="true" />
+                                                )}
+                                                {usuario.active ? "Ativo" : "Inativo"}
+                                            </span>
                                         </Chip.Label>
                                     </Chip>
                                 </Table.Cell>
-                                <Table.Cell className="border-[var(--color-border)] px-5 py-4 group-hover:bg-slate-50">
+                                <Table.Cell className="border-[var(--color-border)] px-5 py-2.5 group-hover:bg-[var(--color-row-hover)]">
                                     <Button
                                         type="button"
                                         variant="ghost"
                                         isIconOnly
                                         aria-label={`Editar usuário: ${usuario.name}`}
                                         onPress={() => onEditar(usuario)}
-                                        className="h-10 w-10 rounded-lg text-[var(--color-primary)] hover:bg-white"
+                                        className="h-11 w-11 rounded-lg text-[var(--color-brand)] hover:bg-[var(--color-brand-soft)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-brand)]"
                                     >
                                         <Pencil size={18} aria-hidden="true" />
                                     </Button>

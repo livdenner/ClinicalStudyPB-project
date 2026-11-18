@@ -9,6 +9,7 @@ package clinicalstudypb.candidates.domain;
  */
 public class CandidateConflictException extends RuntimeException {
 
+    /** Código estável publicado em {@code ProblemDetail}, quando aplicável. */
     private final String code;
 
     /**
@@ -21,13 +22,22 @@ public class CandidateConflictException extends RuntimeException {
         this.code = null;
     }
 
-    /** Cria conflito da Release 2 com código estável para os clientes. */
+    /**
+     * Cria conflito da Release 2 com código estável para os clientes.
+     *
+     * @param code código estável de conflito
+     * @param message explicação legível do conflito
+     */
     public CandidateConflictException(String code, String message) {
         super(message);
         this.code = code;
     }
 
-    /** Código estável da regra, quando definido no contrato. */
+    /**
+     * Retorna o código estável da regra, quando definido no contrato.
+     *
+     * @return código de erro ou {@code null}
+     */
     public String getCode() {
         return code;
     }

@@ -58,7 +58,7 @@ export function ListaVisitasPrevistas({
                                     <Button
                                         isIconOnly
                                         variant="ghost"
-                                        className="h-11 w-11 text-[#B42318]"
+                                        className="h-11 w-11 text-[var(--color-error)]"
                                         aria-label={`Excluir visita: ${visita.name}`}
                                         isDisabled={acoesBloqueadas || !podeExcluir}
                                         onPress={() => onExcluir(visita)}

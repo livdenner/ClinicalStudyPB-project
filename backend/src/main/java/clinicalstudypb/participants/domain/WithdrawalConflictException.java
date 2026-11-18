@@ -16,6 +16,7 @@ public class WithdrawalConflictException extends RuntimeException {
     /** Estudo encerrado ou cancelado, somente leitura. */
     public static final String STUDY_READ_ONLY = "STUDY_READ_ONLY";
 
+    /** Código estável publicado no contrato. */
     private final String code;
 
     /**

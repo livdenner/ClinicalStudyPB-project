@@ -1,5 +1,5 @@
 import { Input, Label, ListBox, Select, TextField } from "@heroui/react";
-import { ROLE_LABELS, type UserRole } from "../../types/auth";
+import { PERFIS_EQUIPE, ROLE_LABELS, type UserRole } from "../../types/auth";
 import type { FiltroSituacaoUsuario } from "../../types/usuario";
 
 type BuscaFiltroUsuariosProps = {
@@ -20,7 +20,7 @@ export function BuscaFiltroUsuarios({
     aoMudarSituacao,
 }: BuscaFiltroUsuariosProps) {
     const filtroClass =
-        "h-11 rounded-lg border border-[var(--color-border)] bg-white px-3 text-sm text-[var(--color-text)] shadow-none focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]";
+        "h-11 rounded-lg border border-[var(--color-border)] bg-white px-3 text-sm text-[var(--color-text)] shadow-none focus:border-[var(--color-brand)] focus-visible:border-[var(--color-brand)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-brand)] focus-visible:ring-4 focus-visible:ring-[var(--color-brand-ring)]";
 
     return (
         <div className="grid grid-cols-[2fr_1fr_1fr] gap-3 max-[900px]:grid-cols-1">
@@ -55,7 +55,7 @@ export function BuscaFiltroUsuarios({
                             Todos os perfis
                             <ListBox.ItemIndicator />
                         </ListBox.Item>
-                        {(Object.keys(ROLE_LABELS) as UserRole[]).map((item) => (
+                        {PERFIS_EQUIPE.map((item) => (
                             <ListBox.Item key={item} id={item} textValue={ROLE_LABELS[item]}>
                                 {ROLE_LABELS[item]}
                                 <ListBox.ItemIndicator />

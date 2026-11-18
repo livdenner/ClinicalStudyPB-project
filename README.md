@@ -4,14 +4,14 @@
 
 ClinicalStudyPB é um sistema acadêmico de gestão de estudos clínicos. A Release 1 reúne administração de usuários, autenticação, estudos, protocolo e recrutamento (RF01–RF11), com backend Java, aplicação web e estrutura inicial mobile. O consentimento usa exclusivamente dados fictícios e não possui assinatura ou validade clínica/jurídica.
 
-| Integrante | Sprint 1 | Sprint 2 |
-| --- | --- | --- |
-| Lívia | Gerência | Backend |
-| Lucas | Backend | Gerência |
-| Raffael | Web 1 | Web 1 |
-| Allan | Web 2 | Web 2 |
-| Júlio | Mobile | Mobile |
-| Júlia | QA/DevOps | QA/DevOps |
+| Integrante | Sprint 1  | Sprint 2  |
+| ---------- | --------- | --------- |
+| Lívia      | Gerência  | Backend   |
+| Lucas      | Backend   | Gerência  |
+| Raffael    | Web 1     | Web 1     |
+| Allan      | Web 2     | Web 2     |
+| Júlio      | Mobile    | Mobile    |
+| Júlia      | QA/DevOps | QA/DevOps |
 
 Consulte as [entregas, evidências e pendências da Release 1](releases/release1/README.md), o [processo das duas sprints](releases/release1/processo/README.md), o [índice de releases](releases/README.md) e as [convenções de contribuição](CONTRIBUTING.md). O planejamento e acompanhamento da equipe ficam no [Azure DevOps TEAM5](https://dev.azure.com/engsw2/TEAM5).
 
@@ -21,12 +21,12 @@ O backend é um **monólito modular em camadas**, executado como uma aplicação
 
 A web chama a API REST com JWT; somente o backend acessa o PostgreSQL. O Flyway versiona o esquema e o Hibernate valida seu mapeamento. O mobile da Release 1 navega entre duas telas iniciais; a integração de login pertence à Sprint 3.
 
-| Diagrama | Visualização no GitHub | Fonte editável | PDF |
-| --- | --- | --- | --- |
-| Casos de uso | [RF01–RF11](docs/diagrams/casos-de-uso.png) | [Draw.io](docs/diagrams/casos-de-uso.drawio) | [PDF](docs/diagrams/casos-de-uso.drawio.pdf) |
-| Classes/domínio | [Estudos e protocolo](docs/diagrams/classes.png), [recrutamento](docs/diagrams/classes-recrutamento.png) | [Draw.io](docs/diagrams/classes.drawio) | [PDF, 2 páginas](docs/diagrams/classes.drawio.pdf) |
-| Sequência | [Protocolo e estados](docs/diagrams/sequencia.png), [galeria dos seis fluxos](docs/diagrams/README.md#sequências) | [Draw.io](docs/diagrams/sequencia.drawio) | [PDF, 6 páginas](docs/diagrams/sequencia.drawio.pdf) |
-| Arquitetura | [Aplicações, módulos e banco](docs/diagrams/arquitetura.png) | [Draw.io](docs/diagrams/arquitetura.drawio) | [PDF](docs/diagrams/arquitetura.drawio.pdf) |
+| Diagrama        | Visualização no GitHub                                                                                            | Fonte editável                               | PDF                                                  |
+| --------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------- |
+| Casos de uso    | [RF01–RF11](docs/diagrams/casos-de-uso.png)                                                                       | [Draw.io](docs/diagrams/casos-de-uso.drawio) | [PDF](docs/diagrams/casos-de-uso.drawio.pdf)         |
+| Classes/domínio | [Estudos e protocolo](docs/diagrams/classes.png), [recrutamento](docs/diagrams/classes-recrutamento.png)          | [Draw.io](docs/diagrams/classes.drawio)      | [PDF, 2 páginas](docs/diagrams/classes.drawio.pdf)   |
+| Sequência       | [Protocolo e estados](docs/diagrams/sequencia.png), [galeria dos seis fluxos](docs/diagrams/README.md#sequências) | [Draw.io](docs/diagrams/sequencia.drawio)    | [PDF, 6 páginas](docs/diagrams/sequencia.drawio.pdf) |
+| Arquitetura     | [Aplicações, módulos e banco](docs/diagrams/arquitetura.png)                                                      | [Draw.io](docs/diagrams/arquitetura.drawio)  | [PDF](docs/diagrams/arquitetura.drawio.pdf)          |
 
 ![Arquitetura do ClinicalStudyPB](docs/diagrams/arquitetura.png)
 
@@ -34,15 +34,15 @@ Os arquivos mantêm a notação UML, as cores e o modelo Draw.io preexistentes. 
 
 ## 3. Funcionalidades e demonstração
 
-| Requisitos | Fluxo e perfil | Situação na Release 1 |
-| --- | --- | --- |
-| RF01–RF03 | Administrador gerencia usuários; login/logout e autorização por perfil protegem as rotas web e HTTP. | Backend e web concluídos. |
-| RF04 | Pesquisador cadastra, consulta e edita seus estudos; coordenador consulta estudos. | Backend e web concluídos. |
-| RF05–RF07 | Pesquisador responsável cadastra critérios de inclusão/exclusão, configura visitas/atividades e altera o estado do estudo. | Backend e web concluídos. |
-| RF08–RF10 | Coordenador cadastra candidatos, responde critérios e registra consentimento simulado. | Backend e web concluídos. |
-| RF11 | Coordenador inclui candidato elegível com consentimento concedido e vaga disponível, com painel de vagas e confirmação. | Backend e web concluídos. |
-| Mobile | Estrutura inicial com navegação Início ↔ Estudos provisórios. | Escopo inicial concluído; login integrado na Sprint 3. |
-| DevOps/Qualidade | Compose, Flyway, carga fictícia e CI de backend, web, E2E e mobile. | Ambiente e pipeline validados; relatórios na release. |
+| Requisitos       | Fluxo e perfil                                                                                                             | Situação na Release 1                                  |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| RF01–RF03        | Administrador gerencia usuários; login/logout e autorização por perfil protegem as rotas web e HTTP.                       | Backend e web concluídos.                              |
+| RF04             | Pesquisador cadastra, consulta e edita seus estudos; coordenador consulta estudos.                                         | Backend e web concluídos.                              |
+| RF05–RF07        | Pesquisador responsável cadastra critérios de inclusão/exclusão, configura visitas/atividades e altera o estado do estudo. | Backend e web concluídos.                              |
+| RF08–RF10        | Coordenador cadastra candidatos, responde critérios e registra consentimento simulado.                                     | Backend e web concluídos.                              |
+| RF11             | Coordenador inclui candidato elegível com consentimento concedido e vaga disponível, com painel de vagas e confirmação.    | Backend e web concluídos.                              |
+| Mobile           | Estrutura inicial com navegação Início ↔ Estudos provisórios.                                                              | Escopo inicial concluído; login integrado na Sprint 3. |
+| DevOps/Qualidade | Compose, Flyway, carga fictícia e CI de backend, web, E2E e mobile.                                                        | Ambiente e pipeline validados; relatórios na release.  |
 
 O [quadro RF01–RF11 da Release 1](releases/release1/README.md#rastreabilidade-dos-requisitos) identifica implementação, testes e integração de cada tela. A navegação de painel, visitas e relatórios que ainda usa protótipos não constitui evidência de persistência dessas funcionalidades.
 
@@ -56,18 +56,18 @@ A [galeria de capturas](releases/release1/images/README.md) contém sucesso e er
 
 ## 4. Stack e pré-requisitos
 
-| Componente | Versão de referência |
-| --- | --- |
-| Java / Spring Boot | Java 21 (validação: JDK 21.0.7) / 3.5.16 |
-| Maven Wrapper | 3.9.9 |
-| PostgreSQL | Imagem `postgres:18` (validação: servidor 18.6) |
-| Springdoc / OpenAPI | 2.8.17 / contrato em `backend/openapi.yaml` |
-| Web | React 19.3.1, TypeScript 6.0.3, Vite 8.3.5 |
-| Interface web | HeroUI 3.2.6, Tailwind CSS 4.3.3, Lucide React 1.61.0 |
-| Mobile | Expo 58.0.19, React Native 0.88.0, React 19.3.0, TypeScript 6.0.3 |
-| Testes | JaCoCo 0.8.13, Vitest 5.0.5, Playwright 1.64.1, Jest 30.5.2 |
-| Node.js / npm | Node 22 no CI; validação com 22.23.4 / npm 10.9.9 |
-| Docker / Compose | Validação com 29.9.2 / 5.6.1 |
+| Componente          | Versão de referência                                              |
+| ------------------- | ----------------------------------------------------------------- |
+| Java / Spring Boot  | Java 21 (validação: JDK 21.0.7) / 3.5.16                          |
+| Maven Wrapper       | 3.9.9                                                             |
+| PostgreSQL          | Imagem `postgres:18` (validação: servidor 18.6)                   |
+| Springdoc / OpenAPI | 2.8.17 / contrato em `backend/openapi.yaml`                       |
+| Web                 | React 19.3.1, TypeScript 6.0.3, Vite 8.3.5                        |
+| Interface web       | HeroUI 3.2.6, Tailwind CSS 4.3.3, Lucide React 1.61.0             |
+| Mobile              | Expo 58.0.19, React Native 0.88.0, React 19.3.0, TypeScript 6.0.3 |
+| Testes              | JaCoCo 0.8.13, Vitest 5.0.5, Playwright 1.64.1, Jest 30.5.2       |
+| Node.js / npm       | Node 22 no CI; validação com 22.23.4 / npm 10.9.9                 |
+| Docker / Compose    | Validação com 29.9.2 / 5.6.1                                      |
 
 As versões Java vêm do `backend/pom.xml` e do Wrapper; as dependências Java transitivas são gerenciadas pelo Spring Boot. As versões JavaScript instaladas são fixadas nos respectivos `package-lock.json`; use `npm ci`. A tag Docker `postgres:18` acompanha correções da série 18, portanto não fixa um patch ou digest.
 
@@ -98,13 +98,13 @@ No Windows (PowerShell): `Copy-Item .env.example .env`.
 
 **2. Preencha as variáveis** no `.env`:
 
-| Variável | Obrigatória | Descrição |
-| --- | --- | --- |
-| `DB_USER` | Não | Usuário do banco. Padrão: `clinicalstudypb`. |
-| `DB_PASSWORD` | Sim | Senha do banco. Escolha um valor só seu; não coloque no Git. |
-| `DB_HOST_PORT` | Não | Porta do banco na máquina local. Padrão: `15432`. |
-| `JWT_SECRET_BASE64` | Sim | Chave de assinatura dos JWTs: Base64 de pelo menos 32 bytes aleatórios. Gere com `openssl rand -base64 32`. Mantenha fora do Git. |
-| `JWT_EXPIRATION_SECONDS` | Não | Validade do token em segundos. Padrão: `3600`. |
+| Variável                 | Obrigatória | Descrição                                                                                                                         |
+| ------------------------ | ----------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `DB_USER`                | Não         | Usuário do banco. Padrão: `clinicalstudypb`.                                                                                      |
+| `DB_PASSWORD`            | Sim         | Senha do banco. Escolha um valor só seu; não coloque no Git.                                                                      |
+| `DB_HOST_PORT`           | Não         | Porta do banco na máquina local. Padrão: `15432`.                                                                                 |
+| `JWT_SECRET_BASE64`      | Sim         | Chave de assinatura dos JWTs: Base64 de pelo menos 32 bytes aleatórios. Gere com `openssl rand -base64 32`. Mantenha fora do Git. |
+| `JWT_EXPIRATION_SECONDS` | Não         | Validade do token em segundos. Padrão: `3600`.                                                                                    |
 
 Sem `openssl`, gere uma chave com o Node.js (também funciona no PowerShell) e copie o resultado para `JWT_SECRET_BASE64` no `.env`:
 
@@ -149,12 +149,12 @@ Para iniciar novamente sem reconstruir a imagem, use `docker compose up -d`. Dep
 
 As contas abaixo são criadas por `backend/dev/seed_demo_users.sql`, após as migrações. Execute os três scripts na ordem do comando anterior. O Flyway aplica V1–V10 e o Hibernate valida o esquema; o [guia do backend](backend/docs/eligibility-integration.md#migrações) descreve a persistência.
 
-| Perfil | E-mail | Senha de demonstração |
-| --- | --- | --- |
-| Pesquisador | `pesquisador@clinicalstudypb.test` | `Demo@Clinical2026` |
-| Coordenador | `coordenador@clinicalstudypb.test` | `Demo@Clinical2026` |
-| Administrador | `administrador@clinicalstudypb.test` | `Demo@Clinical2026` |
-| Participante | `participante@clinicalstudypb.test` | `Demo@Clinical2026` |
+| Perfil        | E-mail                               | Senha de demonstração |
+| ------------- | ------------------------------------ | --------------------- |
+| Pesquisador   | `pesquisador@clinicalstudypb.test`   | `Demo@Clinical2026`   |
+| Coordenador   | `coordenador@clinicalstudypb.test`   | `Demo@Clinical2026`   |
+| Administrador | `administrador@clinicalstudypb.test` | `Demo@Clinical2026`   |
+| Participante  | `participante@clinicalstudypb.test`  | `Demo@Clinical2026`   |
 
 Essas credenciais são apenas para demonstração e podem ser usadas para obter um token de acesso pelo endpoint de login.
 
@@ -169,10 +169,10 @@ backend/dev/
 
 ### Variáveis das aplicações cliente
 
-| Arquivo modelo | Variável | Uso |
-| --- | --- | --- |
-| [web/.env.example](web/.env.example) | `VITE_API_BASE_URL` | Deixe vazia em desenvolvimento para usar `/api` pelo proxy Vite; para outra API, informe a origem sem `/api` (ex.: `http://localhost:8080`), pois os serviços já acrescentam `/api/...`. |
-| [mobile/.env.example](mobile/.env.example) | `EXPO_PUBLIC_API_BASE_URL` | Base da API para a futura integração; exemplo Android emulador: `http://10.0.2.2:8080/api`. No telefone, use o IP da máquina na rede. |
+| Arquivo modelo                             | Variável                   | Uso                                                                                                                                                                                      |
+| ------------------------------------------ | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [web/.env.example](web/.env.example)       | `VITE_API_BASE_URL`        | Deixe vazia em desenvolvimento para usar `/api` pelo proxy Vite; para outra API, informe a origem sem `/api` (ex.: `http://localhost:8080`), pois os serviços já acrescentam `/api/...`. |
+| [mobile/.env.example](mobile/.env.example) | `EXPO_PUBLIC_API_BASE_URL` | Base da API para a futura integração; exemplo Android emulador: `http://10.0.2.2:8080/api`. No telefone, use o IP da máquina na rede.                                                    |
 
 São configurações públicas do aplicativo cliente: nunca coloque chaves privadas ou senhas nessas variáveis. Os modelos ficam versionados; arquivos `.env` e a chave JWT ficam fora do Git. O mobile inicial não precisa de conexão com a API para navegar.
 
@@ -221,6 +221,23 @@ A confirmação distingue **Vinculado a conta existente** de **Convite emitido**
 O código de ativação é um **recurso de demonstração**, apresentado somente ao coordenador na confirmação do cadastro, com opção de copiar e horário de validade. Ele fica apenas na confirmação aberta, não é salvo em armazenamento do navegador nem mantido na listagem, e é descartado ao fechar. O candidato usa o e-mail e o código no primeiro acesso; o backend só consome o código quando a definição da senha é concluída. A validade é de 72 horas, conforme o OpenAPI. Não há envio por e-mail nesta etapa.
 
 O formulário usa o modal acessível já adotado no Web, com foco inicial, navegação por teclado, erros associados aos campos e apresentação responsiva. Os novos cenários automatizados do cadastro e do convite pertencem à T17.8; o andamento posterior do convite e da decisão pertence à T17.7. A validação completa no aplicativo depende da integração mobile da T17.9.
+
+**Critério de aceite pendente — aplicativo (T17.9):** usar o e-mail e o código exibido no cadastro para definir a senha pelo aplicativo; em seguida, tentar reutilizar o mesmo código e confirmar sua rejeição. A validação direta pela API não substitui essa verificação pela interface mobile.
+
+### Sessão por aba (T24.4)
+
+Agora dá para usar perfis diferentes em abas do mesmo navegador. A sessão fica no `sessionStorage`: recarregar mantém o login, mas sair ou deixar a sessão expirar afeta apenas aquela aba. Depois da expiração, é preciso entrar novamente.
+
+Para testar, entre como administrador em uma aba. Abra outra pelo botão de nova aba do navegador, digite o endereço do sistema e entre como coordenador. Depois, saia de uma delas e confira se a outra continua funcionando, inclusive após recarregar.
+
+Quem estava logado na versão anterior vai precisar entrar novamente. A sessão antiga do `localStorage` é removida, sem apagar os outros dados locais.
+
+Evite duplicar uma aba já autenticada para fazer essa demonstração, pois o navegador pode copiar a sessão inicial. Nesse caso, as sessões ficam independentes depois da cópia.
+
+O teste `web/e2e/auth/tab-session.spec.ts` verifica os dois perfis em abas do mesmo navegador, além da recarga, do logout e da expiração. Para rodar com a stack E2E preparada:
+
+cd web
+npm run test:e2e -- e2e/auth/tab-session.spec.ts
 
 ## 6. Testes, cobertura e qualidade
 

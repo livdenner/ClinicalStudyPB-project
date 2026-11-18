@@ -11,7 +11,10 @@ import org.springframework.http.HttpStatus;
  */
 public abstract class AuthProblemException extends RuntimeException {
 
+    /** Status HTTP associado ao erro de autenticação. */
     private final HttpStatus status;
+
+    /** Código estável retornado no {@code ProblemDetail}. */
     private final String code;
 
     /**

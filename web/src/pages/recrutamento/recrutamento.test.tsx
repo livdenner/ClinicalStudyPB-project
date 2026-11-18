@@ -101,9 +101,9 @@ function rotasDoEstudo(candidatos: CandidatoApi[], status: StatusConsentimentoAp
     };
 }
 
-function renderPage(role: UserRole = "COORDINATOR", autenticado = true) {
+function renderPage(role: UserRole = "COORDINATOR", autenticado = true, path = "/recrutamento") {
     if (autenticado) {
-        localStorage.setItem(
+        sessionStorage.setItem(
             AUTH_STORAGE_KEY,
             JSON.stringify({
                 accessToken: "token-coordenador",
@@ -122,7 +122,7 @@ function renderPage(role: UserRole = "COORDINATOR", autenticado = true) {
 
     return render(
         <AuthProvider>
-            <MemoryRouter initialEntries={["/recrutamento"]}>
+            <MemoryRouter initialEntries={[path]}>
                 <Routes>
                     <Route path="/recrutamento" element={<RecrutamentoPage />} />
                     <Route path="/login" element={<p>Tela de login</p>} />
@@ -134,11 +134,13 @@ function renderPage(role: UserRole = "COORDINATOR", autenticado = true) {
 
 beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
 });
 
 afterEach(() => {
     cleanup();
     localStorage.clear();
+    sessionStorage.clear();
     vi.restoreAllMocks();
 });
 
@@ -289,13 +291,10 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
             consentStatus: "PENDING",
         };
 
-        const fetchMock = vi
-            .spyOn(globalThis, "fetch")
-            .mockResolvedValueOnce(resposta([estudoRecrutamento]))
-            .mockResolvedValueOnce(resposta([]))
-            .mockResolvedValueOnce(resposta([]))
-            .mockResolvedValueOnce(resposta(novoCandidato, 201));
-
+        const fetchMock = mockApiPorRota({
+            ...rotasDoEstudo([]),
+            "POST /api/studies/10/candidates": resposta(novoCandidato, 201),
+        });
         renderPage();
 
         await screen.findByText("Nenhum candidato encontrado");
@@ -319,7 +318,9 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
         fireEvent.click(await screen.findByRole("button", { name: "Concluir cadastro" }));
         await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
 
-        const [url, options] = fetchMock.mock.calls[3];
+        const cadastro = fetchMock.mock.calls.find(([, options]) => options?.method === "POST");
+        expect(cadastro).toBeDefined();
+        const [url, options] = cadastro!;
         expect(url).toBe("/api/studies/10/candidates");
         expect(options?.method).toBe("POST");
         expect(JSON.parse(String(options?.body))).toEqual({
@@ -332,7 +333,7 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
         expect(
             screen.getByText("Candidato cadastrado. Vinculado a conta existente.")
         ).toBeInTheDocument();
-        expect(screen.getByText("Candidato 050")).toBeInTheDocument();
+        expect(await screen.findByText("Candidato 050")).toBeInTheDocument();
         expect(screen.getByText("38 anos")).toBeInTheDocument();
         expect(screen.getByText("Exibindo 1 de 1 candidatos")).toBeInTheDocument();
     });
@@ -454,6 +455,7 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
                     candidateId: 102,
                     candidateName: "Candidato 021",
                     includedAt: "2026-11-09T12:00:00Z",
+                    status: "ACTIVE",
                 },
                 201
             ),
@@ -549,6 +551,7 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
                     candidateId: 100,
                     candidateName: "Candidato 001",
                     includedAt: "2026-11-09T10:00:00Z",
+                    status: "ACTIVE",
                 },
             ]),
         });
@@ -656,6 +659,7 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
                         candidateId: 102,
                         candidateName: "Candidato 021",
                         includedAt: "2026-11-09T17:00:00Z",
+                        status: "ACTIVE",
                     },
                     201
                 )
@@ -665,3 +669,35 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
         await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     });
 });
+
+it("T24.1: seleciona o estudo da URL mesmo quando não é o primeiro da lista", async () => {
+    const fetchMock = mockApiPorRota({
+        ...rotasDoEstudo([]),
+        "GET /api/studies": resposta([estudoPlanejamento, estudoRecrutamento]),
+    });
+    renderPage("COORDINATOR", true, "/recrutamento?studyId=10");
+    await screen.findByText("Nenhum candidato encontrado");
+    expect(screen.getByLabelText("Estudo clínico")).toHaveValue("10");
+    expect(fetchMock.mock.calls.some(([url]) => String(url) === "/api/studies/10/candidates")).toBe(
+        true
+    );
+    expect(fetchMock.mock.calls.some(([url]) => String(url).startsWith("/api/studies/20/"))).toBe(
+        false
+    );
+});
+
+it.each(["999", "abc", "0", "1e1"])(
+    "T24.1: não consulta outro estudo silenciosamente para studyId=%s",
+    async (id) => {
+        const fetchMock = mockApiPorRota(rotasDoEstudo([]));
+        renderPage("COORDINATOR", true, `/recrutamento?studyId=${id}`);
+        expect(await screen.findByRole("alert")).toHaveTextContent(
+            "O estudo solicitado não está disponível."
+        );
+        expect(screen.getByLabelText("Estudo clínico")).toHaveValue("");
+        expect(fetchMock).toHaveBeenCalledTimes(1);
+        fireEvent.change(screen.getByLabelText("Estudo clínico"), { target: { value: "10" } });
+        await screen.findByText("Nenhum candidato encontrado");
+        expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    }
+);

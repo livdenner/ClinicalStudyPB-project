@@ -9,6 +9,7 @@ package clinicalstudypb.scheduling.domain;
  */
 public class InvalidScheduledVisitException extends IllegalArgumentException {
 
+    /** Código de erro exposto em {@code ProblemDetail}. */
     private final String code;
 
     /**

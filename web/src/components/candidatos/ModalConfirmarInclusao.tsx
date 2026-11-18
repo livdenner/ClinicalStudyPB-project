@@ -81,7 +81,7 @@ export function ModalConfirmarInclusao({
             >
                 <header className="flex items-start justify-between gap-4 border-b border-[var(--color-border)] px-5 py-4">
                     <div className="flex items-start gap-3">
-                        <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#E4F4E9] text-[#16804B]">
+                        <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[var(--color-success-soft)] text-[var(--color-success)]">
                             <UserCheck size={18} aria-hidden="true" />
                         </div>
                         <div>
@@ -109,7 +109,7 @@ export function ModalConfirmarInclusao({
 
                 <div className="flex flex-col gap-4 p-5">
                     {erro && (
-                        <div className="rounded-lg border border-[#FECACA] bg-[#FDEAEA] p-3 text-sm text-[#B42318]">
+                        <div className="rounded-lg border border-[var(--color-error-border)] bg-[var(--color-error-soft)] p-3 text-sm text-[var(--color-error)]">
                             <ErrorMessage message={erro} />
                         </div>
                     )}
@@ -122,11 +122,11 @@ export function ModalConfirmarInclusao({
                     <dl className="grid grid-cols-3 gap-2.5 rounded-xl border border-[var(--color-border)] bg-[#F8FAFC] p-3.5 text-xs">
                         <div>
                             <dt className="text-[var(--color-muted)]">Elegibilidade</dt>
-                            <dd className="mt-1 font-bold text-[#16804B]">Elegível</dd>
+                            <dd className="mt-1 font-bold text-[var(--color-success)]">Elegível</dd>
                         </div>
                         <div>
                             <dt className="text-[var(--color-muted)]">Consentimento</dt>
-                            <dd className="mt-1 font-bold text-[#16804B]">Aceito</dd>
+                            <dd className="mt-1 font-bold text-[var(--color-success)]">Aceito</dd>
                         </div>
                         <div>
                             <dt className="text-[var(--color-muted)]">Vagas disponíveis</dt>
@@ -136,7 +136,7 @@ export function ModalConfirmarInclusao({
                         </div>
                     </dl>
 
-                    <p className="rounded-lg border border-[#FDE68A] bg-[#FFFBEB] px-3.5 py-2.5 text-xs text-[#92400E]">
+                    <p className="rounded-lg border border-[var(--color-warning-border)] bg-[var(--color-warning-soft)] px-3.5 py-2.5 text-xs text-[var(--color-warning)]">
                         Após confirmar a inclusão, uma vaga será ocupada no estudo e a decisão do
                         consentimento simulado ficará bloqueada contra alterações.
                     </p>

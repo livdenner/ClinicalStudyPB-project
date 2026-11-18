@@ -170,7 +170,7 @@ export function ModalVisitaPrevista({
                                         ref={erroRef}
                                         role="alert"
                                         tabIndex={-1}
-                                        className="rounded-lg bg-[#FDEAEA] p-3 text-sm text-[#B42318]"
+                                        className="rounded-lg bg-[var(--color-error-soft)] p-3 text-sm text-[var(--color-error)]"
                                     >
                                         {erro}
                                     </p>

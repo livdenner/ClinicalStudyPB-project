@@ -64,7 +64,7 @@ function renderCriterios(atual: EstudoApi = estudo, usuario: AuthenticatedUser =
 }
 
 async function abrirCadastro() {
-    const botao = await screen.findByRole("button", { name: "Novo critério" });
+    const botao = await screen.findByRole("button", { name: "Cadastrar critério" });
     await waitFor(() => expect(botao).toBeEnabled());
     fireEvent.click(botao);
     return screen.findByRole("dialog", { name: "Novo critério" });
@@ -137,7 +137,7 @@ describe("critérios de inclusão e exclusão — RF05", () => {
                 ).findByText(criado.description)
             ).toBeInTheDocument();
             await waitFor(() =>
-                expect(screen.getByRole("button", { name: "Novo critério" })).toBeEnabled()
+                expect(screen.getByRole("button", { name: "Cadastrar critério" })).toBeEnabled()
             );
             expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
             expect(fetchMock.mock.calls.slice(3).map(([endereco]) => endereco)).toEqual([
@@ -221,7 +221,9 @@ describe("critérios de inclusão e exclusão — RF05", () => {
         fireEvent.click(within(dialog).getByRole("button", { name: "Atualizar dados" }));
         await screen.findByText("Somente leitura");
         expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: "Novo critério" })).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole("button", { name: "Cadastrar critério" })
+        ).not.toBeInTheDocument();
         expect(fetchMock).toHaveBeenCalledTimes(5);
     });
 
@@ -232,6 +234,11 @@ describe("critérios de inclusão e exclusão — RF05", () => {
             usuario: { ...pesquisador, role: "COORDINATOR" as const },
         },
         { motivo: "outro pesquisador", atual: estudo, usuario: { ...pesquisador, id: 8 } },
+        ...(["CLOSED", "CANCELLED"] as const).map((status) => ({
+            motivo: status,
+            atual: { ...estudo, status },
+            usuario: pesquisador,
+        })),
         {
             motivo: "estudo em execução",
             atual: { ...estudo, status: "EXECUTION" as const },
@@ -243,7 +250,9 @@ describe("critérios de inclusão e exclusão — RF05", () => {
         expect(await screen.findByText(criterios[0].description)).toBeInTheDocument();
         expect(screen.getByText(criterios[1].description)).toBeInTheDocument();
         expect(screen.getByText("Somente leitura")).toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: "Novo critério" })).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole("button", { name: "Cadastrar critério" })
+        ).not.toBeInTheDocument();
         expect(fetchMock).toHaveBeenCalledTimes(2);
     });
 
@@ -259,7 +268,7 @@ describe("critérios de inclusão e exclusão — RF05", () => {
         expect(await screen.findByRole("alert")).toHaveTextContent(
             "Critérios indisponíveis no momento."
         );
-        expect(screen.getByRole("button", { name: "Novo critério" })).toBeDisabled();
+        expect(screen.getByRole("button", { name: "Cadastrar critério" })).toBeDisabled();
         fireEvent.click(screen.getByRole("button", { name: "Tentar novamente" }));
         const inclusao = await screen.findByRole("region", { name: "Critérios de inclusão" });
         const exclusao = screen.getByRole("region", { name: "Critérios de exclusão" });

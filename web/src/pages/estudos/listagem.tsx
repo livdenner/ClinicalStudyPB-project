@@ -125,6 +125,7 @@ function GestaoEstudos({ token, pesquisador }: { token: string; pesquisador: Aut
                 {pesquisador.role === "RESEARCHER" && (
                     <Button
                         variant="primary"
+                        className="button--create"
                         isDisabled={carregando || Boolean(erro)}
                         onPress={() => setModal({})}
                     >

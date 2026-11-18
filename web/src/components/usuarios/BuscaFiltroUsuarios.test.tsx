@@ -32,7 +32,6 @@ describe("BuscaFiltroUsuarios", () => {
         ["Administrador", "ADMINISTRATOR"],
         ["Coordenador", "COORDINATOR"],
         ["Pesquisador", "RESEARCHER"],
-        ["Participante", "PARTICIPANT"],
     ])("converte a seleção de %s para o perfil esperado", async (rotulo, perfil) => {
         const { aoMudarPerfil } = renderFiltros();
         fireEvent.click(screen.getByRole("button", { name: /Perfil/ }));
@@ -59,4 +58,11 @@ describe("BuscaFiltroUsuarios", () => {
         fireEvent.click(await screen.findByRole("option", { name: "Todas as situações" }));
         expect(aoMudarSituacao).toHaveBeenCalledWith("");
     });
+});
+
+it("não oferece Participante no filtro de perfis", async () => {
+    renderFiltros();
+    fireEvent.click(screen.getByRole("button", { name: /Perfil/ }));
+    await screen.findByRole("option", { name: "Pesquisador" });
+    expect(screen.queryByRole("option", { name: "Participante" })).not.toBeInTheDocument();
 });

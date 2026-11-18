@@ -62,4 +62,15 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p FROM Participant p WHERE p.id = :id AND p.studyId = :studyId")
     Optional<Participant> findByIdAndStudyIdForUpdate(@Param("id") Long id, @Param("studyId") Long studyId);
+
+    /**
+     * Lista as participações (ativas ou retiradas) das candidaturas de uma conta, da inclusão
+     * mais recente para a mais antiga (RF17, T23.1).
+     *
+     * @param userId conta autenticada dona das candidaturas
+     * @return participações da conta; vazio quando nenhuma candidatura foi incluída
+     */
+    @Query("SELECT p FROM Participant p, Candidate c WHERE c.id = p.candidateId AND c.userId = :userId "
+            + "ORDER BY p.includedAt DESC, p.id DESC")
+    List<Participant> findAllByAccountOrderByIncludedAtDesc(@Param("userId") Long userId);
 }

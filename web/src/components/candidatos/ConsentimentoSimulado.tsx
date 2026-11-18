@@ -39,9 +39,12 @@ type Props = {
 };
 
 const CONSENTIMENTO_CARD_CLASSES: Record<StatusConsentimentoApi, string> = {
-    PENDING: "border-[#FDE68A] bg-[#FFFBEB] text-[#92400E]",
-    GRANTED: "border-[#A7F3D0] bg-[#ECFDF5] text-[#065F46]",
-    DECLINED: "border-[#FECACA] bg-[#FEF2F2] text-[#991B1B]",
+    PENDING:
+        "border-[var(--color-warning-border)] bg-[var(--color-warning-soft)] text-[var(--color-warning)]",
+    GRANTED:
+        "border-[var(--color-success-border)] bg-[var(--color-success-soft)] text-[var(--color-success)]",
+    DECLINED:
+        "border-[var(--color-neutral-border)] bg-[var(--color-neutral-soft)] text-[var(--color-neutral)]",
 };
 
 const CONSENTIMENTO_DESCRICOES: Record<StatusConsentimentoApi, string> = {
@@ -318,7 +321,7 @@ export function ConsentimentoSimulado({
             {perfilAutorizado && !estudoEmRecrutamento && (
                 <p
                     role="note"
-                    className="rounded-xl border border-[#FDE68A] bg-[#FFFBEB] px-4 py-3 text-xs font-medium text-[#92400E]"
+                    className="rounded-xl border border-[var(--color-warning-border)] bg-[var(--color-warning-soft)] px-4 py-3 text-xs font-medium text-[var(--color-warning)]"
                 >
                     O estudo está em <strong>{STATUS_ESTUDO_LABELS[statusEstudo]}</strong>. O
                     registro ou alteração de consentimento simulado só é permitido com o estudo em
@@ -329,7 +332,7 @@ export function ConsentimentoSimulado({
             {perfilAutorizado && estudoEmRecrutamento && !candidatoValido && (
                 <p
                     role="note"
-                    className="rounded-xl border border-[#FECACA] bg-[#FEF2F2] px-4 py-3 text-xs font-medium text-[#991B1B]"
+                    className="rounded-xl border border-[var(--color-warning-border)] bg-[var(--color-warning-soft)] px-4 py-3 text-xs font-medium text-[var(--color-warning)]"
                 >
                     Candidato inelegível. O registro de consentimento simulado está habilitado
                     apenas para candidatos válidos (elegíveis ou em avaliação).
@@ -339,14 +342,14 @@ export function ConsentimentoSimulado({
             {mensagemSucesso && (
                 <div
                     role="status"
-                    className="rounded-xl border border-[#A7F3D0] bg-[#ECFDF5] px-4 py-3 text-sm font-medium text-[#065F46]"
+                    className="rounded-xl border border-[var(--color-success-border)] bg-[var(--color-success-soft)] px-4 py-3 text-sm font-medium text-[var(--color-success)]"
                 >
                     {mensagemSucesso}
                 </div>
             )}
 
             {erroSalvar && (
-                <div className="rounded-xl border border-[#FECACA] bg-[#FDEAEA] p-3.5 text-sm text-[#B42318]">
+                <div className="rounded-xl border border-[var(--color-error-border)] bg-[var(--color-error-soft)] p-3.5 text-sm text-[var(--color-error)]">
                     <ErrorMessage message={erroSalvar} />
                 </div>
             )}

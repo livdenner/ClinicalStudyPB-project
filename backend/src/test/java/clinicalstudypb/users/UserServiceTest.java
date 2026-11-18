@@ -10,13 +10,16 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import clinicalstudypb.shared.CurrentActor;
 import clinicalstudypb.shared.ResourceNotFoundException;
 import clinicalstudypb.users.application.UserService;
 import clinicalstudypb.users.domain.EmailAlreadyInUseException;
 import clinicalstudypb.users.domain.User;
+import clinicalstudypb.users.domain.UserConflictException;
 import clinicalstudypb.users.domain.UserRole;
 import clinicalstudypb.users.infrastructure.PasswordEncodingConfig;
 import clinicalstudypb.users.infrastructure.UserRepository;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,7 +35,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  *
  * @author Lucas N. de Araújo
  * @since 2026-10-21
- * @version 0.0.1
+ * @version 0.0.2
  */
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -40,13 +43,16 @@ class UserServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private CurrentActor currentActor;
+
     private PasswordEncoder passwordEncoder;
     private UserService userService;
 
     @BeforeEach
     void setUp() {
         passwordEncoder = new PasswordEncodingConfig().passwordEncoder();
-        userService = new UserService(userRepository, passwordEncoder);
+        userService = new UserService(userRepository, passwordEncoder, currentActor);
     }
 
     @Test
@@ -143,5 +149,105 @@ class UserServiceTest {
 
         assertThrows(ResourceNotFoundException.class, () -> userService.deleteUser(99L));
         verify(userRepository, never()).delete(any(User.class));
+    }
+
+    @Test
+    void updateUserAllowsAdministratorToEditOwnNameAndEmailKeepingRole() {
+        User admin = userWithId(1L, "Admin", "admin@example.com", UserRole.ADMINISTRATOR);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
+
+        User updated = userService.updateUser(1L, "Admin Atualizada", "nova@example.com", UserRole.ADMINISTRATOR);
+
+        assertSame(admin, updated);
+        assertEquals("Admin Atualizada", updated.getName());
+        assertEquals("nova@example.com", updated.getEmail());
+        assertEquals(UserRole.ADMINISTRATOR, updated.getRole());
+        verify(userRepository, never()).lockActiveByRoleOrderByIdAsc(any());
+    }
+
+    @Test
+    void updateUserRejectsChangingOwnRole() {
+        User admin = userWithId(1L, "Admin", "admin@example.com", UserRole.ADMINISTRATOR);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
+        when(currentActor.userId()).thenReturn(1L);
+
+        UserConflictException exception = assertThrows(UserConflictException.class,
+                () -> userService.updateUser(1L, "Novo Nome", "novo@example.com", UserRole.RESEARCHER));
+
+        assertEquals(UserConflictException.SELF_ACCOUNT_CHANGE_NOT_ALLOWED, exception.getCode());
+        assertEquals("Admin", admin.getName());
+        assertEquals("admin@example.com", admin.getEmail());
+        assertEquals(UserRole.ADMINISTRATOR, admin.getRole());
+        verify(userRepository, never()).lockActiveByRoleOrderByIdAsc(any());
+    }
+
+    @Test
+    void deactivateAndDeleteRejectOwnAccount() {
+        User admin = userWithId(1L, "Admin", "admin@example.com", UserRole.ADMINISTRATOR);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(admin));
+        when(currentActor.userId()).thenReturn(1L);
+
+        UserConflictException deactivateError = assertThrows(UserConflictException.class,
+                () -> userService.deactivateUser(1L));
+        UserConflictException deleteError = assertThrows(UserConflictException.class,
+                () -> userService.deleteUser(1L));
+
+        assertEquals(UserConflictException.SELF_ACCOUNT_CHANGE_NOT_ALLOWED, deactivateError.getCode());
+        assertEquals(UserConflictException.SELF_ACCOUNT_CHANGE_NOT_ALLOWED, deleteError.getCode());
+        assertTrue(admin.isActive());
+        verify(userRepository, never()).delete(any(User.class));
+    }
+
+    @Test
+    void operationsRejectRemovingLastActiveAdministrator() {
+        User targetAdmin = userWithId(2L, "Último Admin", "ultimo@example.com", UserRole.ADMINISTRATOR);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(targetAdmin));
+        when(currentActor.userId()).thenReturn(1L);
+        when(userRepository.lockActiveByRoleOrderByIdAsc(UserRole.ADMINISTRATOR)).thenReturn(List.of(targetAdmin));
+
+        UserConflictException updateError = assertThrows(UserConflictException.class,
+                () -> userService.updateUser(2L, "Pesquisador", "ultimo@example.com", UserRole.RESEARCHER));
+        UserConflictException deactivateError = assertThrows(UserConflictException.class,
+                () -> userService.deactivateUser(2L));
+        UserConflictException deleteError = assertThrows(UserConflictException.class,
+                () -> userService.deleteUser(2L));
+
+        assertEquals(UserConflictException.LAST_ACTIVE_ADMINISTRATOR, updateError.getCode());
+        assertEquals(UserConflictException.LAST_ACTIVE_ADMINISTRATOR, deactivateError.getCode());
+        assertEquals(UserConflictException.LAST_ACTIVE_ADMINISTRATOR, deleteError.getCode());
+        assertTrue(targetAdmin.isActive());
+        assertEquals(UserRole.ADMINISTRATOR, targetAdmin.getRole());
+        verify(userRepository, never()).delete(any(User.class));
+    }
+
+    @Test
+    void operationsAllowRemovingAdminStatusWhenAnotherActiveAdministratorRemains() {
+        User otherAdmin = userWithId(1L, "Outro Admin", "outro@example.com", UserRole.ADMINISTRATOR);
+        User targetForRoleChange = userWithId(2L, "Admin Dois", "dois@example.com", UserRole.ADMINISTRATOR);
+        User targetForDeactivate = userWithId(3L, "Admin Três", "tres@example.com", UserRole.ADMINISTRATOR);
+        User targetForDelete = userWithId(4L, "Admin Quatro", "quatro@example.com", UserRole.ADMINISTRATOR);
+
+        when(currentActor.userId()).thenReturn(1L);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(targetForRoleChange));
+        when(userRepository.findById(3L)).thenReturn(Optional.of(targetForDeactivate));
+        when(userRepository.findById(4L)).thenReturn(Optional.of(targetForDelete));
+        when(userRepository.lockActiveByRoleOrderByIdAsc(UserRole.ADMINISTRATOR))
+                .thenReturn(List.of(otherAdmin, targetForRoleChange))
+                .thenReturn(List.of(otherAdmin, targetForDeactivate))
+                .thenReturn(List.of(otherAdmin, targetForDelete));
+
+        User updated = userService.updateUser(2L, "Coordenador", "dois@example.com", UserRole.COORDINATOR);
+        User deactivated = userService.deactivateUser(3L);
+        userService.deleteUser(4L);
+
+        assertEquals(UserRole.COORDINATOR, updated.getRole());
+        assertFalse(deactivated.isActive());
+        verify(userRepository).delete(targetForDelete);
+    }
+
+    private User userWithId(Long id, String name, String email, UserRole role) {
+        User user = new User(name, email, "{bcrypt}hash", role);
+        ReflectionTestUtils.setField(user, "id", id);
+        return user;
     }
 }

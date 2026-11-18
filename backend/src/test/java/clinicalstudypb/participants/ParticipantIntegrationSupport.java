@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import clinicalstudypb.candidates.domain.Candidate;
 import clinicalstudypb.candidates.domain.EligibilityStatus;
 import clinicalstudypb.candidates.infrastructure.CandidateRepository;
 import clinicalstudypb.consent.domain.ConsentDecision;
@@ -103,7 +104,12 @@ abstract class ParticipantIntegrationSupport extends IntegrationTestSupport {
                                 "email", "participant-candidate-" + java.util.UUID.randomUUID()
                                         + "@clinicalstudypb.test", "phone", "(83) 99999-0000"))))
                 .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
-        Long id = objectMapper.readTree(response).get("id").asLong();
+        JsonNode created = objectMapper.readTree(response);
+        Long id = created.get("id").asLong();
+        String activationCode = created.path("activation").path("activationCode").textValue();
+        if (activationCode != null) {
+            activateCandidateAccount(created.get("email").asText(), activationCode);
+        }
         if (eligibility != EligibilityStatus.PENDING) {
             evaluate(owner.getId(), id, eligibility == EligibilityStatus.ELIGIBLE).andExpect(status().isOk());
         }
@@ -124,10 +130,27 @@ abstract class ParticipantIntegrationSupport extends IntegrationTestSupport {
     }
 
     protected ResultActions consent(Long studyId, Long id, ConsentDecision decision) throws Exception {
-        return mockMvc.perform(put(studyPath(studyId) + "/candidates/" + id + "/consent")
-                .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+        Candidate candidate = candidateRepository.findById(id).orElseThrow();
+        User account = userRepository.findById(candidate.getUserId()).orElseThrow();
+        return mockMvc.perform(post("/api/me/invitations/" + id + "/decision")
+                .header(HttpHeaders.AUTHORIZATION, bearer(tokenFor(account.getEmail())))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(Map.of("status", decision))));
+    }
+
+    private void activateCandidateAccount(String email, String activationCode) throws Exception {
+        String activationResponse = mockMvc.perform(post("/api/auth/activation")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("email", email, "activationCode", activationCode))))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        String restrictedToken = objectMapper.readTree(activationResponse).get("accessToken").asText();
+        mockMvc.perform(put("/api/auth/password")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(restrictedToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(Map.of("newPassword", PASSWORD))))
+                .andExpect(status().isOk());
     }
 
     protected ResultActions include(Long studyId, Long id) throws Exception {

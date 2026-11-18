@@ -1,6 +1,7 @@
 package clinicalstudypb.scheduling.api;
 
 import clinicalstudypb.scheduling.application.ScheduledVisitService;
+import clinicalstudypb.scheduling.domain.InvalidScheduledVisitException;
 import clinicalstudypb.scheduling.domain.ScheduledVisitStatus;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.headers.Header;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -90,6 +92,54 @@ public class ScheduledVisitController {
         return ResponseEntity.created(location)
                 .eTag(String.valueOf(created.version()))
                 .body(created);
+    }
+
+    /**
+     * Registra o desfecho final da visita agendada com controle de versão.
+     *
+     * @param studyId identificador do estudo
+     * @param participantId identificador do participante
+     * @param visitId identificador do agendamento
+     * @param ifMatch versão atual da visita entre aspas
+     * @param request desfecho e observação
+     * @return visita atualizada e sua nova ETag
+     */
+    @PostMapping("/participants/{participantId}/visits/{visitId}/outcome")
+    @PreAuthorize("hasRole('COORDINATOR')")
+    @Operation(summary = "Registra desfecho de visita agendada (RF13, T19.1)",
+            description = "Somente COORDINATOR. Aceita SCHEDULED para DONE, ABSENT ou CANCELLED uma única vez.",
+            responses = {
+                @ApiResponse(responseCode = "200", description = "Desfecho registrado",
+                        headers = @Header(name = "ETag", description = "Nova versão da visita",
+                                schema = @Schema(type = "string")),
+                        content = @Content(schema = @Schema(implementation = ScheduledVisitResponse.class))),
+                @ApiResponse(responseCode = "400", description = "Desfecho, observação ou If-Match inválido"),
+                @ApiResponse(responseCode = "401", description = "Token ausente ou inválido"),
+                @ApiResponse(responseCode = "403", description = "Perfil sem permissão"),
+                @ApiResponse(responseCode = "404", description = "Estudo, participante ou visita não encontrado"),
+                @ApiResponse(responseCode = "409",
+                        description = "Estado final, estudo somente leitura ou versão divergente")
+            })
+    public ResponseEntity<ScheduledVisitResponse> recordOutcome(
+            @PathVariable Long studyId,
+            @PathVariable Long participantId,
+            @PathVariable Long visitId,
+            @RequestHeader("If-Match") String ifMatch,
+            @Valid @RequestBody VisitOutcomeRequest request) {
+        ScheduledVisitResponse updated = ScheduledVisitResponse.from(scheduledVisitService.recordOutcome(
+                studyId, participantId, visitId, parseVisitVersion(ifMatch), request.outcome(), request.note()));
+        return ResponseEntity.ok().eTag(String.valueOf(updated.version())).body(updated);
+    }
+
+    private Long parseVisitVersion(String ifMatch) {
+        if (ifMatch == null || !ifMatch.matches("\"[0-9]+\"")) {
+            throw new InvalidScheduledVisitException("INVALID_IF_MATCH", "If-Match deve conter a versão entre aspas.");
+        }
+        try {
+            return Long.valueOf(ifMatch.substring(1, ifMatch.length() - 1));
+        } catch (NumberFormatException exception) {
+            throw new InvalidScheduledVisitException("INVALID_IF_MATCH", "If-Match contém uma versão inválida.");
+        }
     }
 
     /**

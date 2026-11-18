@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import clinicalstudypb.candidates.domain.EligibilityStatus;
 import clinicalstudypb.consent.domain.ConsentDecision;
+import clinicalstudypb.consent.domain.SimulatedConsent;
 import clinicalstudypb.participants.domain.Participant;
 import clinicalstudypb.studies.domain.Study;
 import clinicalstudypb.studies.domain.StudyStatus;
@@ -70,7 +71,9 @@ class ParticipantIntegrationTest extends ParticipantIntegrationSupport {
     @EnumSource(value = EligibilityStatus.class, names = {"PENDING", "INELIGIBLE"})
     void incompleteOrNegativeEligibilityReturnsConflictAndPreservesAllRecords(EligibilityStatus eligibility)
             throws Exception {
-        Long rejected = candidate(study, "Candidata pendente", eligibility, ConsentDecision.GRANTED);
+        Long rejected = candidate(study, "Candidata pendente", eligibility, null);
+        Long participantUserId = candidateRepository.findById(rejected).orElseThrow().getUserId();
+        consentRepository.saveAndFlush(new SimulatedConsent(rejected, ConsentDecision.GRANTED, NOW, participantUserId));
         DatabaseSnapshot before = snapshot();
         include(study.getId(), rejected).andExpect(status().isConflict());
         assertEquals(before, snapshot());

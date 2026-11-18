@@ -19,15 +19,19 @@ import org.springframework.data.repository.query.Param;
 public interface CandidateRepository extends JpaRepository<Candidate, Long> {
 
     /**
-     * Lista os candidatos do estudo em ordem estável de cadastro.
+     * Lista os candidatos do estudo incluindo cancelados, na ordem de cadastro.
      *
      * @param studyId identificador do estudo
      * @return candidatos do estudo
      */
-    /** Lista os candidatos do estudo incluindo cancelados, na ordem de cadastro. */
     List<Candidate> findAllByStudyIdOrderByIdAsc(Long studyId);
 
-    /** Lista os candidatos não cancelados do estudo, na ordem de cadastro. */
+    /**
+     * Lista os candidatos não cancelados do estudo, na ordem de cadastro.
+     *
+     * @param studyId identificador do estudo
+     * @return candidatos ativos (não cancelados) do estudo
+     */
     List<Candidate> findAllByStudyIdAndCancelledAtIsNullOrderByIdAsc(Long studyId);
 
     /**
@@ -50,9 +54,37 @@ public interface CandidateRepository extends JpaRepository<Candidate, Long> {
     @Query("select c from Candidate c where c.id = :id and c.studyId = :studyId")
     Optional<Candidate> findForConsentUpdate(@Param("id") Long id, @Param("studyId") Long studyId);
 
-    /** Impede vincular a mesma conta duas vezes ao mesmo estudo enquanto houver candidatura não cancelada. */
+    /**
+     * Impede vincular a mesma conta duas vezes ao mesmo estudo enquanto houver candidatura não cancelada.
+     *
+     * @param studyId identificador do estudo
+     * @param userId identificador da conta do candidato
+     * @return {@code true} quando já existe candidatura ativa para o usuário no estudo
+     */
     boolean existsByStudyIdAndUserIdAndCancelledAtIsNull(Long studyId, Long userId);
 
-    /** Verifica se a conta possui alguma candidatura não cancelada em qualquer estudo. */
+    /**
+     * Verifica se a conta possui alguma candidatura não cancelada em qualquer estudo.
+     *
+     * @param userId identificador da conta do candidato
+     * @return {@code true} quando há ao menos uma candidatura ativa vinculada à conta
+     */
     boolean existsByUserIdAndCancelledAtIsNull(Long userId);
+
+    /**
+     * Lista as candidaturas da conta autenticada da mais recente para a mais antiga.
+     *
+     * @param userId identificador da conta participante
+     * @return candidaturas da conta ordenadas do maior para o menor identificador
+     */
+    List<Candidate> findAllByUserIdOrderByIdDesc(Long userId);
+
+    /**
+     * Busca uma candidatura pertencente à conta autenticada.
+     *
+     * @param id identificador da candidatura
+     * @param userId identificador da conta participante
+     * @return candidatura pertencente à conta ou vazio
+     */
+    Optional<Candidate> findByIdAndUserId(Long id, Long userId);
 }

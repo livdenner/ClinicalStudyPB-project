@@ -1,5 +1,6 @@
 package clinicalstudypb.visits.api;
 
+import clinicalstudypb.visits.domain.PlannedVisit;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -18,4 +19,19 @@ import java.util.List;
  */
 public record PlannedVisitResponse(Long id, Long studyId, String name, LocalDate plannedDate,
                                    Integer position, List<PlannedActivityResponse> activities) {
+
+    /**
+     * Converte uma visita prevista do domínio para sua representação pública com atividades ordenadas.
+     *
+     * @param visit visita prevista persistida
+     * @return representação da visita prevista com atividades
+     */
+    public static PlannedVisitResponse from(PlannedVisit visit) {
+        List<PlannedActivityResponse> activities = visit.getActivities().stream()
+                .map(activity -> new PlannedActivityResponse(activity.getId(), activity.getName(),
+                        activity.getDescription(), activity.getPosition()))
+                .toList();
+        return new PlannedVisitResponse(visit.getId(), visit.getStudyId(), visit.getName(),
+                visit.getPlannedDate(), visit.getPosition(), activities);
+    }
 }

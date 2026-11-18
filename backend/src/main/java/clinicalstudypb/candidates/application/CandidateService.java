@@ -27,7 +27,14 @@ import java.util.regex.Pattern;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Coordena o cadastro de candidatos e o vínculo com contas de participantes. */
+/**
+ * Coordena o cadastro de candidatos e o vínculo com contas de participantes.
+ *
+ * @author Lívia
+ * @author Lucas N. de Araújo
+ * @since 2026-11-06
+ * @version 0.0.1
+ */
 @Service
 public class CandidateService {
 
@@ -46,7 +53,17 @@ public class CandidateService {
     private final ParticipantRepository participantRepository;
     private final CurrentActor currentActor;
 
-    /** Recebe os repositórios e serviços necessários para o ciclo de vida da candidatura. */
+    /**
+     * Recebe os repositórios e serviços necessários para o ciclo de vida da candidatura.
+     *
+     * @param candidateRepository repositório JPA de candidatos
+     * @param studyService serviço de estudos para consulta e bloqueio em recrutamento
+     * @param userService serviço de contas para criação e bloqueio do usuário vinculado
+     * @param invitationService serviço de emissão e invalidação de códigos de ativação
+     * @param consentRepository repositório de consentimentos simulados
+     * @param participantRepository repositório de participantes incluídos
+     * @param currentActor provedor do usuário autenticado na requisição
+     */
     public CandidateService(CandidateRepository candidateRepository, StudyService studyService,
                             UserService userService, CandidateInvitationService invitationService,
                             SimulatedConsentRepository consentRepository, ParticipantRepository participantRepository,
@@ -60,7 +77,16 @@ public class CandidateService {
         this.currentActor = currentActor;
     }
 
-    /** Cadastra e vincula a conta numa única transação, emitindo convite quando necessário. */
+    /**
+     * Cadastra e vincula a conta numa única transação, emitindo convite quando necessário.
+     *
+     * @param studyId identificador do estudo em recrutamento
+     * @param name nome completo do candidato
+     * @param age idade do candidato em anos
+     * @param email endereço de e-mail da conta de participante
+     * @param phone telefone de contato com DDD
+     * @return candidato persistido e código de ativação, quando emitido
+     */
     @Transactional
     public Registration create(Long studyId, String name, Integer age, String email, String phone) {
         String normalizedPhone = normalizePhone(phone);
@@ -94,7 +120,13 @@ public class CandidateService {
         return new Registration(candidate, code);
     }
 
-    /** Gera novo código para uma conta convidada, sem recriar candidato ou usuário. */
+    /**
+     * Gera novo código para uma conta convidada, sem recriar candidato ou usuário.
+     *
+     * @param studyId identificador do estudo
+     * @param candidateId identificador do candidato no estudo
+     * @return novo código de ativação e instante de expiração
+     */
     @Transactional
     public CandidateInvitationService.IssuedCode reissue(Long studyId, Long candidateId) {
         requireRecruitment(studyId);
@@ -111,13 +143,24 @@ public class CandidateService {
         return invitationService.issue(user.getId());
     }
 
-    /** Lista candidatos não cancelados do estudo existente, na ordem de cadastro. */
+    /**
+     * Lista candidatos não cancelados do estudo existente, na ordem de cadastro.
+     *
+     * @param studyId identificador do estudo
+     * @return candidatos ativos do estudo
+     */
     @Transactional(readOnly = true)
     public List<Candidate> list(Long studyId) {
         return list(studyId, false);
     }
 
-    /** Lista candidatos do estudo existente, podendo incluir os cancelados. */
+    /**
+     * Lista candidatos do estudo existente, podendo incluir os cancelados.
+     *
+     * @param studyId identificador do estudo
+     * @param includeCancelled indica se candidaturas canceladas também devem ser retornadas
+     * @return candidatos filtrados em ordem de cadastro
+     */
     @Transactional(readOnly = true)
     public List<Candidate> list(Long studyId, boolean includeCancelled) {
         studyService.getStudy(studyId);
@@ -130,6 +173,11 @@ public class CandidateService {
     /**
      * Cancela a candidatura antes da inclusão, preservando avaliação e consentimento
      * e invalidando o convite pendente quando a conta não possui outra candidatura ativa.
+     *
+     * @param studyId identificador do estudo
+     * @param candidateId identificador do candidato
+     * @param reason justificativa do cancelamento
+     * @return candidato atualizado com os metadados do cancelamento
      */
     @Transactional
     public Candidate cancel(Long studyId, Long candidateId, String reason) {
@@ -157,7 +205,13 @@ public class CandidateService {
         return saved;
     }
 
-    /** Consulta um candidato somente no estudo indicado. */
+    /**
+     * Consulta um candidato somente no estudo indicado.
+     *
+     * @param studyId identificador do estudo
+     * @param candidateId identificador do candidato
+     * @return candidato pertencente ao estudo
+     */
     @Transactional(readOnly = true)
     public Candidate get(Long studyId, Long candidateId) {
         studyService.getStudy(studyId);
@@ -165,7 +219,37 @@ public class CandidateService {
                 .orElseThrow(() -> new ResourceNotFoundException("Candidato não encontrado: " + candidateId));
     }
 
-    /** Bloqueia candidato durante atualização do consentimento ou inclusão. */
+    /**
+     * Lista todas as candidaturas vinculadas à conta participante da mais recente para a mais antiga.
+     *
+     * @param userId identificador da conta participante
+     * @return candidaturas da conta autenticada
+     */
+    @Transactional(readOnly = true)
+    public List<Candidate> listByUser(Long userId) {
+        return candidateRepository.findAllByUserIdOrderByIdDesc(userId);
+    }
+
+    /**
+     * Consulta uma candidatura garantindo que pertença à conta participante informada.
+     *
+     * @param candidateId identificador da candidatura
+     * @param userId identificador da conta participante
+     * @return candidatura vinculada à conta
+     */
+    @Transactional(readOnly = true)
+    public Candidate getByIdAndUser(Long candidateId, Long userId) {
+        return candidateRepository.findByIdAndUserId(candidateId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Convite não encontrado: " + candidateId));
+    }
+
+    /**
+     * Bloqueia candidato durante atualização do consentimento ou inclusão.
+     *
+     * @param studyId identificador do estudo
+     * @param candidateId identificador do candidato
+     * @return candidato bloqueado para escrita
+     */
     @Transactional
     public Candidate lockForConsentUpdate(Long studyId, Long candidateId) {
         studyService.getStudy(studyId);
@@ -173,7 +257,13 @@ public class CandidateService {
                 .orElseThrow(() -> new ResourceNotFoundException("Candidato não encontrado: " + candidateId));
     }
 
-    /** Monta o estado público atual; somente o código recém-emitido pode ser incluído. */
+    /**
+     * Monta o estado público atual; somente o código recém-emitido pode ser incluído.
+     *
+     * @param candidate candidato consultado
+     * @param issued código em texto claro recém-emitido, ou {@code null} em leituras comuns
+     * @return fotografia consistente do estado, consentimento e convite
+     */
     @Transactional(readOnly = true)
     public Snapshot snapshot(Candidate candidate, CandidateInvitationService.IssuedCode issued) {
         User user = userService.getUser(candidate.getUserId());
@@ -252,7 +342,12 @@ public class CandidateService {
         return trimmed;
     }
 
-    /** Resultado interno do cadastro, incluindo código somente quando gerado. */
+    /**
+     * Resultado interno do cadastro, incluindo código somente quando gerado.
+     *
+     * @param candidate entidade do candidato recém-cadastrado
+     * @param issued código em texto claro quando gerado na criação, ou {@code null}
+     */
     public record Registration(Candidate candidate, CandidateInvitationService.IssuedCode issued) {
         @Override
         public String toString() {
@@ -260,7 +355,15 @@ public class CandidateService {
         }
     }
 
-    /** Dados usados para montar a resposta sem expor hash ou senha. */
+    /**
+     * Dados usados para montar a resposta sem expor hash ou senha.
+     *
+     * @param candidate entidade persistida do candidato
+     * @param status estado consolidado no fluxo de recrutamento
+     * @param consent decisão atual de consentimento simulado
+     * @param invitation metadados do convite pendente, quando existir
+     * @param issued código recém-emitido nesta operação, ou {@code null}
+     */
     public record Snapshot(Candidate candidate, CandidateStatus status, ConsentStatus consent,
                            CandidateActivationInvite invitation, CandidateInvitationService.IssuedCode issued) {
     }
