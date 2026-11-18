@@ -5,9 +5,9 @@ on:
     workflows: [CI]
     types: [completed]
 
-concurrency:
-  group: publicador-relatorios
-  cancel-in-progress: false
+# Sem grupo de concorrência: o GitHub guarda só uma execução pendente por grupo e cancela as
+# outras, o que perderia relatórios quando várias CIs terminam juntas. As disputas de push são
+# tratadas no publicar.py (novas tentativas com --force-with-lease na branch do bot).
 
 permissions:
   actions: read
@@ -30,6 +30,10 @@ jobs:
         if: steps.artefato.outputs.disponivel == 'true'
         with:
           persist-credentials: false
+      - uses: actions/setup-node@v4 # gerar.mjs monta o índice no mesmo formato das outras pastas
+        if: steps.artefato.outputs.disponivel == 'true'
+        with:
+          node-version: "22"
       - uses: actions/download-artifact@v4
         if: steps.artefato.outputs.disponivel == 'true'
         with:
