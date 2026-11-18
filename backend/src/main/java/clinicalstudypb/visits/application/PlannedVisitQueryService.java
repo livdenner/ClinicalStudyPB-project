@@ -1,7 +1,9 @@
 package clinicalstudypb.visits.application;
 
+import clinicalstudypb.visits.api.PlannedVisitResponse;
 import clinicalstudypb.visits.infrastructure.PlannedVisitRepository;
 import clinicalstudypb.visits.infrastructure.PlannedVisitRepository.PlannedVisitNameProjection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -42,5 +44,13 @@ public class PlannedVisitQueryService implements PlannedVisitLookup {
                 .collect(Collectors.toMap(
                         PlannedVisitNameProjection::getId,
                         PlannedVisitNameProjection::getName));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PlannedVisitResponse> findByStudy(Long studyId) {
+        return plannedVisitRepository.findByStudyIdOrderByPositionAsc(studyId).stream()
+                .map(PlannedVisitResponse::from)
+                .toList();
     }
 }

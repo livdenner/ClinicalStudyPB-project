@@ -12,13 +12,14 @@ import java.time.Instant;
  * @param candidateId identificador do candidato
  * @param status estado atual
  * @param recordedAt horário da última decisão ou ausente quando pendente
+ * @param recordedByUserId conta autora da decisão ou ausente quando pendente ou anterior à Sprint 3
  * @author Lucas N. de Araújo
  * @since 2026-11-07
- * @version 0.0.1
+ * @version 0.0.2
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record SimulatedConsentResponse(Long studyId, Long candidateId, ConsentStatus status,
-                                       Instant recordedAt) {
+                                       Instant recordedAt, Long recordedByUserId) {
     /**
      * Representa o estado inicial sem decisão persistida.
      *
@@ -27,7 +28,7 @@ public record SimulatedConsentResponse(Long studyId, Long candidateId, ConsentSt
      * @return resposta pendente
      */
     public static SimulatedConsentResponse pending(Long studyId, Long candidateId) {
-        return new SimulatedConsentResponse(studyId, candidateId, ConsentStatus.PENDING, null);
+        return new SimulatedConsentResponse(studyId, candidateId, ConsentStatus.PENDING, null, null);
     }
 
     /**
@@ -35,10 +36,11 @@ public record SimulatedConsentResponse(Long studyId, Long candidateId, ConsentSt
      *
      * @param studyId identificador do estudo
      * @param consent decisão persistida
-     * @return resposta com estado e horário
+     * @return resposta com estado, horário e autoria
      */
     public static SimulatedConsentResponse from(Long studyId, SimulatedConsent consent) {
         return new SimulatedConsentResponse(studyId, consent.getCandidateId(),
-                ConsentStatus.valueOf(consent.getStatus().name()), consent.getRecordedAt());
+                ConsentStatus.valueOf(consent.getStatus().name()), consent.getRecordedAt(),
+                consent.getRecordedByUserId());
     }
 }

@@ -70,4 +70,21 @@ public interface CandidateRepository extends JpaRepository<Candidate, Long> {
      * @return {@code true} quando há ao menos uma candidatura ativa vinculada à conta
      */
     boolean existsByUserIdAndCancelledAtIsNull(Long userId);
+
+    /**
+     * Lista as candidaturas da conta autenticada da mais recente para a mais antiga.
+     *
+     * @param userId identificador da conta participante
+     * @return candidaturas da conta ordenadas do maior para o menor identificador
+     */
+    List<Candidate> findAllByUserIdOrderByIdDesc(Long userId);
+
+    /**
+     * Busca uma candidatura pertencente à conta autenticada.
+     *
+     * @param id identificador da candidatura
+     * @param userId identificador da conta participante
+     * @return candidatura pertencente à conta ou vazio
+     */
+    Optional<Candidate> findByIdAndUserId(Long id, Long userId);
 }

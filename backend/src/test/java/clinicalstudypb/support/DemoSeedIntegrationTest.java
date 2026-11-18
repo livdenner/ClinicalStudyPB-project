@@ -165,7 +165,9 @@ class DemoSeedIntegrationTest extends IntegrationTestSupport {
         mockMvc.perform(get("/api/studies/" + study + "/candidates/" + candidate + "/consent")
                         .header(HttpHeaders.AUTHORIZATION, token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("GRANTED"));
+                .andExpect(jsonPath("$.status").value("GRANTED"))
+                .andExpect(jsonPath("$.recordedByUserId").doesNotExist());
+        assertNone("SELECT COUNT(*) FROM simulated_consents WHERE recorded_by_user_id IS NOT NULL");
     }
 
     @Test
@@ -179,7 +181,8 @@ class DemoSeedIntegrationTest extends IntegrationTestSupport {
                         .header(HttpHeaders.AUTHORIZATION, token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(JSON_DECLINED))
-                .andExpect(status().isConflict());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("CONSENT_DECIDED_BY_CANDIDATE"));
         mockMvc.perform(put("/api/studies/" + study + "/candidates/" + candidate + "/eligibility")
                         .header(HttpHeaders.AUTHORIZATION, token)
                         .contentType(MediaType.APPLICATION_JSON)

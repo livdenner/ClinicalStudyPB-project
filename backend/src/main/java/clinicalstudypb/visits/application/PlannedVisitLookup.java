@@ -1,5 +1,7 @@
 package clinicalstudypb.visits.application;
 
+import clinicalstudypb.visits.api.PlannedVisitResponse;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -28,4 +30,12 @@ public interface PlannedVisitLookup {
      * @return mapa {@code plannedVisitId -> nome}
      */
     Map<Long, String> findNamesByStudy(Long studyId);
+
+    /**
+     * Lista as visitas previstas e suas atividades na ordem do protocolo do estudo.
+     *
+     * @param studyId identificador do estudo
+     * @return visitas ordenadas por posição crescente
+     */
+    List<PlannedVisitResponse> findByStudy(Long studyId);
 }

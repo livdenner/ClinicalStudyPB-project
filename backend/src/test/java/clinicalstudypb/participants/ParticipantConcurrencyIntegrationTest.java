@@ -105,11 +105,15 @@ class ParticipantConcurrencyIntegrationTest extends ParticipantIntegrationSuppor
 
     @Test
     void inclusionUsesConsentCommittedWhileWaitingForTheStudyLock() throws Exception {
-        int response = includeAfterLockedChange(locked -> consent(study.getId(), candidateId, ConsentDecision.DECLINED)
-                .andExpect(status().isOk()));
+        Long pendingCandidateId = candidate(study, "Ana Pendente", EligibilityStatus.ELIGIBLE, null);
+        int response = includeAfterLockedChange(pendingCandidateId,
+                locked -> consent(study.getId(), pendingCandidateId, ConsentDecision.DECLINED)
+                        .andExpect(status().isOk()));
         assertEquals(409, response);
-        assertEquals(ConsentDecision.DECLINED, consentRepository.findById(candidateId).orElseThrow().getStatus());
-        assertNothingIncludedOrLocked();
+        assertEquals(ConsentDecision.DECLINED,
+                consentRepository.findById(pendingCandidateId).orElseThrow().getStatus());
+        assertEquals(0, participantRepository.count());
+        assertFalse(consentRepository.findById(pendingCandidateId).orElseThrow().isLockedAfterInclusion());
     }
 
     @Test
@@ -154,6 +158,10 @@ class ParticipantConcurrencyIntegrationTest extends ParticipantIntegrationSuppor
     }
 
     private int includeAfterLockedChange(CheckedChange change) throws Exception {
+        return includeAfterLockedChange(candidateId, change);
+    }
+
+    private int includeAfterLockedChange(Long targetCandidateId, CheckedChange change) throws Exception {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         CountDownLatch started = new CountDownLatch(1);
         try {
@@ -161,7 +169,7 @@ class ParticipantConcurrencyIntegrationTest extends ParticipantIntegrationSuppor
                 Study locked = studyRepository.findByIdForUpdate(study.getId()).orElseThrow();
                 Future<MvcResult> request = executor.submit(() -> {
                     started.countDown();
-                    return include(study.getId(), candidateId).andReturn();
+                    return include(study.getId(), targetCandidateId).andReturn();
                 });
                 awaitBlockedRequests(started, 1);
                 try {
