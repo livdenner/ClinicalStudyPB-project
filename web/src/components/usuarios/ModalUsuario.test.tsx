@@ -166,3 +166,53 @@ describe("ModalUsuario", () => {
         expect(within(dialog).getByRole("button", { name: "Salvar alterações" })).toBeEnabled();
     });
 });
+
+it("usa Pesquisador como padrão válido e não oferece Participante", async () => {
+    render(<ModalUsuario onFechar={vi.fn()} onSalvar={vi.fn()} />);
+    const perfil = await screen.findByRole("button", { name: /Perfil/ });
+    expect(perfil).toHaveTextContent("Pesquisador");
+    fireEvent.click(perfil);
+    await screen.findByRole("option", { name: "Administrador" });
+    expect(screen.queryByRole("option", { name: "Participante" })).not.toBeInTheDocument();
+});
+
+it("bloqueia perfil e situação da própria conta e permite editar seus dados", async () => {
+    const onSalvar = vi.fn().mockResolvedValue(undefined);
+    const admin: Usuario = { ...usuario, role: "ADMINISTRATOR" };
+    render(
+        <ModalUsuario
+            usuario={admin}
+            usuarioLogadoId={admin.id}
+            onFechar={vi.fn()}
+            onSalvar={onSalvar}
+        />
+    );
+    const dialog = await screen.findByRole("dialog", { name: "Editar usuário" });
+    expect(within(dialog).getByRole("button", { name: /Perfil/ })).toBeDisabled();
+    expect(within(dialog).getByRole("switch")).toBeDisabled();
+    expect(screen.getByText(/O perfil e a situação da sua própria conta/)).toBeInTheDocument();
+    fireEvent.change(within(dialog).getByLabelText(/^Nome/), {
+        target: { value: "Admin atualizado" },
+    });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Salvar alterações" }));
+    await waitFor(() =>
+        expect(onSalvar).toHaveBeenCalledWith(
+            { name: "Admin atualizado", email: admin.email, role: "ADMINISTRATOR", password: "" },
+            true
+        )
+    );
+});
+
+it("mantém os controles habilitados para outro administrador", async () => {
+    render(
+        <ModalUsuario
+            usuario={{ ...usuario, role: "ADMINISTRATOR" }}
+            usuarioLogadoId={99}
+            onFechar={vi.fn()}
+            onSalvar={vi.fn()}
+        />
+    );
+    const dialog = await screen.findByRole("dialog", { name: "Editar usuário" });
+    expect(within(dialog).getByRole("button", { name: /Perfil/ })).toBeEnabled();
+    expect(within(dialog).getByRole("switch")).toBeEnabled();
+});

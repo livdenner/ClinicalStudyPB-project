@@ -82,7 +82,9 @@ export function PainelParticipantesVagas({
                         <span className="text-[var(--color-muted)]">Saldo disponível: </span>
                         <strong
                             className={`font-bold ${
-                                estudoLotado ? "text-[#B42318]" : "text-[#16804B]"
+                                estudoLotado
+                                    ? "text-[var(--color-warning)]"
+                                    : "text-[var(--color-info)]"
                             }`}
                         >
                             {vagasDisponiveis} {vagasDisponiveis === 1 ? "vaga" : "vagas"}
@@ -92,8 +94,8 @@ export function PainelParticipantesVagas({
                     <span
                         className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
                             estudoLotado
-                                ? "bg-[#FDEAEA] text-[#B42318]"
-                                : "bg-[#E4F4E9] text-[#16804B]"
+                                ? "bg-[var(--color-warning-soft)] text-[var(--color-warning)]"
+                                : "bg-[var(--color-info-soft)] text-[var(--color-info)]"
                         }`}
                     >
                         {estudoLotado ? "Limite de vagas atingido" : "Vagas disponíveis"}
@@ -111,7 +113,7 @@ export function PainelParticipantesVagas({
                 <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
                     <div
                         className={`h-full rounded-full transition-all ${
-                            estudoLotado ? "bg-[#B42318]" : "bg-[var(--color-primary)]"
+                            estudoLotado ? "bg-[var(--color-warning)]" : "bg-[var(--color-primary)]"
                         }`}
                         style={{ width: `${percentualOcupacao}%` }}
                     />
@@ -180,7 +182,7 @@ export function PainelParticipantesVagas({
                                             <Chip
                                                 size="sm"
                                                 variant="soft"
-                                                className="bg-[#E4F4E9] font-semibold text-[#16804B]"
+                                                className="bg-[var(--color-success-soft)] font-semibold text-[var(--color-success)]"
                                             >
                                                 <Chip.Label>
                                                     <span className="inline-flex items-center gap-1">

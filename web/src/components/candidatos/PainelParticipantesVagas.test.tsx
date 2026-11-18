@@ -10,6 +10,7 @@ function participante(id: number, nome: string): ParticipanteApi {
         candidateId: 100 + id,
         candidateName: nome,
         includedAt: "2026-11-09T12:00:00Z",
+        status: "ACTIVE",
     };
 }
 

@@ -6,7 +6,6 @@ import clinicalstudypb.studies.domain.InvalidStudyException;
 import clinicalstudypb.studies.domain.Study;
 import clinicalstudypb.studies.domain.StudyStatus;
 import clinicalstudypb.visits.api.PlannedActivityRequest;
-import clinicalstudypb.visits.api.PlannedActivityResponse;
 import clinicalstudypb.visits.api.PlannedVisitRequest;
 import clinicalstudypb.visits.api.PlannedVisitResponse;
 import clinicalstudypb.visits.domain.PlannedVisit;
@@ -60,7 +59,7 @@ public class PlannedVisitService {
     public List<PlannedVisitResponse> list(Long studyId) {
         studies.getStudy(studyId);
         return visits.findByStudyIdOrderByPositionAsc(studyId).stream()
-                .map(this::toResponse).toList();
+                .map(PlannedVisitResponse::from).toList();
     }
 
     /**
@@ -76,7 +75,7 @@ public class PlannedVisitService {
         PlannedVisit visit = visits.findByIdAndStudyId(visitId, studyId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Visita prevista não encontrada: " + visitId));
-        return toResponse(visit);
+        return PlannedVisitResponse.from(visit);
     }
 
     /**
@@ -290,15 +289,6 @@ public class PlannedVisitService {
 
     private String nameKey(String name) {
         return name.strip().toLowerCase(Locale.ROOT);
-    }
-
-    private PlannedVisitResponse toResponse(PlannedVisit visit) {
-        List<PlannedActivityResponse> activities = visit.getActivities().stream()
-                .map(activity -> new PlannedActivityResponse(activity.getId(), activity.getName(),
-                        activity.getDescription(), activity.getPosition()))
-                .toList();
-        return new PlannedVisitResponse(visit.getId(), visit.getStudyId(), visit.getName(),
-                visit.getPlannedDate(), visit.getPosition(), activities);
     }
 
     private record VisitRow(Long id, String name, LocalDate plannedDate, Integer position) {

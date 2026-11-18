@@ -19,9 +19,18 @@ export function isSessionExpired(session: AuthSession, now: number = Date.now())
     return !Number.isFinite(session.expiresAt) || session.expiresAt <= now;
 }
 
-export function loadStoredSession(now: number = Date.now()): AuthSession | null {
+function clearLegacySession(): void {
     try {
-        const raw = window.localStorage.getItem(AUTH_STORAGE_KEY);
+        window.localStorage.removeItem(AUTH_STORAGE_KEY);
+    } catch {
+        // ignora de proposito a falha de acesso ao storage em ambientes restritos
+    }
+}
+
+export function loadStoredSession(now: number = Date.now()): AuthSession | null {
+    clearLegacySession();
+    try {
+        const raw = window.sessionStorage.getItem(AUTH_STORAGE_KEY);
         if (!raw) {
             return null;
         }
@@ -63,13 +72,15 @@ export function saveStoredSession(response: LoginResponse, now: number = Date.no
         user: response.user,
     };
 
-    window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+    clearLegacySession();
+    window.sessionStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
     return session;
 }
 
 export function clearStoredSession(): void {
+    clearLegacySession();
     try {
-        window.localStorage.removeItem(AUTH_STORAGE_KEY);
+        window.sessionStorage.removeItem(AUTH_STORAGE_KEY);
     } catch {
         // Ignora falha de acesso ao storage em ambientes restritos.
     }

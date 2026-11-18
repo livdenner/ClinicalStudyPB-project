@@ -45,7 +45,7 @@ export function CamposAtividadesVisita({ atividades, onChange, bloqueado }: Prop
                         <Button
                             isIconOnly
                             variant="ghost"
-                            className="h-11 w-11 text-[#B42318]"
+                            className="h-11 w-11 text-[var(--color-error)]"
                             aria-label={`Remover atividade ${indice + 1}`}
                             isDisabled={bloqueado || atividades.length === 1}
                             onPress={() => onChange(atividades.filter((_, i) => i !== indice))}

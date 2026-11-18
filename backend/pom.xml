@@ -136,6 +136,21 @@
                                         <include>*ParticipantService</include>
                                         <include>*ParticipantQueryService</include>
                                         <include>*IntegratedStudyReadiness</include>
+                                        <include>*ScheduledVisitParticipantWithdrawal</include>
+                                    </includes>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.80</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <rule>
+                                    <!-- Módulo de participantes (inclusão e retirada, RF11/RF16): cada pacote. -->
+                                    <element>PACKAGE</element>
+                                    <includes>
+                                        <include>*participants*</include>
                                     </includes>
                                     <limits>
                                         <limit>

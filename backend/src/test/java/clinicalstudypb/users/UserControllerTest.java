@@ -1,6 +1,7 @@
 package clinicalstudypb.users;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -17,6 +18,7 @@ import clinicalstudypb.users.application.UserService;
 import clinicalstudypb.users.api.UserController;
 import clinicalstudypb.users.domain.EmailAlreadyInUseException;
 import clinicalstudypb.users.domain.User;
+import clinicalstudypb.users.domain.UserConflictException;
 import clinicalstudypb.users.domain.UserRole;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,7 +34,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
  *
  * @author Lucas N. de Araújo
  * @since 2026-10-21
- * @version 0.0.1
+ * @version 0.0.2
  */
 @WebMvcTest(UserController.class)
 @AutoConfigureMockMvc(addFilters = false)
@@ -131,5 +133,27 @@ class UserControllerTest {
     void deleteReturnsNoContent() throws Exception {
         mockMvc.perform(delete("/api/users/7"))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void selfAccountChangeIsReportedAsConflictWithContractCode() throws Exception {
+        doThrow(new UserConflictException(UserConflictException.SELF_ACCOUNT_CHANGE_NOT_ALLOWED,
+                "O administrador não pode excluir a própria conta."))
+                .when(userService).deleteUser(7L);
+
+        mockMvc.perform(delete("/api/users/7"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value(UserConflictException.SELF_ACCOUNT_CHANGE_NOT_ALLOWED));
+    }
+
+    @Test
+    void lastActiveAdministratorIsReportedAsConflictWithContractCode() throws Exception {
+        when(userService.deactivateUser(7L))
+                .thenThrow(new UserConflictException(UserConflictException.LAST_ACTIVE_ADMINISTRATOR,
+                        "O sistema deve manter pelo menos um administrador ativo."));
+
+        mockMvc.perform(patch("/api/users/7/deactivate"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value(UserConflictException.LAST_ACTIVE_ADMINISTRATOR));
     }
 }

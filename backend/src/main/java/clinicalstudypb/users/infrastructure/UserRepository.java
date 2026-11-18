@@ -15,11 +15,16 @@ import org.springframework.data.repository.query.Param;
  *
  * @author Lucas N. de Araújo
  * @since 2026-10-21
- * @version 0.0.1
+ * @version 0.0.2
  */
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    /** Lista apenas as contas da equipe administradas por /api/users. */
+    /**
+     * Lista apenas as contas da equipe administradas por /api/users.
+     *
+     * @param role perfil excluído da listagem
+     * @return usuários cujo perfil é diferente do informado
+     */
     List<User> findByRoleNot(UserRole role);
 
     /**
@@ -43,6 +48,17 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findForUpdateByEmail(@Param("email") String email);
 
     /**
+     * Bloqueia todas as contas ativas de um perfil em ordem crescente de identificador para
+     * serializar operações concorrentes que reduzem o número de administradores ativos.
+     *
+     * @param role perfil administrativo a bloquear
+     * @return contas ativas com o perfil informado, bloqueadas em ordem crescente de id
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT u FROM User u WHERE u.role = :role AND u.active = true ORDER BY u.id ASC")
+    List<User> lockActiveByRoleOrderByIdAsc(@Param("role") UserRole role);
+
+    /**
      * Localiza um usuário pelo e-mail informado.
      *
      * @param email e-mail cadastrado
@@ -50,7 +66,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
      */
     Optional<User> findByEmail(String email);
 
-    /** Localiza a identidade sem diferenciar maiúsculas e minúsculas. */
+    /**
+     * Localiza a identidade sem diferenciar maiúsculas e minúsculas.
+     *
+     * @param email endereço de e-mail consultado
+     * @return usuário encontrado ou vazio
+     */
     Optional<User> findByEmailIgnoreCase(String email);
 
     /**

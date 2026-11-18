@@ -20,10 +20,19 @@ import clinicalstudypb.users.domain.User;
 import clinicalstudypb.users.domain.UserRole;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 
 /**
@@ -32,7 +41,7 @@ import org.springframework.test.web.servlet.ResultActions;
  *
  * @author Júlia Pamplona
  * @since 2026-10-30
- * @version 0.0.1
+ * @version 0.0.2
  */
 class UserIntegrationTest extends IntegrationTestSupport {
 
@@ -41,12 +50,13 @@ class UserIntegrationTest extends IntegrationTestSupport {
     private static final String RESEARCHER_EMAIL = "pesquisador@clinicalstudypb.test";
     private static final String NEW_PASSWORD = "Senha@Nova2026";
 
+    private User admin;
     private User researcher;
     private String token;
 
     @BeforeEach
     void setUp() throws Exception {
-        saveUser("Administradora Teste", ADMIN_EMAIL, UserRole.ADMINISTRATOR);
+        admin = saveUser("Administradora Teste", ADMIN_EMAIL, UserRole.ADMINISTRATOR);
         researcher = saveUser("Pesquisador Teste", RESEARCHER_EMAIL, UserRole.RESEARCHER);
         token = tokenFor(ADMIN_EMAIL);
     }
@@ -303,6 +313,138 @@ class UserIntegrationTest extends IntegrationTestSupport {
         assertEquals(1, studyRepository.count());
     }
 
+    @Test
+    void administratorCanEditOwnNameAndEmailButCannotChangeRoleDeactivateOrDeleteSelf() throws Exception {
+        update(admin.getId(), new UpdateUserBody("Administradora Renomeada", "admin.novo@clinicalstudypb.test",
+                        "ADMINISTRATOR"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Administradora Renomeada"))
+                .andExpect(jsonPath("$.email").value("admin.novo@clinicalstudypb.test"))
+                .andExpect(jsonPath("$.role").value("ADMINISTRATOR"));
+
+        update(admin.getId(), new UpdateUserBody("Outro Nome", "admin.novo@clinicalstudypb.test", "RESEARCHER"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("SELF_ACCOUNT_CHANGE_NOT_ALLOWED"));
+
+        mockMvc.perform(patch(USERS_URL + "/{id}/deactivate", admin.getId())
+                        .header(HttpHeaders.AUTHORIZATION, bearer(token)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("SELF_ACCOUNT_CHANGE_NOT_ALLOWED"));
+
+        mockMvc.perform(delete(USERS_URL + "/{id}", admin.getId())
+                        .header(HttpHeaders.AUTHORIZATION, bearer(token)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("SELF_ACCOUNT_CHANGE_NOT_ALLOWED"));
+
+        User stored = userRepository.findById(admin.getId()).orElseThrow();
+        assertTrue(stored.isActive());
+        assertEquals(UserRole.ADMINISTRATOR, stored.getRole());
+        assertEquals("Administradora Renomeada", stored.getName());
+        assertEquals("admin.novo@clinicalstudypb.test", stored.getEmail());
+    }
+
+    @Test
+    void lastActiveAdministratorCannotBeDemotedDeactivatedOrDeleted() throws Exception {
+        String secondAdminEmail = "admin2@clinicalstudypb.test";
+        User secondAdmin = saveUser("Segundo Admin", secondAdminEmail, UserRole.ADMINISTRATOR);
+        String secondAdminToken = tokenFor(secondAdminEmail);
+
+        mockMvc.perform(patch(USERS_URL + "/{id}/deactivate", secondAdmin.getId())
+                        .header(HttpHeaders.AUTHORIZATION, bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.active").value(false));
+
+        mockMvc.perform(put(USERS_URL + "/{id}", admin.getId())
+                        .header(HttpHeaders.AUTHORIZATION, bearer(secondAdminToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new UpdateUserBody("Administradora Teste", ADMIN_EMAIL, "COORDINATOR"))))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("LAST_ACTIVE_ADMINISTRATOR"));
+
+        mockMvc.perform(patch(USERS_URL + "/{id}/deactivate", admin.getId())
+                        .header(HttpHeaders.AUTHORIZATION, bearer(secondAdminToken)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("LAST_ACTIVE_ADMINISTRATOR"));
+
+        mockMvc.perform(delete(USERS_URL + "/{id}", admin.getId())
+                        .header(HttpHeaders.AUTHORIZATION, bearer(secondAdminToken)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("LAST_ACTIVE_ADMINISTRATOR"));
+
+        User remainingAdmin = userRepository.findById(admin.getId()).orElseThrow();
+        assertTrue(remainingAdmin.isActive());
+        assertEquals(UserRole.ADMINISTRATOR, remainingAdmin.getRole());
+    }
+
+    @Test
+    void concurrentDeactivationOfTwoActiveAdministratorsKeepsOneActive() throws Exception {
+        String secondAdminEmail = "admin.concorrente@clinicalstudypb.test";
+        User secondAdmin = saveUser("Admin Concorrente", secondAdminEmail, UserRole.ADMINISTRATOR);
+        String secondAdminToken = tokenFor(secondAdminEmail);
+
+        List<ConcurrentResult> results = runConcurrently(
+                () -> deactivateAndCapture(secondAdmin.getId(), token),
+                () -> deactivateAndCapture(admin.getId(), secondAdminToken));
+
+        List<Integer> statuses = results.stream().map(ConcurrentResult::status).sorted().toList();
+        assertEquals(List.of(HttpStatus.OK.value(), HttpStatus.CONFLICT.value()), statuses);
+
+        ConcurrentResult conflict = results.stream()
+                .filter(result -> result.status() == HttpStatus.CONFLICT.value())
+                .findFirst()
+                .orElseThrow();
+        assertEquals("LAST_ACTIVE_ADMINISTRATOR", conflict.code());
+
+        long activeAdmins = userRepository.findAll().stream()
+                .filter(user -> user.getRole() == UserRole.ADMINISTRATOR && user.isActive())
+                .count();
+        assertEquals(1, activeAdmins);
+    }
+
+    private ConcurrentResult deactivateAndCapture(Long targetUserId, String actorToken) throws Exception {
+        MvcResult result = mockMvc.perform(patch(USERS_URL + "/{id}/deactivate", targetUserId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(actorToken)))
+                .andReturn();
+        int statusCode = result.getResponse().getStatus();
+        String code = null;
+        if (statusCode == HttpStatus.CONFLICT.value()) {
+            code = objectMapper.readTree(result.getResponse().getContentAsString(StandardCharsets.UTF_8))
+                    .get("code").asText();
+        }
+        return new ConcurrentResult(statusCode, code);
+    }
+
+    private static List<ConcurrentResult> runConcurrently(
+            Callable<ConcurrentResult> first,
+            Callable<ConcurrentResult> second) throws Exception {
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        CountDownLatch ready = new CountDownLatch(2);
+        CountDownLatch release = new CountDownLatch(1);
+        try {
+            List<Future<ConcurrentResult>> futures = List.of(
+                    executor.submit(() -> awaitAndCall(ready, release, first)),
+                    executor.submit(() -> awaitAndCall(ready, release, second)));
+            assertTrue(ready.await(10, TimeUnit.SECONDS));
+            release.countDown();
+            return List.of(futures.get(0).get(30, TimeUnit.SECONDS), futures.get(1).get(30, TimeUnit.SECONDS));
+        } finally {
+            release.countDown();
+            executor.shutdownNow();
+        }
+    }
+
+    private static ConcurrentResult awaitAndCall(
+            CountDownLatch ready,
+            CountDownLatch release,
+            Callable<ConcurrentResult> call) throws Exception {
+        ready.countDown();
+        if (!release.await(10, TimeUnit.SECONDS)) {
+            throw new IllegalStateException("A requisição concorrente não foi liberada.");
+        }
+        return call.call();
+    }
+
     private ResultActions create(CreateUserBody body) throws Exception {
         return mockMvc.perform(post(USERS_URL)
                 .header(HttpHeaders.AUTHORIZATION, bearer(token))
@@ -328,5 +470,8 @@ class UserIntegrationTest extends IntegrationTestSupport {
     }
 
     private record UpdateUserBody(String name, String email, String role) {
+    }
+
+    private record ConcurrentResult(int status, String code) {
     }
 }

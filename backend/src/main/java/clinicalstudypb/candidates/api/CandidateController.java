@@ -52,6 +52,7 @@ public class CandidateController {
      * Lista candidatos de um estudo.
      *
      * @param studyId identificador do estudo
+     * @param includeCancelled indica se candidatos cancelados devem ser incluídos
      * @return candidatos vinculados ao estudo
      */
     @GetMapping
@@ -125,7 +126,13 @@ public class CandidateController {
         return CandidateResponse.from(candidateService.snapshot(candidateService.get(studyId, candidateId), null));
     }
 
-    /** Gera um novo código de ativação para um candidato convidado. */
+    /**
+     * Gera um novo código de ativação para um candidato convidado.
+     *
+     * @param studyId identificador do estudo
+     * @param candidateId identificador do candidato
+     * @return metadados e código recém-emitido de ativação
+     */
     @PostMapping("/{candidateId}/activation-code")
     @PreAuthorize("hasRole('COORDINATOR')")
     @Operation(summary = "Gera novo código de ativação para o candidato",

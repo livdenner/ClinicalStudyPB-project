@@ -18,11 +18,13 @@ function renderApp(initialRoute = "/login") {
 describe("Login e gestão de sessão (T4.2)", () => {
     beforeEach(() => {
         window.localStorage.clear();
+        sessionStorage.clear();
         vi.restoreAllMocks();
     });
 
     afterEach(() => {
         window.localStorage.clear();
+        sessionStorage.clear();
     });
 
     it("valida campos obrigatórios antes de chamar a API", async () => {
@@ -162,8 +164,8 @@ describe("Login e gestão de sessão (T4.2)", () => {
         expect(logoutHeaders.get("Authorization")).toBe("Bearer jwt-token-teste");
     });
 
-    it("descarta automaticamente sessão já expirada no armazenamento local", () => {
-        window.localStorage.setItem(
+    it("descarta automaticamente sessão já expirada no armazenamento da aba", () => {
+        window.sessionStorage.setItem(
             AUTH_STORAGE_KEY,
             JSON.stringify({
                 accessToken: "token-expirado",
@@ -180,6 +182,6 @@ describe("Login e gestão de sessão (T4.2)", () => {
         );
 
         expect(loadStoredSession()).toBeNull();
-        expect(window.localStorage.getItem(AUTH_STORAGE_KEY)).toBeNull();
+        expect(window.sessionStorage.getItem(AUTH_STORAGE_KEY)).toBeNull();
     });
 });

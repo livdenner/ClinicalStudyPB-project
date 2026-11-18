@@ -2,14 +2,16 @@ package clinicalstudypb.scheduling.infrastructure;
 
 import clinicalstudypb.scheduling.domain.ScheduledVisit;
 import clinicalstudypb.scheduling.domain.ScheduledVisitStatus;
+import jakarta.persistence.LockModeType;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
-import java.time.Instant;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.data.repository.Repository;
+import org.springframework.data.repository.query.Param;
 
 /**
  * Repositório JPA para persistência e consulta de visitas agendadas.
@@ -36,6 +38,8 @@ public interface ScheduledVisitRepository extends Repository<ScheduledVisit, Lon
      * @param actorUserId autor da mudança
      * @param occurredAt instante da mudança
      * @param note motivo registrado nas visitas
+     * @param scheduled estado pendente que será cancelado
+     * @param cancelled estado final aplicado após o cancelamento
      * @return quantidade de visitas canceladas
      */
     @Modifying(flushAutomatically = true)
@@ -107,6 +111,22 @@ public interface ScheduledVisitRepository extends Repository<ScheduledVisit, Lon
     Optional<ScheduledVisit> findByIdAndStudyIdAndParticipantId(Long id, Long studyId, Long participantId);
 
     /**
+     * Bloqueia o agendamento que pertence ao estudo e ao participante da rota.
+     *
+     * @param id identificador do agendamento
+     * @param studyId identificador do estudo
+     * @param participantId identificador do participante
+     * @return visita bloqueada ou vazio
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT v FROM ScheduledVisit v WHERE v.id = :id AND v.studyId = :studyId "
+            + "AND v.participantId = :participantId")
+    Optional<ScheduledVisit> findByIdAndStudyIdAndParticipantIdForUpdate(
+            @Param("id") Long id,
+            @Param("studyId") Long studyId,
+            @Param("participantId") Long participantId);
+
+    /**
      * Lista todos os agendamentos do estudo ordenados cronologicamente.
      *
      * @param studyId identificador do estudo
@@ -148,4 +168,12 @@ public interface ScheduledVisitRepository extends Repository<ScheduledVisit, Lon
             Long studyId,
             Long participantId,
             ScheduledVisitStatus status);
+
+    /**
+     * Lista os agendamentos de um conjunto de participações, em qualquer estudo (RF18, T23.1).
+     *
+     * @param participantIds participações da conta autenticada
+     * @return lista ordenada por instante agendado e identificador
+     */
+    List<ScheduledVisit> findByParticipantIdInOrderByScheduledAtAscIdAsc(Collection<Long> participantIds);
 }

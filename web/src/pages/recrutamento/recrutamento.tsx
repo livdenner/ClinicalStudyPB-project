@@ -1,6 +1,7 @@
+import { SeloEstadoEstudo } from "../../components/estudos/SeloEstadoEstudo";
 import { useCallback, useEffect, useState } from "react";
 import { Plus, Search } from "lucide-react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { AvaliacaoElegibilidade } from "../../components/candidatos/AvaliacaoElegibilidade";
 import { ConsentimentoSimulado } from "../../components/candidatos/ConsentimentoSimulado";
 import { ModalConfirmarInclusao } from "../../components/candidatos/ModalConfirmarInclusao";
@@ -88,17 +89,11 @@ function salvarCacheConsentimento(candidateId: number, termo: string) {
     }
 }
 
-const STATUS_ESTUDO_CLASSES: Record<StatusEstudoCandidato, string> = {
-    PLANNING: "bg-[#FEF3C7] text-[#92400E]",
-    RECRUITMENT: "bg-[#E4F4E9] text-[#16804B]",
-    EXECUTION: "bg-[#E9F2FD] text-[#245A91]",
-    CLOSED: "bg-[#F1F5F9] text-[#475569]",
-    CANCELLED: "bg-[#FDEAEA] text-[#B42318]",
-};
-
 export function RecrutamentoPage() {
     const { session, logout } = useAuth();
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const estudoSolicitado = searchParams.get("studyId");
 
     if (!session) {
         return <Navigate to="/login" replace />;
@@ -128,8 +123,9 @@ export function RecrutamentoPage() {
 
     return (
         <GestaoCandidatos
-            key={session.accessToken}
+            key={`${session.accessToken}:${estudoSolicitado ?? ""}`}
             token={session.accessToken}
+            estudoSolicitado={estudoSolicitado}
             role={session.user.role}
             responsavelNome={session.user.name}
             onIrParaLogin={handleIrParaLogin}
@@ -138,12 +134,14 @@ export function RecrutamentoPage() {
 }
 
 function GestaoCandidatos({
+    estudoSolicitado,
     token,
     role,
     responsavelNome,
     onIrParaLogin,
 }: {
     token: string;
+    estudoSolicitado: string | null;
     role: UserRole;
     responsavelNome: string;
     onIrParaLogin: () => Promise<void>;
@@ -188,7 +186,16 @@ function GestaoCandidatos({
                 if (controller.signal.aborted) return;
                 const lista = dados as EstudoComStatusApi[];
                 setEstudos(lista);
-                const primeiroId = lista[0]?.id ?? null;
+                const idSolicitado =
+                    estudoSolicitado !== null &&
+                    /^[1-9]\d*$/.test(estudoSolicitado) &&
+                    Number.isSafeInteger(Number(estudoSolicitado))
+                        ? Number(estudoSolicitado)
+                        : null;
+                const primeiroId =
+                    estudoSolicitado === null
+                        ? (lista[0]?.id ?? null)
+                        : (lista.find((item) => item.id === idSolicitado)?.id ?? null);
                 setEstudoSelecionadoId(primeiroId);
                 if (primeiroId !== null) {
                     setCarregandoCandidatos(true);
@@ -216,7 +223,7 @@ function GestaoCandidatos({
             });
 
         return () => controller.abort();
-    }, [token, tentativaEstudos]);
+    }, [token, tentativaEstudos, estudoSolicitado]);
 
     useEffect(() => {
         if (estudoSelecionadoId === null) {
@@ -448,7 +455,7 @@ function GestaoCandidatos({
                             setMensagemSucesso("");
                             setModalAberto(true);
                         }}
-                        className="btn btn-primary inline-flex items-center gap-2 font-semibold transition hover:bg-[var(--color-primary-dark)]"
+                        className="btn button--create"
                     >
                         <Plus aria-hidden="true" size={18} />
                         Novo candidato
@@ -459,7 +466,7 @@ function GestaoCandidatos({
             {mensagemSucesso && (
                 <div
                     role="status"
-                    className="rounded-xl border border-[#A7F3D0] bg-[#ECFDF5] px-4 py-3 text-sm font-medium text-[#065F46]"
+                    className="rounded-xl border border-[var(--color-success-border)] bg-[var(--color-success-soft)] px-4 py-3 text-sm font-medium text-[var(--color-success)]"
                 >
                     {mensagemSucesso}
                 </div>
@@ -469,6 +476,18 @@ function GestaoCandidatos({
                 className="flex flex-col gap-4 rounded-xl border border-[var(--color-border)] bg-white p-5"
                 aria-label="Seleção de estudo e filtros"
             >
+                {estudoSolicitado !== null &&
+                    !carregandoEstudos &&
+                    !erroEstudos &&
+                    estudoSelecionadoId === null && (
+                        <p
+                            role="alert"
+                            className="rounded-lg bg-[var(--color-warning-soft)] p-3 text-sm text-[var(--color-warning)]"
+                        >
+                            O estudo solicitado não está disponível. Selecione outro estudo para
+                            continuar.
+                        </p>
+                    )}
                 <div className="flex flex-wrap items-end justify-between gap-4">
                     <div className="flex min-w-[260px] flex-1 flex-col gap-1.5">
                         <label
@@ -506,6 +525,11 @@ function GestaoCandidatos({
                             }}
                             className="h-10 rounded-lg border border-[var(--color-border)] bg-white px-3 text-sm text-[var(--color-text)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] disabled:opacity-60"
                         >
+                            {estudoSelecionadoId === null && estudos.length > 0 && (
+                                <option value="" disabled>
+                                    Selecione um estudo
+                                </option>
+                            )}
                             {estudos.length === 0 ? (
                                 <option value="">Nenhum estudo disponível</option>
                             ) : (
@@ -523,11 +547,7 @@ function GestaoCandidatos({
                             <span className="text-xs font-medium text-[var(--color-muted)]">
                                 Estado do estudo:
                             </span>
-                            <span
-                                className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${STATUS_ESTUDO_CLASSES[statusEstudo]}`}
-                            >
-                                {STATUS_ESTUDO_LABELS[statusEstudo]}
-                            </span>
+                            <SeloEstadoEstudo estado={statusEstudo} />
                         </div>
                     )}
 
@@ -552,7 +572,7 @@ function GestaoCandidatos({
                 {estudoSelecionado && !estudoEmRecrutamento && podeCadastrar && (
                     <p
                         role="note"
-                        className="rounded-lg border border-[#FDE68A] bg-[#FFFBEB] px-3.5 py-2.5 text-xs font-medium text-[#92400E]"
+                        className="rounded-lg border border-[var(--color-warning-border)] bg-[var(--color-warning-soft)] px-3.5 py-2.5 text-xs font-medium text-[var(--color-warning)]"
                     >
                         O cadastro de novos candidatos só é permitido quando o estudo está em
                         recrutamento. Estado atual:{" "}
