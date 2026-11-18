@@ -168,4 +168,12 @@ public interface ScheduledVisitRepository extends Repository<ScheduledVisit, Lon
             Long studyId,
             Long participantId,
             ScheduledVisitStatus status);
+
+    /**
+     * Lista os agendamentos de um conjunto de participações, em qualquer estudo (RF18, T23.1).
+     *
+     * @param participantIds participações da conta autenticada
+     * @return lista ordenada por instante agendado e identificador
+     */
+    List<ScheduledVisit> findByParticipantIdInOrderByScheduledAtAscIdAsc(Collection<Long> participantIds);
 }
