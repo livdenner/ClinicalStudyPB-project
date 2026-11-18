@@ -24,6 +24,15 @@ public interface PlannedVisitLookup {
     Optional<String> findNameByStudyAndId(Long studyId, Long plannedVisitId);
 
     /**
+     * Busca o protocolo completo de uma visita prevista no estudo.
+     *
+     * @param studyId identificador do estudo
+     * @param plannedVisitId identificador da visita prevista
+     * @return visita e atividades ou vazio
+     */
+    Optional<PlannedVisitResponse> findByStudyAndId(Long studyId, Long plannedVisitId);
+
+    /**
      * Mapeia identificadores de visitas previstas do estudo para seus nomes.
      *
      * @param studyId identificador do estudo
