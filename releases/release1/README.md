@@ -13,7 +13,7 @@ Entrega das Sprints **1 (13–26/10/2026)** e **2 (27/10–09/11/2026)**, public
 | CI do commit da tag | [Execução 42758428358](https://github.com/livdenner/ClinicalStudyPB-project/actions/runs/42758428358): Backend, Web, E2E e Mobile com sucesso |
 | PRs integrados depois da consolidação anterior | #61 (instalação limpa), #62 (diagramas), #63 (inclusão na web), #64 (Swagger), #65 (E2E do fluxo completo), #66 (consolidação do RF11), #67 (consentimento consultado na API), #68 e #69 (testes de componentes de RF09–RF11) |
 
-**Correção documental (T26.1, 18/11/2026).** A primeira versão deste documento foi consolidada sobre `development` **6ab8cba** (merge do PR #55), em 09/11/2026, antes de os PRs #61 a #69 entrarem. Esta revisão atualiza a matriz, os testes e as pendências para a versão realmente publicada na tag. Os registros da consolidação anterior continuam em [tests/consolidacao](tests/consolidacao/) como histórico. O conteúdo da tag não mudou.
+**Correção documental (T26.1, 18/11/2026).** A primeira versão deste documento foi escrita sobre `development` **6ab8cba** (merge do PR #55), em 09/11/2026. Depois disso entraram os PRs #61 a #69, e o PR #70 levou tudo para `main`, gerando o commit da tag. Esta revisão atualiza a matriz, os testes e as pendências para a versão realmente publicada na tag. Os registros da consolidação anterior continuam em [tests/consolidacao](tests/consolidacao/) como histórico. O conteúdo da tag não mudou.
 
 ## Objetivo e escopo previsto
 

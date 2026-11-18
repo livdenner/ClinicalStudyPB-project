@@ -69,7 +69,7 @@ Em 12/11/2026 o repositório tinha, além de `main`, `development` e da branch d
 
 ## Correção documental da Release 1 (T26.1)
 
-Em 18/11/2026, o [README da Release 1](../release1/README.md) foi corrigido para refletir a versão realmente publicada. A primeira versão tinha sido consolidada sobre `development` **6ab8cba** (merge do PR #55), antes de os PRs #61 a #69 entrarem.
+Em 18/11/2026, o [README da Release 1](../release1/README.md) foi corrigido para refletir a versão realmente publicada. 
 
 | Item | Correção |
 | --- | --- |
