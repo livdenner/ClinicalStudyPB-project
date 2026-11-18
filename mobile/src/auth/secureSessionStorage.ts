@@ -11,6 +11,13 @@ export const SESSION_STORAGE_KEY = 'clinicalstudypb.session.v1';
 export const SESSION_RECORD_VERSION = 1;
 
 /**
+ * Tentativas por operação nativa. O SecureStore pode falhar de forma
+ * transitória (keychain ocupado, biometria ainda inicializando); uma segunda
+ * tentativa recupera esses casos sem atrasar perceptivelmente o fluxo.
+ */
+const NATIVE_OPERATION_ATTEMPTS = 2;
+
+/**
  * Operações mínimas do armazenamento seguro. A interface permite substituir
  * o SecureStore por uma implementação de teste sem carregar o módulo nativo.
  */
@@ -60,8 +67,18 @@ interface StoredSessionRecordV1 {
   user: AuthSession['user'];
 }
 
+/**
+ * Registro gravado no lugar da sessão quando a remoção nativa falha. Não
+ * contém token e faz a próxima leitura tratar o armazenamento como vazio.
+ */
+const REVOKED_SESSION_RECORD = JSON.stringify({
+  version: SESSION_RECORD_VERSION,
+  revoked: true,
+});
+
 type StoredSessionParse =
   | { kind: 'session'; session: AuthSession }
+  | { kind: 'revoked' }
   | { kind: 'corrupted' }
   | { kind: 'unsupported-version' };
 
@@ -78,6 +95,9 @@ function parseStoredSession(raw: string): StoredSessionParse {
   }
   if (value.version !== SESSION_RECORD_VERSION) {
     return { kind: 'unsupported-version' };
+  }
+  if (value.revoked === true) {
+    return { kind: 'revoked' };
   }
 
   const user = parseAuthUser(value.user);
@@ -110,9 +130,37 @@ function parseStoredSession(raw: string): StoredSessionParse {
 export function createSecureSessionStorage(
   adapter: SecureStorageAdapter,
 ): SessionStorage {
+  async function runWithRetry<T>(operation: () => Promise<T>): Promise<T> {
+    let lastError: unknown;
+    for (let attempt = 0; attempt < NATIVE_OPERATION_ATTEMPTS; attempt += 1) {
+      try {
+        return await operation();
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    throw lastError;
+  }
+
+  async function removeRecord(): Promise<void> {
+    try {
+      await runWithRetry(() => adapter.deleteItemAsync(SESSION_STORAGE_KEY));
+      return;
+    } catch {
+      // A remoção pode falhar de forma persistente, por exemplo com o
+      // armazenamento temporariamente bloqueado. Sobrescrever o registro com
+      // uma marca de revogação impede que a sessão antiga volte a ser
+      // restaurada na próxima abertura do aplicativo.
+    }
+
+    await runWithRetry(() =>
+      adapter.setItemAsync(SESSION_STORAGE_KEY, REVOKED_SESSION_RECORD),
+    );
+  }
+
   async function clearQuietly(): Promise<void> {
     try {
-      await adapter.deleteItemAsync(SESSION_STORAGE_KEY);
+      await removeRecord();
     } catch {
       // Um registro inválido não pode impedir a interface de seguir para o login.
     }
@@ -122,7 +170,7 @@ export function createSecureSessionStorage(
     async read(): Promise<SessionReadResult> {
       let available: boolean;
       try {
-        available = await adapter.isAvailableAsync();
+        available = await runWithRetry(() => adapter.isAvailableAsync());
       } catch {
         return { status: 'invalid', reason: 'unavailable' };
       }
@@ -132,7 +180,7 @@ export function createSecureSessionStorage(
 
       let raw: string | null;
       try {
-        raw = await adapter.getItemAsync(SESSION_STORAGE_KEY);
+        raw = await runWithRetry(() => adapter.getItemAsync(SESSION_STORAGE_KEY));
       } catch {
         return { status: 'invalid', reason: 'storage-error' };
       }
@@ -147,6 +195,11 @@ export function createSecureSessionStorage(
       }
 
       await clearQuietly();
+
+      if (parsed.kind === 'revoked') {
+        return { status: 'empty' };
+      }
+
       return {
         status: 'invalid',
         reason:
@@ -165,7 +218,9 @@ export function createSecureSessionStorage(
       };
 
       try {
-        await adapter.setItemAsync(SESSION_STORAGE_KEY, JSON.stringify(record));
+        await runWithRetry(() =>
+          adapter.setItemAsync(SESSION_STORAGE_KEY, JSON.stringify(record)),
+        );
       } catch {
         throw new SessionPersistenceError('write');
       }
@@ -173,7 +228,7 @@ export function createSecureSessionStorage(
 
     async clear(): Promise<void> {
       try {
-        await adapter.deleteItemAsync(SESSION_STORAGE_KEY);
+        await removeRecord();
       } catch {
         throw new SessionPersistenceError('clear');
       }

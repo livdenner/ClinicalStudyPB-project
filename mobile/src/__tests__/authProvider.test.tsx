@@ -135,6 +135,22 @@ describe('AuthProvider', () => {
     expect(storage.clear).toHaveBeenCalledTimes(1);
   });
 
+  it('não libera outro perfil nem quando a limpeza do registro falha', async () => {
+    const stored = createSession({}, { role: 'RESEARCHER' });
+    const storage = createStorage({ status: 'restored', session: stored });
+    storage.clear.mockRejectedValueOnce(new Error('keychain bloqueado'));
+
+    const { result } = await renderAuth(storage);
+
+    await waitFor(() => expect(result.current.status).toBe('anonymous'));
+
+    expect(result.current.session).toBeNull();
+    expect(result.current.notice).toEqual({
+      tone: 'error',
+      message: AUTH_MESSAGES.forbidden,
+    });
+  });
+
   it('avisa quando o registro persistido está corrompido', async () => {
     const storage = createStorage({ status: 'invalid', reason: 'corrupted' });
 
@@ -363,8 +379,72 @@ describe('AuthProvider', () => {
 
     expect(result.current.status).toBe('anonymous');
     expect(result.current.session).toBeNull();
+    expect(result.current.notice).toBeNull();
     expect(storage.clear).toHaveBeenCalledTimes(1);
     expect(api.logoutSession).toHaveBeenCalledWith(stored.accessToken);
+  });
+
+  it('avisa quando a sessão não pôde ser limpa do armazenamento', async () => {
+    const stored = createSession();
+    const storage = createStorage({ status: 'restored', session: stored });
+    storage.clear.mockRejectedValueOnce(new Error('keychain bloqueado'));
+    const { result } = await renderAuth(storage);
+
+    await waitFor(() => expect(result.current.status).toBe('authenticated'));
+
+    await act(async () => {
+      await result.current.signOut();
+    });
+
+    expect(result.current.status).toBe('anonymous');
+    expect(result.current.session).toBeNull();
+    expect(result.current.notice).toEqual({
+      tone: 'warning',
+      message: AUTH_MESSAGES.sessionCleanupFailed,
+    });
+    expect(api.logoutSession).toHaveBeenCalledWith(stored.accessToken);
+  });
+
+  it('continua negando a sessão vencida mesmo quando a limpeza falha', async () => {
+    const stored = createSession({ expiresAt: Date.now() - 60_000 });
+    const storage = createStorage({ status: 'restored', session: stored });
+    storage.clear.mockRejectedValueOnce(new Error('keychain bloqueado'));
+    const { result } = await renderAuth(storage);
+
+    await waitFor(() => expect(result.current.status).toBe('anonymous'));
+
+    expect(result.current.session).toBeNull();
+    expect(result.current.notice).toEqual({
+      tone: 'warning',
+      message: AUTH_MESSAGES.sessionExpired,
+    });
+  });
+
+  it('não avisa falha de limpeza quando a sessão existia apenas em memória', async () => {
+    api.loginWithPassword.mockResolvedValue(loginResponse());
+    const storage = createStorage();
+    storage.save.mockRejectedValueOnce(new Error('disco cheio'));
+    storage.clear.mockRejectedValueOnce(new Error('keychain bloqueado'));
+    const { result } = await renderAuth(storage);
+
+    await waitFor(() => expect(result.current.status).toBe('anonymous'));
+
+    await act(async () => {
+      await result.current.signIn({
+        email: 'raffael@exemplo.test',
+        password: 'Senha12345',
+      });
+    });
+    expect(result.current.persistenceWarning).toBe(
+      AUTH_MESSAGES.persistenceFailed,
+    );
+
+    await act(async () => {
+      await result.current.signOut();
+    });
+
+    expect(result.current.status).toBe('anonymous');
+    expect(result.current.notice).toBeNull();
   });
 
   it('substitui a sessão restrita ao definir a senha inicial', async () => {
@@ -386,6 +466,27 @@ describe('AuthProvider', () => {
     expect(result.current.session?.user.mustChangePassword).toBe(false);
     expect(result.current.session?.accessToken).toBe('novo.token.assinatura');
     expect(storage.save).toHaveBeenCalledTimes(1);
+    expect(result.current.persistenceWarning).toBeNull();
+  });
+
+  it('mantém a sessão atualizada em memória quando a persistência falha após a troca de senha', async () => {
+    const stored = createSession({}, { mustChangePassword: true });
+    const storage = createStorage({ status: 'restored', session: stored });
+    api.changeAccountPassword.mockResolvedValue(loginResponse());
+    storage.save.mockRejectedValueOnce(new Error('disco cheio'));
+    const { result } = await renderAuth(storage);
+
+    await waitFor(() => expect(result.current.status).toBe('authenticated'));
+
+    await act(async () => {
+      await result.current.changePassword({ newPassword: 'NovaSenha1' });
+    });
+
+    expect(result.current.status).toBe('authenticated');
+    expect(result.current.session?.accessToken).toBe('novo.token.assinatura');
+    expect(result.current.persistenceWarning).toBe(
+      AUTH_MESSAGES.persistenceFailed,
+    );
   });
 
   it('encerra a sessão que venceu antes da troca de senha', async () => {

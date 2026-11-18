@@ -35,6 +35,8 @@ export const AUTH_MESSAGES = {
     'Não foi possível restaurar a sua sessão. Entre novamente.',
   persistenceFailed:
     'A sessão não pôde ser salva no dispositivo. Se fechar o aplicativo, será necessário entrar novamente.',
+  sessionCleanupFailed:
+    'Sua sessão foi encerrada, mas não foi possível limpar os dados salvos no dispositivo. Feche e abra o aplicativo novamente.',
   unexpected: 'Não foi possível concluir a operação. Tente novamente.',
 } as const;
 

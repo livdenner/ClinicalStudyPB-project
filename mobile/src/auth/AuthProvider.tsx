@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type PropsWithChildren,
 } from 'react';
@@ -78,12 +79,13 @@ async function readStoredSession(
   }
 }
 
-/** A limpeza é sempre tentada, mas nunca impede a saída da área privada. */
-async function clearStoredSession(storage: SessionStorage): Promise<void> {
+/** A limpeza é sempre tentada e o retorno indica se o registro foi removido. */
+async function clearStoredSession(storage: SessionStorage): Promise<boolean> {
   try {
     await storage.clear();
+    return true;
   } catch {
-    // A Entrega 4 consolida a recuperação de falhas persistentes de armazenamento.
+    return false;
   }
 }
 
@@ -127,6 +129,7 @@ export function AuthProvider({
   storage,
 }: PropsWithChildren<AuthProviderProps>) {
   const [state, setState] = useState<AuthState>(INITIAL_STATE);
+  const persistedRef = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -137,10 +140,13 @@ export function AuthProvider({
         return;
       }
 
+      persistedRef.current = false;
+
       if (result.status === 'restored') {
         const restored = result.session;
 
         if (isSessionExpired(restored)) {
+          persistedRef.current = false;
           await clearStoredSession(storage);
           if (!active) {
             return;
@@ -158,6 +164,7 @@ export function AuthProvider({
         }
 
         if (!isParticipant(restored)) {
+          persistedRef.current = false;
           await clearStoredSession(storage);
           if (!active) {
             return;
@@ -171,6 +178,7 @@ export function AuthProvider({
           return;
         }
 
+        persistedRef.current = true;
         setState({
           status: 'authenticated',
           session: restored,
@@ -213,6 +221,7 @@ export function AuthProvider({
       }
 
       const persisted = await persistSession(storage, newSession);
+      persistedRef.current = persisted;
       setState({
         status: 'authenticated',
         session: newSession,
@@ -240,6 +249,8 @@ export function AuthProvider({
 
   const signOut = useCallback(async (): Promise<void> => {
     const token = state.session?.accessToken ?? null;
+    const wasPersisted = persistedRef.current;
+    persistedRef.current = false;
 
     setState({
       status: 'anonymous',
@@ -248,7 +259,20 @@ export function AuthProvider({
       persistenceWarning: null,
     });
 
-    await clearStoredSession(storage);
+    const cleared = await clearStoredSession(storage);
+    if (!cleared && wasPersisted) {
+      setState((previous) =>
+        previous.status === 'anonymous'
+          ? {
+              ...previous,
+              notice: {
+                tone: 'warning',
+                message: AUTH_MESSAGES.sessionCleanupFailed,
+              },
+            }
+          : previous,
+      );
+    }
 
     if (token !== null) {
       try {
@@ -267,6 +291,7 @@ export function AuthProvider({
       }
 
       if (isSessionExpired(current)) {
+        persistedRef.current = false;
         await clearStoredSession(storage);
         setState({
           status: 'anonymous',
@@ -285,6 +310,7 @@ export function AuthProvider({
       }
 
       const persisted = await persistSession(storage, newSession);
+      persistedRef.current = persisted;
       setState({
         status: 'authenticated',
         session: newSession,

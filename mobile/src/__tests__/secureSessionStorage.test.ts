@@ -28,6 +28,9 @@ class FakeSecureStorage implements SecureStorageAdapter {
   getError: Error | null = null;
   setError: Error | null = null;
   deleteError: Error | null = null;
+  transientGetFailures = 0;
+  transientSetFailures = 0;
+  transientDeleteFailures = 0;
 
   async isAvailableAsync(): Promise<boolean> {
     if (this.failAvailability) {
@@ -37,6 +40,10 @@ class FakeSecureStorage implements SecureStorageAdapter {
   }
 
   async getItemAsync(key: string): Promise<string | null> {
+    if (this.transientGetFailures > 0) {
+      this.transientGetFailures -= 1;
+      throw new Error('falha transitória de leitura');
+    }
     if (this.getError) {
       throw this.getError;
     }
@@ -44,6 +51,10 @@ class FakeSecureStorage implements SecureStorageAdapter {
   }
 
   async setItemAsync(key: string, value: string): Promise<void> {
+    if (this.transientSetFailures > 0) {
+      this.transientSetFailures -= 1;
+      throw new Error('falha transitória de gravação');
+    }
     if (this.setError) {
       throw this.setError;
     }
@@ -51,6 +62,10 @@ class FakeSecureStorage implements SecureStorageAdapter {
   }
 
   async deleteItemAsync(key: string): Promise<void> {
+    if (this.transientDeleteFailures > 0) {
+      this.transientDeleteFailures -= 1;
+      throw new Error('falha transitória de remoção');
+    }
     if (this.deleteError) {
       throw this.deleteError;
     }
@@ -213,10 +228,75 @@ describe('armazenamento seguro da sessão', () => {
     } satisfies Partial<SessionPersistenceError>);
   });
 
-  it('throws a typed error when the session cannot be removed', async () => {
+  it('repete uma leitura que falha de forma transitória', async () => {
     const adapter = new FakeSecureStorage();
     const storage = createSecureSessionStorage(adapter);
+    adapter.entries.set(SESSION_STORAGE_KEY, storedRecord());
+    adapter.transientGetFailures = 1;
+
+    expect(await storage.read()).toEqual({ status: 'restored', session });
+  });
+
+  it('repete uma gravação que falha de forma transitória', async () => {
+    const adapter = new FakeSecureStorage();
+    const storage = createSecureSessionStorage(adapter);
+    adapter.transientSetFailures = 1;
+
+    await storage.save(session);
+
+    expect(adapter.entries.has(SESSION_STORAGE_KEY)).toBe(true);
+    expect(await storage.read()).toEqual({ status: 'restored', session });
+  });
+
+  it('repete uma remoção que falha de forma transitória', async () => {
+    const adapter = new FakeSecureStorage();
+    const storage = createSecureSessionStorage(adapter);
+    await storage.save(session);
+    adapter.transientDeleteFailures = 1;
+
+    await storage.clear();
+
+    expect(adapter.entries.has(SESSION_STORAGE_KEY)).toBe(false);
+  });
+
+  it('revoga o registro quando a remoção falha de forma persistente', async () => {
+    const adapter = new FakeSecureStorage();
+    const storage = createSecureSessionStorage(adapter);
+    await storage.save(session);
+    adapter.deleteError = new Error('keychain bloqueado');
+
+    await storage.clear();
+
+    const raw = String(adapter.entries.get(SESSION_STORAGE_KEY));
+    expect(JSON.parse(raw)).toEqual({
+      version: SESSION_RECORD_VERSION,
+      revoked: true,
+    });
+    expect(raw).not.toContain(session.accessToken);
+
+    adapter.deleteError = null;
+    expect(await storage.read()).toEqual({ status: 'empty' });
+    expect(adapter.entries.has(SESSION_STORAGE_KEY)).toBe(false);
+  });
+
+  it('trata um registro revogado como armazenamento vazio', async () => {
+    const adapter = new FakeSecureStorage();
+    const storage = createSecureSessionStorage(adapter);
+    adapter.entries.set(
+      SESSION_STORAGE_KEY,
+      JSON.stringify({ version: SESSION_RECORD_VERSION, revoked: true }),
+    );
+
+    expect(await storage.read()).toEqual({ status: 'empty' });
+    expect(adapter.entries.has(SESSION_STORAGE_KEY)).toBe(false);
+  });
+
+  it('falha na limpeza somente quando remoção e revogação falham', async () => {
+    const adapter = new FakeSecureStorage();
+    const storage = createSecureSessionStorage(adapter);
+    await storage.save(session);
     adapter.deleteError = new Error('keychain indisponível');
+    adapter.setError = new Error('keychain indisponível');
 
     await expect(storage.clear()).rejects.toMatchObject({
       name: 'SessionPersistenceError',
