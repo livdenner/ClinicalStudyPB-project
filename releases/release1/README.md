@@ -1,8 +1,19 @@
 # Release 1 — Estrutura, protocolo e recrutamento
 
-Entrega das Sprints **1 (13–26/10/2026)** e **2 (27/10–09/11/2026)**. Consolidação documental sobre `development` **6ab8cba**, em 09/11/2026 (America/Fortaleza). O projeto usa dados fictícios e consentimento estritamente simulado.
+Entrega das Sprints **1 (13–26/10/2026)** e **2 (27/10–09/11/2026)**, publicada na tag **`release1`**, em `main` **8e88d15**. O projeto usa dados fictícios e consentimento estritamente simulado.
 
-[Instalação e execução](../../README.md#5-instalação-e-execução) · [Diagramas](../../docs/diagrams/README.md) · [OpenAPI](../../backend/openapi.yaml) · [Capturas](images/README.md) · [Testes e cobertura](tests/README.md) · [Instalação limpa — T16.13](tests/t16-13/README.md) · [Processo das sprints](processo/README.md) · [Azure DevOps TEAM5](https://dev.azure.com/engsw2/TEAM5)
+[Instalação e execução](../../README.md#5-instalação-e-execução) · [Diagramas](../../docs/diagrams/README.md) · [OpenAPI](../../backend/openapi.yaml) · [Capturas](images/README.md) · [Testes e cobertura](tests/README.md) · [Instalação limpa — T16.13](tests/t16-13/README.md) · [Processo das sprints](processo/README.md) · [GitHub Release](https://github.com/livdenner/ClinicalStudyPB-project/releases/tag/release1) · [Azure DevOps TEAM5](https://dev.azure.com/engsw2/TEAM5)
+
+## Versão publicada
+
+| Item | Valor |
+| --- | --- |
+| Tag | `release1`, criada sobre `main` **8e88d15** (merge do [PR #70](https://github.com/livdenner/ClinicalStudyPB-project/pull/70), `development` → `main`) |
+| GitHub Release | [Release 1 — RF01 a RF11](https://github.com/livdenner/ClinicalStudyPB-project/releases/tag/release1), publicada em 10/11/2026 (01:59 em America/Fortaleza) |
+| CI do commit da tag | [Execução 42758428358](https://github.com/livdenner/ClinicalStudyPB-project/actions/runs/42758428358): Backend, Web, E2E e Mobile com sucesso |
+| PRs integrados depois da consolidação anterior | #61 (instalação limpa), #62 (diagramas), #63 (inclusão na web), #64 (Swagger), #65 (E2E do fluxo completo), #66 (consolidação do RF11), #67 (consentimento consultado na API), #68 e #69 (testes de componentes de RF09–RF11) |
+
+**Correção documental (T26.1, 18/11/2026).** A primeira versão deste documento foi consolidada sobre `development` **6ab8cba** (merge do PR #55), em 09/11/2026, antes de os PRs #61 a #69 entrarem. Esta revisão atualiza a matriz, os testes e as pendências para a versão realmente publicada na tag. Os registros da consolidação anterior continuam em [tests/consolidacao](tests/consolidacao/) como histórico. O conteúdo da tag não mudou.
 
 ## Objetivo e escopo previsto
 
@@ -10,7 +21,7 @@ Disponibilizar a estrutura das três aplicações, usuários/autenticação/auto
 
 ## Rastreabilidade dos requisitos
 
-Situação avaliada na versão consolidada. **Concluído** indica fluxo disponível no recorte contratado. Todos os 11 RF previstos (RF01–RF11) estão concluídos nas camadas de backend e web; nenhum RF está sem implementação.
+Situação avaliada na versão publicada (tag `release1`, `8e88d15`). **Concluído** indica fluxo disponível no recorte contratado. Todos os 11 RF previstos (RF01–RF11) estão concluídos nas camadas de backend e web; nenhum RF está sem implementação.
 
 | RF | Requisito / situação | Implementação e tela | Evidência e testes | Justificativa ou pendência |
 | --- | --- | --- | --- | --- |
@@ -22,11 +33,11 @@ Situação avaliada na versão consolidada. **Concluído** indica fluxo disponí
 | RF06 | Visitas previstas e atividades — **concluído** | `/planned-visits`; aba Visitas previstas, ordem e atividades do protocolo. | [Visita cadastrada](images/06-visita-sucesso.jpg); [PlannedVisitIntegrationTest](../../backend/src/test/java/clinicalstudypb/visits/PlannedVisitIntegrationTest.java), [web](../../web/src/pages/estudos/visitas-previstas.test.tsx). | Versão do estudo em `If-Match`, posição contínua, atividade mínima e edição conforme estado. |
 | RF07 | Estados do estudo — **concluído** | PATCH `/status`, GET `/status-history`; ações e selo na web. | [Protocolo incompleto](images/03-recrutamento-validacao.jpg), [recrutamento aberto](images/05-criterios-sucesso.jpg); [StudyLifecycleIntegrationTest](../../backend/src/test/java/clinicalstudypb/studies/StudyLifecycleIntegrationTest.java), [web](../../web/src/pages/estudos/visualizar.test.tsx). | Pré-condições, cancelamento justificado, restauração e conflitos são validados no backend. |
 | RF08 | Candidatos — **concluído** | `/candidates`; coordenador em `/recrutamento`, com filtro por estudo. | [Cadastro](images/07-candidato-sucesso.jpg); [CandidateIntegrationTest](../../backend/src/test/java/clinicalstudypb/candidates/CandidateIntegrationTest.java), [web](../../web/src/pages/recrutamento/recrutamento.test.tsx). | Exige recrutamento; duplicidade por nome normalizado + idade no mesmo estudo. |
-| RF09 | Elegibilidade — **concluído** | GET/PUT `/eligibility`; avaliação com critérios de inclusão/exclusão e parecer. | [Elegível após salvar](images/08-elegibilidade-sucesso.jpg); [integração](../../backend/src/test/java/clinicalstudypb/candidates/EligibilityEvaluationIntegrationTest.java), [regras](../../backend/src/test/java/clinicalstudypb/candidates/EligibilityEvaluationServiceTest.java). | Respostas incompletas mantêm `PENDING`; grava autor/instante; incluído não pode ser reavaliado. A tela foi validada na sessão real; não há suíte específica de componentes dessa avaliação nesta base. |
-| RF10 | Consentimento simulado — **concluído** | GET/PUT `/consent`; coordenador registra aceite ou recusa. | [Aceite](images/09-consentimento-sucesso.jpg); [SimulatedConsentIntegrationTest](../../backend/src/test/java/clinicalstudypb/consent/SimulatedConsentIntegrationTest.java), [bloqueio após inclusão](tests/rf11-api.json). | Decisão e horário persistem na API; identificação textual do termo e responsável exibido são dados auxiliares da interface. Sem assinatura/validade clínica; sem suíte específica de componentes do consentimento nesta base. |
-| RF11 | Inclusão de participante — **concluído** | POST `/inclusion`, GET `/participants`: API atômica e interface web em `/recrutamento` com modal de confirmação e painel de vagas. | [Sessão real HTTP](tests/rf11-api.json); [ParticipantIntegrationTest](../../backend/src/test/java/clinicalstudypb/participants/ParticipantIntegrationTest.java), [concorrência](../../backend/src/test/java/clinicalstudypb/participants/ParticipantConcurrencyIntegrationTest.java). | Validação atômica de vaga, bloqueio definitivo do consentimento e lista de participantes integrados (T15.3/PR #63). |
+| RF09 | Elegibilidade — **concluído** | GET/PUT `/eligibility`; avaliação com critérios de inclusão/exclusão e parecer. | [Elegível após salvar](images/08-elegibilidade-sucesso.jpg); [integração](../../backend/src/test/java/clinicalstudypb/candidates/EligibilityEvaluationIntegrationTest.java), [regras](../../backend/src/test/java/clinicalstudypb/candidates/EligibilityEvaluationServiceTest.java), [componentes da avaliação](../../web/src/components/candidatos/AvaliacaoElegibilidade.test.tsx) (PR #68), [E2E do fluxo completo](../../web/e2e/flows/full-recruitment.spec.ts) (PR #65). | Respostas incompletas mantêm `PENDING`; grava autor/instante; incluído não pode ser reavaliado. |
+| RF10 | Consentimento simulado — **concluído** | GET/PUT `/consent`; coordenador registra aceite ou recusa. A lista de candidatos consulta a decisão na API (PR #67). | [Aceite](images/09-consentimento-sucesso.jpg); [SimulatedConsentIntegrationTest](../../backend/src/test/java/clinicalstudypb/consent/SimulatedConsentIntegrationTest.java), [bloqueio após inclusão](tests/rf11-api.json), [componentes do consentimento](../../web/src/components/candidatos/ConsentimentoSimulado.test.tsx) (PR #68), [recrutamento com consentimento da API](../../web/src/pages/recrutamento/recrutamento.test.tsx) (PRs #67 e #68). | Decisão e horário persistem na API. Antes do PR #67, a lista só conhecia a decisão pelo `localStorage` do navegador em que ela foi registrada; em outro navegador, o candidato com aceite aparecia como "Não registrado" e a inclusão ficava bloqueada. A identificação textual do termo e o responsável exibido continuam dados auxiliares da interface. Sem assinatura/validade clínica. |
+| RF11 | Inclusão de participante — **concluído** | POST `/inclusion`, GET `/participants`: API atômica e interface web em `/recrutamento` com modal de confirmação e painel de vagas (PR #63). | [Sessão real HTTP](tests/rf11-api.json); [ParticipantIntegrationTest](../../backend/src/test/java/clinicalstudypb/participants/ParticipantIntegrationTest.java), [concorrência](../../backend/src/test/java/clinicalstudypb/participants/ParticipantConcurrencyIntegrationTest.java), [modal de confirmação](../../web/src/components/candidatos/ModalConfirmarInclusao.test.tsx) e [painel de vagas](../../web/src/components/candidatos/PainelParticipantesVagas.test.tsx) (PR #69), [E2E até a inclusão](../../web/e2e/flows/full-recruitment.spec.ts) (PR #65). | Validação atômica de vaga, bloqueio definitivo do consentimento e lista de participantes integrados. |
 | Mobile | Estrutura inicial — **concluída no escopo da Release 1** | React Native/Expo Router, telas Início e Estudos provisórias e cliente HTTP genérico. | [Guia mobile](../../mobile/README.md), [Android e testes da T16.13](tests/t16-13/README.md). | Abertura e navegação validadas; login e integração de negócio mobile pertencem à Sprint 3. |
-| DevOps/Qualidade | Ambiente, seeds e CI — **concluídos no recorte verificado** | Compose, Flyway V1–V10, três cargas repetíveis e quatro jobs de CI. | [Instalação limpa](tests/t16-13/README.md), [relatórios atuais](tests/README.md), [convenções e E2E](../../CONTRIBUTING.md). | Meta de 80% de linhas backend atendida; ampliação do E2E de recrutamento e fechamento gerencial constam nas pendências. |
+| DevOps/Qualidade | Ambiente, seeds e CI — **concluídos** | Compose, Flyway V1–V10, três cargas repetíveis e quatro jobs de CI; no Swagger UI, as rotas protegidas de estudos, usuários, visitas previstas e logout passaram a enviar o token após "Authorize" (PR #64). | [Instalação limpa](tests/t16-13/README.md), [relatórios da tag](tests/README.md), [convenções e E2E](../../CONTRIBUTING.md). | Meta de 80% de linhas backend atendida; E2E do fluxo completo integrado (PR #65); tag e GitHub Release publicadas. |
 
 As rotas abreviadas acima pertencem ao estudo/candidato informado no [contrato OpenAPI](../../backend/openapi.yaml). O [resumo da API](../../backend/docs/release1-api.md) descreve permissões, estados, concorrência e respostas HTTP. A [sequência de inclusão](../../docs/diagrams/sequencia-inclusao.png) representa o fluxo efetivo do backend.
 
@@ -38,7 +49,7 @@ Os RF01–RF11 têm APIs implementadas nos módulos de usuários, autenticação
 
 ### Web
 
-Os RF01–RF10 possuem interface integrada. Na Sprint 2 entraram [critérios](../../web/src/pages/estudos/criterios.tsx) (RF05), [visitas previstas e atividades](../../web/src/pages/estudos/visitas-previstas.tsx) (RF06), estados do estudo (RF07), [candidatos por estudo](../../web/src/pages/recrutamento/recrutamento.tsx) (RF08), [avaliação de elegibilidade](../../web/src/components/candidatos/AvaliacaoElegibilidade.tsx) (RF09) e [consentimento simulado](../../web/src/components/candidatos/ConsentimentoSimulado.tsx) (RF10). RF11 teve a ação e listagem web integradas na tela de recrutamento via PR #63 ([ModalConfirmarInclusao](../../web/src/components/candidatos/ModalConfirmarInclusao.tsx) e [PainelParticipantesVagas](../../web/src/components/candidatos/PainelParticipantesVagas.tsx)). A matriz acima e a [galeria](images/README.md) identificam a evidência de cada fluxo.
+Os RF01–RF11 possuem interface integrada. Na Sprint 2 entraram [critérios](../../web/src/pages/estudos/criterios.tsx) (RF05), [visitas previstas e atividades](../../web/src/pages/estudos/visitas-previstas.tsx) (RF06), estados do estudo (RF07), [candidatos por estudo](../../web/src/pages/recrutamento/recrutamento.tsx) (RF08), [avaliação de elegibilidade](../../web/src/components/candidatos/AvaliacaoElegibilidade.tsx) (RF09) e [consentimento simulado](../../web/src/components/candidatos/ConsentimentoSimulado.tsx) (RF10). RF11 teve a ação e listagem web integradas na tela de recrutamento via PR #63 ([ModalConfirmarInclusao](../../web/src/components/candidatos/ModalConfirmarInclusao.tsx) e [PainelParticipantesVagas](../../web/src/components/candidatos/PainelParticipantesVagas.tsx)). O PR #67 fez a lista de candidatos consultar o consentimento na API, e os PRs #68 e #69 acrescentaram os testes de componentes de elegibilidade, consentimento, modal de inclusão e painel de vagas. A matriz acima e a [galeria](images/README.md) identificam a evidência de cada fluxo.
 
 ### Mobile
 
@@ -69,7 +80,7 @@ A [CI](../../.github/workflows/ci.yml) verifica backend, web, E2E e mobile. O [C
 
 ## Demonstração e capturas reais
 
-A [galeria](images/README.md) relaciona 13 capturas a RF, pré-condições e passos de reprodução. As imagens foram obtidas com API e PostgreSQL reais e dados fictícios. O estudo da sessão tem critérios dos dois tipos, visita com atividade e recrutamento aberto; o coordenador cadastrou e avaliou um candidato, registrou consentimento e depois o incluiu pela API.
+A [galeria](images/README.md) relaciona 13 capturas a RF, pré-condições e passos de reprodução. As imagens foram obtidas com API e PostgreSQL reais e dados fictícios, em 09/11/2026, antes da integração da tela de inclusão (PR #63). O estudo da sessão tem critérios dos dois tipos, visita com atividade e recrutamento aberto; o coordenador cadastrou e avaliou um candidato, registrou consentimento e depois o incluiu pela API. Na versão publicada, a inclusão também pode ser feita pela web, e o [E2E do fluxo completo](../../web/e2e/flows/full-recruitment.spec.ts) percorre esse caminho.
 
 ![Critérios e recrutamento](images/05-criterios-sucesso.jpg)
 
@@ -88,23 +99,25 @@ Depois da [instalação e carga das contas fictícias](../../README.md#5-instala
 1. Administrador: entre na web, abra **Usuários**, cadastre um usuário fictício e confira as validações de campos obrigatórios.
 2. Pesquisador: abra **Estudos clínicos**, crie um estudo em planejamento, cadastre critérios dos dois tipos e uma visita com atividade. Abra o recrutamento. A tentativa sem protocolo completo deve apresentar a pendência retornada pela API.
 3. Coordenador: em **Recrutamento**, selecione o estudo, cadastre candidato fictício, responda todos os critérios e salve a avaliação. Inclusões devem ser atendidas e exclusões não devem se aplicar para obter `ELIGIBLE`.
-4. Registre o consentimento simulado como aceito. Para a inclusão via API, consulte a operação `POST /api/studies/{studyId}/candidates/{candidateId}/inclusion` no Swagger; não há corpo JSON. A listagem usa `GET /api/studies/{studyId}/participants`.
+4. Registre o consentimento simulado como aceito e use **Incluir participante** na linha do candidato. O modal **Confirmar inclusão de participante** mostra elegibilidade e consentimento; depois da confirmação, o painel de vagas é atualizado. A mesma operação existe na API: `POST /api/studies/{studyId}/candidates/{candidateId}/inclusion`, sem corpo JSON; a listagem usa `GET /api/studies/{studyId}/participants`.
 5. Faça logout e tente acessar diretamente uma rota protegida. Uma sessão ausente leva ao login; perfil sem permissão recebe acesso negado.
 6. Mobile: abra **ClinicalStudyPB → Ver estudos → Voltar ao início** no Expo Go ou emulador.
 
 ## Testes e cobertura
 
+Execução real em 18/11/2026 sobre o commit da tag, `main` **8e88d15** ([detalhes e ambiente](tests/tag-release1/README.md)).
+
 | Verificação | Resultado real | Evidência |
 | --- | --- | --- |
-| Backend: Checkstyle, JUnit, integração PostgreSQL e JaCoCo | **487 testes aprovados**, cobertura **97,27%** das linhas (891/916); meta 80% atendida | [Log](tests/consolidacao/backend-verify.txt), [suítes](tests/consolidacao/backend-suites.csv), [JaCoCo CSV](tests/consolidacao/backend-coverage.csv) |
-| Web: Vitest e cobertura | **166 testes em 21 arquivos**, cobertura de linhas **74,60%** | [Log completo](tests/consolidacao/web-tests.txt) |
-| Web: formatação, ESLint, TypeScript e build | Aprovados na exportação LF dos arquivos versionados | [Log](tests/consolidacao/web-quality-build.txt) |
-| E2E web: navegador + API + PostgreSQL na CI | **7 testes aprovados** | [Log da CI](tests/consolidacao/ci-e2e.txt) |
-| Mobile: Jest e cobertura na CI | **2 testes em 2 suítes**, cobertura de linhas **76,47%** | [Log da CI](tests/consolidacao/ci-mobile.txt) |
+| Backend: Checkstyle, JUnit, integração PostgreSQL e JaCoCo | **487 testes aprovados**, cobertura **97,27%** das linhas (891/916); meta 80% atendida | [Log](tests/tag-release1/backend-verify.txt), [suítes](tests/tag-release1/backend-suites.csv), [JaCoCo CSV](tests/tag-release1/backend-coverage.csv) |
+| Web: Vitest e cobertura | **200 testes em 25 arquivos**, cobertura de linhas **86,75%** (1421/1638) | [Log completo](tests/tag-release1/web-tests.txt) |
+| Web: formatação, ESLint, TypeScript e build | Aprovados | [Log](tests/tag-release1/web-quality-build.txt) |
+| E2E web: navegador + API + PostgreSQL | **8 testes aprovados**, incluindo o [fluxo completo](../../web/e2e/flows/full-recruitment.spec.ts) até a inclusão pela web (PR #65) | [Log](tests/tag-release1/e2e-tests.txt) |
+| Mobile: Jest e cobertura | **2 testes em 2 suítes**, cobertura de linhas **76,47%** | [Log](tests/tag-release1/mobile-tests.txt) |
 
-O [relatório de testes](tests/README.md) informa versão, ambiente, comandos, cobertura de ramos, exclusões do JaCoCo, tentativa web inicial e limites dos E2E. A meta de 80% é do backend, não das três aplicações em conjunto. A [CI do commit 6ab8cba](https://github.com/livdenner/ClinicalStudyPB-project/actions/runs/42728167544) concluiu seus quatro jobs com sucesso. O [histórico anterior](tests/historico-antes-t16-12.md) preserva as medições das versões anteriores sem misturá-las à tabela atual.
+O [relatório de testes](tests/README.md) informa versão, ambiente, comandos, cobertura de ramos, exclusões do JaCoCo e o que cada camada de teste demonstra. A meta de 80% é do backend, não das três aplicações em conjunto. A [CI do commit da tag](https://github.com/livdenner/ClinicalStudyPB-project/actions/runs/42758428358) concluiu seus quatro jobs com sucesso. O Swagger UI da versão publicada envia o token nas rotas protegidas depois de "Authorize" (PR #64).
 
-A [validação de instalação limpa da T16.13](tests/t16-13/README.md) e seus logs preservam os resultados do recorte `2c6e854` (450 testes backend e 157 web). A tabela acima apresenta a consolidação posterior em `6ab8cba` (487 backend e 166 web); as duas execuções permanecem identificadas por versão.
+Execuções anteriores continuam identificadas por versão, sem misturar números: a [consolidação de 09/11 em `6ab8cba`](tests/README.md#consolidação-anterior-6ab8cba-preservada-como-histórico) (487 backend, 166 web, 7 E2E), anterior aos PRs #61 a #69; a [instalação limpa da T16.13](tests/t16-13/README.md), no recorte `2c6e854` (450 backend e 157 web); e o [histórico anterior](tests/historico-antes-t16-12.md).
 
 ## Processo das Sprints 1 e 2
 
@@ -118,9 +131,9 @@ Os gráficos usam PRs restantes por data real de merge, com fonte em CSV e defin
 
 ## Pendências e passagem para a próxima entrega
 
-- Ampliar o smoke E2E para protocolo → candidato → elegibilidade → consentimento → inclusão; os sete cenários atuais cobrem principalmente login e cadastro de estudo. Testes específicos de componentes de elegibilidade/consentimento completam a cobertura das novas telas.
-- Na interface de consentimento, a identificação do termo é auxiliar/local e o responsável exibido deriva da sessão; a API persiste `status` e `recordedAt`. Não tratar esses rótulos como auditoria persistida do termo ou da autoria.
-- A Gerência conclui revisão/integração dos PRs, DoD, tag e GitHub Release `release1` na T16.15. Este documento não declara publicação de tag/release antes desse fechamento.
-- Na Sprint 3, integrar login e fluxos mobile. Manter o esqueleto e a navegação já validados; conferir as recomendações de patches compatíveis do Expo registradas na T16.13 antes de alterar o lockfile.
+- **Login e fluxos mobile.** Na Sprint 3, integrar login e fluxos de negócio ao aplicativo. Manter o esqueleto e a navegação já validados; conferir as recomendações de patches compatíveis do Expo registradas na T16.13 antes de alterar o lockfile.
+- **Rótulos do consentimento.** Na interface de consentimento, a identificação do termo é auxiliar/local e o responsável exibido deriva da sessão; a API persiste `status` e `recordedAt`. Não tratar esses rótulos como auditoria persistida do termo ou da autoria.
+
+Concluídos depois da consolidação anterior e retirados desta lista: o E2E do fluxo completo (PR #65), os testes de componentes de elegibilidade, consentimento e inclusão (PRs #68 e #69) e a publicação da tag e da GitHub Release `release1` (T16.15, PR #70).
 
 Para a equipe que continuar o projeto, o [README de instalação](../../README.md), os [diagramas editáveis e exportados](../../docs/diagrams/README.md), o [contrato da API](../../backend/openapi.yaml) e os [relatórios versionados](tests/README.md) formam a referência desta entrega.

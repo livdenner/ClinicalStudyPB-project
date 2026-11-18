@@ -66,3 +66,17 @@ Em 12/11/2026 o repositório tinha, além de `main`, `development` e da branch d
 | Branch | Situação | Destino |
 | --- | --- | --- |
 | `test/3458-study-transitions` | Sem PR; um commit de 07/11/2026 com dois testes de estados do estudo na web, em conflito com a `development`. | Encerrada por decisão do Gerente em 12/11/2026. Os dois casos (estudo encerrado sem botões de edição ou transição; cancelar a confirmação sem enviar transição) passam para os testes do PBI-24, que reorganiza os botões dos estudos. |
+
+## Correção documental da Release 1 (T26.1)
+
+Em 18/11/2026, o [README da Release 1](../release1/README.md) foi corrigido para refletir a versão realmente publicada. A primeira versão tinha sido consolidada sobre `development` **6ab8cba** (merge do PR #55), antes de os PRs #61 a #69 entrarem.
+
+| Item | Correção |
+| --- | --- |
+| Versão | Tag `release1` e [GitHub Release](https://github.com/livdenner/ClinicalStudyPB-project/releases/tag/release1) publicadas em 10/11/2026, sobre `main` **8e88d15** (PR #70). |
+| Matriz RF09–RF11 | Testes de componentes de elegibilidade, consentimento, modal de inclusão e painel de vagas (PRs #68 e #69); consentimento consultado na API pela lista de candidatos (PR #67); E2E do fluxo completo (PR #65). |
+| Testes | Números de uma execução nova na tag, em [tests/tag-release1](../release1/tests/tag-release1/); os da consolidação anterior ficam como histórico. |
+| Pendências | Ficaram só o login e os fluxos mobile e os rótulos do consentimento; E2E completo, testes de componentes e publicação da tag foram retirados por estarem concluídos. |
+| Processo e galeria | Registram o fechamento da release depois do corte da Sprint 2 e que as capturas são anteriores à tag. |
+
+Alteração apenas documental, integrada pela `development`: o conteúdo da tag `release1` não mudou.

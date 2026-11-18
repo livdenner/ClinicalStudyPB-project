@@ -1,0 +1,17 @@
+> test:e2e
+> playwright test --reporter=list
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+Running 8 tests using 4 workers
+  ok 4 [chromium] › e2e\auth\login.spec.ts:28:5 › login › rota protegida sem sessão redireciona para o login (2.3s)
+  ok 3 [chromium] › e2e\auth\login.spec.ts:12:5 › login › CA-02.2: senha errada mostra mensagem genérica e mantém na tela de login (5.6s)
+  ok 1 [chromium] › e2e\auth\login.spec.ts:21:5 › login › CA-02.2: e-mail inexistente mostra a mesma mensagem genérica (5.7s)
+  ok 6 [chromium] › e2e\smoke.spec.ts:3:1 › a aplicação carrega e leva o visitante à tela de login (537ms)
+  ok 2 [chromium] › e2e\auth\login.spec.ts:6:5 › login › CA-02.1: pesquisador entra com credenciais válidas e vai para estudos (6.2s)
+  ok 8 [chromium] › e2e\studies\create-study.spec.ts:39:5 › cadastro de estudo › valida campos obrigatórios antes de enviar (2.0s)
+  ok 7 [chromium] › e2e\studies\create-study.spec.ts:16:5 › cadastro de estudo › CA-04.1: pesquisador cadastra um estudo e ele persiste na listagem (3.5s)
+  ok 5 [chromium] › e2e\flows\full-recruitment.spec.ts:62:5 › fluxo completo da Release 1 › configura o estudo, abre o recrutamento e inclui um participante (13.8s)
+  8 passed (46.0s)
