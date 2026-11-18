@@ -2527,7 +2527,9 @@ components:
           type: integer
           format: int64
           readOnly: true
-          description: Conta que registrou a decisão (o próprio candidato desde a Sprint 3); ausente quando status=PENDING
+          description: >-
+            Conta que registrou a decisão (o próprio candidato desde a Sprint 3);
+            ausente quando status=PENDING ou em decisões anteriores à Sprint 3
     StudyInvitationSummary:
       type: object
       required: [candidateId, studyId, studyTitle, status]

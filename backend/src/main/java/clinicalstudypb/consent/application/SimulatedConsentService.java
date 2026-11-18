@@ -17,6 +17,7 @@ import clinicalstudypb.users.application.UserService;
 import clinicalstudypb.users.domain.User;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Objects;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -84,7 +85,8 @@ public class SimulatedConsentService {
      */
     @Transactional
     public DecisionResult decide(Long candidateId, ConsentDecision decision) {
-        Long actorUserId = currentActor.userId();
+        Long actorUserId = Objects.requireNonNull(
+                currentActor.userId(), "A conta participante autenticada é obrigatória.");
         Candidate owner = candidateService.getByIdAndUser(candidateId, actorUserId);
         Study study = studyService.lockForCandidateRegistration(owner.getStudyId());
         Candidate candidate = candidateService.lockForConsentUpdate(study.getId(), candidateId);

@@ -7,6 +7,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.util.Objects;
 
 /**
  * Última decisão simulada de um candidato, vinculada a ele por chave primária.
@@ -40,14 +41,14 @@ public class SimulatedConsent {
     }
 
     /**
-     * Cria uma decisão inicial sem autoria explícita para compatibilidade interna e testes legados.
+     * Cria uma decisão sem autoria explícita para representar registros anteriores à Sprint 3 ou testes internos.
      *
      * @param candidateId candidato ao qual pertence
      * @param status decisão simulada
      * @param recordedAt horário atribuído pelo servidor
      */
     public SimulatedConsent(Long candidateId, ConsentDecision status, Instant recordedAt) {
-        this(candidateId, status, recordedAt, null);
+        initialize(candidateId, status, recordedAt, null);
     }
 
     /**
@@ -59,6 +60,11 @@ public class SimulatedConsent {
      * @param recordedByUserId identificador da conta participante autora da decisão
      */
     public SimulatedConsent(Long candidateId, ConsentDecision status, Instant recordedAt, Long recordedByUserId) {
+        initialize(candidateId, status, recordedAt,
+                Objects.requireNonNull(recordedByUserId, "A conta autora da decisão é obrigatória."));
+    }
+
+    private void initialize(Long candidateId, ConsentDecision status, Instant recordedAt, Long recordedByUserId) {
         this.candidateId = candidateId;
         this.status = status;
         this.recordedAt = recordedAt;
@@ -112,7 +118,8 @@ public class SimulatedConsent {
     /**
      * Consulta o identificador da conta participante autora da decisão.
      *
-     * @return identificador do usuário que registrou a decisão ou {@code null}
+     * @return identificador do usuário que registrou a decisão, ou {@code null} em registros
+     *         anteriores à Sprint 3
      */
     public Long getRecordedByUserId() {
         return recordedByUserId;

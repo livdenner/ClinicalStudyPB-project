@@ -12,7 +12,7 @@ import java.time.Instant;
  * @param candidateId identificador do candidato
  * @param status estado atual
  * @param recordedAt horário da última decisão ou ausente quando pendente
- * @param recordedByUserId conta que registrou a decisão ou ausente quando pendente
+ * @param recordedByUserId conta autora da decisão ou ausente quando pendente ou anterior à Sprint 3
  * @author Lucas N. de Araújo
  * @since 2026-11-07
  * @version 0.0.2
