@@ -93,7 +93,7 @@ function rotasDoEstudo(candidatos: CandidatoApi[], status: StatusConsentimentoAp
 
 function renderPage(role: UserRole = "COORDINATOR", autenticado = true, path = "/recrutamento") {
     if (autenticado) {
-        localStorage.setItem(
+        sessionStorage.setItem(
             AUTH_STORAGE_KEY,
             JSON.stringify({
                 accessToken: "token-coordenador",
@@ -124,11 +124,13 @@ function renderPage(role: UserRole = "COORDINATOR", autenticado = true, path = "
 
 beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
 });
 
 afterEach(() => {
     cleanup();
     localStorage.clear();
+    sessionStorage.clear();
     vi.restoreAllMocks();
 });
 

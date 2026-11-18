@@ -34,10 +34,12 @@ function renderApp(initialRoute: string) {
 describe("Rotas protegidas e menu por perfil (T5.2)", () => {
     beforeEach(() => {
         window.localStorage.clear();
+        sessionStorage.clear();
     });
 
     afterEach(() => {
         window.localStorage.clear();
+        sessionStorage.clear();
         vi.restoreAllMocks();
     });
 
