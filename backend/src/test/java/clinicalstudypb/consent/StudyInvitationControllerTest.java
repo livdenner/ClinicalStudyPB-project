@@ -72,6 +72,19 @@ class StudyInvitationControllerTest {
     }
 
     @Test
+    void coordinatorConsentReadOmitsRecordedByUserIdWhenLegacyActorIsNull() throws Exception {
+        Instant recordedAt = Instant.parse("2026-11-08T12:00:00Z");
+        when(consentService.get(1L, 2L)).thenReturn(
+                Optional.of(new SimulatedConsent(2L, ConsentDecision.GRANTED, recordedAt)));
+
+        mockMvc.perform(get("/api/studies/{studyId}/candidates/{candidateId}/consent", 1L, 2L))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("GRANTED"))
+                .andExpect(jsonPath("$.recordedAt").value(recordedAt.toString()))
+                .andExpect(jsonPath("$.recordedByUserId").doesNotExist());
+    }
+
+    @Test
     void listAndDecisionValidateStatusParametersAndForwardValidDecision() throws Exception {
         mockMvc.perform(get("/api/me/invitations").param("status", "INCLUDED"))
                 .andExpect(status().isBadRequest());

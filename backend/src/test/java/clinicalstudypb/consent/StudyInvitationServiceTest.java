@@ -194,6 +194,16 @@ class StudyInvitationServiceTest {
         assertThrows(ResourceNotFoundException.class, () -> invitationService.get(12L));
     }
 
+    @Test
+    void decideRequiresAuthenticatedActorAndDomainConstructorRejectsNullActor() {
+        when(currentActor.userId()).thenReturn(null);
+
+        assertThrows(NullPointerException.class, () -> consentService.decide(5L, ConsentDecision.GRANTED));
+        assertThrows(NullPointerException.class, () -> new SimulatedConsent(
+                5L, ConsentDecision.GRANTED, Instant.parse("2026-11-17T12:00:00Z"), null));
+        verify(consentRepository, never()).saveAndFlush(any());
+    }
+
     private Candidate candidate(Long id, Long studyId, Long userId, EligibilityStatus eligibility) {
         Candidate c = new Candidate(studyId, "Participante", "participante", 30,
                 "p@test.local", "83999990000", userId);

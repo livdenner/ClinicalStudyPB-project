@@ -118,6 +118,22 @@ class SimulatedConsentIntegrationTest extends IntegrationTestSupport {
     }
 
     @Test
+    void legacyDecisionWithoutAuthorRemainsReadableWithoutRecordedByUserId() throws Exception {
+        jdbc.update("""
+                INSERT INTO simulated_consents (candidate_id, status, recorded_at, locked_after_inclusion)
+                VALUES (?, 'GRANTED', TIMESTAMP WITH TIME ZONE '2026-11-08T12:00:00Z', FALSE)
+                """, candidateId);
+
+        mockMvc.perform(get(coordinatorConsentPath()).header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.studyId").value(studyId))
+                .andExpect(jsonPath("$.candidateId").value(candidateId))
+                .andExpect(jsonPath("$.status").value("GRANTED"))
+                .andExpect(jsonPath("$.recordedAt").exists())
+                .andExpect(jsonPath("$.recordedByUserId").doesNotExist());
+    }
+
+    @Test
     void participantCanGrantAndCoordinatorReadsPersistedDecisionWithAuthor() throws Exception {
         decide(candidateId, "GRANTED")
                 .andExpect(status().isOk())

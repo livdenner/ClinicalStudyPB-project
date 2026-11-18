@@ -165,7 +165,9 @@ class DemoSeedIntegrationTest extends IntegrationTestSupport {
         mockMvc.perform(get("/api/studies/" + study + "/candidates/" + candidate + "/consent")
                         .header(HttpHeaders.AUTHORIZATION, token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("GRANTED"));
+                .andExpect(jsonPath("$.status").value("GRANTED"))
+                .andExpect(jsonPath("$.recordedByUserId").doesNotExist());
+        assertNone("SELECT COUNT(*) FROM simulated_consents WHERE recorded_by_user_id IS NOT NULL");
     }
 
     @Test
