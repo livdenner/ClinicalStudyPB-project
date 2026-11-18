@@ -1,11 +1,5 @@
 export type StatusConsentimentoApi = "PENDING" | "GRANTED" | "DECLINED";
 
-export type DecisaoConsentimentoApi = "GRANTED" | "DECLINED";
-
-export type DadosConsentimentoSimuladoApi = {
-    status: DecisaoConsentimentoApi;
-};
-
 export type ConsentimentoSimuladoApi = {
     studyId: number;
     candidateId: number;

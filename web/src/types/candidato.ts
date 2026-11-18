@@ -20,6 +20,17 @@ export type DadosCandidatoApi = {
 export type StatusCandidatoApi =
     "INVITED" | "ACTIVE" | "CONSENT_PENDING" | "GRANTED" | "DECLINED" | "INCLUDED" | "CANCELLED";
 
+/** Rótulos da situação consolidada pelo backend, sem inferência local. @author Lívia */
+export const SITUACAO_CANDIDATO_LABELS: Record<StatusCandidatoApi, string> = {
+    INVITED: "Convidado",
+    ACTIVE: "Conta ativa",
+    CONSENT_PENDING: "Aguardando decisão",
+    GRANTED: "Aceitou",
+    DECLINED: "Recusou",
+    INCLUDED: "Incluído",
+    CANCELLED: "Cancelado",
+};
+
 export type AtivacaoCandidatoApi = {
     expiresAt: string;
     expired: boolean;

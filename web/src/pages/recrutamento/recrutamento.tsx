@@ -1,9 +1,8 @@
 import { SeloEstadoEstudo } from "../../components/estudos/SeloEstadoEstudo";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Plus, Search } from "lucide-react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { AvaliacaoElegibilidade } from "../../components/candidatos/AvaliacaoElegibilidade";
-import { ConsentimentoSimulado } from "../../components/candidatos/ConsentimentoSimulado";
 import { ModalConfirmarInclusao } from "../../components/candidatos/ModalConfirmarInclusao";
 import { ModalNovoCandidato } from "../../components/candidatos/ModalNovoCandidato";
 import { PainelParticipantesVagas } from "../../components/candidatos/PainelParticipantesVagas";
@@ -13,7 +12,6 @@ import { ErrorMessage } from "../../components/ui/ErrorMessage";
 import { useAuth } from "../../context/AuthContext";
 import { ApiClientError } from "../../services/api/apiClient";
 import { cadastrarCandidato, listarCandidatosPorEstudo } from "../../services/candidatos";
-import { obterConsentimentoSimulado } from "../../services/consentimento";
 import { listarEstudos } from "../../services/estudos";
 import {
     incluirParticipanteNoEstudo,
@@ -25,70 +23,14 @@ import {
     type CandidatoApi,
     type DadosCandidatoApi,
     type EstudoComStatusApi,
-    type StatusElegibilidadeApi,
     type StatusEstudoCandidato,
 } from "../../types/candidato";
-import type { StatusConsentimentoApi } from "../../types/consentimento";
 import type { ParticipanteApi } from "../../types/participante";
+import { candidatoPodeSerIncluido } from "../../utils/candidatos";
 
 const PERFIS_PERMITIDOS: UserRole[] = ["COORDINATOR", "RESEARCHER"];
-const CONSENTIMENTO_CACHE_KEY = "clinicalstudypb.consentimentos";
 
-/**
- * Guarda só a identificação do termo, que a API não armazena. A decisão do consentimento
- * vem sempre da API: o cache local não vale em outro navegador nem para dados do seed.
- */
-type CacheConsentimentoItem = {
-    termo: string;
-};
-
-/**
- * Consulta a decisão de consentimento de cada candidato. Uma falha isolada não esconde a
- * lista: o candidato fica sem decisão conhecida, e a inclusão continua bloqueada para ele.
- */
-async function carregarConsentimentos(
-    studyId: number,
-    candidatos: CandidatoApi[],
-    token: string,
-    signal: AbortSignal
-): Promise<{ lista: CandidatoApi[]; falhou: boolean }> {
-    const resultados = await Promise.allSettled(
-        candidatos.map((candidato) =>
-            obterConsentimentoSimulado(studyId, candidato.id, token, signal)
-        )
-    );
-    let falhou = false;
-    const lista = candidatos.map((candidato, indice) => {
-        const resultado = resultados[indice];
-        if (resultado.status === "fulfilled") {
-            return { ...candidato, consentStatus: resultado.value.status };
-        }
-        falhou = true;
-        return candidato;
-    });
-    return { lista, falhou };
-}
-
-function lerCacheConsentimentos(): Record<number, CacheConsentimentoItem> {
-    try {
-        const bruto = localStorage.getItem(CONSENTIMENTO_CACHE_KEY);
-        if (!bruto) return {};
-        return JSON.parse(bruto) as Record<number, CacheConsentimentoItem>;
-    } catch {
-        return {};
-    }
-}
-
-function salvarCacheConsentimento(candidateId: number, termo: string) {
-    try {
-        const atual = lerCacheConsentimentos();
-        atual[candidateId] = { termo };
-        localStorage.setItem(CONSENTIMENTO_CACHE_KEY, JSON.stringify(atual));
-    } catch {
-        // Ignora falha de armazenamento local
-    }
-}
-
+/** Abre o acompanhamento de candidatos conforme o perfil autenticado. @author Lívia */
 export function RecrutamentoPage() {
     const { session, logout } = useAuth();
     const navigate = useNavigate();
@@ -127,7 +69,6 @@ export function RecrutamentoPage() {
             token={session.accessToken}
             estudoSolicitado={estudoSolicitado}
             role={session.user.role}
-            responsavelNome={session.user.name}
             onIrParaLogin={handleIrParaLogin}
         />
     );
@@ -137,13 +78,11 @@ function GestaoCandidatos({
     estudoSolicitado,
     token,
     role,
-    responsavelNome,
     onIrParaLogin,
 }: {
     token: string;
     estudoSolicitado: string | null;
     role: UserRole;
-    responsavelNome: string;
     onIrParaLogin: () => Promise<void>;
 }) {
     const [estudos, setEstudos] = useState<EstudoComStatusApi[]>([]);
@@ -156,7 +95,6 @@ function GestaoCandidatos({
     const [carregandoCandidatos, setCarregandoCandidatos] = useState(false);
     const [erroCandidatos, setErroCandidatos] = useState("");
     const [tentativaCandidatos, setTentativaCandidatos] = useState(0);
-    const [avisoConsentimentos, setAvisoConsentimentos] = useState("");
 
     const [participantes, setParticipantes] = useState<ParticipanteApi[]>([]);
     const [carregandoParticipantes, setCarregandoParticipantes] = useState(false);
@@ -167,16 +105,7 @@ function GestaoCandidatos({
     const [modalAberto, setModalAberto] = useState(false);
     const [mensagemSucesso, setMensagemSucesso] = useState("");
     const [candidatoAvaliandoId, setCandidatoAvaliandoId] = useState<number | null>(null);
-    const [candidatoConsentimentoId, setCandidatoConsentimentoId] = useState<number | null>(null);
     const [candidatoIncluindo, setCandidatoIncluindo] = useState<CandidatoApi | null>(null);
-    const [termosConsentimento, setTermosConsentimento] = useState<Record<number, string>>(() => {
-        const cache = lerCacheConsentimentos();
-        const inicial: Record<number, string> = {};
-        for (const [idStr, item] of Object.entries(cache)) {
-            inicial[Number(idStr)] = item.termo;
-        }
-        return inicial;
-    });
 
     useEffect(() => {
         const controller = new AbortController();
@@ -233,25 +162,9 @@ function GestaoCandidatos({
         const controller = new AbortController();
 
         listarCandidatosPorEstudo(estudoSelecionadoId, token, controller.signal)
-            .then(async (dados) => {
+            .then((dados) => {
                 if (controller.signal.aborted) return;
-                // Só o coordenador consulta o consentimento; para os outros perfis a API responde 403.
-                const resultado =
-                    role === "COORDINATOR"
-                        ? await carregarConsentimentos(
-                              estudoSelecionadoId,
-                              dados,
-                              token,
-                              controller.signal
-                          )
-                        : { lista: dados, falhou: false };
-                if (controller.signal.aborted) return;
-                setCandidatos(resultado.lista);
-                setAvisoConsentimentos(
-                    resultado.falhou
-                        ? "Não foi possível consultar o consentimento de alguns candidatos. A inclusão deles fica bloqueada até uma nova consulta."
-                        : ""
-                );
+                setCandidatos(dados);
             })
             .catch((error: unknown) => {
                 if (controller.signal.aborted) return;
@@ -278,7 +191,7 @@ function GestaoCandidatos({
             });
 
         return () => controller.abort();
-    }, [estudoSelecionadoId, token, role, tentativaCandidatos]);
+    }, [estudoSelecionadoId, token, tentativaCandidatos]);
 
     useEffect(() => {
         if (estudoSelecionadoId === null) {
@@ -338,7 +251,33 @@ function GestaoCandidatos({
     const limiteVagas = estudoSelecionado?.participantLimit ?? 0;
     const vagasOcupadas = participantes.length;
     const vagasDisponiveis = Math.max(0, limiteVagas - vagasOcupadas);
-    const participantesCandidatoIds = new Set(participantes.map((p) => p.candidateId));
+    const vagasConhecidas = !carregandoParticipantes && !erroParticipantes;
+
+    function atualizarCandidatos() {
+        setCarregandoCandidatos(true);
+        setErroCandidatos("");
+        setTentativaCandidatos((atual) => atual + 1);
+    }
+
+    function atualizarListas() {
+        atualizarCandidatos();
+        setCarregandoParticipantes(true);
+        setErroParticipantes("");
+        setTentativaParticipantes((atual) => atual + 1);
+    }
+
+    function handleAbrirInclusao(candidato: CandidatoApi) {
+        if (
+            !podeCadastrar ||
+            !candidatoPodeSerIncluido(candidato) ||
+            !estudoEmRecrutamento ||
+            !vagasConhecidas ||
+            vagasDisponiveis <= 0
+        )
+            return;
+        setMensagemSucesso("");
+        setCandidatoIncluindo(candidato);
+    }
 
     async function handleCadastrar(dados: DadosCandidatoApi) {
         if (!estudoSelecionado) throw new Error("Selecione um estudo para cadastrar o candidato.");
@@ -368,42 +307,26 @@ function GestaoCandidatos({
 
     async function handleConfirmarInclusao() {
         if (!estudoSelecionado || !candidatoIncluindo) return;
-        const novoParticipante = await incluirParticipanteNoEstudo(
-            estudoSelecionado.id,
-            candidatoIncluindo.id,
-            token
-        );
-        setParticipantes((atuais) =>
-            atuais.some((p) => p.id === novoParticipante.id)
-                ? atuais
-                : [...atuais, novoParticipante]
-        );
+        if (
+            !podeCadastrar ||
+            !candidatoPodeSerIncluido(candidatoIncluindo) ||
+            !estudoEmRecrutamento ||
+            !vagasConhecidas ||
+            vagasDisponiveis <= 0
+        ) {
+            throw new ApiClientError("O candidato não atende às condições para inclusão.", {
+                status: 409,
+            });
+        }
+        await incluirParticipanteNoEstudo(estudoSelecionado.id, candidatoIncluindo.id, token);
         setCandidatoIncluindo(null);
         setMensagemSucesso("Participante incluído no estudo com sucesso.");
+        atualizarListas();
     }
 
-    function handleAtualizarStatusCandidato(
-        candidateId: number,
-        novoStatus: StatusElegibilidadeApi
-    ) {
-        setCandidatos((atuais) =>
-            atuais.map((c) => (c.id === candidateId ? { ...c, eligibilityStatus: novoStatus } : c))
-        );
+    function handleAtualizarStatusCandidato() {
+        atualizarCandidatos();
     }
-
-    const handleAtualizarConsentimentoCandidato = useCallback(
-        (candidateId: number, novoStatus: StatusConsentimentoApi, termoIdentificacao: string) => {
-            salvarCacheConsentimento(candidateId, termoIdentificacao);
-            setCandidatos((atuais) =>
-                atuais.map((c) => (c.id === candidateId ? { ...c, consentStatus: novoStatus } : c))
-            );
-            setTermosConsentimento((atuais) => ({
-                ...atuais,
-                [candidateId]: termoIdentificacao,
-            }));
-        },
-        []
-    );
 
     const candidatoAvaliando =
         candidatoAvaliandoId !== null
@@ -419,26 +342,6 @@ function GestaoCandidatos({
                 role={role}
                 onVoltar={() => setCandidatoAvaliandoId(null)}
                 onAtualizarStatusCandidato={handleAtualizarStatusCandidato}
-            />
-        );
-    }
-
-    const candidatoConsentimento =
-        candidatoConsentimentoId !== null
-            ? (candidatos.find((c) => c.id === candidatoConsentimentoId) ?? null)
-            : null;
-
-    if (candidatoConsentimento && estudoSelecionado) {
-        return (
-            <ConsentimentoSimulado
-                estudo={estudoSelecionado}
-                candidato={candidatoConsentimento}
-                token={token}
-                role={role}
-                responsavelNome={responsavelNome}
-                termoInicial={termosConsentimento[candidatoConsentimento.id]}
-                onVoltar={() => setCandidatoConsentimentoId(null)}
-                onAtualizarConsentimentoCandidato={handleAtualizarConsentimentoCandidato}
             />
         );
     }
@@ -459,26 +362,41 @@ function GestaoCandidatos({
                         Candidatos e recrutamento
                     </h1>
                     <p className="mt-2 text-sm text-[var(--color-muted)]">
-                        Filtre por estudo, acompanhe a situação de elegibilidade e cadastre novos
-                        candidatos.
+                        Acompanhe a situação dos candidatos. O consentimento é decidido pelo próprio
+                        candidato no aplicativo; atualize a lista para consultar mudanças.
                     </p>
                 </div>
 
-                {podeCadastrar && (
+                <div className="flex flex-wrap items-center gap-3">
                     <Button
                         type="button"
-                        variant="primary"
-                        disabled={!botaoCadastroHabilitado}
-                        onClick={() => {
-                            setMensagemSucesso("");
-                            setModalAberto(true);
-                        }}
-                        className="btn button--create"
+                        variant="secondary"
+                        disabled={
+                            !estudoSelecionado ||
+                            carregandoEstudos ||
+                            carregandoCandidatos ||
+                            carregandoParticipantes
+                        }
+                        onClick={atualizarListas}
                     >
-                        <Plus aria-hidden="true" size={18} />
-                        Novo candidato
+                        Atualizar lista
                     </Button>
-                )}
+                    {podeCadastrar && (
+                        <Button
+                            type="button"
+                            variant="primary"
+                            disabled={!botaoCadastroHabilitado}
+                            onClick={() => {
+                                setMensagemSucesso("");
+                                setModalAberto(true);
+                            }}
+                            className="btn button--create"
+                        >
+                            <Plus aria-hidden="true" size={18} />
+                            Novo candidato
+                        </Button>
+                    )}
+                </div>
             </header>
 
             {mensagemSucesso && (
@@ -524,7 +442,6 @@ function GestaoCandidatos({
                                 const novoId = Number.isNaN(valor) ? null : valor;
                                 setMensagemSucesso("");
                                 setCandidatoAvaliandoId(null);
-                                setCandidatoConsentimentoId(null);
                                 setCandidatoIncluindo(null);
                                 setEstudoSelecionadoId(novoId);
                                 if (novoId !== null) {
@@ -675,45 +592,16 @@ function GestaoCandidatos({
                     </div>
                 ) : (
                     <>
-                        {avisoConsentimentos && (
-                            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border)] px-5 py-3">
-                                <ErrorMessage message={avisoConsentimentos} />
-                                <Button
-                                    type="button"
-                                    variant="secondary"
-                                    onClick={() => {
-                                        setCarregandoCandidatos(true);
-                                        setAvisoConsentimentos("");
-                                        setTentativaCandidatos((atual) => atual + 1);
-                                    }}
-                                >
-                                    Consultar novamente
-                                </Button>
-                            </div>
-                        )}
                         <TabelaCandidatos
                             candidatos={candidatosFiltrados}
-                            participantesCandidatoIds={participantesCandidatoIds}
-                            vagasDisponiveis={vagasDisponiveis}
+                            vagasDisponiveis={vagasConhecidas ? vagasDisponiveis : undefined}
                             estudoEmRecrutamento={estudoEmRecrutamento}
                             onSelecionarCandidato={
                                 podeCadastrar
                                     ? (candidato) => setCandidatoAvaliandoId(candidato.id)
                                     : undefined
                             }
-                            onAbrirConsentimento={
-                                podeCadastrar
-                                    ? (candidato) => setCandidatoConsentimentoId(candidato.id)
-                                    : undefined
-                            }
-                            onIncluirParticipante={
-                                podeCadastrar
-                                    ? (candidato) => {
-                                          setMensagemSucesso("");
-                                          setCandidatoIncluindo(candidato);
-                                      }
-                                    : undefined
-                            }
+                            onIncluirParticipante={podeCadastrar ? handleAbrirInclusao : undefined}
                         />
                         <footer className="border-t border-[var(--color-border)] px-5 py-4 text-xs text-[var(--color-muted)]">
                             Exibindo {candidatosFiltrados.length} de {candidatos.length} candidatos

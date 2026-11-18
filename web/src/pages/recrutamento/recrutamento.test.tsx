@@ -5,7 +5,6 @@ import { AuthProvider } from "../../context/AuthContext";
 import { AUTH_STORAGE_KEY } from "../../services/auth";
 import type { UserRole } from "../../types/auth";
 import type { CandidatoApi, EstudoComStatusApi } from "../../types/candidato";
-import type { StatusConsentimentoApi } from "../../types/consentimento";
 import { RecrutamentoPage } from "./recrutamento";
 
 const estudoRecrutamento: EstudoComStatusApi = {
@@ -58,12 +57,14 @@ const candidatoElegivel: CandidatoApi = {
     consentStatus: "PENDING",
 };
 
+const candidatoAceitou: CandidatoApi = {
+    ...candidatoElegivel,
+    status: "GRANTED",
+    consentStatus: "GRANTED",
+};
+
 function resposta(body: unknown, status = 200) {
     return new Response(JSON.stringify(body), { status });
-}
-
-function consentimento(studyId: number, candidateId: number, status: StatusConsentimentoApi) {
-    return resposta({ studyId, candidateId, status });
 }
 
 /**
@@ -87,17 +88,11 @@ function mockApiPorRota(rotas: Record<string, Response | Error | Array<Response 
     });
 }
 
-function rotasDoEstudo(candidatos: CandidatoApi[], status: StatusConsentimentoApi = "PENDING") {
+function rotasDoEstudo(candidatos: CandidatoApi[]) {
     return {
         "GET /api/studies": resposta([estudoRecrutamento]),
         "GET /api/studies/10/candidates": resposta(candidatos),
         "GET /api/studies/10/participants": resposta([]),
-        ...Object.fromEntries(
-            candidatos.map((c) => [
-                `GET /api/studies/10/candidates/${c.id}/consent`,
-                consentimento(10, c.id, status),
-            ])
-        ),
     };
 }
 
@@ -192,7 +187,6 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
             "GET /api/studies": resposta([estudoRecrutamento, estudoPlanejamento]),
             "GET /api/studies/20/candidates": resposta([candidatoOutroEstudo]),
             "GET /api/studies/20/participants": resposta([]),
-            "GET /api/studies/20/candidates/201/consent": consentimento(20, 201, "PENDING"),
         });
 
         renderPage();
@@ -221,11 +215,7 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
         expect(await screen.findByText("Candidato 099")).toBeInTheDocument();
         expect(screen.getByText("Inelegível")).toBeInTheDocument();
         expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(
-            expect.arrayContaining([
-                "/api/studies/20/candidates",
-                "/api/studies/20/participants",
-                "/api/studies/20/candidates/201/consent",
-            ])
+            expect.arrayContaining(["/api/studies/20/candidates", "/api/studies/20/participants"])
         );
     });
 
@@ -447,7 +437,24 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
 describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () => {
     it("usa a decisão da API sem registro local e permite incluir o participante", async () => {
         const fetchMock = mockApiPorRota({
-            ...rotasDoEstudo([candidatoElegivel], "GRANTED"),
+            ...rotasDoEstudo([candidatoAceitou]),
+            "GET /api/studies/10/candidates": [
+                resposta([candidatoAceitou]),
+                resposta([{ ...candidatoAceitou, status: "INCLUDED" }]),
+            ],
+            "GET /api/studies/10/participants": [
+                resposta([]),
+                resposta([
+                    {
+                        id: 1,
+                        studyId: 10,
+                        candidateId: 102,
+                        candidateName: "Candidato 021",
+                        includedAt: "2026-11-09T12:00:00Z",
+                        status: "ACTIVE",
+                    },
+                ]),
+            ],
             "POST /api/studies/10/candidates/102/inclusion": resposta(
                 {
                     id: 1,
@@ -463,9 +470,9 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
 
         renderPage();
 
-        expect(await screen.findByText("Aceito")).toBeInTheDocument();
+        expect(await screen.findByText("Aceitou")).toBeInTheDocument();
         const incluir = screen.getByRole("button", { name: "Incluir participante: Candidato 021" });
-        expect(incluir).toBeEnabled();
+        await waitFor(() => expect(incluir).toBeEnabled());
 
         fireEvent.click(incluir);
         const dialog = await screen.findByRole("dialog", {
@@ -477,10 +484,14 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
         expect(
             await screen.findByText("Participante incluído no estudo com sucesso.")
         ).toBeInTheDocument();
-        expect(screen.getByLabelText("Paciente Incluído: Candidato 021")).toBeInTheDocument();
         expect(
-            screen.getByRole("status", { name: "Indicador de vagas do estudo" })
-        ).toHaveTextContent("1 de 50");
+            await within(await screen.findByLabelText("Lista de candidatos")).findByText("Incluído")
+        ).toBeInTheDocument();
+        await waitFor(() =>
+            expect(
+                screen.getByRole("status", { name: "Indicador de vagas do estudo" })
+            ).toHaveTextContent("1 de 50")
+        );
         expect(
             fetchMock.mock.calls.some(
                 ([url, init]) =>
@@ -494,45 +505,45 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
             "clinicalstudypb.consentimentos",
             JSON.stringify({ 102: { status: "GRANTED", termo: "TCLE-ANTIGO" } })
         );
-        mockApiPorRota(rotasDoEstudo([candidatoElegivel], "PENDING"));
+        mockApiPorRota(rotasDoEstudo([candidatoElegivel]));
 
         renderPage();
 
-        expect(await screen.findByText("Não registrado")).toBeInTheDocument();
+        expect(await screen.findByText("Aguardando decisão")).toBeInTheDocument();
         expect(
-            screen.getByRole("button", { name: "Incluir participante: Candidato 021" })
-        ).toBeDisabled();
+            screen.queryByRole("button", { name: "Incluir participante: Candidato 021" })
+        ).not.toBeInTheDocument();
     });
 
-    it("avisa quando o consentimento não pôde ser consultado e permite consultar de novo", async () => {
+    it("avisa quando a situação não pôde ser consultada e permite consultar de novo", async () => {
         mockApiPorRota({
-            ...rotasDoEstudo([candidatoElegivel]),
-            "GET /api/studies/10/candidates/102/consent": [
+            ...rotasDoEstudo([candidatoAceitou]),
+            "GET /api/studies/10/candidates": [
                 resposta({ message: "Falha interna" }, 500),
-                consentimento(10, 102, "GRANTED"),
+                resposta([candidatoAceitou]),
             ],
         });
 
         renderPage();
 
+        expect(await screen.findByRole("alert")).toHaveTextContent(
+            "Não foi possível carregar os candidatos."
+        );
         expect(
-            await screen.findByText(
-                /Não foi possível consultar o consentimento de alguns candidatos/
-            )
-        ).toBeInTheDocument();
-        expect(
-            screen.getByRole("button", { name: "Incluir participante: Candidato 021" })
-        ).toBeDisabled();
-
-        fireEvent.click(screen.getByRole("button", { name: "Consultar novamente" }));
-
-        expect(await screen.findByText("Aceito")).toBeInTheDocument();
-        expect(
-            screen.queryByText(/Não foi possível consultar o consentimento de alguns candidatos/)
+            screen.queryByRole("button", { name: "Incluir participante: Candidato 021" })
         ).not.toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole("button", { name: "Tentar novamente" }));
+
+        expect(await screen.findByText("Aceitou")).toBeInTheDocument();
         expect(
-            screen.getByRole("button", { name: "Incluir participante: Candidato 021" })
-        ).toBeEnabled();
+            screen.queryByText(/Não foi possível carregar os candidatos/)
+        ).not.toBeInTheDocument();
+        await waitFor(() =>
+            expect(
+                screen.getByRole("button", { name: "Incluir participante: Candidato 021" })
+            ).toBeEnabled()
+        );
     });
 
     it("mantém o botão de inclusão desabilitado quando o estudo já atingiu o limite de vagas", async () => {
@@ -542,7 +553,7 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
         };
 
         mockApiPorRota({
-            ...rotasDoEstudo([candidatoElegivel], "GRANTED"),
+            ...rotasDoEstudo([candidatoAceitou]),
             "GET /api/studies": resposta([estudoUmaVaga]),
             "GET /api/studies/10/participants": resposta([
                 {
@@ -558,7 +569,7 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
 
         renderPage();
 
-        expect(await screen.findByText("Aceito")).toBeInTheDocument();
+        expect(await screen.findByText("Aceitou")).toBeInTheDocument();
 
         const indicadorVagas = screen.getByRole("status", {
             name: "Indicador de vagas do estudo",
@@ -579,7 +590,7 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
 
     it("exibe o motivo específico retornado pela API (HTTP 409) quando a última vaga esgota antes da resposta", async () => {
         mockApiPorRota({
-            ...rotasDoEstudo([candidatoElegivel], "GRANTED"),
+            ...rotasDoEstudo([candidatoAceitou]),
             "POST /api/studies/10/candidates/102/inclusion": resposta(
                 {
                     code: "INCLUSION_CONFLICT",
@@ -591,10 +602,10 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
 
         renderPage();
 
-        expect(await screen.findByText("Aceito")).toBeInTheDocument();
-        fireEvent.click(
-            screen.getByRole("button", { name: "Incluir participante: Candidato 021" })
-        );
+        expect(await screen.findByText("Aceitou")).toBeInTheDocument();
+        const incluir = screen.getByRole("button", { name: "Incluir participante: Candidato 021" });
+        await waitFor(() => expect(incluir).toBeEnabled());
+        fireEvent.click(incluir);
 
         const dialog = await screen.findByRole("dialog", {
             name: "Confirmar inclusão de participante",
@@ -615,11 +626,25 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
             concluirInclusao = resolve;
         });
 
-        const rotasBase = rotasDoEstudo([candidatoElegivel], "GRANTED");
+        const rotasBase = rotasDoEstudo([candidatoAceitou]);
         const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
             const rota = `${(init?.method ?? "GET").toUpperCase()} ${String(input)}`;
             if (rota === "POST /api/studies/10/candidates/102/inclusion") {
-                return pendenteInclusao;
+                const resultado = await pendenteInclusao;
+                rotasBase["GET /api/studies/10/candidates"] = resposta([
+                    { ...candidatoAceitou, status: "INCLUDED" },
+                ]);
+                rotasBase["GET /api/studies/10/participants"] = resposta([
+                    {
+                        id: 502,
+                        studyId: 10,
+                        candidateId: 102,
+                        candidateName: "Candidato 021",
+                        includedAt: "2026-11-09T17:00:00Z",
+                        status: "ACTIVE",
+                    },
+                ]);
+                return resultado;
             }
             const respostaRota = (rotasBase as Record<string, Response | undefined>)[rota];
             if (!respostaRota) {
@@ -630,10 +655,10 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
 
         renderPage();
 
-        expect(await screen.findByText("Aceito")).toBeInTheDocument();
-        fireEvent.click(
-            screen.getByRole("button", { name: "Incluir participante: Candidato 021" })
-        );
+        expect(await screen.findByText("Aceitou")).toBeInTheDocument();
+        const incluir = screen.getByRole("button", { name: "Incluir participante: Candidato 021" });
+        await waitFor(() => expect(incluir).toBeEnabled());
+        fireEvent.click(incluir);
 
         const dialog = await screen.findByRole("dialog", {
             name: "Confirmar inclusão de participante",
