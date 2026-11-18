@@ -7,7 +7,9 @@ export type AuthErrorContext = 'login' | 'activation' | 'password' | 'session';
 export type AuthFlowErrorCode =
   | 'ROLE_NOT_ALLOWED'
   | 'SESSION_EXPIRED'
-  | 'INVALID_RESPONSE';
+  | 'PASSWORD_CHANGE_REQUIRED'
+  | 'INVALID_RESPONSE'
+  | 'STALE_REQUEST';
 
 /**
  * Mensagens genéricas exibidas pelo aplicativo. Nenhuma delas revela a
@@ -26,6 +28,8 @@ export const AUTH_MESSAGES = {
     'A senha atual não foi confirmada. Confira e tente novamente.',
   passwordChangeRequired: 'Defina uma nova senha para continuar.',
   sessionExpired: 'Sua sessão expirou. Entre novamente.',
+  staleRequest:
+    'A sessão mudou durante a operação. Tente novamente com a sessão atual.',
   forbidden: 'Acesso negado a este aplicativo.',
   serviceUnavailable:
     'O serviço está indisponível no momento. Tente novamente.',
@@ -46,6 +50,10 @@ function messageForFlowError(code: AuthFlowErrorCode): string {
       return AUTH_MESSAGES.forbidden;
     case 'SESSION_EXPIRED':
       return AUTH_MESSAGES.sessionExpired;
+    case 'PASSWORD_CHANGE_REQUIRED':
+      return AUTH_MESSAGES.passwordChangeRequired;
+    case 'STALE_REQUEST':
+      return AUTH_MESSAGES.staleRequest;
     default:
       return AUTH_MESSAGES.unexpected;
   }

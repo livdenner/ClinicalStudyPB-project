@@ -115,4 +115,19 @@ describe('mensagens de erro de autenticação', () => {
       getAuthErrorMessage(new AuthFlowError('INVALID_RESPONSE'), 'login'),
     ).toBe(AUTH_MESSAGES.unexpected);
   });
+
+  it('maps the password restriction without treating it as expiration', () => {
+    expect(
+      getAuthErrorMessage(
+        new AuthFlowError('PASSWORD_CHANGE_REQUIRED'),
+        'session',
+      ),
+    ).toBe(AUTH_MESSAGES.passwordChangeRequired);
+  });
+
+  it('explains when a response belongs to a replaced session', () => {
+    expect(
+      getAuthErrorMessage(new AuthFlowError('STALE_REQUEST'), 'session'),
+    ).toBe(AUTH_MESSAGES.staleRequest);
+  });
 });

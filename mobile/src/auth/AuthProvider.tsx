@@ -26,6 +26,10 @@ import type {
   PasswordChangeRequest,
 } from '../services/auth/authTypes';
 import {
+  classifyAuthenticatedFailure,
+  withPasswordChangeRequired,
+} from './authenticatedSession';
+import {
   createSessionFromLoginResponse,
   InvalidAuthResponseError,
   isSessionExpired,
@@ -35,6 +39,7 @@ import type {
   SessionReadResult,
   SessionStorage,
 } from './secureSessionStorage';
+import { useSessionExpiration } from './useSessionExpiration';
 
 /** Estados possíveis da sessão do aplicativo. */
 export type SessionStatus = 'loading' | 'anonymous' | 'authenticated';
@@ -57,6 +62,12 @@ export interface AuthContextValue extends AuthState {
   activateAccount(input: ActivationRequest): Promise<AuthSession>;
   signOut(): Promise<void>;
   changePassword(input: PasswordChangeRequest): Promise<AuthSession>;
+  /**
+   * Executa uma chamada autenticada com o token da sessão atual. O provider
+   * confere o vencimento antes da chamada, invalida a sessão uma única vez em
+   * caso de 401 e descarta respostas de sessões que já foram substituídas.
+   */
+  runAuthenticated<T>(operation: (accessToken: string) => Promise<T>): Promise<T>;
   clearNotice(): void;
 }
 
@@ -130,6 +141,14 @@ export function AuthProvider({
 }: PropsWithChildren<AuthProviderProps>) {
   const [state, setState] = useState<AuthState>(INITIAL_STATE);
   const persistedRef = useRef(false);
+  const sessionRef = useRef<AuthSession | null>(null);
+  /**
+   * Identidade da sessão. Cresce ao autenticar, sair ou invalidar e permite
+   * descartar respostas de uma sessão que já não é a atual.
+   */
+  const generationRef = useRef(0);
+  /** Identidade da tentativa de autenticação (login, ativação ou senha). */
+  const attemptRef = useRef(0);
 
   useEffect(() => {
     let active = true;
@@ -151,6 +170,7 @@ export function AuthProvider({
           if (!active) {
             return;
           }
+          sessionRef.current = null;
           setState({
             status: 'anonymous',
             session: null,
@@ -169,6 +189,7 @@ export function AuthProvider({
           if (!active) {
             return;
           }
+          sessionRef.current = null;
           setState({
             status: 'anonymous',
             session: null,
@@ -179,6 +200,8 @@ export function AuthProvider({
         }
 
         persistedRef.current = true;
+        generationRef.current += 1;
+        sessionRef.current = restored;
         setState({
           status: 'authenticated',
           session: restored,
@@ -211,8 +234,151 @@ export function AuthProvider({
     };
   }, [storage]);
 
+  /**
+   * Encerra a sessão atual e limpa o armazenamento. A geração é trocada antes
+   * da limpeza para que requisições e callbacks antigos não afetem a próxima
+   * sessão; chamadas concorrentes de invalidação, portanto, só limpam uma vez.
+   */
+  const invalidateSession = useCallback(
+    async (notice: SessionNotice): Promise<void> => {
+      attemptRef.current += 1;
+      const generation = generationRef.current + 1;
+      generationRef.current = generation;
+      const wasPersisted = persistedRef.current;
+      persistedRef.current = false;
+      sessionRef.current = null;
+
+      setState({
+        status: 'anonymous',
+        session: null,
+        notice,
+        persistenceWarning: null,
+      });
+
+      const cleared = await clearStoredSession(storage);
+      if (
+        !cleared &&
+        wasPersisted &&
+        generationRef.current === generation
+      ) {
+        setState((previous) =>
+          previous.status === 'anonymous'
+            ? {
+                ...previous,
+                notice: {
+                  tone: 'warning',
+                  message: AUTH_MESSAGES.sessionCleanupFailed,
+                },
+              }
+            : previous,
+        );
+      }
+    },
+    [storage],
+  );
+
+  const requirePasswordChange = useCallback(
+    async (session: AuthSession): Promise<void> => {
+      if (sessionRef.current !== session) {
+        return;
+      }
+
+      const updated = withPasswordChangeRequired(session);
+      if (updated === session) {
+        return;
+      }
+
+      sessionRef.current = updated;
+      setState((previous) =>
+        previous.status === 'authenticated' && previous.session === session
+          ? { ...previous, session: updated }
+          : previous,
+      );
+
+      const persisted = await persistSession(storage, updated);
+      if (sessionRef.current !== updated) {
+        // A sessão mudou durante a gravação: preserva a sessão mais recente
+        // em vez de deixar o registro antigo no armazenamento.
+        const current = sessionRef.current;
+        if (current !== null) {
+          await persistSession(storage, current);
+        }
+        return;
+      }
+
+      persistedRef.current = persisted;
+      setState((previous) =>
+        previous.session === updated
+          ? {
+              ...previous,
+              persistenceWarning: persisted
+                ? null
+                : AUTH_MESSAGES.persistenceFailed,
+            }
+          : previous,
+      );
+    },
+    [storage],
+  );
+
+  /**
+   * Executa a operação com o token atual e aplica a política central:
+   * 401 invalida a sessão; `PASSWORD_CHANGE_REQUIRED` apenas restringe;
+   * 403 e falhas de rede/servidor não apagam a sessão.
+   */
+  const runAuthenticated = useCallback(
+    async <T,>(
+      operation: (accessToken: string) => Promise<T>,
+    ): Promise<T> => {
+      const current = sessionRef.current;
+      if (current === null) {
+        throw new AuthFlowError('SESSION_EXPIRED');
+      }
+
+      if (isSessionExpired(current)) {
+        await invalidateSession({
+          tone: 'warning',
+          message: AUTH_MESSAGES.sessionExpired,
+        });
+        throw new AuthFlowError('SESSION_EXPIRED');
+      }
+
+      const generation = generationRef.current;
+
+      let result: T;
+      try {
+        result = await operation(current.accessToken);
+      } catch (error) {
+        if (generation !== generationRef.current) {
+          throw new AuthFlowError('STALE_REQUEST');
+        }
+
+        switch (classifyAuthenticatedFailure(error)) {
+          case 'unauthorized':
+            await invalidateSession({
+              tone: 'warning',
+              message: AUTH_MESSAGES.sessionExpired,
+            });
+            throw new AuthFlowError('SESSION_EXPIRED');
+          case 'password-change-required':
+            await requirePasswordChange(current);
+            throw new AuthFlowError('PASSWORD_CHANGE_REQUIRED');
+          default:
+            throw error;
+        }
+      }
+
+      if (generation !== generationRef.current) {
+        throw new AuthFlowError('STALE_REQUEST');
+      }
+
+      return result;
+    },
+    [invalidateSession, requirePasswordChange],
+  );
+
   const completeAuthentication = useCallback(
-    async (response: LoginResponse): Promise<AuthSession> => {
+    async (response: LoginResponse, attempt: number): Promise<AuthSession> => {
       const newSession = toSession(response);
 
       if (!isParticipant(newSession)) {
@@ -220,7 +386,32 @@ export function AuthProvider({
         throw new AuthFlowError('ROLE_NOT_ALLOWED');
       }
 
+      if (attempt !== attemptRef.current) {
+        throw new AuthFlowError('STALE_REQUEST');
+      }
+
+      if (isSessionExpired(newSession)) {
+        await clearStoredSession(storage);
+        throw new AuthFlowError('SESSION_EXPIRED');
+      }
+
       const persisted = await persistSession(storage, newSession);
+
+      if (attempt !== attemptRef.current) {
+        // A resposta ficou obsoleta enquanto era gravada, por exemplo após
+        // sair ou após outro login. Sem sessão atual, o registro é removido
+        // para não ressuscitar o acesso; com sessão mais nova, ela é regravada.
+        const current = sessionRef.current;
+        if (current === null) {
+          await clearStoredSession(storage);
+        } else {
+          await persistSession(storage, current);
+        }
+        throw new AuthFlowError('STALE_REQUEST');
+      }
+
+      generationRef.current += 1;
+      sessionRef.current = newSession;
       persistedRef.current = persisted;
       setState({
         status: 'authenticated',
@@ -236,21 +427,33 @@ export function AuthProvider({
   );
 
   const signIn = useCallback(
-    async (credentials: LoginRequest): Promise<AuthSession> =>
-      completeAuthentication(await loginWithPassword(credentials)),
+    async (credentials: LoginRequest): Promise<AuthSession> => {
+      const attempt = attemptRef.current + 1;
+      attemptRef.current = attempt;
+      const response = await loginWithPassword(credentials);
+      return completeAuthentication(response, attempt);
+    },
     [completeAuthentication],
   );
 
   const activateAccount = useCallback(
-    async (input: ActivationRequest): Promise<AuthSession> =>
-      completeAuthentication(await activateAccountWithCode(input)),
+    async (input: ActivationRequest): Promise<AuthSession> => {
+      const attempt = attemptRef.current + 1;
+      attemptRef.current = attempt;
+      const response = await activateAccountWithCode(input);
+      return completeAuthentication(response, attempt);
+    },
     [completeAuthentication],
   );
 
   const signOut = useCallback(async (): Promise<void> => {
-    const token = state.session?.accessToken ?? null;
+    attemptRef.current += 1;
+    generationRef.current += 1;
+    const generation = generationRef.current;
+    const token = sessionRef.current?.accessToken ?? null;
     const wasPersisted = persistedRef.current;
     persistedRef.current = false;
+    sessionRef.current = null;
 
     setState({
       status: 'anonymous',
@@ -260,9 +463,13 @@ export function AuthProvider({
     });
 
     const cleared = await clearStoredSession(storage);
-    if (!cleared && wasPersisted) {
+    if (
+      !cleared &&
+      wasPersisted &&
+      generationRef.current === generation
+    ) {
       setState((previous) =>
-        previous.status === 'anonymous'
+        previous.status === 'anonymous' && previous.session === null
           ? {
               ...previous,
               notice: {
@@ -281,47 +488,20 @@ export function AuthProvider({
         // O JWT é stateless: a falha ao confirmar o logout não mantém a sessão.
       }
     }
-  }, [state.session, storage]);
+  }, [storage]);
 
   const changePassword = useCallback(
     async (input: PasswordChangeRequest): Promise<AuthSession> => {
-      const current = state.session;
-      if (current === null) {
-        throw new AuthFlowError('SESSION_EXPIRED');
-      }
+      const attempt = attemptRef.current + 1;
+      attemptRef.current = attempt;
 
-      if (isSessionExpired(current)) {
-        persistedRef.current = false;
-        await clearStoredSession(storage);
-        setState({
-          status: 'anonymous',
-          session: null,
-          notice: { tone: 'warning', message: AUTH_MESSAGES.sessionExpired },
-          persistenceWarning: null,
-        });
-        throw new AuthFlowError('SESSION_EXPIRED');
-      }
+      const response = await runAuthenticated((accessToken) =>
+        changeAccountPassword(input, accessToken),
+      );
 
-      const response = await changeAccountPassword(input, current.accessToken);
-      const newSession = toSession(response);
-
-      if (!isParticipant(newSession)) {
-        throw new AuthFlowError('ROLE_NOT_ALLOWED');
-      }
-
-      const persisted = await persistSession(storage, newSession);
-      persistedRef.current = persisted;
-      setState({
-        status: 'authenticated',
-        session: newSession,
-        notice: null,
-        persistenceWarning: persisted
-          ? null
-          : AUTH_MESSAGES.persistenceFailed,
-      });
-      return newSession;
+      return completeAuthentication(response, attempt);
     },
-    [state.session, storage],
+    [runAuthenticated, completeAuthentication],
   );
 
   const clearNotice = useCallback((): void => {
@@ -330,6 +510,25 @@ export function AuthProvider({
     );
   }, []);
 
+  const handleExpiration = useCallback((): void => {
+    if (sessionRef.current === null) {
+      return;
+    }
+
+    void invalidateSession({
+      tone: 'warning',
+      message: AUTH_MESSAGES.sessionExpired,
+    });
+  }, [invalidateSession]);
+
+  useSessionExpiration({
+    expiresAt:
+      state.status === 'authenticated'
+        ? state.session?.expiresAt ?? null
+        : null,
+    onExpire: handleExpiration,
+  });
+
   const value = useMemo<AuthContextValue>(
     () => ({
       ...state,
@@ -337,9 +536,18 @@ export function AuthProvider({
       activateAccount,
       signOut,
       changePassword,
+      runAuthenticated,
       clearNotice,
     }),
-    [state, signIn, activateAccount, signOut, changePassword, clearNotice],
+    [
+      state,
+      signIn,
+      activateAccount,
+      signOut,
+      changePassword,
+      runAuthenticated,
+      clearNotice,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
