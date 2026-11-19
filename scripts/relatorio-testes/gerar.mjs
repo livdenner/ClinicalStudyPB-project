@@ -10,7 +10,8 @@
  *
  * Saída: `<pasta>/AAAA-MM-DD_HH-mm_<sha>.md`, com uma linha por teste, e o índice
  * `<pasta>/README.md`, que aponta para a última execução. Na CI, a pasta é
- * `docs/test-ci/<branch>` (main ou development); localmente, `docs/test-ci/local`.
+ * `docs/test-ci/<branch>` (main ou development) ou `docs/test-ci/pull-requests/<número>`;
+ * localmente, `docs/test-ci/local`.
  * Quando o commit testado é o merge de um PR, o relatório identifica a integração (PR, branch e título).
  * Uso e opções: `node scripts/relatorio-testes/gerar.mjs --ajuda`.
  */
@@ -507,12 +508,19 @@ export function nomeDoArquivo(data, sha, existentes = new Set()) {
     return nome;
 }
 
-/** Gera o índice `README.md` a partir dos arquivos de execução da pasta. */
-export function gerarIndice(pasta, urlRepositorio = "") {
-    const contribuicao = path.relative(pasta, path.join(RAIZ, "CONTRIBUTING.md")).replace(/\\/g, "/");
-    const nomePasta = path.basename(pasta);
-    const descricao =
-        nomePasta === "development"
+/**
+ * Gera o índice `README.md` a partir dos arquivos de execução da pasta. `raiz` é o repositório
+ * para onde apontam os links (o publicador da CI informa o clone em que grava os relatórios).
+ */
+export function gerarIndice(pasta, urlRepositorio = "", raiz = RAIZ) {
+    const linkPara = (destino) => path.relative(pasta, path.join(raiz, destino)).replace(/\\/g, "/");
+    const contribuicao = linkPara("CONTRIBUTING.md");
+    const historicos = linkPara("docs/test-ci/README.md");
+    const numeroPr = path.basename(path.dirname(pasta)) === "pull-requests" ? path.basename(pasta) : "";
+    const nomePasta = numeroPr ? `pull-requests/${numeroPr}` : path.basename(pasta);
+    const descricao = numeroPr
+        ? `Cada arquivo registra a execução da CI em um commit do **PR #${numeroPr}**, antes do merge.`
+        : nomePasta === "development"
             ? "Cada arquivo registra a execução da CI após uma **integração na `development`** (merge de PR)."
             : nomePasta === "main"
               ? "Cada arquivo registra a execução da CI após um push na **`main`** (versões estáveis)."
@@ -524,7 +532,7 @@ export function gerarIndice(pasta, urlRepositorio = "") {
     const linhas = [
         `# Histórico de execuções de testes — \`${nomePasta}\``,
         "",
-        "[Voltar aos históricos](../README.md)",
+        `[Voltar aos históricos](${historicos})`,
         "",
         `${descricao} Backend, web, E2E e mobile entram no mesmo arquivo,`,
         "com **uma linha por teste** e o resultado de cada um. O nome segue `AAAA-MM-DD_HH-mm_<commit>.md`,",
@@ -627,6 +635,8 @@ Opções (caminhos relativos à raiz do repositório):
   --branch <nome>         branch testada            (padrão: TEST_REPORT_BRANCH, GITHUB_REF_NAME ou atual)
   --exigir-todas          termina com erro se algum relatório não for encontrado
   --somente-indice        só regenera o README.md da pasta de saída
+  --raiz <pasta>          repositório em que --saida é resolvida e para onde apontam os links
+                          do índice (padrão: o deste script; usado pelo publicador da CI)
   --ajuda                 mostra esta ajuda
 
 Variáveis de ambiente usadas pela CI: TEST_REPORT_MENSAGEM (mensagem do commit testado, para
@@ -639,13 +649,14 @@ export function lerArgumentos(argv) {
         playwright: "web/test-reports/playwright.json",
         jest: "mobile/test-reports/jest.json",
         saida: "docs/test-ci/local",
+        raiz: "",
         sha: "",
         branch: "",
         exigirTodas: false,
         somenteIndice: false,
         ajuda: false,
     };
-    const comValor = { "--backend": "backend", "--vitest": "vitest", "--playwright": "playwright", "--jest": "jest", "--saida": "saida", "--sha": "sha", "--branch": "branch" };
+    const comValor = { "--backend": "backend", "--vitest": "vitest", "--playwright": "playwright", "--jest": "jest", "--saida": "saida", "--raiz": "raiz", "--sha": "sha", "--branch": "branch" };
     for (let i = 0; i < argv.length; i += 1) {
         const arg = argv[i];
         if (comValor[arg]) {
@@ -672,11 +683,12 @@ export function main(argv = process.argv.slice(2)) {
         console.log(AJUDA);
         return 0;
     }
-    const pasta = path.resolve(RAIZ, opcoes.saida);
+    const raiz = path.resolve(opcoes.raiz || RAIZ);
+    const pasta = path.resolve(raiz, opcoes.saida);
     fs.mkdirSync(pasta, { recursive: true });
     if (opcoes.somenteIndice) {
-        fs.writeFileSync(path.join(pasta, "README.md"), gerarIndice(pasta, urlDoRepositorio()));
-        console.log(path.relative(RAIZ, path.join(pasta, "README.md")));
+        fs.writeFileSync(path.join(pasta, "README.md"), gerarIndice(pasta, urlDoRepositorio(), raiz));
+        console.log(path.relative(raiz, path.join(pasta, "README.md")).replace(/\\/g, "/"));
         return 0;
     }
 
@@ -727,9 +739,9 @@ export function main(argv = process.argv.slice(2)) {
     });
     const destino = path.join(pasta, nome);
     fs.writeFileSync(destino, markdown);
-    fs.writeFileSync(path.join(pasta, "README.md"), gerarIndice(pasta, urlRepositorio));
+    fs.writeFileSync(path.join(pasta, "README.md"), gerarIndice(pasta, urlRepositorio, raiz));
 
-    const relativo = path.relative(RAIZ, destino).replace(/\\/g, "/");
+    const relativo = path.relative(raiz, destino).replace(/\\/g, "/");
     console.log(relativo);
     for (const fonte of fontes) {
         console.error(

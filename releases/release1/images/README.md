@@ -4,6 +4,8 @@
 
 Capturas obtidas em 09/11/2026 (America/Fortaleza), no navegador, com a web real, proxy Vite e API Spring Boot/PostgreSQL. Não houve interceptação de respostas HTTP. Dados, contas e termos são fictícios. A web corresponde ao código integrado até `2a83f3d`; o backend de demonstração tem o mesmo código de produção de `6ab8cba`. A carga inicial desta sessão usou os dois seeds da T16.13; o estudo e os registros adicionais foram criados durante a demonstração.
 
+As capturas são anteriores à versão publicada (tag `release1`, `main` **8e88d15**), que acrescentou a tela de inclusão (PR #63), a consulta do consentimento na API pela lista de candidatos (PR #67) e a correção do Swagger (PR #64). Os fluxos capturados continuam válidos; com o PR #67, a situação do consentimento na lista de candidatos passa a vir da API, em vez do navegador. A inclusão, que nesta sessão foi feita pela API, também pode ser feita pela web na versão publicada. Não há captura da tela de inclusão.
+
 O estudo da sessão é **Release 1 - Protocolo e recrutamento**, limite 2, período 01/01/2027–31/12/2027. O candidato é **Candidato fictício Release 1**, 30 anos. IDs, horários e total de registros variam em uma nova execução. Os arquivos são capturas de viewport, sem montagem ou alteração do conteúdo.
 
 | Evidência | RF | Como reproduzir e resultado |

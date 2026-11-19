@@ -1,0 +1,104 @@
+[INFO] Scanning for projects...
+[INFO] ----------------------< clinicalstudypb:backend >-----------------------
+[INFO] Building ClinicalStudyPB Backend 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] --- clean:3.4.1:clean (default-clean) @ backend ---
+[INFO] --- checkstyle:3.6.0:check (checkstyle) @ backend ---
+[INFO] Iniciando a auditoria...
+Auditoria completa.
+[INFO] You have 0 Checkstyle violations.
+[INFO] --- jacoco:0.8.13:prepare-agent (prepare-agent) @ backend ---
+[INFO] argLine set to -javaagent:<maven-repo>\\org\\jacoco\\org.jacoco.agent\\0.8.13\\org.jacoco.agent-0.8.13-runtime.jar=destfile=<worktree>\\backend\\target\\jacoco.exec,excludes=clinicalstudypb/ClinicalStudyPBApplication.class:**/*Configuration.class:**/*Config.class
+[INFO] --- resources:3.3.1:resources (default-resources) @ backend ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 11 resources from src\main\resources to target\classes
+[INFO] --- compiler:3.14.1:compile (default-compile) @ backend ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 102 source files with javac [debug parameters release 21] to target\classes
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ backend ---
+[INFO] Copying 1 resource from src\test\resources to target\test-classes
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ backend ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 30 source files with javac [debug parameters release 21] to target\test-classes
+[INFO] --- surefire:3.5.6:test (default-test) @ backend ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running clinicalstudypb.auth.AuthControllerValidationTest
+[INFO] Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 83.57 s -- in clinicalstudypb.auth.AuthControllerValidationTest
+[INFO] Running clinicalstudypb.auth.AuthIntegrationTest
+[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 29.28 s -- in clinicalstudypb.auth.AuthIntegrationTest
+[INFO] Running clinicalstudypb.auth.AuthorizationIntegrationTest
+[INFO] Tests run: 102, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 48.22 s -- in clinicalstudypb.auth.AuthorizationIntegrationTest
+[INFO] Running clinicalstudypb.auth.AuthServiceTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.257 s -- in clinicalstudypb.auth.AuthServiceTest
+[INFO] Running clinicalstudypb.auth.JwtServiceTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.048 s -- in clinicalstudypb.auth.JwtServiceTest
+[INFO] Running clinicalstudypb.candidates.CandidateConcurrencyIntegrationTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.029 s -- in clinicalstudypb.candidates.CandidateConcurrencyIntegrationTest
+[INFO] Running clinicalstudypb.candidates.CandidateIntegrationTest
+[INFO] Tests run: 13, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 7.048 s -- in clinicalstudypb.candidates.CandidateIntegrationTest
+[INFO] Running clinicalstudypb.candidates.CandidateServiceTest
+[INFO] Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.412 s -- in clinicalstudypb.candidates.CandidateServiceTest
+[INFO] Running clinicalstudypb.candidates.EligibilityConcurrencyIntegrationTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.081 s -- in clinicalstudypb.candidates.EligibilityConcurrencyIntegrationTest
+[INFO] Running clinicalstudypb.candidates.EligibilityEvaluationIntegrationTest
+[INFO] Tests run: 38, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.34 s -- in clinicalstudypb.candidates.EligibilityEvaluationIntegrationTest
+[INFO] Running clinicalstudypb.candidates.EligibilityEvaluationServiceTest
+[INFO] Tests run: 28, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.431 s -- in clinicalstudypb.candidates.EligibilityEvaluationServiceTest
+[INFO] Running clinicalstudypb.consent.SimulatedConsentIntegrationTest
+[INFO] Tests run: 16, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.712 s -- in clinicalstudypb.consent.SimulatedConsentIntegrationTest
+[INFO] Running clinicalstudypb.criteria.StudyCriterionIntegrationTest
+[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 7.769 s -- in clinicalstudypb.criteria.StudyCriterionIntegrationTest
+[INFO] Running clinicalstudypb.criteria.StudyCriterionServiceTest
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.287 s -- in clinicalstudypb.criteria.StudyCriterionServiceTest
+[INFO] Running clinicalstudypb.participants.ParticipantConcurrencyIntegrationTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.716 s -- in clinicalstudypb.participants.ParticipantConcurrencyIntegrationTest
+[INFO] Running clinicalstudypb.participants.ParticipantIntegrationTest
+[INFO] Tests run: 24, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.25 s -- in clinicalstudypb.participants.ParticipantIntegrationTest
+[INFO] Running clinicalstudypb.participants.ParticipantServiceTest
+[INFO] Tests run: 18, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.270 s -- in clinicalstudypb.participants.ParticipantServiceTest
+[INFO] Running clinicalstudypb.studies.StudyControllerTest
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.824 s -- in clinicalstudypb.studies.StudyControllerTest
+[INFO] Running clinicalstudypb.studies.StudyIntegrationTest
+[INFO] Tests run: 29, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.172 s -- in clinicalstudypb.studies.StudyIntegrationTest
+[INFO] Running clinicalstudypb.studies.StudyLifecycleIntegrationTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.913 s -- in clinicalstudypb.studies.StudyLifecycleIntegrationTest
+[INFO] Running clinicalstudypb.studies.StudyProtocolFlowIntegrationTest
+[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.491 s -- in clinicalstudypb.studies.StudyProtocolFlowIntegrationTest
+[INFO] Running clinicalstudypb.studies.StudyServiceTest
+[INFO] Tests run: 33, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.962 s -- in clinicalstudypb.studies.StudyServiceTest
+[INFO] Running clinicalstudypb.studies.StudyStatusIntegrationTest
+[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.887 s -- in clinicalstudypb.studies.StudyStatusIntegrationTest
+[INFO] Running clinicalstudypb.support.DemoSeedIntegrationTest
+[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.238 s -- in clinicalstudypb.support.DemoSeedIntegrationTest
+[INFO] Running clinicalstudypb.users.UserControllerTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.769 s -- in clinicalstudypb.users.UserControllerTest
+[INFO] Running clinicalstudypb.users.UserIntegrationTest
+[INFO] Tests run: 17, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.488 s -- in clinicalstudypb.users.UserIntegrationTest
+[INFO] Running clinicalstudypb.users.UserServiceTest
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.566 s -- in clinicalstudypb.users.UserServiceTest
+[INFO] Running clinicalstudypb.visits.PlannedVisitIntegrationTest
+[INFO] Tests run: 12, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.609 s -- in clinicalstudypb.visits.PlannedVisitIntegrationTest
+[INFO] Results:
+[INFO] Tests run: 487, Failures: 0, Errors: 0, Skipped: 0
+[INFO] --- jacoco:0.8.13:report (report) @ backend ---
+[INFO] Loading execution data file <worktree>\backend\target\jacoco.exec
+[INFO] Analyzed bundle 'ClinicalStudyPB Backend' with 87 classes
+[INFO] --- jar:3.4.2:jar (default-jar) @ backend ---
+[INFO] Building jar: <worktree>\backend\target\backend-0.0.1-SNAPSHOT.jar
+[INFO] --- spring-boot:3.5.16:repackage (repackage) @ backend ---
+[INFO] Replacing main artifact <worktree>\backend\target\backend-0.0.1-SNAPSHOT.jar with repackaged archive, adding nested dependencies in BOOT-INF/.
+[INFO] The original artifact has been renamed to <worktree>\backend\target\backend-0.0.1-SNAPSHOT.jar.original
+[INFO] --- jacoco:0.8.13:check (check) @ backend ---
+[INFO] Loading execution data file <worktree>\backend\target\jacoco.exec
+[INFO] Analyzed bundle 'backend' with 87 classes
+[INFO] All coverage checks have been met.
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  05:27 min
+[INFO] Finished at: 2026-11-18T16:17:06-03:00
+[INFO] ------------------------------------------------------------------------
