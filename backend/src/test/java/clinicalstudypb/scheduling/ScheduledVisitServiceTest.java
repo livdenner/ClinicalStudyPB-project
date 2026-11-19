@@ -1,6 +1,7 @@
 package clinicalstudypb.scheduling;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -224,15 +225,152 @@ class ScheduledVisitServiceTest {
     }
 
     @Test
-    void rejectsReadOnlyStudyBeforeCheckingVersion() {
+    void scheduledToDoneNormalizesBlankNoteToNullAndFallsBackToEmptyVisitName() {
         ScheduledVisit visit = pendingVisit();
-        allowOutcome(visit, StudyStatus.CANCELLED);
+        allowOutcome(visit, StudyStatus.EXECUTION);
+        when(actor.userId()).thenReturn(7L);
+        when(repository.saveAndFlush(visit)).thenReturn(visit);
+        when(plannedVisits.findNameByStudyAndId(STUDY_ID, PLANNED_VISIT_ID)).thenReturn(Optional.empty());
+
+        ScheduledVisitResult result = service.recordOutcome(
+                STUDY_ID, PARTICIPANT_ID, 8L, 0L, VisitOutcome.DONE, "   ");
+
+        assertEquals(ScheduledVisitStatus.DONE, result.visit().getStatus());
+        assertNull(result.visit().getOutcomeNote());
+        assertEquals(7L, result.visit().getOutcomeByUserId());
+        assertEquals(NOW, result.visit().getOutcomeAt());
+        assertEquals("", result.plannedVisitName());
+    }
+
+    @Test
+    void scheduledToDoneAcceptsRecruitmentStudyAndStripsNote() {
+        ScheduledVisit visit = pendingVisit();
+        allowOutcome(visit, StudyStatus.RECRUITMENT);
+        when(actor.userId()).thenReturn(7L);
+        when(repository.saveAndFlush(visit)).thenReturn(visit);
+        when(plannedVisits.findNameByStudyAndId(STUDY_ID, PLANNED_VISIT_ID))
+                .thenReturn(Optional.of("Visita inicial"));
+
+        ScheduledVisitResult result = service.recordOutcome(
+                STUDY_ID, PARTICIPANT_ID, 8L, 0L, VisitOutcome.DONE, "  Sem intercorrências  ");
+
+        assertEquals(ScheduledVisitStatus.DONE, result.visit().getStatus());
+        assertEquals("Sem intercorrências", result.visit().getOutcomeNote());
+        assertEquals("Visita inicial", result.plannedVisitName());
+    }
+
+    @Test
+    void scheduledToAbsentRecordsAuthorAndInstantWithoutNote() {
+        ScheduledVisit visit = pendingVisit();
+        allowOutcome(visit, StudyStatus.EXECUTION);
+        when(actor.userId()).thenReturn(7L);
+        when(repository.saveAndFlush(visit)).thenReturn(visit);
+        when(plannedVisits.findNameByStudyAndId(STUDY_ID, PLANNED_VISIT_ID))
+                .thenReturn(Optional.of("Visita intermediária"));
+
+        ScheduledVisitResult result = service.recordOutcome(
+                STUDY_ID, PARTICIPANT_ID, 8L, 0L, VisitOutcome.ABSENT, null);
+
+        assertEquals(ScheduledVisitStatus.ABSENT, result.visit().getStatus());
+        assertNull(result.visit().getOutcomeNote());
+        assertEquals(7L, result.visit().getOutcomeByUserId());
+        assertEquals(NOW, result.visit().getOutcomeAt());
+    }
+
+    @Test
+    void scheduledToCancelledAccepts500CharacterBoundaryNote() {
+        ScheduledVisit visit = pendingVisit();
+        allowOutcome(visit, StudyStatus.EXECUTION);
+        when(actor.userId()).thenReturn(7L);
+        when(repository.saveAndFlush(visit)).thenReturn(visit);
+        when(plannedVisits.findNameByStudyAndId(STUDY_ID, PLANNED_VISIT_ID))
+                .thenReturn(Optional.of("Visita final"));
+        String exactBoundary = "a".repeat(500);
+
+        ScheduledVisitResult result = service.recordOutcome(
+                STUDY_ID, PARTICIPANT_ID, 8L, 0L, VisitOutcome.CANCELLED, "  " + exactBoundary + "  ");
+
+        assertEquals(ScheduledVisitStatus.CANCELLED, result.visit().getStatus());
+        assertEquals(exactBoundary, result.visit().getOutcomeNote());
+    }
+
+    @Test
+    void rejectsNullOutcomeBeforeLockingStudy() {
+        InvalidScheduledVisitException error = assertThrows(InvalidScheduledVisitException.class,
+                () -> service.recordOutcome(STUDY_ID, PARTICIPANT_ID, 8L, 0L, null, "Observação"));
+
+        assertEquals("INVALID_VISIT_OUTCOME", error.getCode());
+        verifyNoInteractions(studyService, participants, repository);
+    }
+
+    @Test
+    void rejectsOutcomeNoteLongerThan500CharactersBeforeLockingStudy() {
+        InvalidScheduledVisitException error = assertThrows(InvalidScheduledVisitException.class,
+                () -> service.recordOutcome(STUDY_ID, PARTICIPANT_ID, 8L, 0L,
+                        VisitOutcome.DONE, "a".repeat(501)));
+
+        assertEquals("INVALID_OUTCOME_NOTE", error.getCode());
+        verifyNoInteractions(studyService, participants, repository);
+    }
+
+    @Test
+    void rejectsOutcomeWhenScheduledVisitNotFoundInScope() {
+        Study study = mock(Study.class);
+        when(studyService.lockForScheduling(STUDY_ID)).thenReturn(study);
+        when(participants.lockForScheduling(STUDY_ID, PARTICIPANT_ID)).thenReturn(activeParticipant());
+        when(repository.findByIdAndStudyIdAndParticipantIdForUpdate(8L, STUDY_ID, PARTICIPANT_ID))
+                .thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> service.recordOutcome(STUDY_ID, PARTICIPANT_ID, 8L, 0L, VisitOutcome.DONE, null));
+        verify(repository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void rejectsNullExpectedVersionWithVersionMismatch() {
+        ScheduledVisit visit = pendingVisit();
+        allowOutcome(visit, StudyStatus.EXECUTION);
+
+        SchedulingConflictException error = assertThrows(SchedulingConflictException.class,
+                () -> service.recordOutcome(STUDY_ID, PARTICIPANT_ID, 8L, null, VisitOutcome.DONE, null));
+
+        assertEquals("VERSION_MISMATCH", error.getCode());
+        verify(repository, never()).saveAndFlush(any());
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = StudyStatus.class, names = {"CLOSED", "CANCELLED"})
+    void rejectsReadOnlyStudyBeforeCheckingVersion(StudyStatus status) {
+        ScheduledVisit visit = pendingVisit();
+        allowOutcome(visit, status);
 
         SchedulingConflictException error = assertThrows(SchedulingConflictException.class,
                 () -> service.recordOutcome(STUDY_ID, PARTICIPANT_ID, 8L, 2L,
                         VisitOutcome.DONE, null));
 
         assertEquals("STUDY_READ_ONLY", error.getCode());
+        verify(repository, never()).saveAndFlush(any());
+    }
+
+    @ParameterizedTest(name = "{0} -> {1}")
+    @MethodSource("invalidFinalOutcomeTransitions")
+    void rejectsTransitionFromAnyFinalStatusWithoutModifyingVisit(
+            ScheduledVisitStatus initialFinalStatus,
+            VisitOutcome attemptedOutcome) {
+        ScheduledVisit visit = pendingVisit();
+        Instant initialAt = NOW.minusSeconds(60);
+        visit.registerOutcome(initialFinalStatus, 11L, initialAt, "Motivo inicial");
+        allowOutcome(visit, StudyStatus.EXECUTION);
+        String validNote = attemptedOutcome == VisitOutcome.CANCELLED ? "Nova justificativa" : "Nova nota";
+
+        SchedulingConflictException error = assertThrows(SchedulingConflictException.class,
+                () -> service.recordOutcome(STUDY_ID, PARTICIPANT_ID, 8L, 0L, attemptedOutcome, validNote));
+
+        assertEquals("VISIT_OUTCOME_FINAL", error.getCode());
+        assertEquals(initialFinalStatus, visit.getStatus());
+        assertEquals(11L, visit.getOutcomeByUserId());
+        assertEquals(initialAt, visit.getOutcomeAt());
+        assertEquals("Motivo inicial", visit.getOutcomeNote());
         verify(repository, never()).saveAndFlush(any());
     }
 
@@ -514,6 +652,15 @@ class ScheduledVisitServiceTest {
                 Arguments.of(ScheduledVisitStatus.SCHEDULED, null),
                 Arguments.of(null, 1L),
                 Arguments.of(ScheduledVisitStatus.DONE, 1L));
+    }
+
+    private static Stream<Arguments> invalidFinalOutcomeTransitions() {
+        return Stream.of(
+                ScheduledVisitStatus.DONE,
+                ScheduledVisitStatus.ABSENT,
+                ScheduledVisitStatus.CANCELLED)
+                .flatMap(finalStatus -> Stream.of(VisitOutcome.values())
+                        .map(attempted -> Arguments.of(finalStatus, attempted)));
     }
 
     private Study studyInStatus(StudyStatus status) {
