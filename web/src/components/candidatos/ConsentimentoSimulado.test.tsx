@@ -29,7 +29,12 @@ const candidatoElegivel: CandidatoApi = {
     studyId: 10,
     name: "Candidato 021",
     age: 55,
+    email: "candidato021@exemplo.test",
+    phone: "(83) 99999-0021",
+    userId: 202,
+    status: "CONSENT_PENDING",
     eligibilityStatus: "ELIGIBLE",
+    consentStatus: "PENDING",
 };
 
 const candidatoInelegivel: CandidatoApi = {

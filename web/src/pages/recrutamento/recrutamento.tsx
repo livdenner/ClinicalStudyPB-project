@@ -341,11 +341,29 @@ function GestaoCandidatos({
     const participantesCandidatoIds = new Set(participantes.map((p) => p.candidateId));
 
     async function handleCadastrar(dados: DadosCandidatoApi) {
-        if (!estudoSelecionado) return;
+        if (!estudoSelecionado) throw new Error("Selecione um estudo para cadastrar o candidato.");
         const novo = await cadastrarCandidato(estudoSelecionado.id, dados, token);
-        setCandidatos((atuais) => [...atuais, novo]);
-        setModalAberto(false);
-        setMensagemSucesso("Candidato cadastrado com sucesso.");
+        const { activation, ...candidato } = novo;
+        setCandidatos((atuais) => [
+            ...atuais,
+            {
+                ...candidato,
+                ...(activation
+                    ? {
+                          activation: {
+                              expiresAt: activation.expiresAt,
+                              expired: activation.expired,
+                          },
+                      }
+                    : {}),
+            },
+        ]);
+        setMensagemSucesso(
+            novo.status === "INVITED"
+                ? "Candidato cadastrado. Convite emitido."
+                : "Candidato cadastrado. Vinculado a conta existente."
+        );
+        return novo;
     }
 
     async function handleConfirmarInclusao() {
