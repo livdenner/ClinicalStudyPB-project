@@ -46,7 +46,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
  *
  * @author Júlia Pamplona
  * @since 2026-10-30
- * @version 0.0.3
+ * @version 0.0.4
  */
 class AuthorizationIntegrationTest extends IntegrationTestSupport {
 
@@ -108,6 +108,11 @@ class AuthorizationIntegrationTest extends IntegrationTestSupport {
             new Endpoint(HttpMethod.POST, "/api/studies/{id}/criteria",
                     "{\"type\":\"EXCLUSION\",\"description\":\"Estar em gestação\"}"));
 
+    /**
+     * Só a consulta do consentimento. O PUT foi descontinuado (T17.1) e responde 403
+     * CONSENT_DECIDED_BY_CANDIDATE a todos os perfis: ele fica em {@link #DEPRECATED_CONSENT_ENDPOINT}
+     * e também na {@code CandidateFlowPermissionMatrixIntegrationTest} (T17.5).
+     */
     private static final List<Endpoint> CONSENT_ENDPOINTS = List.of(
             new Endpoint(HttpMethod.GET, "/api/studies/{id}/candidates/{candidateId}/consent", null));
 

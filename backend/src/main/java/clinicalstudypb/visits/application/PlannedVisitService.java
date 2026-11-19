@@ -208,6 +208,7 @@ public class PlannedVisitService {
         if (positions.isEmpty()) {
             throw new ResourceNotFoundException("Atividade não encontrada: " + activityId);
         }
+        requireNoResults(activityId);
         Integer count = jdbc.queryForObject(
                 "SELECT COUNT(*) FROM planned_activities WHERE planned_visit_id = ?",
                 Integer.class, visitId);
@@ -282,8 +283,19 @@ public class PlannedVisitService {
         }
         for (Long id : existing) {
             if (!retained.contains(id)) {
+                requireNoResults(id);
                 jdbc.update("DELETE FROM planned_activities WHERE id = ?", id);
             }
+        }
+    }
+
+    private void requireNoResults(Long activityId) {
+        Boolean hasResults = jdbc.queryForObject(
+                "SELECT EXISTS (SELECT 1 FROM activity_results WHERE planned_activity_id = ?)",
+                Boolean.class, activityId);
+        if (Boolean.TRUE.equals(hasResults)) {
+            throw new ProtocolConflictException(
+                    "ACTIVITY_HAS_RESULTS", "A atividade possui resultados registrados e não pode ser excluída.");
         }
     }
 
