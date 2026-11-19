@@ -103,12 +103,21 @@ export async function apiRequest<T>(
     headers,
     body: requestBody,
   });
-  const responseBody = await readResponseBody(response);
 
   if (!response.ok) {
+    // Um erro HTTP precisa virar `ApiError` mesmo com corpo vazio, inválido
+    // ou declarado como JSON sem ser. O status é o dado confiável para o
+    // tratamento central de 401.
+    let errorBody: unknown;
+    try {
+      errorBody = await readResponseBody(response);
+    } catch {
+      errorBody = undefined;
+    }
+
     const error = (
-      responseBody !== null && typeof responseBody === 'object'
-        ? responseBody
+      errorBody !== null && typeof errorBody === 'object'
+        ? errorBody
         : {}
     ) as ApiErrorResponse;
 
@@ -122,5 +131,6 @@ export async function apiRequest<T>(
     );
   }
 
+  const responseBody = await readResponseBody(response);
   return responseBody as T;
 }

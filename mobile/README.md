@@ -1,15 +1,19 @@
 # Aplicativo mobile
 
-Aplicativo do participante, desenvolvido em React Native com Expo e TypeScript. O app usa Expo Router para navegação por arquivos. A base desta sprint contém as rotas iniciais e um cliente HTTP reutilizável; as telas de início e estudos são provisórias. Não há login, sessão, armazenamento de token nem integração de negócio nesta etapa.
+Aplicativo do participante, desenvolvido em React Native com Expo e TypeScript. O app usa Expo Router para navegação por arquivos. Nesta etapa, o aplicativo tem login do participante, ativação de primeiro acesso, sessão protegida persistida em armazenamento seguro e troca de senha. As telas de início e estudos continuam provisórias quanto ao conteúdo de negócio: a de estudos ainda não lista os estudos reais do participante.
 
 ## Escopo e estado atual
 
-- A rota `src/app/index.tsx` é a tela inicial.
-- A rota `src/app/studies.tsx` é um destino provisório usado para demonstrar navegação.
-- `src/app/_layout.tsx` define o Stack e os títulos das rotas.
-- `src/services/api/apiClient.ts` fornece uma função genérica para requisições JSON e erros HTTP.
-- `src/__tests__/navigation.test.tsx` verifica a rota inicial e a navegação para estudos.
-- O app pode ser executado no Android com Expo Go; não é necessário criar um build nativo para a tarefa de esqueleto.
+- `src/app/_layout.tsx` monta o `Stack` protegido. Enquanto a sessão é restaurada, as rotas privadas não são liberadas e uma camada de carregamento cobre a tela.
+- `src/app/login.tsx` é a entrada do aplicativo quando não há sessão válida. Também leva à ativação de primeiro acesso.
+- `src/app/activation.tsx` ativa um candidato convidado com e-mail e código de ativação.
+- `src/app/change-password.tsx` define a senha inicial de uma sessão restrita ou troca a senha de uma conta já ativa.
+- `src/app/index.tsx` é o início autenticado, com dados públicos do participante, aviso de persistência, acesso a estudos, troca de senha e saída.
+- `src/app/studies.tsx` é um destino protegido provisório; a listagem real fica para uma entrega posterior.
+- `src/auth/AuthProvider.tsx` mantém a sessão em memória, restaura do armazenamento, executa login/ativação/troca de senha/logout e centraliza o tratamento de falhas autenticadas.
+- `src/auth/secureSessionStorage.ts` grava apenas token, validade absoluta e dados públicos mínimos do usuário em um registro versionado no `expo-secure-store`.
+- `src/services/api/apiClient.ts` fornece a requisição JSON e converte respostas fora de 2xx em `ApiError`.
+- `src/__tests__/` cobre sessão, armazenamento seguro, cliente HTTP, formulários, política de senha, mensagens de erro e a navegação protegida.
 
 O papel de cada integrante pode mudar entre sprints. Antes de iniciar uma alteração, confira no board e no planejamento da sprint quem está responsável por Mobile e quais critérios de aceite pertencem à tarefa atual. Este guia documenta o projeto para qualquer pessoa que assuma essa responsabilidade.
 
@@ -17,9 +21,9 @@ O papel de cada integrante pode mudar entre sprints. Antes de iniciar uma altera
 
 - Node.js 22 e npm (a versão do Node usada no CI). O arquivo `package-lock.json` fixa a árvore de dependências; use `npm ci` para reproduzir a instalação.
 - Android Studio e Android SDK, se for usar um emulador Android; ou um telefone Android com Expo Go compatível com Expo SDK 58.
-- Para executar o backend e validar chamadas reais, Docker Compose e as variáveis requeridas na raiz do repositório. Veja o README principal. A tarefa atual não depende do backend.
+- Backend em execução e acessível a partir do dispositivo para validar login, ativação e senha. Veja o README principal para subir a stack e conferir as credenciais de demonstração.
 
-Confira as versões atuais em `package.json` antes de atualizar ferramentas: Expo SDK `~58.0.19`, React Native `0.88.0`, React `19.3.0` e TypeScript `~6.0.3`. Não atualize versões isoladamente sem validar a compatibilidade com o SDK do Expo.
+Confira as versões atuais em `package.json` antes de atualizar ferramentas: Expo SDK `~58.0.26`, React Native `0.88.1`, React `19.3.0` e TypeScript `~6.0.3`. Não atualize versões isoladamente sem validar a compatibilidade com o SDK do Expo.
 
 ## Instalação inicial
 
@@ -53,21 +57,61 @@ Também é possível iniciar apenas o servidor Metro com `npm.cmd start` e press
 2. Na pasta `mobile/`, rode `npm.cmd start`.
 3. Abra o Expo Go no telefone e leia o QR code exibido pelo terminal.
 
-Depois da abertura, confira o título **ClinicalStudyPB**, toque em **Ver estudos**, confira a mensagem de tela provisória e toque em **Voltar ao início**. Para repetir uma instalação limpa, instale as dependências pelo lockfile em uma cópia nova do projeto; as telas iniciais não exigem `.env` nem backend ativo.
+Ao abrir o app pela primeira vez, a tela de login aparece. Para validar o fluxo completo, suba o backend, configure a URL da API e use uma conta de participante ativa. O coordenador, o pesquisador e o administrador são recusados pelo aplicativo; não há sessão utilizável para esses perfis.
 
 Se a rede bloquear a conexão local, use `npm.cmd start -- --tunnel`; a conexão por túnel pode ser mais lenta e requer que a ferramenta de túnel esteja disponível. No Windows, use `npm.cmd` caso a política de execução bloqueie o script `npm.ps1`. Em macOS/Linux, os comandos equivalentes são `npm`.
 
 ## Configurar a URL da API
 
-Copie `.env.example` para `.env` na pasta `mobile/` somente se for desenvolver chamadas à API. O arquivo `.env` é local e ignorado pelo Git. A variável pública `EXPO_PUBLIC_API_BASE_URL` deve apontar para o backend acessível a partir do dispositivo:
+O aplicativo exige `EXPO_PUBLIC_API_BASE_URL` para qualquer chamada HTTP. Copie `.env.example` para `.env` na pasta `mobile/`; o arquivo `.env` é local e ignorado pelo Git. A URL deve terminar na base `/api` e apontar para o backend acessível a partir do dispositivo:
 
 - Android Emulator do Android Studio: `http://10.0.2.2:8080/api` (o endereço especial `10.0.2.2` alcança o computador host).
 - Telefone físico: use o IPv4 da máquina na rede local, por exemplo `http://192.168.x.x:8080/api`; não use `10.0.2.2` no telefone.
 - iOS Simulator: normalmente `http://localhost:8080/api`.
 
-O Expo injeta variáveis `EXPO_PUBLIC_*` no bundle do app; nunca coloque senhas, chaves privadas ou tokens nesse prefixo nem versione segredos. Reinicie o Expo depois de alterar `.env`.
+Se precisar alternar entre emulador e telefone sem editar `.env`, defina a variável no processo antes de iniciar o Expo. No PowerShell:
 
-A integração do mobile ainda está pendente. O cliente HTTP usa `EXPO_PUBLIC_API_BASE_URL` com a base `/api`; os caminhos relativos serão `auth/login`, `studies` e os demais recursos. O [contrato OpenAPI](../backend/openapi.yaml) descreve os RF01–RF11 da Release 1. A integração de login e dos fluxos mobile pertence à Sprint 3.
+```powershell
+$env:EXPO_PUBLIC_API_BASE_URL = "http://10.0.2.2:8080/api"
+npm.cmd start
+```
+
+A variável de processo tem precedência sobre o `.env` na inicialização do bundle. Reinicie o Expo depois de qualquer alteração. O Expo injeta variáveis `EXPO_PUBLIC_*` no bundle do app; nunca coloque senhas, chaves privadas ou tokens nesse prefixo nem versione segredos.
+
+Os caminhos usados pelo app são relativos à base: `auth/login`, `auth/activation`, `auth/password` e `auth/logout`. O [contrato OpenAPI](../backend/openapi.yaml) descreve os RF01–RF11 da Release 1.
+
+## Fluxo de autenticação
+
+### Login
+
+A tela de login valida e-mail e senha localmente e envia `POST auth/login`. A senha é transmitida exatamente como digitada, sem aparo ou transformação. Falhas de credencial usam uma mensagem genérica, sem revelar se o e-mail existe. A sessão só é criada para o perfil `PARTICIPANT`; os demais perfis recebem acesso negado e nenhuma sessão é mantida em memória ou no armazenamento.
+
+### Primeiro acesso
+
+Em **Ativar conta**, o candidato informa o e-mail cadastrado e o código de ativação recebido (`POST auth/activation`). O código é apenas aparado nas extremidades; maiúsculas, minúsculas e conteúdo interno são preservados. A resposta é uma sessão restrita (`mustChangePassword = true`), que só permite definir a senha inicial ou sair. Outras rotas privadas ficam bloqueadas até a senha ser definida.
+
+### Senha restrita e troca de senha
+
+Com `mustChangePassword = true`, o app mostra apenas a definição de senha e a opção **Sair**. A nova senha precisa ter de 8 a 72 caracteres, com pelo menos uma letra e um número, e não é aparada nem convertida. A confirmação existe apenas na interface e não é enviada. Em `PUT auth/password`, o modo de primeiro acesso não envia `currentPassword`; a troca de uma conta ativa exige a senha atual. A resposta substitui a sessão anterior, já sem a restrição, antes de voltar ao início.
+
+### Expiração e logout
+
+O vencimento é absoluto, calculado a partir de `expiresIn` no recebimento e gravado junto com a sessão. Um timer encerra a sessão no prazo e, quando o app volta ao primeiro plano, o prazo é conferido novamente porque o sistema pode suspender timers em segundo plano. Um 401 em chamada autenticada invalida a sessão uma única vez, mesmo com respostas simultâneas ou atrasadas. Um `403 PASSWORD_CHANGE_REQUIRED` apenas restringe a sessão; `FORBIDDEN`, falha de rede e erro 5xx não apagam a sessão. Sair limpa a sessão local primeiro e só depois tenta confirmar o logout na API; uma falha nessa confirmação não mantém o acesso no dispositivo.
+
+### Perfis não participantes
+
+Coordenador, pesquisador e administrador são recusados no login e na restauração de sessão. Uma sessão persistida de perfil diferente de `PARTICIPANT` é descartada e o app volta ao login.
+
+## Sessão e armazenamento seguro
+
+A sessão fica em memória e em um registro versionado no `expo-secure-store`, na chave `clinicalstudypb.session.v1`. Apenas o token, o instante absoluto de vencimento e os dados públicos do usuário (`id`, `name`, `email`, `role`, `active`, `mustChangePassword`) são gravados. Senhas e códigos de ativação nunca são armazenados.
+
+- Registros corrompidos, de versão desconhecida ou ilegíveis são descartados e o app volta ao login com aviso genérico.
+- Se a remoção nativa falhar, o registro é substituído por um marcador de revogação sem token; a próxima leitura o trata como armazenamento vazio, evitando ressuscitar a sessão.
+- Se a gravação falhar, a sessão continua em memória e a interface avisa que, ao fechar o app, será necessário entrar novamente.
+- Na web, o SecureStore não está disponível; a leitura informa indisponibilidade e o app segue para o login. O alvo desta tarefa é Android.
+
+Os estados de sessão são `loading`, `anonymous` e `authenticated`. As rotas privadas usam `Stack.Protected` e só são liberadas após a restauração terminar.
 
 ## Verificações locais
 
@@ -75,28 +119,38 @@ Na pasta `mobile/`:
 
 ```powershell
 npm.cmd test -- --runInBand
+npm.cmd run test:report -- --runInBand --coverage
 npx.cmd tsc --noEmit
 npx.cmd expo install --check
 ```
 
-Os testes Jest cobrem a navegação inicial e o tratamento de erros do cliente HTTP. `tsc` verifica o TypeScript e `expo install --check` compara as dependências com o SDK do Expo. Não há script de lint mobile configurado nesta base. O CI já instala pelo lockfile e executa Jest com cobertura (`npm test -- --ci --coverage`), disponibilizando o artefato `mobile-coverage`.
+- `npm test` executa o Jest com o preset `jest-expo`.
+- `npm run test:report` cria `test-reports/` e grava o JSON usado pelo relatório de execução (`test-reports/jest.json`). `test-reports/` e `coverage/` são ignorados pelo Git.
+- `tsc --noEmit` verifica o TypeScript.
+- `expo install --check` compara as dependências com o catálogo do SDK do Expo.
 
-O comando `expo install --check` pode recomendar atualizações de pacotes dentro do mesmo SDK ao consultar o catálogo online. Registre as versões e o resultado; não atualize dependências nem o lockfile automaticamente durante a conferência de instalação. Na validação da T16.13, o catálogo recomendou atualizações do SDK 58, enquanto os testes, o TypeScript e a navegação em Android passaram com as versões fixadas. A consulta offline usa os dados locais e não substitui o diagnóstico online. Veja o [relatório da execução](../releases/release1/tests/t16-13/README.md).
+Os testes Jest cobrem login, ativação, troca de senha, expiração, persistência segura, tratamento de 401 e concorrência de sessão, além da navegação protegida e do cliente HTTP. Não há script de lint mobile configurado nesta base. O CI instala pelo lockfile e executa `npm run test:report -- --coverage`, publicando os artefatos `mobile-coverage` e `resultados-mobile`.
+
+O comando `expo install --check` pode recomendar atualizações de pacotes dentro do mesmo SDK ao consultar o catálogo online. Registre as versões e o resultado; não atualize dependências nem o lockfile automaticamente durante a conferência de instalação. Na validação da T16.13, o catálogo recomendou atualizações do SDK 58, enquanto os testes, o TypeScript e a navegação em Android passaram com as versões fixadas. A consulta offline usa os dados locais e não substitui o diagnóstico online. Veja o [relatório da execução](../releases/release1/tests/t16-13/README.md). Nesta task, os patches recomendados dentro do SDK 58 para `@expo/ui`, `expo`, `expo-router`, `expo-web-browser` e `jest-expo` foram aplicados de forma deliberada e os testes foram reexecutados; repita o `expo install --check` após a atualização e registre a saída.
 
 ### Auditoria de dependências
 
-Na auditoria de 24/10/2026, `npm audit` reportou cinco ocorrências de severidade alta associadas a dois pacotes transitivos: `node-forge@1.4.0` e `zod@3.25.76`, dentro da cadeia `expo@58.0.19` → `@expo/cli@58.1.15`. A mesma auditoria com `--omit=dev` manteve os avisos porque o Expo está declarado como dependência de produção. Esses pacotes pertencem ao caminho de ferramentas do Expo/CLI e não são importados diretamente pelas telas ou serviços do app; o risco identificado é na cadeia de desenvolvimento/build.
+A auditoria registrada em 24/10/2026, quando o projeto usava `expo@58.0.19`, reportou cinco ocorrências de severidade alta associadas a dois pacotes transitivos: `node-forge@1.4.0` e `zod@3.25.76`, dentro da cadeia `expo@58.0.19` → `@expo/cli@58.1.15`. A mesma auditoria com `--omit=dev` manteve os avisos porque o Expo está declarado como dependência de produção. Esses pacotes pertencem ao caminho de ferramentas do Expo/CLI e não são importados diretamente pelas telas ou serviços do app; o risco identificado é na cadeia de desenvolvimento/build.
 
-Os avisos são [GHSA-86w9-cpqp-85rv](https://github.com/advisories/GHSA-86w9-cpqp-85rv) para node-forge e [GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5) para Zod. Na data da verificação, o advisory de node-forge não indicava versão corrigida; o fix de Zod requer versão 4.6.6 ou superior. `npm audit fix --force` propõe trocar Expo SDK 58 por Expo 54.0.38, uma atualização incompatível com a stack atual, então não foi aplicado. Encaminhamento: acompanhar uma atualização compatível do Expo CLI/dependências no SDK usado pelo projeto e reexecutar `npm audit`; não forçar downgrade nem override de major sem validar compatibilidade.
+Os avisos são [GHSA-86w9-cpqp-85rv](https://github.com/advisories/GHSA-86w9-cpqp-85rv) para node-forge e [GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5) para Zod. Na data da verificação, o advisory de node-forge não indicava versão corrigida; o fix de Zod requer versão 4.6.6 ou superior. `npm audit fix --force` propõe trocar Expo SDK 58 por Expo 54.0.38, uma atualização incompatível com a stack atual, então não foi aplicado. Encaminhamento: acompanhar uma atualização compatível do Expo CLI/dependências no SDK usado pelo projeto e reexecutar `npm audit`; não forçar downgrade nem override de major sem validar compatibilidade. A auditoria não foi refeita após a atualização de dependências desta tarefa.
 
 ## Cliente HTTP
 
-`apiRequest<T>(path, options)` recebe um caminho relativo à URL base, adiciona `Accept: application/json`, serializa `body` como JSON, lê respostas JSON ou texto e retorna `undefined` para HTTP 204. Para respostas fora de 2xx, lança `ApiError` com `status`, `code` e `fieldErrors` quando esses campos estiverem presentes. O chamador pode passar cabeçalhos, inclusive `Authorization`, mas o cliente não adquire, guarda, renova ou remove credenciais.
+`apiRequest<T>(path, options)` recebe um caminho relativo à URL base, adiciona `Accept: application/json`, serializa `body` como JSON, lê respostas JSON ou texto e retorna `undefined` para HTTP 204. Para respostas fora de 2xx, lança `ApiError` com `status`, `code` e `fieldErrors` quando esses campos estiverem presentes. Um erro com corpo vazio, texto ou JSON inválido também vira `ApiError`; o status HTTP é o dado usado pelo tratamento central de 401.
 
-Exemplo para uma tarefa futura, depois de confirmar contrato e endpoint:
+O cliente não adquire, guarda, renova ou remove credenciais. Quem gerencia o token é o `AuthProvider`, por meio de `runAuthenticated(operation)`, que injeta o token da sessão atual e aplica a política de expiração. Para um novo recurso protegido, use esse caminho em vez de montar o cabeçalho manualmente:
 
 ```ts
-const studies = await apiRequest<Study[]>('/studies');
+const studies = await runAuthenticated((token) =>
+  apiRequest<Study[]>('studies', {
+    headers: { Authorization: `Bearer ${token}` },
+  }),
+);
 ```
 
 Defina o tipo de resposta e o tratamento de erro junto à funcionalidade que integrar o endpoint; não trate a resposta como confiável sem validar o contrato.

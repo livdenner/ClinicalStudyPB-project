@@ -45,4 +45,23 @@ describe('apiRequest', () => {
     expect(json).toHaveBeenCalledTimes(1);
     expect(text).not.toHaveBeenCalled();
   });
+
+  it('keeps a 401 without a readable body as an ApiError', async () => {
+    process.env.EXPO_PUBLIC_API_BASE_URL = 'http://localhost:8080/api';
+
+    jest.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: false,
+      status: 401,
+      headers: {
+        get: jest.fn().mockReturnValue('application/json'),
+      },
+      json: jest.fn().mockRejectedValue(new SyntaxError('Unexpected token')),
+      text: jest.fn(),
+    } as unknown as Response);
+
+    await expect(apiRequest('/auth/me')).rejects.toMatchObject({
+      name: 'ApiError',
+      status: 401,
+    } satisfies Partial<ApiError>);
+  });
 });
