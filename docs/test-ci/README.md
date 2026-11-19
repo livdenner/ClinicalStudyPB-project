@@ -7,6 +7,6 @@ Registro automático, teste a teste, de cada execução da CI. Cada arquivo reú
 | [Integrações na `development`](development/README.md) | Uma execução por merge de PR na `development`, com o PR integrado (número, branch e título) | Indicada no topo do índice |
 | [Versões na `main`](main/README.md) | Uma execução por push na `main` | Indicada no topo do índice |
 
-O nome de cada arquivo segue `AAAA-MM-DD_HH-mm_<commit>.md`, com data e hora em America/Fortaleza. Os relatórios de PRs ainda em revisão não são versionados. Eles ficam no artefato `relatorio-execucao-testes` e no resumo da execução da CI. Para gerar um relatório localmente, veja o [guia de contribuição](../../CONTRIBUTING.md#relatório-de-execução-dos-testes).
+O nome de cada arquivo segue `AAAA-MM-DD_HH-mm_<commit>.md`, com data e hora em America/Fortaleza. A CI gera o relatório como artefato. O publicador versiona os relatórios de PRs internas na própria branch da PR, em `pull-requests/<número>/`; após merges, acumula os relatórios em uma PR do bot para `development` ou `main`. PRs de forks ficam somente com o artefato. Para gerar um relatório localmente, veja o [guia de contribuição](../../CONTRIBUTING.md#relatório-de-execução-dos-testes).
 
 As rodadas registradas à mão durante o desenvolvimento de cada tarefa ficam em [docs/test-runs](../test-runs/README.md).

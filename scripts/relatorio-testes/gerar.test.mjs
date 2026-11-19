@@ -16,6 +16,7 @@ import {
     lerIntegracao,
     lerJestOuVitest,
     lerPlaywright,
+    main,
     nomeDoArquivo,
     sanitizar,
 } from "./gerar.mjs";
@@ -336,6 +337,29 @@ describe("integração", () => {
             assert.match(indice, /\| `abcdef1` \| PR #81 \(`feat\/x`\): Retirada do participante \| CI/);
         } finally {
             fs.rmSync(path.dirname(pasta), { recursive: true, force: true });
+        }
+    });
+
+    it("gera o índice de um PR em outro repositório com --raiz", () => {
+        const raiz = fs.mkdtempSync(path.join(os.tmpdir(), "repositorio-"));
+        const pasta = path.join(raiz, "docs/test-ci/pull-requests/90");
+        fs.mkdirSync(pasta, { recursive: true });
+        try {
+            fs.writeFileSync(
+                path.join(pasta, "2026-11-16_10-30_abcdef1.md"),
+                '<!-- resumo: {"total":2,"passou":2,"falhou":0,"ignorado":0,"instavel":0,"ambiente":"CI (GitHub Actions)","integracao":{"pr":90,"branch":"","titulo":"Corrige a CI","emRevisao":true}} -->\n',
+            );
+            const saida = path.relative(raiz, pasta);
+            assert.equal(main(["--somente-indice", "--raiz", raiz, "--saida", saida]), 0);
+            const indice = fs.readFileSync(path.join(pasta, "README.md"), "utf8");
+            assert.match(indice, /# Histórico de execuções de testes — `pull-requests\/90`/);
+            assert.match(indice, /commit do \*\*PR #90\*\*/);
+            assert.match(indice, /\[Voltar aos históricos\]\(\.\.\/\.\.\/README\.md\)/);
+            assert.match(indice, /\[guia de contribuição\]\(\.\.\/\.\.\/\.\.\/\.\.\/CONTRIBUTING\.md#/);
+            assert.match(indice, /\| Integração \| Ambiente \|/);
+            assert.match(indice, /Corrige a CI — em revisão, ainda não integrado \| CI \(GitHub Actions\) \| 2 \| 2 \| 0 \| 0 \| 0 \| ✅ ok \|/);
+        } finally {
+            fs.rmSync(raiz, { recursive: true, force: true });
         }
     });
 });
