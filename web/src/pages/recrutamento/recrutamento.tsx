@@ -7,6 +7,7 @@ import { ModalConfirmarInclusao } from "../../components/candidatos/ModalConfirm
 import { ModalNovoCandidato } from "../../components/candidatos/ModalNovoCandidato";
 import { PainelParticipantesVagas } from "../../components/candidatos/PainelParticipantesVagas";
 import { TabelaCandidatos } from "../../components/candidatos/TabelaCandidatos";
+import { VisitasParticipante } from "../../components/visitas/VisitasParticipante";
 import { Button } from "../../components/ui/Button";
 import { ErrorMessage } from "../../components/ui/ErrorMessage";
 import { useAuth } from "../../context/AuthContext";
@@ -27,6 +28,7 @@ import {
 } from "../../types/candidato";
 import type { ParticipanteApi } from "../../types/participante";
 import { candidatoPodeSerIncluido } from "../../utils/candidatos";
+import { podeAgendarVisita } from "../../utils/agendamento";
 
 const PERFIS_PERMITIDOS: UserRole[] = ["COORDINATOR", "RESEARCHER"];
 
@@ -106,6 +108,10 @@ function GestaoCandidatos({
     const [mensagemSucesso, setMensagemSucesso] = useState("");
     const [candidatoAvaliandoId, setCandidatoAvaliandoId] = useState<number | null>(null);
     const [candidatoIncluindo, setCandidatoIncluindo] = useState<CandidatoApi | null>(null);
+    const [agendaSelecionada, setAgendaSelecionada] = useState<{
+        participantId: number;
+        abrirAgendamento: boolean;
+    } | null>(null);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -328,6 +334,12 @@ function GestaoCandidatos({
         atualizarCandidatos();
     }
 
+    function abrirAgenda(participante: ParticipanteApi, agendar: boolean) {
+        if (!estudoSelecionado || participante.studyId !== estudoSelecionado.id) return;
+        if (agendar && !podeAgendarVisita(role, estudoSelecionado.status, participante)) return;
+        setAgendaSelecionada({ participantId: participante.id, abrirAgendamento: agendar });
+    }
+
     const candidatoAvaliando =
         candidatoAvaliandoId !== null
             ? (candidatos.find((c) => c.id === candidatoAvaliandoId) ?? null)
@@ -342,6 +354,24 @@ function GestaoCandidatos({
                 role={role}
                 onVoltar={() => setCandidatoAvaliandoId(null)}
                 onAtualizarStatusCandidato={handleAtualizarStatusCandidato}
+            />
+        );
+    }
+
+    const participanteAgenda = agendaSelecionada
+        ? participantes.find((participante) => participante.id === agendaSelecionada.participantId)
+        : null;
+
+    if (participanteAgenda && estudoSelecionado && agendaSelecionada) {
+        return (
+            <VisitasParticipante
+                key={`${estudoSelecionado.id}:${participanteAgenda.id}`}
+                estudo={estudoSelecionado}
+                participante={participanteAgenda}
+                token={token}
+                role={role}
+                abrirAgendamento={agendaSelecionada.abrirAgendamento}
+                onVoltar={() => setAgendaSelecionada(null)}
             />
         );
     }
@@ -443,6 +473,7 @@ function GestaoCandidatos({
                                 setMensagemSucesso("");
                                 setCandidatoAvaliandoId(null);
                                 setCandidatoIncluindo(null);
+                                setAgendaSelecionada(null);
                                 setEstudoSelecionadoId(novoId);
                                 if (novoId !== null) {
                                     setCarregandoCandidatos(true);
@@ -617,6 +648,13 @@ function GestaoCandidatos({
                     participantes={participantes}
                     carregando={carregandoParticipantes}
                     erro={erroParticipantes}
+                    onVerVisitas={(participante) => abrirAgenda(participante, false)}
+                    onAgendarVisita={
+                        podeCadastrar &&
+                        (statusEstudo === "RECRUITMENT" || statusEstudo === "EXECUTION")
+                            ? (participante) => abrirAgenda(participante, true)
+                            : undefined
+                    }
                     onTentarNovamente={() => {
                         setCarregandoParticipantes(true);
                         setErroParticipantes("");

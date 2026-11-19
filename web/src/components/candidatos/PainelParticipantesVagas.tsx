@@ -1,5 +1,5 @@
 import { Chip, Table } from "@heroui/react";
-import { CheckCircle2, Users } from "lucide-react";
+import { CalendarDays, CalendarPlus, Users } from "lucide-react";
 import type { ParticipanteApi } from "../../types/participante";
 import { Button } from "../ui/Button";
 import { ErrorMessage } from "../ui/ErrorMessage";
@@ -11,6 +11,8 @@ type Props = {
     carregando: boolean;
     erro: string;
     onTentarNovamente: () => void;
+    onVerVisitas?: (participante: ParticipanteApi) => void;
+    onAgendarVisita?: (participante: ParticipanteApi) => void;
 };
 
 function formatarInclusao(iso: string): string {
@@ -28,6 +30,7 @@ function formatarInclusao(iso: string): string {
     return `${data} às ${hora}`;
 }
 
+/** Mostra vagas, situação dos participantes e acessos à agenda autorizada. @author Lívia */
 export function PainelParticipantesVagas({
     estudoTitulo,
     limiteVagas,
@@ -35,12 +38,26 @@ export function PainelParticipantesVagas({
     carregando,
     erro,
     onTentarNovamente,
+    onVerVisitas,
+    onAgendarVisita,
 }: Props) {
     const vagasOcupadas = participantes.length;
     const vagasDisponiveis = Math.max(0, limiteVagas - vagasOcupadas);
     const estudoLotado = limiteVagas > 0 && vagasDisponiveis === 0;
     const percentualOcupacao =
         limiteVagas > 0 ? Math.min(100, Math.round((vagasOcupadas / limiteVagas) * 100)) : 0;
+    const exibirAcoes = Boolean(onVerVisitas || onAgendarVisita);
+    const colunas = [
+        "Participante",
+        "Vínculo",
+        "Data de inclusão",
+        "Situação",
+        ...(exibirAcoes ? ["Visitas"] : []),
+    ];
+    const itensTabela = participantes.map((participante) => ({
+        ...participante,
+        permiteAgendar: Boolean(onAgendarVisita) && participante.status === "ACTIVE",
+    }));
 
     return (
         <section
@@ -149,20 +166,18 @@ export function PainelParticipantesVagas({
                             className="w-full min-w-[460px] text-left text-sm"
                         >
                             <Table.Header>
-                                {["Participante", "Vínculo", "Data de inclusão", "Situação"].map(
-                                    (titulo) => (
-                                        <Table.Column
-                                            key={titulo}
-                                            id={titulo}
-                                            isRowHeader={titulo === "Participante"}
-                                            className="rounded-none bg-[var(--color-primary)] px-5 py-3 text-xs font-semibold text-white after:hidden"
-                                        >
-                                            {titulo}
-                                        </Table.Column>
-                                    )
-                                )}
+                                {colunas.map((titulo) => (
+                                    <Table.Column
+                                        key={titulo}
+                                        id={titulo}
+                                        isRowHeader={titulo === "Participante"}
+                                        className="rounded-none bg-[var(--color-primary)] px-5 py-3 text-xs font-semibold text-white after:hidden"
+                                    >
+                                        {titulo}
+                                    </Table.Column>
+                                ))}
                             </Table.Header>
-                            <Table.Body items={participantes}>
+                            <Table.Body items={itensTabela}>
                                 {(participante) => (
                                     <Table.Row
                                         id={participante.id}
@@ -182,19 +197,57 @@ export function PainelParticipantesVagas({
                                             <Chip
                                                 size="sm"
                                                 variant="soft"
-                                                className="bg-[var(--color-success-soft)] font-semibold text-[var(--color-success)]"
+                                                className={`font-semibold ${participante.status === "ACTIVE" ? "bg-[var(--color-success-soft)] text-[var(--color-success)]" : "bg-[var(--color-neutral-soft)] text-[var(--color-neutral)]"}`}
                                             >
                                                 <Chip.Label>
-                                                    <span className="inline-flex items-center gap-1">
-                                                        <CheckCircle2
-                                                            size={13}
-                                                            aria-hidden="true"
-                                                        />
-                                                        Incluído
-                                                    </span>
+                                                    {participante.status === "ACTIVE"
+                                                        ? "Ativo"
+                                                        : participante.status === "WITHDRAWN"
+                                                          ? "Retirado"
+                                                          : "Situação indisponível"}
                                                 </Chip.Label>
                                             </Chip>
                                         </Table.Cell>
+                                        {exibirAcoes && (
+                                            <Table.Cell className="border-[var(--color-border)] px-5 py-3.5 group-hover:bg-slate-50">
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    {onVerVisitas && (
+                                                        <Button
+                                                            type="button"
+                                                            variant="secondary"
+                                                            className="btn btn-secondary inline-flex items-center gap-1.5 text-xs"
+                                                            aria-label={`Ver visitas: ${participante.candidateName}`}
+                                                            onClick={() =>
+                                                                onVerVisitas(participante)
+                                                            }
+                                                        >
+                                                            <CalendarDays
+                                                                size={15}
+                                                                aria-hidden="true"
+                                                            />
+                                                            Ver visitas
+                                                        </Button>
+                                                    )}
+                                                    {participante.permiteAgendar &&
+                                                        onAgendarVisita && (
+                                                            <Button
+                                                                type="button"
+                                                                className="btn button--create inline-flex items-center gap-1.5 text-xs"
+                                                                aria-label={`Agendar visita: ${participante.candidateName}`}
+                                                                onClick={() =>
+                                                                    onAgendarVisita(participante)
+                                                                }
+                                                            >
+                                                                <CalendarPlus
+                                                                    size={15}
+                                                                    aria-hidden="true"
+                                                                />
+                                                                Agendar
+                                                            </Button>
+                                                        )}
+                                                </div>
+                                            </Table.Cell>
+                                        )}
                                     </Table.Row>
                                 )}
                             </Table.Body>
