@@ -36,6 +36,17 @@ export type AtivacaoCandidatoApi = {
     expired: boolean;
 };
 
+/** Motivo obrigatório enviado ao cancelar uma candidatura antes da inclusão. @author Lívia */
+export type DadosCancelamentoCandidatoApi = {
+    reason: string;
+};
+
+/** Histórico de cancelamento preservado pela API, sem apagar a candidatura. @author Lívia */
+export type CancelamentoCandidatoApi = DadosCancelamentoCandidatoApi & {
+    cancelledAt: string;
+    cancelledByUserId: number;
+};
+
 export type CandidatoApi = DadosCandidatoApi & {
     id: number;
     studyId: number;
@@ -44,6 +55,7 @@ export type CandidatoApi = DadosCandidatoApi & {
     eligibilityStatus: StatusElegibilidadeApi;
     consentStatus: StatusConsentimentoApi;
     activation?: AtivacaoCandidatoApi;
+    cancellation?: CancelamentoCandidatoApi;
 };
 
 /** Resposta exclusiva do cadastro; o código não faz parte dos dados da listagem. @author Lívia */

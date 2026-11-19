@@ -4,6 +4,7 @@ import { Plus, Search } from "lucide-react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { AvaliacaoElegibilidade } from "../../components/candidatos/AvaliacaoElegibilidade";
 import { ModalConfirmarInclusao } from "../../components/candidatos/ModalConfirmarInclusao";
+import { ModalCancelarCandidatura } from "../../components/candidatos/ModalCancelarCandidatura";
 import { ModalNovoCandidato } from "../../components/candidatos/ModalNovoCandidato";
 import { PainelParticipantesVagas } from "../../components/candidatos/PainelParticipantesVagas";
 import { TabelaCandidatos } from "../../components/candidatos/TabelaCandidatos";
@@ -11,8 +12,13 @@ import { Button } from "../../components/ui/Button";
 import { ErrorMessage } from "../../components/ui/ErrorMessage";
 import { useAuth } from "../../context/AuthContext";
 import { ApiClientError } from "../../services/api/apiClient";
-import { cadastrarCandidato, listarCandidatosPorEstudo } from "../../services/candidatos";
-import { listarEstudos } from "../../services/estudos";
+import {
+    cadastrarCandidato,
+    cancelarCandidatura,
+    listarCandidatosPorEstudo,
+    obterCandidato,
+} from "../../services/candidatos";
+import { listarEstudos, obterEstudo } from "../../services/estudos";
 import {
     incluirParticipanteNoEstudo,
     listarParticipantesPorEstudo,
@@ -26,7 +32,7 @@ import {
     type StatusEstudoCandidato,
 } from "../../types/candidato";
 import type { ParticipanteApi } from "../../types/participante";
-import { candidatoPodeSerIncluido } from "../../utils/candidatos";
+import { candidatoPodeSerCancelado, candidatoPodeSerIncluido } from "../../utils/candidatos";
 
 const PERFIS_PERMITIDOS: UserRole[] = ["COORDINATOR", "RESEARCHER"];
 
@@ -95,6 +101,7 @@ function GestaoCandidatos({
     const [carregandoCandidatos, setCarregandoCandidatos] = useState(false);
     const [erroCandidatos, setErroCandidatos] = useState("");
     const [tentativaCandidatos, setTentativaCandidatos] = useState(0);
+    const [incluirCancelados, setIncluirCancelados] = useState(false);
 
     const [participantes, setParticipantes] = useState<ParticipanteApi[]>([]);
     const [carregandoParticipantes, setCarregandoParticipantes] = useState(false);
@@ -106,6 +113,7 @@ function GestaoCandidatos({
     const [mensagemSucesso, setMensagemSucesso] = useState("");
     const [candidatoAvaliandoId, setCandidatoAvaliandoId] = useState<number | null>(null);
     const [candidatoIncluindo, setCandidatoIncluindo] = useState<CandidatoApi | null>(null);
+    const [candidatoCancelando, setCandidatoCancelando] = useState<CandidatoApi | null>(null);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -161,7 +169,7 @@ function GestaoCandidatos({
 
         const controller = new AbortController();
 
-        listarCandidatosPorEstudo(estudoSelecionadoId, token, controller.signal)
+        listarCandidatosPorEstudo(estudoSelecionadoId, token, controller.signal, incluirCancelados)
             .then((dados) => {
                 if (controller.signal.aborted) return;
                 setCandidatos(dados);
@@ -191,7 +199,7 @@ function GestaoCandidatos({
             });
 
         return () => controller.abort();
-    }, [estudoSelecionadoId, token, tentativaCandidatos]);
+    }, [estudoSelecionadoId, token, tentativaCandidatos, incluirCancelados]);
 
     useEffect(() => {
         if (estudoSelecionadoId === null) {
@@ -277,6 +285,60 @@ function GestaoCandidatos({
             return;
         setMensagemSucesso("");
         setCandidatoIncluindo(candidato);
+    }
+
+    function handleAbrirCancelamento(candidato: CandidatoApi) {
+        if (
+            !podeCadastrar ||
+            !estudoSelecionado ||
+            !estudoEmRecrutamento ||
+            carregandoEstudos ||
+            erroEstudos ||
+            carregandoCandidatos ||
+            erroCandidatos ||
+            candidato.studyId !== estudoSelecionado.id ||
+            !candidatoPodeSerCancelado(candidato)
+        )
+            return;
+        setMensagemSucesso("");
+        setCandidatoCancelando(candidato);
+    }
+
+    async function handleCancelarCandidatura(reason: string) {
+        if (
+            !podeCadastrar ||
+            !estudoSelecionado ||
+            !candidatoCancelando ||
+            !estudoEmRecrutamento ||
+            candidatoCancelando.studyId !== estudoSelecionado.id ||
+            !candidatoPodeSerCancelado(candidatoCancelando)
+        ) {
+            throw new ApiClientError("A candidatura não está disponível para cancelamento.", {
+                status: 409,
+            });
+        }
+        await cancelarCandidatura(estudoSelecionado.id, candidatoCancelando.id, { reason }, token);
+        setCandidatoCancelando(null);
+        setMensagemSucesso("Candidatura cancelada com sucesso. O histórico foi preservado.");
+        atualizarListas();
+    }
+
+    async function handleAtualizarCancelamento() {
+        if (!estudoSelecionado || !candidatoCancelando) {
+            throw new Error("Selecione uma candidatura para atualizar os dados.");
+        }
+        try {
+            const [candidatoAtual, estudoAtual] = await Promise.all([
+                obterCandidato(estudoSelecionado.id, candidatoCancelando.id, token),
+                obterEstudo(estudoSelecionado.id, token),
+            ]);
+            setCandidatoCancelando(candidatoAtual);
+            setEstudos((atuais) =>
+                atuais.map((estudo) => (estudo.id === estudoAtual.id ? estudoAtual : estudo))
+            );
+        } finally {
+            atualizarListas();
+        }
     }
 
     async function handleCadastrar(dados: DadosCandidatoApi) {
@@ -436,13 +498,18 @@ function GestaoCandidatos({
                             id="seletor-estudo-candidatos"
                             aria-label="Estudo clínico"
                             value={estudoSelecionadoId ?? ""}
-                            disabled={carregandoEstudos || estudos.length === 0}
+                            disabled={
+                                carregandoEstudos ||
+                                estudos.length === 0 ||
+                                Boolean(candidatoCancelando)
+                            }
                             onChange={(event) => {
                                 const valor = Number(event.target.value);
                                 const novoId = Number.isNaN(valor) ? null : valor;
                                 setMensagemSucesso("");
                                 setCandidatoAvaliandoId(null);
                                 setCandidatoIncluindo(null);
+                                setCandidatoCancelando(null);
                                 setEstudoSelecionadoId(novoId);
                                 if (novoId !== null) {
                                     setCarregandoCandidatos(true);
@@ -503,6 +570,27 @@ function GestaoCandidatos({
                         />
                     </div>
                 </div>
+
+                <label className="flex cursor-pointer items-center gap-2 text-sm text-[var(--color-text)]">
+                    <input
+                        type="checkbox"
+                        checked={incluirCancelados}
+                        disabled={
+                            !estudoSelecionado ||
+                            carregandoEstudos ||
+                            Boolean(erroEstudos) ||
+                            Boolean(candidatoCancelando)
+                        }
+                        onChange={(event) => {
+                            if (event.target.checked === incluirCancelados) return;
+                            setIncluirCancelados(event.target.checked);
+                            setCarregandoCandidatos(true);
+                            setErroCandidatos("");
+                        }}
+                        className="h-4 w-4 accent-[var(--color-primary)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]"
+                    />
+                    Exibir candidaturas canceladas
+                </label>
 
                 {estudoSelecionado && !estudoEmRecrutamento && podeCadastrar && (
                     <p
@@ -602,6 +690,9 @@ function GestaoCandidatos({
                                     : undefined
                             }
                             onIncluirParticipante={podeCadastrar ? handleAbrirInclusao : undefined}
+                            onCancelarCandidatura={
+                                podeCadastrar ? handleAbrirCancelamento : undefined
+                            }
                         />
                         <footer className="border-t border-[var(--color-border)] px-5 py-4 text-xs text-[var(--color-muted)]">
                             Exibindo {candidatosFiltrados.length} de {candidatos.length} candidatos
@@ -630,6 +721,22 @@ function GestaoCandidatos({
                     estudoTitulo={estudoSelecionado.title}
                     onFechar={() => setModalAberto(false)}
                     onCadastrar={handleCadastrar}
+                />
+            )}
+
+            {candidatoCancelando && estudoSelecionado && (
+                <ModalCancelarCandidatura
+                    key={`${estudoSelecionado.id}:${candidatoCancelando.id}`}
+                    estudoTitulo={estudoSelecionado.title}
+                    candidato={candidatoCancelando}
+                    permitido={
+                        podeCadastrar &&
+                        estudoEmRecrutamento &&
+                        candidatoPodeSerCancelado(candidatoCancelando)
+                    }
+                    onFechar={() => setCandidatoCancelando(null)}
+                    onConfirmar={handleCancelarCandidatura}
+                    onAtualizar={handleAtualizarCancelamento}
                 />
             )}
 
