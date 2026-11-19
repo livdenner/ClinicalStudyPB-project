@@ -48,13 +48,14 @@ jobs:
           app-id: ${{ vars.CI_REPORTS_APP_ID }}
           private-key: ${{ secrets.CI_REPORTS_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
-          repositories: ClinicalStudyPB-project
+          repositories: ${{ github.event.repository.name }}
       - name: Versionar relatório ou atualizar PR do bot
         if: steps.artefato.outputs.disponivel == 'true'
         env:
           GH_TOKEN: ${{ steps.app.outputs.token }}
           RELATORIO_DIR: ${{ runner.temp }}/relatorio
           APP_LOGIN: clinicalstudypb-ci-reports[bot]
+          APP_EMAIL: 357421632+clinicalstudypb-ci-reports[bot]@users.noreply.github.com
         run: |
           gh auth setup-git
           python3 scripts/relatorio-testes/publicar.py

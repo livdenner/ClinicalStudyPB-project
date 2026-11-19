@@ -157,6 +157,37 @@ class PublicarPrTest(unittest.TestCase):
             self.publicar(pr_de("feat/x", self.sha))
         self.assertEqual(self.cenario.arquivos("feat/x", "docs/test-ci/pull-requests"), [])
 
+    def test_checkout_usa_sha_e_recusa_push_se_branch_andar_apos_ponta(self):
+        ponta_real = publicar.ponta
+        chamadas = []
+
+        def ponta_com_corrida(work, branch):
+            resultado = ponta_real(work, branch)
+            if not chamadas:
+                chamadas.append(resultado)
+                self.cenario.commit("feat/x", "app.txt", "v2")
+            return resultado
+
+        with patch.object(publicar, "ponta", side_effect=ponta_com_corrida):
+            self.publicar(pr_de("feat/x", self.sha))
+        self.assertEqual(self.cenario.arquivos("feat/x", "docs/test-ci/pull-requests"), [])
+
+    def test_ignora_commit_de_relatorio_do_bot_mesmo_com_outro_actor(self):
+        pr = pr_de("feat/x", self.sha)
+
+        def responder(route):
+            if route.startswith(f"repos/{REPO}/commits/"):
+                return {
+                    "commit": {"message": f"{publicar.MENSAGEM}2026-11-16_10-30_abcdef1"},
+                    "files": [{"filename": "docs/test-ci/pull-requests/7/rel.md"}],
+                }
+            return api_falsa(self.cenario, pr)(route)
+
+        run = {"actor": {"login": "revisor"}, "pull_requests": [{"number": 7}], "head_branch": "feat/x"}
+        with patch.object(publicar, "api", side_effect=responder):
+            publicar.publicar_pr(self.work, REPO, run, self.arquivo)
+        self.assertEqual(self.cenario.arquivos("feat/x", "docs/test-ci/pull-requests"), [])
+
 
 @patch.dict(os.environ, {"APP_LOGIN": BOT})
 @patch.object(publicar, "indice", indice_falso)
@@ -212,8 +243,37 @@ class PublicarPushTest(unittest.TestCase):
         self.assertTrue(publicar.so_documentacao(work, sha))
         self.assertFalse(publicar.so_documentacao(work, git(work, "rev-parse", f"{sha}^1").stdout.strip()))
 
+    def _api_rebase_pr(self, sha, arquivos_pr):
+        def responder(route):
+            if route == f"repos/{REPO}/commits/{sha}/pulls":
+                return [{"number": 7, "base": {"ref": "development"}, "merged_at": "2026-11-19T17:00:00Z"}]
+            if route.startswith(f"repos/{REPO}/pulls/7/files"):
+                return [{"filename": nome} for nome in arquivos_pr]
+            if route.startswith(f"repos/{REPO}/pulls?"):
+                return [{"number": 9}]
+            raise AssertionError(route)
+        return responder
 
-@unittest.skipUnless(publicar.GERADOR.is_file(), "gerar.mjs chega à main com a integração da development")
+    def test_rebase_de_pr_com_codigo_e_relatorio_na_ponta_publica_relatorio(self):
+        self.cenario.commit("development", "app.txt", "v1")
+        rel = "docs/test-ci/pull-requests/7/2026-11-16_10-30_abcdef1.md"
+        sha = self.cenario.commit("development", rel, "rel")
+        work = self.cenario.clonar()
+        relatorio = self.cenario.relatorio(sha)
+        with patch.object(publicar, "api", side_effect=self._api_rebase_pr(sha, ["app.txt", rel])):
+            publicar.publicar_push(work, REPO, {"head_branch": "development", "head_sha": sha}, relatorio)
+        self.assertEqual(self.cenario.arquivos("ci-reports/development", "docs/test-ci/development"), [relatorio.name, "README.md"])
+
+    def test_rebase_de_pr_apenas_com_docs_test_ci_nao_publica_novo_relatorio(self):
+        rel = "docs/test-ci/pull-requests/7/2026-11-16_10-30_abcdef1.md"
+        sha = self.cenario.commit("development", rel, "rel")
+        work = self.cenario.clonar()
+        relatorio = self.cenario.relatorio(sha)
+        with patch.object(publicar, "api", side_effect=self._api_rebase_pr(sha, [rel])):
+            publicar.publicar_push(work, REPO, {"head_branch": "development", "head_sha": sha}, relatorio)
+        self.assertFalse(self.cenario.existe("ci-reports/development"))
+
+
 class IndiceTest(unittest.TestCase):
     def test_indice_usa_o_formato_do_gerador(self):
         with tempfile.TemporaryDirectory() as temporario:

@@ -70,7 +70,13 @@ def preparar_repo(temporario, repo):
     work = Path(temporario) / "repositorio"
     comando("git", "clone", "--quiet", f"https://github.com/{repo}.git", str(work))
     comando("git", "config", "user.name", os.environ["APP_LOGIN"], cwd=work)
-    comando("git", "config", "user.email", "github-actions[bot]@users.noreply.github.com", cwd=work)
+    comando(
+        "git",
+        "config",
+        "user.email",
+        os.environ.get("APP_EMAIL", "357421632+clinicalstudypb-ci-reports[bot]@users.noreply.github.com"),
+        cwd=work,
+    )
     comando("git", "config", "commit.gpgsign", "false", cwd=work)
     return work
 
@@ -90,10 +96,10 @@ def ponta(work, branch):
     return comando("git", "rev-parse", f"refs/remotes/origin/{branch}", cwd=work).stdout.strip()
 
 
-def checkout(work, branch):
-    if not ponta(work, branch):
+def checkout(work, branch, sha=None):
+    if sha is None and not ponta(work, branch):
         return False
-    comando("git", "checkout", "--quiet", "-B", "publicacao", f"origin/{branch}", cwd=work)
+    comando("git", "checkout", "--quiet", "-B", "publicacao", sha or f"origin/{branch}", cwd=work)
     return True
 
 
@@ -139,7 +145,7 @@ def publicar_pr(work, repo, run, arquivo):
         sha = pr["head"]["sha"]
         if not do_commit(arquivo, sha):
             continue  # A branch mudou enquanto a CI terminava.
-        if ponta(work, branch) != sha or not checkout(work, branch):
+        if ponta(work, branch) != sha or not checkout(work, branch, sha=sha):
             return
         ultimo = api(f"repos/{repo}/commits/{sha}")
         arquivos = ultimo.get("files", [])
@@ -148,7 +154,7 @@ def publicar_pr(work, repo, run, arquivo):
             return
         if registrar(work, Path("docs/test-ci/pull-requests") / str(pr["number"]), arquivo):
             try:
-                push(work, f"HEAD:refs/heads/{branch}")
+                push(work, f"--force-with-lease=refs/heads/{branch}:{sha}", f"HEAD:refs/heads/{branch}")
             except PushRecusado:
                 if ponta(work, branch) == sha:
                     raise
@@ -156,12 +162,39 @@ def publicar_pr(work, repo, run, arquivo):
         return
 
 
-def so_documentacao(work, sha):
+def pais(work, sha):
+    saida = comando("git", "rev-list", "--parents", "-n", "1", sha, cwd=work, check=False).stdout.split()
+    return max(len(saida) - 1, 0)
+
+
+def _pr_so_documentacao(repo, base, sha):
+    prs = api(f"repos/{repo}/commits/{sha}/pulls")
+    pr = next((item for item in prs if (not base or item["base"]["ref"] == base) and item.get("merged_at")), None)
+    if not pr:
+        return False
+    arquivos_pr = []
+    pagina = 1
+    while True:
+        lote = api(f"repos/{repo}/pulls/{pr['number']}/files?per_page=100&page={pagina}")
+        arquivos_pr.extend(lote)
+        if len(lote) < 100:
+            break
+        pagina += 1
+    return bool(arquivos_pr) and all(item["filename"].startswith("docs/test-ci/") for item in arquivos_pr)
+
+
+def so_documentacao(work, sha, repo=None, base=None):
     diferenca = comando("git", "diff", "--name-only", f"{sha}^1", sha, cwd=work, check=False)
     if diferenca.returncode:
         return False
     nomes = diferenca.stdout.splitlines()
-    return bool(nomes) and all(nome.startswith("docs/test-ci/") for nome in nomes)
+    if not nomes or not all(nome.startswith("docs/test-ci/") for nome in nomes):
+        return False
+    # Em "Rebase and merge", a ponta pode ser só o commit do bot em pull-requests/<n>/:
+    # conferimos os arquivos do PR inteiro para não omitir o relatório da integração.
+    if pais(work, sha) == 1 and any(nome.startswith("docs/test-ci/pull-requests/") for nome in nomes):
+        return bool(repo) and _pr_so_documentacao(repo, base, sha)
+    return True
 
 
 def montar_bot(work, base, bot, arquivo):
@@ -206,7 +239,7 @@ def publicar_push(work, repo, run, arquivo, espera=time.sleep):
     if base not in BASES or not checkout(work, base):
         return
     sha = run["head_sha"]
-    if not do_commit(arquivo, sha) or so_documentacao(work, sha):
+    if not do_commit(arquivo, sha) or so_documentacao(work, sha, repo=repo, base=base):
         return
     bot = f"{PREFIXO_BOT}{base}"
     for tentativa in range(1, TENTATIVAS + 1):

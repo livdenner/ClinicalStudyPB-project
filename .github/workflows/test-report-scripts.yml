@@ -1,0 +1,24 @@
+name: Testes dos scripts de relatório
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  scripts:
+    name: Scripts de relatório (Python e Node)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Testar gerador (gerar.test.mjs)
+        run: node --test scripts/relatorio-testes/gerar.test.mjs
+      - name: Testar publicador (test_publicar.py)
+        run: python3 -B -m unittest discover -s scripts/relatorio-testes -v
