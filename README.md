@@ -244,7 +244,9 @@ O formulário contém apenas visita prevista e data/hora, com o participante e o
 
 A agenda usa `GET /api/studies/{studyId}/participants/{participantId}/visits`, com horários em Fortaleza e filtro por situação: Agendada (`SCHEDULED`), Realizada (`DONE`), Ausente (`ABSENT`) ou Cancelada (`CANCELLED`). Após HTTP 201, a resposta confirmada é adicionada à lista em ordem cronológica, sem recarregar a página; o filtro volta para todas as situações para apresentar o novo registro.
 
-Erros da API, inclusive HTTP 400 e 409, são exibidos no formulário com o texto recebido e sem limpar a visita ou a data/hora preenchida. Agendamentos `SCHEDULED` ou `DONE` bloqueiam outro para a mesma visita prevista e participante; `ABSENT` e `CANCELLED` permitem novo agendamento. Esta tarefa não oferece remarcação nem registro de desfecho. Os novos testes específicos pertencem à T18.5.
+Erros da API, inclusive HTTP 400 e 409, são exibidos no formulário com o texto recebido e sem limpar a visita ou a data/hora preenchida. Agendamentos `SCHEDULED` ou `DONE` bloqueiam outro para a mesma visita prevista e participante; `ABSENT` e `CANCELLED` permitem novo agendamento. O registro dos desfechos segue o fluxo próprio de RF13.
+
+Os testes Web da T18.5 verificam formulário, mensagens literais, atualização da lista, filtros e restrições de agendamento, com HTTP simulado e dados fictícios. A [matriz de rastreabilidade RF12](docs/tests/rastreabilidade-agendamento-web.md) relaciona os casos aos arquivos. O comando `npm run test:coverage` exige pelo menos 81% de linhas individualmente nos três novos componentes, e seus resultados integram o relatório do PBI-25.
 
 ### Sessão por aba (T24.4)
 

@@ -99,3 +99,52 @@ describe("Participantes e vagas (RF11)", () => {
         expect(onTentarNovamente).toHaveBeenCalledTimes(1);
     });
 });
+
+/** Acesso à agenda de participantes incluídos conforme RF12. @author Lívia */
+describe("RF12 — ações da agenda no painel (T18.5)", () => {
+    it("RF12-PV01: participante ativo oferece agendamento para o participante selecionado", () => {
+        const onAgendarVisita = vi.fn();
+        renderPainel({
+            participantes: [participante(1, "Pessoa fictícia ativa")],
+            onAgendarVisita,
+        });
+        fireEvent.click(
+            screen.getByRole("button", { name: "Agendar visita: Pessoa fictícia ativa" })
+        );
+        expect(onAgendarVisita).toHaveBeenCalledExactlyOnceWith(
+            expect.objectContaining({ id: 1, studyId: 10, status: "ACTIVE" })
+        );
+    });
+
+    it("RF12-PV02: participante retirado não recebe ação de agendar e mantém consulta do histórico", () => {
+        const onAgendarVisita = vi.fn();
+        const onVerVisitas = vi.fn();
+        renderPainel({
+            participantes: [
+                { ...participante(1, "Pessoa fictícia retirada"), status: "WITHDRAWN" },
+            ],
+            onAgendarVisita,
+            onVerVisitas,
+        });
+        expect(screen.getByText("Retirado")).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /Agendar visita:/ })).not.toBeInTheDocument();
+        fireEvent.click(
+            screen.getByRole("button", { name: "Ver visitas: Pessoa fictícia retirada" })
+        );
+        expect(onVerVisitas).toHaveBeenCalledExactlyOnceWith(
+            expect.objectContaining({ id: 1, status: "WITHDRAWN" })
+        );
+        expect(onAgendarVisita).not.toHaveBeenCalled();
+    });
+
+    it("RF12-PV03: ausência de autorização para agendar mantém somente a consulta", () => {
+        renderPainel({
+            participantes: [participante(1, "Pessoa fictícia em consulta")],
+            onVerVisitas: vi.fn(),
+        });
+        expect(
+            screen.getByRole("button", { name: "Ver visitas: Pessoa fictícia em consulta" })
+        ).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /Agendar visita:/ })).not.toBeInTheDocument();
+    });
+});
