@@ -32,9 +32,10 @@ it("consulta apenas o estudo solicitado e diferencia participantes ativos e reti
     render(<ParticipantesEstudo estudoId={3} token="token-teste" />);
     expect(screen.getByRole("status")).toHaveTextContent("Carregando participantes");
     expect(
-        await screen.findByRole("table", { name: "Participantes do estudo" })
+        await screen.findByRole("grid", { name: "Participantes do estudo" })
     ).toBeInTheDocument();
-    expect(screen.getByText("Ana Silva")).toBeInTheDocument();
+    expect(screen.getByRole("rowheader", { name: "Ana Silva" })).toBeInTheDocument();
+    expect(screen.queryByRole("list", { name: "Participantes do estudo" })).not.toBeInTheDocument();
     expect(screen.getByText("Bruno Costa")).toBeInTheDocument();
     expect(screen.getByText("Ativo")).toBeInTheDocument();
     expect(screen.getByText("Retirado")).toBeInTheDocument();
@@ -51,7 +52,7 @@ it("orienta quando o estudo não tem participantes", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(resposta([]));
     render(<ParticipantesEstudo estudoId={3} token="token-teste" />);
     expect(await screen.findByText("Nenhum participante incluído")).toBeInTheDocument();
-    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    expect(screen.queryByRole("grid", { name: "Participantes do estudo" })).not.toBeInTheDocument();
 });
 
 it("recupera uma consulta após erro usando Tentar novamente", async () => {

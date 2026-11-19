@@ -1,3 +1,4 @@
+import { calcularVagasDisponiveis } from "../../utils/estudos";
 import { SeloEstadoEstudo } from "../../components/estudos/SeloEstadoEstudo";
 import { useCallback, useEffect, useState } from "react";
 import { Plus, Search } from "lucide-react";
@@ -7,7 +8,7 @@ import { ConsentimentoSimulado } from "../../components/candidatos/Consentimento
 import { ModalConfirmarInclusao } from "../../components/candidatos/ModalConfirmarInclusao";
 import { ModalNovoCandidato } from "../../components/candidatos/ModalNovoCandidato";
 import { PainelParticipantesVagas } from "../../components/candidatos/PainelParticipantesVagas";
-import { TabelaCandidatos } from "../../components/candidatos/TabelaCandidatos";
+import { ListaCandidatos } from "../../components/candidatos/ListaCandidatos";
 import { Button } from "../../components/ui/Button";
 import { ErrorMessage } from "../../components/ui/ErrorMessage";
 import { useAuth } from "../../context/AuthContext";
@@ -337,7 +338,7 @@ function GestaoCandidatos({
 
     const limiteVagas = estudoSelecionado?.participantLimit ?? 0;
     const vagasOcupadas = participantes.length;
-    const vagasDisponiveis = Math.max(0, limiteVagas - vagasOcupadas);
+    const vagasDisponiveis = calcularVagasDisponiveis(limiteVagas, vagasOcupadas);
     const participantesCandidatoIds = new Set(participantes.map((p) => p.candidateId));
 
     async function handleCadastrar(dados: DadosCandidatoApi) {
@@ -489,7 +490,7 @@ function GestaoCandidatos({
                         </p>
                     )}
                 <div className="flex flex-wrap items-end justify-between gap-4">
-                    <div className="flex min-w-[260px] flex-1 flex-col gap-1.5">
+                    <div className="flex min-w-0 basis-full flex-1 flex-col min-[761px]:basis-[260px] gap-1.5">
                         <label
                             htmlFor="seletor-estudo-candidatos"
                             className="text-sm font-medium text-[var(--color-title)]"
@@ -523,7 +524,7 @@ function GestaoCandidatos({
                                     setErroParticipantes("");
                                 }
                             }}
-                            className="h-10 rounded-lg border border-[var(--color-border)] bg-white px-3 text-sm text-[var(--color-text)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] disabled:opacity-60"
+                            className="h-10 w-full min-w-0 rounded-lg border border-[var(--color-border)] bg-white px-3 text-sm text-[var(--color-text)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] disabled:opacity-60"
                         >
                             {estudoSelecionadoId === null && estudos.length > 0 && (
                                 <option value="" disabled>
@@ -551,7 +552,7 @@ function GestaoCandidatos({
                         </div>
                     )}
 
-                    <div className="relative min-w-[240px] flex-1">
+                    <div className="relative min-w-0 basis-full flex-1 min-[761px]:basis-[240px]">
                         <Search
                             size={16}
                             className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-[var(--color-muted)]"
@@ -673,7 +674,7 @@ function GestaoCandidatos({
                                 </Button>
                             </div>
                         )}
-                        <TabelaCandidatos
+                        <ListaCandidatos
                             candidatos={candidatosFiltrados}
                             participantesCandidatoIds={participantesCandidatoIds}
                             vagasDisponiveis={vagasDisponiveis}
