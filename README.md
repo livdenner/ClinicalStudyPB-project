@@ -234,7 +234,15 @@ A ação **Incluir participante** aparece somente com `status=GRANTED`, `consent
 
 O botão **Atualizar lista** consulta novamente candidatos e participantes do estudo selecionado. Recarregar a página também consulta os dados atuais, incluindo a decisão registrada no app. Após avaliação, a lista é buscada novamente; após inclusão, candidatos e painel de vagas são recarregados pela API. Participantes retirados continuam na contagem de vagas, conforme o contrato. Não há notificações nesta sprint.
 
-Os testes existentes afetados pelo novo fluxo foram adaptados; os testes do formulário descontinuado foram removidos junto com o componente. Os novos cenários específicos pertencem à T17.8. A validação ponta a ponta pelo aplicativo depende da T17.9.
+O coordenador também pode **Cancelar candidatura**, somente em estudo `RECRUITMENT` e antes de `INCLUDED` ou `CANCELLED`. A confirmação exige motivo de 1 a 500 caracteres, desconsiderando espaços nas extremidades, e envia `POST /api/studies/{studyId}/candidates/{candidateId}/cancellation` com `{ "reason": "..." }`. Enquanto o envio está em andamento, o formulário impede nova confirmação e fechamento. O cancelamento preserva o histórico; a saída de quem já foi incluído pertence ao fluxo de retirada do participante.
+
+Após sucesso, candidatos e painel de vagas são consultados novamente. A opção **Exibir candidaturas canceladas**, desmarcada por padrão, envia `includeCancelled=true` na listagem e permanece respeitada nas recargas após avaliação, inclusão, cancelamento e atualização manual. O filtro inclui os cancelados junto aos demais candidatos; não é uma lista exclusiva de cancelados. Quando retornado pela API, o cancelamento aparece com selo vermelho e motivo. Para corrigir um cadastro após cancelá-lo, use **Novo candidato** e informe os dados corretos; o cadastro e o vínculo de conta continuam sob validação do backend.
+
+Os erros da operação de cancelamento são exibidos com o texto recebido da API. Em HTTP 409, incluindo `CANDIDATE_ALREADY_INCLUDED`, `CANDIDATE_ALREADY_CANCELLED` e `STUDY_NOT_RECRUITING`, o formulário mantém o motivo e consulta novamente candidato e estudo, além de atualizar as listas. Não há reenvio automático. A confirmação fica bloqueada enquanto faltarem dados atuais ou a situação não permitir o cancelamento; se a consulta falhar, o coordenador pode usar **Atualizar dados** na própria confirmação.
+
+O serviço `obterConsentimentoSimulado` e o tipo `ConsentimentoSimuladoApi`, sem uso no fluxo atual, foram removidos. `StatusConsentimentoApi` continua necessário para conferir o aceite retornado na candidatura.
+
+Os testes existentes afetados pelo novo fluxo foram adaptados; os testes do formulário descontinuado foram removidos junto com o componente. Os novos cenários específicos pertencem à T17.8, incluindo validação do motivo, controle de acesso, bloqueios por situação, HTTP 409, atualização das listas e manutenção do filtro de cancelados. Os testes de componente devem simular HTTP, sem chamar a API real. A validação ponta a ponta pelo aplicativo depende da T17.9.
 
 ### Agendamento de visitas do participante (T18.4)
 

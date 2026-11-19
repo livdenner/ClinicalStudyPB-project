@@ -39,6 +39,13 @@ public class PlannedVisitQueryService implements PlannedVisitLookup {
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<PlannedVisitResponse> findByStudyAndId(Long studyId, Long plannedVisitId) {
+        return plannedVisitRepository.findByIdAndStudyId(plannedVisitId, studyId)
+                .map(PlannedVisitResponse::from);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Map<Long, String> findNamesByStudy(Long studyId) {
         return plannedVisitRepository.findNamesByStudyId(studyId).stream()
                 .collect(Collectors.toMap(

@@ -1,5 +1,5 @@
 import { Chip, Table } from "@heroui/react";
-import { ClipboardCheck, UserPlus } from "lucide-react";
+import { ClipboardCheck, UserPlus, XCircle } from "lucide-react";
 import {
     ELEGIBILIDADE_LABELS,
     SITUACAO_CANDIDATO_LABELS,
@@ -7,7 +7,7 @@ import {
     type StatusCandidatoApi,
     type StatusElegibilidadeApi,
 } from "../../types/candidato";
-import { candidatoPodeSerIncluido } from "../../utils/candidatos";
+import { candidatoPodeSerCancelado, candidatoPodeSerIncluido } from "../../utils/candidatos";
 
 type Props = {
     candidatos: CandidatoApi[];
@@ -15,6 +15,7 @@ type Props = {
     estudoEmRecrutamento?: boolean;
     onSelecionarCandidato?: (candidato: CandidatoApi) => void;
     onIncluirParticipante?: (candidato: CandidatoApi) => void;
+    onCancelarCandidatura?: (candidato: CandidatoApi) => void;
 };
 
 const ELEGIBILIDADE_CLASSES: Record<StatusElegibilidadeApi, string> = {
@@ -30,7 +31,7 @@ const SITUACAO_CLASSES: Record<StatusCandidatoApi, string> = {
     GRANTED: "bg-[var(--color-success-soft)] text-[var(--color-success)]",
     DECLINED: "bg-[var(--color-neutral-soft)] text-[var(--color-neutral)]",
     INCLUDED: "bg-[var(--color-success-soft)] text-[var(--color-success)]",
-    CANCELLED: "bg-[var(--color-neutral-soft)] text-[var(--color-neutral)]",
+    CANCELLED: "bg-[var(--color-error-soft)] text-[var(--color-error)]",
 };
 
 /** Exibe a situação da API e oferece ações permitidas ao coordenador. @author Lívia */
@@ -40,6 +41,7 @@ export function TabelaCandidatos({
     estudoEmRecrutamento = false,
     onSelecionarCandidato,
     onIncluirParticipante,
+    onCancelarCandidatura,
 }: Props) {
     if (candidatos.length === 0) {
         return (
@@ -54,7 +56,16 @@ export function TabelaCandidatos({
         );
     }
 
-    const exibirAcoes = Boolean(onSelecionarCandidato || onIncluirParticipante);
+    const exibirAcoes = Boolean(
+        onSelecionarCandidato || onIncluirParticipante || onCancelarCandidatura
+    );
+    const itens = candidatos.map((candidato) => ({
+        ...candidato,
+        cancelamentoPermitido:
+            Boolean(onCancelarCandidatura) &&
+            estudoEmRecrutamento &&
+            candidatoPodeSerCancelado(candidato),
+    }));
     const colunas = [
         "Identificação",
         "Idade",
@@ -89,7 +100,7 @@ export function TabelaCandidatos({
                             </Table.Column>
                         ))}
                     </Table.Header>
-                    <Table.Body items={candidatos}>
+                    <Table.Body items={itens}>
                         {(candidato) => (
                             <Table.Row
                                 id={candidato.id}
@@ -116,6 +127,11 @@ export function TabelaCandidatos({
                                     {candidato.status === "DECLINED" && (
                                         <p className="mt-1 text-xs text-[var(--color-muted)]">
                                             Decisão final do candidato.
+                                        </p>
+                                    )}
+                                    {candidato.status === "CANCELLED" && candidato.cancellation && (
+                                        <p className="mt-1 max-w-sm whitespace-pre-wrap break-words text-xs text-[var(--color-muted)]">
+                                            Motivo: {candidato.cancellation.reason}
                                         </p>
                                     )}
                                 </Table.Cell>
@@ -169,6 +185,20 @@ export function TabelaCandidatos({
                                                     >
                                                         <UserPlus size={15} aria-hidden="true" />
                                                         Incluir participante
+                                                    </button>
+                                                )}
+                                            {onCancelarCandidatura &&
+                                                candidato.cancelamentoPermitido && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            onCancelarCandidatura(candidato)
+                                                        }
+                                                        aria-label={`Cancelar candidatura: ${candidato.name}`}
+                                                        className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--color-error)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--color-error)] transition hover:bg-[var(--color-error-soft)]"
+                                                    >
+                                                        <XCircle size={15} aria-hidden="true" />
+                                                        Cancelar candidatura
                                                     </button>
                                                 )}
                                         </div>
