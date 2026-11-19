@@ -162,3 +162,13 @@ O verde-petróleo da marca (`--color-brand`) é usado na navegação selecionada
 Texto comum exige contraste mínimo de 4,5:1 com o fundo; confira também hover, foco, mensagens e texto secundário. Mantenha o nome do estado visível e use ícones como apoio, sem depender apenas da cor. Disponibilidade de vagas não é sucesso; atingir a capacidade é atenção, não erro.
 
 Esta entrega cobre a web e este guia. A frente Mobile é responsável por criar tokens nativos equivalentes e aplicar a mesma tabela nas telas do aplicativo. O guia é a referência de alinhamento; esta task não modifica nem declara validada a implementação mobile.
+
+## Cards e grades responsivas no Web (T24.3)
+
+As listas de estudos, candidatos e participantes incluídos no recrutamento usam `CardPadrao` e `GradeCards`, em `web/src/components/ui/CardPadrao.tsx`, tanto no desktop quanto no celular. Mantenha o título e o selo no cabeçalho, os dados no conteúdo e os botões em `acoes`, para que fiquem alinhados no rodapé.
+
+Na aba Participantes do estudo, use tabela no desktop e cards em larguras de até 760px. As duas apresentações compartilham os selos e a formatação da data de inclusão.
+
+A grade usa espaçamento de 20px e distribui as colunas conforme a largura disponível. Os cards têm padding de 20px, altura mínima de 256px e crescem juntos quando um item exige mais espaço. Não corte identificações nem use altura fixa: nomes extensos devem quebrar linha. As ações mantêm uma área clicável mínima de 44px.
+
+O teste `web/e2e/layout/cards-layout.spec.ts` confere alturas, rodapés, navegação e ausência de rolagem horizontal em 1366px e 375px. Ele usa dados controlados com nomes curtos, extensos e sem espaços, sem alterar o banco, e gera capturas nas duas larguras. As evidências de demonstração com dados reais devem ser identificadas separadamente.
