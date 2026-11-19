@@ -4,7 +4,7 @@ import { Plus } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { BuscaFiltroEstudos } from "../../components/estudos/BuscaFiltroEstudos";
-import { TabelaEstudos } from "../../components/estudos/TabelaEstudos";
+import { ListaEstudos } from "../../components/estudos/ListaEstudos";
 import { ModalNovoEstudo } from "../../components/estudos/ModalNovoEstudo";
 import { ModalEditarEstudo } from "../../components/estudos/ModalEditarEstudo";
 import { ErrorMessage } from "../../components/ui/ErrorMessage";
@@ -179,7 +179,7 @@ function GestaoEstudos({ token, pesquisador }: { token: string; pesquisador: Aut
                     </div>
                 ) : (
                     <>
-                        <TabelaEstudos
+                        <ListaEstudos
                             estudos={filtrados}
                             pesquisador={pesquisador}
                             onEditar={(estudo) => {

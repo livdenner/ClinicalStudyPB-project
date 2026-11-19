@@ -82,7 +82,7 @@ describe("visualização de estudos", () => {
         expect(signal?.aborted).toBe(true);
         await act(async () => concluir(resposta(estudo)));
     });
-    it("abre pelo botão da tabela e consulta o endpoint do estudo selecionado", async () => {
+    it("abre pelo link do card e consulta o endpoint do estudo selecionado", async () => {
         const fetchMock = vi
             .spyOn(globalThis, "fetch")
             .mockResolvedValueOnce(resposta([estudo]))
@@ -90,9 +90,9 @@ describe("visualização de estudos", () => {
                 resposta({ ...estudo, title: "Nome retornado pela consulta individual" })
             );
         renderPage("/estudos");
-        const tabela = await screen.findByRole("grid", { name: "Lista de estudos clínicos" });
+        const tabela = await screen.findByRole("list", { name: "Lista de estudos clínicos" });
         fireEvent.click(
-            await within(tabela).findByRole("button", { name: "Visualizar estudo: Estudo do sono" })
+            await within(tabela).findByRole("link", { name: "Visualizar estudo: Estudo do sono" })
         );
 
         expect(

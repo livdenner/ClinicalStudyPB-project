@@ -28,7 +28,7 @@ test.describe("cadastro de estudo", () => {
 
         await expect(dialog).toBeHidden();
         await expect(page.getByText("Estudo cadastrado com sucesso.")).toBeVisible();
-        const table = page.getByRole("grid", { name: "Lista de estudos clínicos" });
+        const table = page.getByRole("list", { name: "Lista de estudos clínicos" });
         await expect(table.getByText(title)).toBeVisible();
 
         // Recarrega para confirmar que o estudo veio do banco, não só do estado da tela.
