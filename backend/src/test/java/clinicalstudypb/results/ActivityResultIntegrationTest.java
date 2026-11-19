@@ -3,6 +3,7 @@ package clinicalstudypb.results;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -31,6 +32,7 @@ class ActivityResultIntegrationTest extends IntegrationTestSupport {
 
     private Long studyId;
     private Long participantId;
+    private Long plannedVisitId;
     private Long visitId;
     private Long firstActivityId;
     private Long secondActivityId;
@@ -55,7 +57,7 @@ class ActivityResultIntegrationTest extends IntegrationTestSupport {
         studyId = studyRepository.save(new Study("Estudo de resultados", "RF14", researcherId,
                 LocalDate.of(2027, 1, 1), LocalDate.of(2027, 12, 31), 10)).getId();
         jdbc.update("UPDATE studies SET status = 'EXECUTION' WHERE id = ?", studyId);
-        Long plannedVisitId = jdbc.queryForObject("INSERT INTO planned_visits "
+        plannedVisitId = jdbc.queryForObject("INSERT INTO planned_visits "
                 + "(study_id, name, planned_date, position) VALUES (?, 'Visita A', '2027-06-01', 1) RETURNING id",
                 Long.class, studyId);
         secondActivityId = activity(plannedVisitId, "Segunda", 2);
@@ -164,6 +166,43 @@ class ActivityResultIntegrationTest extends IntegrationTestSupport {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("STUDY_READ_ONLY"));
         assertEquals(0, countResults());
+    }
+
+    @Test
+    void activityWithResultsCannotBeDeletedOrOmittedFromProtocolUpdate() throws Exception {
+        jdbc.update("UPDATE studies SET status = 'RECRUITMENT' WHERE id = ?", studyId);
+        jdbc.update("UPDATE scheduled_visits SET status = 'DONE' WHERE id = ?", visitId);
+        mockMvc.perform(put(ACTIVITY, studyId, participantId, visitId, firstActivityId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(researcherToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"value\":\"120x80 mmHg\"}"))
+                .andExpect(status().isCreated());
+
+        String plannedPath = "/api/studies/" + studyId + "/planned-visits/" + plannedVisitId;
+        String version = "\"" + jdbc.queryForObject(
+                "SELECT version FROM studies WHERE id = ?", Long.class, studyId) + "\"";
+        mockMvc.perform(delete(plannedPath + "/activities/" + firstActivityId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(researcherToken))
+                        .header(HttpHeaders.IF_MATCH, version))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("ACTIVITY_HAS_RESULTS"));
+
+        mockMvc.perform(put(plannedPath)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(researcherToken))
+                        .header(HttpHeaders.IF_MATCH, version)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"Nome não persistido","plannedDate":"2027-06-01",
+                                 "activities":[{"id":%d,"name":"Segunda","description":"Atividade de teste"}]}
+                                """.formatted(secondActivityId)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("ACTIVITY_HAS_RESULTS"));
+
+        assertEquals(2, jdbc.queryForObject("SELECT COUNT(*) FROM planned_activities "
+                + "WHERE planned_visit_id = ?", Integer.class, plannedVisitId));
+        assertEquals("Visita A", jdbc.queryForObject(
+                "SELECT name FROM planned_visits WHERE id = ?", String.class, plannedVisitId));
+        assertEquals(1, countResults());
     }
 
     private Long activity(Long plannedVisitId, String name, int position) {

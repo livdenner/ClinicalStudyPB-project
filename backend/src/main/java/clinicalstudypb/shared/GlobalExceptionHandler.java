@@ -138,7 +138,11 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(ProtocolConflictException.class)
     public ProblemDetail handleProtocolConflict(ProtocolConflictException exception) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+        if (exception.getCode() != null) {
+            problem.setProperty("code", exception.getCode());
+        }
+        return problem;
     }
 
     /**
