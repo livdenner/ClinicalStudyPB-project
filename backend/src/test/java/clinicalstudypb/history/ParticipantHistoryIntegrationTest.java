@@ -5,6 +5,7 @@ import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -16,6 +17,7 @@ import clinicalstudypb.support.IntegrationTestSupport;
 import clinicalstudypb.users.domain.User;
 import clinicalstudypb.users.domain.UserRole;
 import java.sql.Timestamp;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Locale;
@@ -25,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.ResultActions;
 
 /**
@@ -42,9 +45,13 @@ class ParticipantHistoryIntegrationTest extends IntegrationTestSupport {
     private static final String RESULT =
             "/api/studies/{studyId}/participants/{participantId}/visits/{visitId}/results/{activityId}";
     private static final String WITHDRAWAL = "/api/studies/{studyId}/participants/{participantId}/withdrawal";
+    /** Instante fixo da retirada: depois da visita realizada do Davi e antes da agendada. */
+    private static final Instant WITHDRAWN_AT = Instant.parse("2027-03-15T12:00:00Z");
 
     @Autowired
     private JdbcTemplate jdbc;
+    @MockitoBean(name = "participantClock")
+    private Clock participantClock;
 
     private User researcher;
     private User coordinator;
@@ -78,6 +85,7 @@ class ParticipantHistoryIntegrationTest extends IntegrationTestSupport {
 
     @BeforeEach
     void prepare() throws Exception {
+        when(participantClock.instant()).thenReturn(WITHDRAWN_AT);
         researcher = saveUser("Paula Pesquisadora", "history.researcher@test.local", UserRole.RESEARCHER);
         User otherResearcher = saveUser("Outro Pesquisador", "history.other@test.local", UserRole.RESEARCHER);
         coordinator = saveUser("Coordenadora", "history.coordinator@test.local", UserRole.COORDINATOR);
@@ -212,7 +220,7 @@ class ParticipantHistoryIntegrationTest extends IntegrationTestSupport {
                 .andExpect(jsonPath("$.participant.status").value("WITHDRAWN"))
                 .andExpect(jsonPath("$.participant.withdrawal.reason").value("Mudou de cidade"))
                 .andExpect(jsonPath("$.participant.withdrawal.withdrawnByUserId").value(coordinator.getId()))
-                .andExpect(jsonPath("$.participant.withdrawal.withdrawnAt").exists())
+                .andExpect(jsonPath("$.participant.withdrawal.withdrawnAt").value(WITHDRAWN_AT.toString()))
                 .andExpect(jsonPath("$.participant.withdrawal.cancelledVisitCount").value(1))
                 .andExpect(jsonPath("$.visits[*].id").value(contains(daviDone.intValue(), daviFuture.intValue())))
                 .andExpect(jsonPath("$.visits[0].status").value("DONE"))
