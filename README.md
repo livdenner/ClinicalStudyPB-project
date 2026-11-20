@@ -262,11 +262,23 @@ Em `/visitas`, coordenador e pesquisador autorizado consultam as visitas agendad
 
 Somente o coordenador pode registrar **Realizada**, **Ausente** ou **Cancelar**, e as ações aparecem apenas para visitas `SCHEDULED` em estudos que permitem alterações. Estudos `CLOSED` ou `CANCELLED` ficam em consulta. Cada ação abre uma confirmação; o cancelamento exige justificativa não vazia de até 500 caracteres. O formulário bloqueia novo envio enquanto aguarda a resposta.
 
-O registro usa `POST /api/studies/{studyId}/participants/{participantId}/visits/{visitId}/outcome`, com `If-Match` contendo a versão da própria visita entre aspas. Após sucesso, a resposta da API atualiza a linha e o feedback sem recarregar a página. As ações desaparecem quando o desfecho é final; se o novo estado não corresponder ao filtro escolhido, a linha deixa a lista filtrada.
+O registro usa `POST /api/studies/{studyId}/participants/{participantId}/visits/{visitId}/outcome`, com `If-Match` contendo a versão da própria visita entre aspas. Após sucesso, a resposta da API atualiza a linha e o feedback sem recarregar a página. As ações de desfecho desaparecem quando ele é final; se o novo estado não corresponder ao filtro escolhido, a linha deixa a lista filtrada.
 
 Em HTTP 409, o texto retornado pela API permanece na confirmação e os dados atuais da visita e do estudo são consultados novamente. Não há reenvio automático: uma nova confirmação só é permitida depois da atualização e se a visita ainda estiver agendada e o estudo permitir alterações. Se a consulta falhar, é preciso usar **Atualizar visita** antes de confirmar. Outros erros da API também são apresentados com a mensagem recebida.
 
 As listas do estudo e do participante compartilham as cores semânticas: agendada neutra, realizada verde, ausente amarela e cancelada vermelha. O teste existente da antiga página de visitas foi adaptado para o fluxo real com HTTP simulado. Os novos cenários específicos de desfecho pertencem à T19.4; os resultados das suítes executadas ficam em `docs/test-runs/`.
+
+### Resultados fictícios das atividades de uma visita (T20.4)
+
+Em `/visitas`, a ação **Registrar resultados** aparece apenas para visitas `DONE`, para o pesquisador responsável pelo estudo e quando o estudo permite alterações. Coordenadores e demais pesquisadores autorizados podem usar **Ver resultados**, sem editar. Estudos `CLOSED` ou `CANCELLED` ficam em consulta. Participantes retirados continuam com os resultados de suas visitas realizadas disponíveis; a retirada não impede registrar resultados de uma visita já realizada.
+
+Ao abrir o formulário, o Web consulta `GET /api/studies/{studyId}/participants/{participantId}/visits/{visitId}/results` e os dados atuais do estudo. A resposta fornece atividades, ordem do protocolo e resultados existentes. Cada atividade apresenta um resultado obrigatório em texto livre, com até 200 caracteres, e uma observação opcional de até 500 caracteres, recolhida quando vazia para manter o formulário curto. São valores fictícios, sem cálculo automático.
+
+O botão **Salvar resultado** executa um `PUT /api/studies/{studyId}/participants/{participantId}/visits/{visitId}/results/{activityId}` por atividade, criando (HTTP 201) ou substituindo (HTTP 200) o registro. A API é responsável por registrar autor e instante. A resposta confirmada atualiza o resultado e o horário da última gravação; reabrir a visita consulta novamente os dados persistidos. Não há salvamento em lote: cada atividade tem seu próprio feedback e os campos das demais permanecem preenchidos. Ao editar, esvaziar a observação remove a observação anterior, conforme o contrato.
+
+As mensagens gerais e de campo recebidas da API são exibidas no formulário. Em HTTP 403, 404 ou 409, os dados da visita, atividades e estudo são consultados novamente sem repetir o `PUT`. Rascunhos de atividades que continuam no protocolo são preservados. Se a atualização falhar, novas gravações ficam bloqueadas até **Atualizar dados** ter sucesso; se o estudo ou a visita não permitirem mais alterações, o formulário passa a consulta. Um erro de atividade removida permanece visível no modal, mesmo após a atualização da lista. Gravações simultâneas e fechamento durante uma gravação são bloqueados na interface.
+
+Os campos não salvos são descartados ao fechar o formulário. A interface usa as cores semânticas do PBI-24 e os botões de criação já adotados na Web. O teste existente da página foi adaptado para a opção de consulta após o desfecho; os novos cenários específicos de resultados pertencem à task de testes Web correspondente. Testes, lint e build desta implementação devem ser executados na pasta `web/` do worktree da T20.4.
 
 ### Sessão por aba (T24.4)
 
