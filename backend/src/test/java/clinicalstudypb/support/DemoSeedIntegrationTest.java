@@ -14,8 +14,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -37,6 +39,7 @@ class DemoSeedIntegrationTest extends IntegrationTestSupport {
     private static final Path USERS_SEED = Path.of("dev", "seed_demo_users.sql");
     private static final Path STUDIES_SEED = Path.of("dev", "seed_demo_studies.sql");
     private static final Path RECRUITMENT_SEED = Path.of("dev", "seed_demo_recruitment.sql");
+    private static final Path FOLLOWUP_SEED = Path.of("dev", "seed_demo_followup.sql");
     private static final String RESEARCHER_EMAIL = "pesquisador@clinicalstudypb.test";
     private static final String COORDINATOR_EMAIL = "coordenador@clinicalstudypb.test";
     private static final String DEMO_PASSWORD = "Demo@Clinical2026";
@@ -44,6 +47,12 @@ class DemoSeedIntegrationTest extends IntegrationTestSupport {
     private static final String INFLUENZA_STUDY = "Vacina contra influenza em idosos";
     private static final String LAST_VACANCY_STUDY = "Higiene do sono em trabalhadores noturnos";
     private static final String INCLUDED_CANDIDATE = "Antônia Ferreira Lima";
+    private static final String FOLLOWUP_STUDY = "Controle glicêmico no diabetes tipo 2";
+    private static final String PARTICIPANT_EMAIL = "participante@clinicalstudypb.test";
+    private static final String DEMO_PARTICIPANT = "Participante Demo";
+    private static final String INVITE_EMAIL = "convite@clinicalstudypb.test";
+    private static final String INVITED_CANDIDATE = "Rosa Helena Prates";
+    private static final String INVITE_CODE = "CONVITE-DEMO-2026";
     private static final String JSON_DECLINED = "{\"status\":\"DECLINED\"}";
 
     @Autowired
@@ -53,7 +62,8 @@ class DemoSeedIntegrationTest extends IntegrationTestSupport {
     void candidatosCobremTodasAsSituacoesDeRecrutamento() throws IOException {
         runSeeds();
 
-        assertEquals(List.of("ELIGIBLE", "ELIGIBLE", "ELIGIBLE", "ELIGIBLE", "ELIGIBLE",
+        // Inclui as duas candidaturas do acompanhamento: Participante Demo e o convite pendente.
+        assertEquals(List.of("ELIGIBLE", "ELIGIBLE", "ELIGIBLE", "ELIGIBLE", "ELIGIBLE", "ELIGIBLE", "ELIGIBLE",
                         "INELIGIBLE", "PENDING", "PENDING"),
                 jdbc.queryForList("""
                         SELECT c.eligibility_status FROM candidates c JOIN studies s ON s.id = c.study_id
@@ -156,7 +166,7 @@ class DemoSeedIntegrationTest extends IntegrationTestSupport {
                 .andExpect(jsonPath("$.length()").value(3));
         mockMvc.perform(get("/api/studies/" + study + "/candidates").header(HttpHeaders.AUTHORIZATION, token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(8));
+                .andExpect(jsonPath("$.length()").value(10));
         mockMvc.perform(get("/api/studies/" + study + "/candidates/" + candidate + "/eligibility")
                         .header(HttpHeaders.AUTHORIZATION, token))
                 .andExpect(status().isOk())
@@ -166,8 +176,12 @@ class DemoSeedIntegrationTest extends IntegrationTestSupport {
                         .header(HttpHeaders.AUTHORIZATION, token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("GRANTED"))
-                .andExpect(jsonPath("$.recordedByUserId").doesNotExist());
-        assertNone("SELECT COUNT(*) FROM simulated_consents WHERE recorded_by_user_id IS NOT NULL");
+                .andExpect(jsonPath("$.recordedByUserId").value(candidateUserId(INCLUDED_CANDIDATE)));
+        // No fluxo da Release 2, toda decisão é do próprio candidato.
+        assertNone("""
+                SELECT COUNT(*) FROM simulated_consents sc JOIN candidates c ON c.id = sc.candidate_id
+                 WHERE sc.recorded_by_user_id IS DISTINCT FROM c.user_id
+                """);
     }
 
     @Test
@@ -275,15 +289,18 @@ class DemoSeedIntegrationTest extends IntegrationTestSupport {
         runSeeds();
 
         assertEquals(first, counts());
-        assertEquals(25L, first.get("users"));
+        assertEquals(26L, first.get("users"));
         assertEquals(6L, first.get("studies"));
         assertEquals(14L, first.get("criteria"));
-        assertEquals(21L, first.get("candidates"));
-        assertEquals(21L, first.get("invites"));
-        assertEquals(43L, first.get("answers"));
-        assertEquals(19L, first.get("evaluations"));
-        assertEquals(14L, first.get("consents"));
-        assertEquals(10L, first.get("participants"));
+        assertEquals(24L, first.get("candidates"));
+        assertEquals(22L, first.get("invites"));
+        assertEquals(51L, first.get("answers"));
+        assertEquals(22L, first.get("evaluations"));
+        assertEquals(15L, first.get("consents"));
+        assertEquals(11L, first.get("participants"));
+        assertEquals(9L, first.get("scheduledVisits"));
+        assertEquals(6L, first.get("results"));
+        assertEquals(1L, first.get("withdrawn"));
     }
 
     @Test
@@ -338,10 +355,214 @@ class DemoSeedIntegrationTest extends IntegrationTestSupport {
         assertEquals(0, jdbc.queryForObject("SELECT COUNT(*) FROM studies", Integer.class));
     }
 
+    @Test
+    void coordenadorVeAceiteRecusaEConvitesNaSituacaoDaApi() throws Exception {
+        runSeeds();
+        String token = bearer(demoToken(COORDINATOR_EMAIL));
+
+        Map<String, String> influenza = candidateStatuses(studyIdByTitle(INFLUENZA_STUDY), token);
+        assertEquals("INCLUDED", influenza.get(INCLUDED_CANDIDATE));
+        assertEquals("GRANTED", influenza.get("Conceição Alves Prado"));
+        assertEquals("DECLINED", influenza.get("Elza Martins Teixeira"));
+        assertEquals("INVITED", influenza.get("Domingos Pereira Dias"));
+        assertEquals("CONSENT_PENDING", influenza.get(DEMO_PARTICIPANT));
+        assertEquals("INVITED", influenza.get(INVITED_CANDIDATE));
+
+        // Com o aceite do candidato, a última vaga pode ser disputada pela web.
+        Map<String, String> lastVacancy = candidateStatuses(studyIdByTitle(LAST_VACANCY_STUDY), token);
+        assertEquals("GRANTED", lastVacancy.get("Vera Lúcia Fonseca"));
+        assertEquals("GRANTED", lastVacancy.get("Wilson Barbosa Leite"));
+
+        // Quem decidiu já ativou a conta: o convite foi consumido antes da decisão.
+        assertNone("""
+                SELECT COUNT(*) FROM simulated_consents sc
+                  JOIN candidates c ON c.id = sc.candidate_id
+                  JOIN users u ON u.id = c.user_id
+                  LEFT JOIN candidate_activation_invites i ON i.user_id = u.id
+                 WHERE u.activation_pending OR NOT u.active
+                    OR (i.user_id IS NOT NULL AND (i.used_at IS NULL OR i.used_at > sc.recorded_at))
+                """);
+    }
+
+    @Test
+    void conviteComCodigoConhecidoPermitePrimeiroAcesso() throws Exception {
+        runSeeds();
+
+        mockMvc.perform(post("/api/auth/activation")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("email", INVITE_EMAIL, "activationCode", INVITE_CODE))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.user.role").value("PARTICIPANT"))
+                .andExpect(jsonPath("$.user.mustChangePassword").value(true));
+    }
+
+    @Test
+    void rodarDeNovoRenovaOCodigoAindaNaoUsado() throws Exception {
+        runSeeds();
+        jdbc.update("""
+                UPDATE candidate_activation_invites
+                   SET created_at = CURRENT_TIMESTAMP - INTERVAL '80 hours',
+                       expires_at = CURRENT_TIMESTAMP - INTERVAL '8 hours'
+                 WHERE user_id = (SELECT id FROM users WHERE email = ?)
+                """, INVITE_EMAIL);
+
+        run(FOLLOWUP_SEED);
+
+        assertEquals(1, jdbc.queryForObject("""
+                SELECT COUNT(*) FROM candidate_activation_invites i JOIN users u ON u.id = i.user_id
+                 WHERE u.email = ? AND i.used_at IS NULL AND i.expires_at > CURRENT_TIMESTAMP + INTERVAL '71 hours'
+                """, Integer.class, INVITE_EMAIL));
+        mockMvc.perform(post("/api/auth/activation")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                Map.of("email", INVITE_EMAIL, "activationCode", INVITE_CODE))))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void participanteDemoVeEstudosVisitasEConviteNoAplicativo() throws Exception {
+        runSeeds();
+        String token = bearer(demoToken(PARTICIPANT_EMAIL));
+
+        mockMvc.perform(get("/api/me/studies").header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].studyTitle").value(FOLLOWUP_STUDY));
+        mockMvc.perform(get("/api/me/visits").header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.upcoming.length()").value(1))
+                .andExpect(jsonPath("$.upcoming[0].status").value("SCHEDULED"))
+                .andExpect(jsonPath("$.history.length()").value(1))
+                .andExpect(jsonPath("$.history[0].status").value("DONE"));
+
+        long invitation = jdbc.queryForObject("""
+                SELECT c.id FROM candidates c JOIN studies s ON s.id = c.study_id
+                 WHERE s.title = ? AND c.email = ?
+                """, Long.class, INFLUENZA_STUDY, PARTICIPANT_EMAIL);
+        mockMvc.perform(get("/api/me/invitations?status=CONSENT_PENDING").header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].candidateId").value(invitation));
+        mockMvc.perform(post("/api/me/invitations/" + invitation + "/decision")
+                        .header(HttpHeaders.AUTHORIZATION, token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"GRANTED\"}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void acompanhamentoCobreDesfechosResultadosERetirada() throws Exception {
+        runSeeds();
+        long study = studyIdByTitle(FOLLOWUP_STUDY);
+
+        Map<String, Long> byStatus = jdbc.query("""
+                        SELECT status, COUNT(*) AS total FROM scheduled_visits WHERE study_id = ? GROUP BY status
+                        """, (rs, row) -> Map.entry(rs.getString("status"), rs.getLong("total")), study)
+                .stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        assertEquals(Map.of("SCHEDULED", 3L, "DONE", 3L, "ABSENT", 1L, "CANCELLED", 2L), byStatus);
+        // Mesmas regras da API: resultado só em visita realizada; desfecho final com autoria e instante.
+        assertNone("""
+                SELECT COUNT(*) FROM activity_results r JOIN scheduled_visits v ON v.id = r.scheduled_visit_id
+                 WHERE v.status <> 'DONE' OR r.recorded_at < v.outcome_at
+                """);
+        assertNone("""
+                SELECT COUNT(*) FROM scheduled_visits
+                 WHERE (status = 'SCHEDULED') <> (outcome_at IS NULL AND outcome_by_user_id IS NULL AND version = 0)
+                    OR created_at >= scheduled_at
+                """);
+        // A retirada cancelou a visita futura, como POST .../withdrawal.
+        Map<String, Object> withdrawal = jdbc.queryForMap("""
+                SELECT p.withdrawal_cancelled_visit_count AS cancelled,
+                       (SELECT COUNT(*) FROM scheduled_visits v
+                         WHERE v.participant_id = p.id AND v.status = 'CANCELLED'
+                           AND v.outcome_note = 'Retirada do participante'
+                           AND v.outcome_at = p.withdrawn_at) AS matching,
+                       (SELECT COUNT(*) FROM scheduled_visits v
+                         WHERE v.participant_id = p.id AND v.status = 'SCHEDULED') AS pending
+                  FROM participants p WHERE p.status = 'WITHDRAWN'
+                """);
+        assertEquals(1, ((Number) withdrawal.get("cancelled")).intValue());
+        assertEquals(1L, ((Number) withdrawal.get("matching")).longValue());
+        assertEquals(0L, ((Number) withdrawal.get("pending")).longValue());
+
+        String token = bearer(demoToken(COORDINATOR_EMAIL));
+        mockMvc.perform(get("/api/studies/" + study + "/visits").header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(9));
+        Map<String, Object> done = jdbc.queryForMap("""
+                SELECT v.id, v.participant_id FROM scheduled_visits v
+                  JOIN participants p ON p.id = v.participant_id JOIN candidates c ON c.id = p.candidate_id
+                 WHERE c.name = 'Irene Gomes Vieira' AND v.status = 'DONE'
+                """);
+        mockMvc.perform(get("/api/studies/" + study + "/participants/" + done.get("participant_id") + "/visits/"
+                        + done.get("id") + "/results").header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("DONE"))
+                .andExpect(jsonPath("$.activities.length()").value(2))
+                .andExpect(jsonPath("$.activities[0].result.value").value("7,8%"))
+                .andExpect(jsonPath("$.activities[1].result.value").value("Plano alimentar entregue"));
+    }
+
+    @Test
+    void ajustaDecisoesDeBancosCarregadosAntesDaT266() throws IOException {
+        runSeeds();
+        long user = candidateUserId("Conceição Alves Prado");
+        // Estado de um banco carregado com a versão anterior do script.
+        jdbc.update("UPDATE users SET active = FALSE, activation_pending = TRUE WHERE id = ?", user);
+        jdbc.update("UPDATE candidate_activation_invites SET used_at = NULL WHERE user_id = ?", user);
+        jdbc.update("""
+                UPDATE simulated_consents SET recorded_by_user_id = NULL
+                 WHERE candidate_id IN (SELECT id FROM candidates
+                                         WHERE email LIKE 'demo-candidate-%@clinicalstudypb.invalid')
+                """);
+
+        run(RECRUITMENT_SEED);
+        Map<String, Object> afterFix = counts();
+        run(RECRUITMENT_SEED);
+
+        assertEquals(afterFix, counts());
+        assertNone("""
+                SELECT COUNT(*) FROM simulated_consents sc JOIN candidates c ON c.id = sc.candidate_id
+                 WHERE sc.recorded_by_user_id IS DISTINCT FROM c.user_id
+                """);
+        assertEquals(Boolean.FALSE, jdbc.queryForObject(
+                "SELECT activation_pending FROM users WHERE id = ?", Boolean.class, user));
+        assertEquals(1, jdbc.queryForObject("""
+                SELECT COUNT(*) FROM candidate_activation_invites WHERE user_id = ? AND used_at IS NOT NULL
+                """, Integer.class, user));
+    }
+
+    @Test
+    void semORecrutamentoFalhaSemGravarAcompanhamento() throws IOException {
+        run(USERS_SEED);
+        run(STUDIES_SEED);
+        long users = jdbc.queryForObject("SELECT COUNT(*) FROM users", Long.class);
+
+        DataAccessException error = assertThrows(DataAccessException.class, () -> run(FOLLOWUP_SEED));
+
+        assertTrue(error.getMostSpecificCause().getMessage().contains("seed_demo_recruitment.sql"),
+                error.getMostSpecificCause().getMessage());
+        assertEquals(users, jdbc.queryForObject("SELECT COUNT(*) FROM users", Long.class));
+        assertNone("SELECT COUNT(*) FROM scheduled_visits");
+    }
+
+    private Map<String, String> candidateStatuses(long study, String token) throws Exception {
+        String body = mockMvc.perform(get("/api/studies/" + study + "/candidates")
+                        .header(HttpHeaders.AUTHORIZATION, token))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        Map<String, String> statuses = new HashMap<>();
+        objectMapper.readTree(body).forEach(node -> statuses.put(node.get("name").asText(),
+                node.get("status").asText()));
+        return statuses;
+    }
+
     private void runSeeds() throws IOException {
         run(USERS_SEED);
         run(STUDIES_SEED);
         run(RECRUITMENT_SEED);
+        run(FOLLOWUP_SEED);
     }
 
     private void assertNone(String countQuery) {
@@ -366,7 +587,10 @@ class DemoSeedIntegrationTest extends IntegrationTestSupport {
                        (SELECT COUNT(*) FROM eligibility_answers) AS answers,
                        (SELECT COUNT(*) FROM eligibility_evaluations) AS evaluations,
                        (SELECT COUNT(*) FROM simulated_consents) AS consents,
-                       (SELECT COUNT(*) FROM participants) AS participants
+                       (SELECT COUNT(*) FROM participants) AS participants,
+                       (SELECT COUNT(*) FROM participants WHERE status = 'WITHDRAWN') AS withdrawn,
+                       (SELECT COUNT(*) FROM scheduled_visits) AS "scheduledVisits",
+                       (SELECT COUNT(*) FROM activity_results) AS results
                 """);
     }
 
@@ -376,6 +600,10 @@ class DemoSeedIntegrationTest extends IntegrationTestSupport {
 
     private long candidateId(String name) {
         return jdbc.queryForObject("SELECT id FROM candidates WHERE name = ?", Long.class, name);
+    }
+
+    private long candidateUserId(String name) {
+        return jdbc.queryForObject("SELECT user_id FROM candidates WHERE name = ?", Long.class, name);
     }
 
     private long studyId(String studyStatus) {

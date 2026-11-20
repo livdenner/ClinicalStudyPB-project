@@ -21,7 +21,7 @@ npm run lint
 ```
 
 #### Testes E2E (Playwright)
-Ficam em [web/e2e](web/e2e) e rodam no navegador contra backend e PostgreSQL reais, numa stack descartável ([compose.e2e.yaml](compose.e2e.yaml)) separada do ambiente de desenvolvimento: outro projeto Docker, banco em memória recriado a cada `up` e backend na porta 18080. Os testes usam as contas de demonstração do seed e criam os próprios dados. A stack também carrega os estudos de demonstração e seus dados de recrutamento (`backend/dev/seed_demo_studies.sql` e `backend/dev/seed_demo_recruitment.sql`). Um teste pode lê-los, mas não deve alterá-los, porque o banco é compartilhado por todos os testes da execução. No CI, o job E2E roda em todos os PRs e pushes para a `development` e a `main`.
+Ficam em [web/e2e](web/e2e) e rodam no navegador contra backend e PostgreSQL reais, numa stack descartável ([compose.e2e.yaml](compose.e2e.yaml)) separada do ambiente de desenvolvimento: outro projeto Docker, banco em memória recriado a cada `up` e backend na porta 18080. Os testes usam as contas de demonstração do seed e criam os próprios dados. A stack também carrega os estudos de demonstração com seus dados de recrutamento e de acompanhamento (`backend/dev/seed_demo_studies.sql`, `backend/dev/seed_demo_recruitment.sql` e `backend/dev/seed_demo_followup.sql`). Um teste pode lê-los, mas não deve alterá-los, porque o banco é compartilhado por todos os testes da execução. No CI, o job E2E roda em todos os PRs e pushes para a `development` e a `main`.
 
 ```bash
 cd web
