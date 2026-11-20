@@ -1,3 +1,4 @@
+import { criarAcaoRetirada } from "../../components/participantes/AcaoRegistrarRetirada";
 import { calcularVagasDisponiveis } from "../../utils/estudos";
 import { SeloEstadoEstudo } from "../../components/estudos/SeloEstadoEstudo";
 import { useCallback, useEffect, useState } from "react";
@@ -365,6 +366,13 @@ function GestaoCandidatos({
         setMensagemSucesso("Participante incluído no estudo com sucesso.");
     }
 
+    function handleRetiradaRegistrada(atualizado: ParticipanteApi) {
+        setParticipantes((atuais) =>
+            atuais.map((item) => (item.id === atualizado.id ? atualizado : item))
+        );
+        setMensagemSucesso("Retirada registrada com sucesso.");
+    }
+
     function handleAtualizarStatusCandidato(
         candidateId: number,
         novoStatus: StatusElegibilidadeApi
@@ -709,6 +717,13 @@ function GestaoCandidatos({
                 <PainelParticipantesVagas
                     estudoTitulo={estudoSelecionado.title}
                     limiteVagas={limiteVagas}
+                    renderizarAcoes={criarAcaoRetirada({
+                        perfil: role,
+                        estadoEstudo: statusEstudo,
+                        estudoTitulo: estudoSelecionado.title,
+                        token,
+                        onRetiradaRegistrada: handleRetiradaRegistrada,
+                    })}
                     participantes={participantes}
                     carregando={carregandoParticipantes}
                     erro={erroParticipantes}

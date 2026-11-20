@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { calcularVagasDisponiveis } from "../../utils/estudos";
 import { CardsParticipantes } from "../estudos/CardsParticipantes";
 import { Users } from "lucide-react";
@@ -12,6 +13,7 @@ type Props = {
     carregando: boolean;
     erro: string;
     onTentarNovamente: () => void;
+    renderizarAcoes?: (participante: ParticipanteApi) => ReactNode;
 };
 
 export function PainelParticipantesVagas({
@@ -21,6 +23,7 @@ export function PainelParticipantesVagas({
     carregando,
     erro,
     onTentarNovamente,
+    renderizarAcoes,
 }: Props) {
     const vagasOcupadas = participantes.length;
     const vagasDisponiveis = calcularVagasDisponiveis(limiteVagas, vagasOcupadas);
@@ -128,7 +131,11 @@ export function PainelParticipantesVagas({
                     </span>
                 </div>
             ) : (
-                <CardsParticipantes participantes={participantes} contexto="inclusao" />
+                <CardsParticipantes
+                    participantes={participantes}
+                    contexto="inclusao"
+                    renderizarAcoes={renderizarAcoes}
+                />
             )}
         </section>
     );
