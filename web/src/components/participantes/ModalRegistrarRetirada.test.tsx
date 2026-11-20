@@ -58,14 +58,12 @@ it("confirma com o motivo sem espaços nas extremidades e informa o efeito nas v
 
 it("mantém o modal aberto e mostra a mensagem exata da API", async () => {
     const { onFechar } = abrir(
-        vi
-            .fn()
-            .mockRejectedValue(
-                new ApiClientError("O estudo está encerrado ou cancelado e não aceita retiradas.", {
-                    status: 409,
-                    code: "STUDY_READ_ONLY",
-                })
-            )
+        vi.fn().mockRejectedValue(
+            new ApiClientError("O estudo está encerrado ou cancelado e não aceita retiradas.", {
+                status: 409,
+                code: "STUDY_READ_ONLY",
+            })
+        )
     );
     fireEvent.change(screen.getByRole("textbox", { name: "Motivo da retirada" }), {
         target: { value: "Desistência" },
