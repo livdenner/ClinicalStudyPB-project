@@ -5,7 +5,6 @@ import { AuthProvider } from "../../context/AuthContext";
 import { AUTH_STORAGE_KEY } from "../../services/auth";
 import type { UserRole } from "../../types/auth";
 import type { CandidatoApi, EstudoComStatusApi } from "../../types/candidato";
-import type { StatusConsentimentoApi } from "../../types/consentimento";
 import { RecrutamentoPage } from "./recrutamento";
 
 const estudoRecrutamento: EstudoComStatusApi = {
@@ -37,7 +36,12 @@ const candidatoPendente: CandidatoApi = {
     studyId: 10,
     name: "Candidato 014",
     age: 42,
+    email: "candidato014@exemplo.test",
+    phone: "(83) 99999-0014",
+    userId: 201,
+    status: "ACTIVE",
     eligibilityStatus: "PENDING",
+    consentStatus: "PENDING",
 };
 
 const candidatoElegivel: CandidatoApi = {
@@ -45,15 +49,22 @@ const candidatoElegivel: CandidatoApi = {
     studyId: 10,
     name: "Candidato 021",
     age: 55,
+    email: "candidato021@exemplo.test",
+    phone: "(83) 99999-0021",
+    userId: 202,
+    status: "CONSENT_PENDING",
     eligibilityStatus: "ELIGIBLE",
+    consentStatus: "PENDING",
+};
+
+const candidatoAceitou: CandidatoApi = {
+    ...candidatoElegivel,
+    status: "GRANTED",
+    consentStatus: "GRANTED",
 };
 
 function resposta(body: unknown, status = 200) {
     return new Response(JSON.stringify(body), { status });
-}
-
-function consentimento(studyId: number, candidateId: number, status: StatusConsentimentoApi) {
-    return resposta({ studyId, candidateId, status });
 }
 
 /**
@@ -77,17 +88,11 @@ function mockApiPorRota(rotas: Record<string, Response | Error | Array<Response 
     });
 }
 
-function rotasDoEstudo(candidatos: CandidatoApi[], status: StatusConsentimentoApi = "PENDING") {
+function rotasDoEstudo(candidatos: CandidatoApi[]) {
     return {
         "GET /api/studies": resposta([estudoRecrutamento]),
         "GET /api/studies/10/candidates": resposta(candidatos),
         "GET /api/studies/10/participants": resposta([]),
-        ...Object.fromEntries(
-            candidatos.map((c) => [
-                `GET /api/studies/10/candidates/${c.id}/consent`,
-                consentimento(10, c.id, status),
-            ])
-        ),
     };
 }
 
@@ -169,7 +174,12 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
             studyId: 20,
             name: "Candidato 099",
             age: 31,
+            email: "candidato099@exemplo.test",
+            phone: "(83) 99999-0099",
+            userId: 203,
+            status: "ACTIVE",
             eligibilityStatus: "INELIGIBLE",
+            consentStatus: "PENDING",
         };
 
         const fetchMock = mockApiPorRota({
@@ -177,7 +187,6 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
             "GET /api/studies": resposta([estudoRecrutamento, estudoPlanejamento]),
             "GET /api/studies/20/candidates": resposta([candidatoOutroEstudo]),
             "GET /api/studies/20/participants": resposta([]),
-            "GET /api/studies/20/candidates/201/consent": consentimento(20, 201, "PENDING"),
         });
 
         renderPage();
@@ -206,11 +215,7 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
         expect(await screen.findByText("Candidato 099")).toBeInTheDocument();
         expect(screen.getByText("Inelegível")).toBeInTheDocument();
         expect(fetchMock.mock.calls.map(([url]) => url)).toEqual(
-            expect.arrayContaining([
-                "/api/studies/20/candidates",
-                "/api/studies/20/participants",
-                "/api/studies/20/candidates/201/consent",
-            ])
+            expect.arrayContaining(["/api/studies/20/candidates", "/api/studies/20/participants"])
         );
     });
 
@@ -244,13 +249,11 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
         const dialog = await screen.findByRole("dialog", { name: "Novo candidato" });
         fireEvent.click(within(dialog).getByRole("button", { name: "Cadastrar candidato" }));
 
-        expect(
-            await within(dialog).findByText("Informe a identificação do candidato.")
-        ).toBeInTheDocument();
+        expect(await within(dialog).findByText("Informe o nome do candidato.")).toBeInTheDocument();
         expect(within(dialog).getByText("Informe a idade do candidato.")).toBeInTheDocument();
         expect(fetchMock).toHaveBeenCalledTimes(3);
 
-        fireEvent.change(within(dialog).getByLabelText("Identificação do candidato"), {
+        fireEvent.change(within(dialog).getByLabelText("Nome do candidato"), {
             target: { value: "Candidato 050" },
         });
         fireEvent.change(within(dialog).getByLabelText("Idade"), {
@@ -270,7 +273,12 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
             studyId: 10,
             name: "Candidato 050",
             age: 38,
+            email: "candidato050@exemplo.test",
+            phone: "(83) 99999-0050",
+            userId: 204,
+            status: "ACTIVE",
             eligibilityStatus: "PENDING",
+            consentStatus: "PENDING",
         };
 
         const fetchMock = mockApiPorRota({
@@ -283,14 +291,21 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
         fireEvent.click(screen.getByRole("button", { name: "Novo candidato" }));
 
         const dialog = await screen.findByRole("dialog", { name: "Novo candidato" });
-        fireEvent.change(within(dialog).getByLabelText("Identificação do candidato"), {
+        fireEvent.change(within(dialog).getByLabelText("Nome do candidato"), {
             target: { value: "  Candidato 050  " },
         });
         fireEvent.change(within(dialog).getByLabelText("Idade"), {
             target: { value: "38" },
         });
+        fireEvent.change(within(dialog).getByLabelText("E-mail"), {
+            target: { value: "candidato050@exemplo.test" },
+        });
+        fireEvent.change(within(dialog).getByLabelText("Telefone"), {
+            target: { value: "(83) 99999-0050" },
+        });
         fireEvent.click(within(dialog).getByRole("button", { name: "Cadastrar candidato" }));
 
+        fireEvent.click(await screen.findByRole("button", { name: "Concluir cadastro" }));
         await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
 
         const cadastro = fetchMock.mock.calls.find(([, options]) => options?.method === "POST");
@@ -301,9 +316,13 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
         expect(JSON.parse(String(options?.body))).toEqual({
             name: "Candidato 050",
             age: 38,
+            email: "candidato050@exemplo.test",
+            phone: "(83) 99999-0050",
         });
 
-        expect(screen.getByText("Candidato cadastrado com sucesso.")).toBeInTheDocument();
+        expect(
+            screen.getByText("Candidato cadastrado. Vinculado a conta existente.")
+        ).toBeInTheDocument();
         expect(await screen.findByText("Candidato 050")).toBeInTheDocument();
         expect(screen.getByText("38 anos")).toBeInTheDocument();
         expect(screen.getByText("Exibindo 1 de 1 candidatos")).toBeInTheDocument();
@@ -314,8 +333,8 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
             ...rotasDoEstudo([candidatoPendente]),
             "POST /api/studies/10/candidates": resposta(
                 {
-                    code: "DUPLICATE_CANDIDATE",
-                    message: "Já existe um candidato com este nome neste estudo.",
+                    code: "CANDIDATE_ALREADY_IN_STUDY",
+                    message: "O candidato já está cadastrado no estudo.",
                 },
                 409
             ),
@@ -327,16 +346,22 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
         fireEvent.click(screen.getByRole("button", { name: "Novo candidato" }));
 
         const dialog = await screen.findByRole("dialog", { name: "Novo candidato" });
-        fireEvent.change(within(dialog).getByLabelText("Identificação do candidato"), {
+        fireEvent.change(within(dialog).getByLabelText("Nome do candidato"), {
             target: { value: "Candidato 014" },
         });
         fireEvent.change(within(dialog).getByLabelText("Idade"), {
             target: { value: "42" },
         });
+        fireEvent.change(within(dialog).getByLabelText("E-mail"), {
+            target: { value: candidatoPendente.email },
+        });
+        fireEvent.change(within(dialog).getByLabelText("Telefone"), {
+            target: { value: candidatoPendente.phone },
+        });
         fireEvent.click(within(dialog).getByRole("button", { name: "Cadastrar candidato" }));
 
         expect(await within(dialog).findByRole("alert")).toHaveTextContent(
-            "Já existe um candidato com este nome neste estudo."
+            "O candidato já está cadastrado no estudo."
         );
         expect(screen.getByRole("dialog", { name: "Novo candidato" })).toBeInTheDocument();
     });
@@ -412,7 +437,24 @@ describe("Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4)", () =
 describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () => {
     it("usa a decisão da API sem registro local e permite incluir o participante", async () => {
         const fetchMock = mockApiPorRota({
-            ...rotasDoEstudo([candidatoElegivel], "GRANTED"),
+            ...rotasDoEstudo([candidatoAceitou]),
+            "GET /api/studies/10/candidates": [
+                resposta([candidatoAceitou]),
+                resposta([{ ...candidatoAceitou, status: "INCLUDED" }]),
+            ],
+            "GET /api/studies/10/participants": [
+                resposta([]),
+                resposta([
+                    {
+                        id: 1,
+                        studyId: 10,
+                        candidateId: 102,
+                        candidateName: "Candidato 021",
+                        includedAt: "2026-11-09T12:00:00Z",
+                        status: "ACTIVE",
+                    },
+                ]),
+            ],
             "POST /api/studies/10/candidates/102/inclusion": resposta(
                 {
                     id: 1,
@@ -428,9 +470,9 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
 
         renderPage();
 
-        expect(await screen.findByText("Aceito")).toBeInTheDocument();
+        expect(await screen.findByText("Aceitou")).toBeInTheDocument();
         const incluir = screen.getByRole("button", { name: "Incluir participante: Candidato 021" });
-        expect(incluir).toBeEnabled();
+        await waitFor(() => expect(incluir).toBeEnabled());
 
         fireEvent.click(incluir);
         const dialog = await screen.findByRole("dialog", {
@@ -442,10 +484,14 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
         expect(
             await screen.findByText("Participante incluído no estudo com sucesso.")
         ).toBeInTheDocument();
-        expect(screen.getByLabelText("Paciente Incluído: Candidato 021")).toBeInTheDocument();
         expect(
-            screen.getByRole("status", { name: "Indicador de vagas do estudo" })
-        ).toHaveTextContent("1 de 50");
+            await within(await screen.findByLabelText("Lista de candidatos")).findByText("Incluído")
+        ).toBeInTheDocument();
+        await waitFor(() =>
+            expect(
+                screen.getByRole("status", { name: "Indicador de vagas do estudo" })
+            ).toHaveTextContent("1 de 50")
+        );
         expect(
             fetchMock.mock.calls.some(
                 ([url, init]) =>
@@ -459,45 +505,45 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
             "clinicalstudypb.consentimentos",
             JSON.stringify({ 102: { status: "GRANTED", termo: "TCLE-ANTIGO" } })
         );
-        mockApiPorRota(rotasDoEstudo([candidatoElegivel], "PENDING"));
+        mockApiPorRota(rotasDoEstudo([candidatoElegivel]));
 
         renderPage();
 
-        expect(await screen.findByText("Não registrado")).toBeInTheDocument();
+        expect(await screen.findByText("Aguardando decisão")).toBeInTheDocument();
         expect(
-            screen.getByRole("button", { name: "Incluir participante: Candidato 021" })
-        ).toBeDisabled();
+            screen.queryByRole("button", { name: "Incluir participante: Candidato 021" })
+        ).not.toBeInTheDocument();
     });
 
-    it("avisa quando o consentimento não pôde ser consultado e permite consultar de novo", async () => {
+    it("avisa quando a situação não pôde ser consultada e permite consultar de novo", async () => {
         mockApiPorRota({
-            ...rotasDoEstudo([candidatoElegivel]),
-            "GET /api/studies/10/candidates/102/consent": [
+            ...rotasDoEstudo([candidatoAceitou]),
+            "GET /api/studies/10/candidates": [
                 resposta({ message: "Falha interna" }, 500),
-                consentimento(10, 102, "GRANTED"),
+                resposta([candidatoAceitou]),
             ],
         });
 
         renderPage();
 
+        expect(await screen.findByRole("alert")).toHaveTextContent(
+            "Não foi possível carregar os candidatos."
+        );
         expect(
-            await screen.findByText(
-                /Não foi possível consultar o consentimento de alguns candidatos/
-            )
-        ).toBeInTheDocument();
-        expect(
-            screen.getByRole("button", { name: "Incluir participante: Candidato 021" })
-        ).toBeDisabled();
-
-        fireEvent.click(screen.getByRole("button", { name: "Consultar novamente" }));
-
-        expect(await screen.findByText("Aceito")).toBeInTheDocument();
-        expect(
-            screen.queryByText(/Não foi possível consultar o consentimento de alguns candidatos/)
+            screen.queryByRole("button", { name: "Incluir participante: Candidato 021" })
         ).not.toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole("button", { name: "Tentar novamente" }));
+
+        expect(await screen.findByText("Aceitou")).toBeInTheDocument();
         expect(
-            screen.getByRole("button", { name: "Incluir participante: Candidato 021" })
-        ).toBeEnabled();
+            screen.queryByText(/Não foi possível carregar os candidatos/)
+        ).not.toBeInTheDocument();
+        await waitFor(() =>
+            expect(
+                screen.getByRole("button", { name: "Incluir participante: Candidato 021" })
+            ).toBeEnabled()
+        );
     });
 
     it("mantém o botão de inclusão desabilitado quando o estudo já atingiu o limite de vagas", async () => {
@@ -507,7 +553,7 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
         };
 
         mockApiPorRota({
-            ...rotasDoEstudo([candidatoElegivel], "GRANTED"),
+            ...rotasDoEstudo([candidatoAceitou]),
             "GET /api/studies": resposta([estudoUmaVaga]),
             "GET /api/studies/10/participants": resposta([
                 {
@@ -523,7 +569,7 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
 
         renderPage();
 
-        expect(await screen.findByText("Aceito")).toBeInTheDocument();
+        expect(await screen.findByText("Aceitou")).toBeInTheDocument();
 
         const indicadorVagas = screen.getByRole("status", {
             name: "Indicador de vagas do estudo",
@@ -544,7 +590,7 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
 
     it("exibe o motivo específico retornado pela API (HTTP 409) quando a última vaga esgota antes da resposta", async () => {
         mockApiPorRota({
-            ...rotasDoEstudo([candidatoElegivel], "GRANTED"),
+            ...rotasDoEstudo([candidatoAceitou]),
             "POST /api/studies/10/candidates/102/inclusion": resposta(
                 {
                     code: "INCLUSION_CONFLICT",
@@ -556,10 +602,10 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
 
         renderPage();
 
-        expect(await screen.findByText("Aceito")).toBeInTheDocument();
-        fireEvent.click(
-            screen.getByRole("button", { name: "Incluir participante: Candidato 021" })
-        );
+        expect(await screen.findByText("Aceitou")).toBeInTheDocument();
+        const incluir = screen.getByRole("button", { name: "Incluir participante: Candidato 021" });
+        await waitFor(() => expect(incluir).toBeEnabled());
+        fireEvent.click(incluir);
 
         const dialog = await screen.findByRole("dialog", {
             name: "Confirmar inclusão de participante",
@@ -580,11 +626,25 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
             concluirInclusao = resolve;
         });
 
-        const rotasBase = rotasDoEstudo([candidatoElegivel], "GRANTED");
+        const rotasBase = rotasDoEstudo([candidatoAceitou]);
         const fetchMock = vi.spyOn(globalThis, "fetch").mockImplementation(async (input, init) => {
             const rota = `${(init?.method ?? "GET").toUpperCase()} ${String(input)}`;
             if (rota === "POST /api/studies/10/candidates/102/inclusion") {
-                return pendenteInclusao;
+                const resultado = await pendenteInclusao;
+                rotasBase["GET /api/studies/10/candidates"] = resposta([
+                    { ...candidatoAceitou, status: "INCLUDED" },
+                ]);
+                rotasBase["GET /api/studies/10/participants"] = resposta([
+                    {
+                        id: 502,
+                        studyId: 10,
+                        candidateId: 102,
+                        candidateName: "Candidato 021",
+                        includedAt: "2026-11-09T17:00:00Z",
+                        status: "ACTIVE",
+                    },
+                ]);
+                return resultado;
             }
             const respostaRota = (rotasBase as Record<string, Response | undefined>)[rota];
             if (!respostaRota) {
@@ -595,10 +655,10 @@ describe("Consentimento na lista e inclusão de participante (RF10 e RF11)", () 
 
         renderPage();
 
-        expect(await screen.findByText("Aceito")).toBeInTheDocument();
-        fireEvent.click(
-            screen.getByRole("button", { name: "Incluir participante: Candidato 021" })
-        );
+        expect(await screen.findByText("Aceitou")).toBeInTheDocument();
+        const incluir = screen.getByRole("button", { name: "Incluir participante: Candidato 021" });
+        await waitFor(() => expect(incluir).toBeEnabled());
+        fireEvent.click(incluir);
 
         const dialog = await screen.findByRole("dialog", {
             name: "Confirmar inclusão de participante",
@@ -667,12 +727,55 @@ it.each(["999", "abc", "0", "1e1"])(
     }
 );
 
+it("T24.3: preserva o cancelamento e a consulta de cancelados na lista de cards", async () => {
+    const cancelado: CandidatoApi = {
+        ...candidatoPendente,
+        status: "CANCELLED",
+        cancellation: {
+            reason: "E-mail incorreto",
+            cancelledAt: "2026-11-20T12:00:00Z",
+            cancelledByUserId: 9,
+        },
+    };
+    const fetchMock = mockApiPorRota({
+        ...rotasDoEstudo([candidatoPendente]),
+        "GET /api/studies/10/candidates": [resposta([candidatoPendente]), resposta([])],
+        "POST /api/studies/10/candidates/101/cancellation": resposta(cancelado),
+        "GET /api/studies/10/candidates?includeCancelled=true": resposta([cancelado]),
+    });
+    renderPage();
+    fireEvent.click(
+        await screen.findByRole("button", { name: "Cancelar candidatura: Candidato 014" })
+    );
+    const modal = screen.getByRole("dialog", { name: "Cancelar candidatura" });
+    fireEvent.change(within(modal).getByRole("textbox", { name: /Motivo do cancelamento/ }), {
+        target: { value: "  E-mail incorreto  " },
+    });
+    fireEvent.click(within(modal).getByRole("button", { name: "Confirmar cancelamento" }));
+    expect(await screen.findByText("Nenhum candidato encontrado")).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    fireEvent.click(screen.getByRole("checkbox", { name: "Exibir candidaturas canceladas" }));
+    const lista = await screen.findByRole("list", { name: "Lista de candidatos" });
+    expect(within(lista).getByText("Cancelado")).toBeInTheDocument();
+    expect(within(lista).getByText("Motivo: E-mail incorreto")).toBeInTheDocument();
+    expect(within(lista).queryByRole("button")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /consentimento/i })).not.toBeInTheDocument();
+    const envio = fetchMock.mock.calls.find(([, options]) => options?.method === "POST");
+    expect(envio?.[0]).toBe("/api/studies/10/candidates/101/cancellation");
+    expect(JSON.parse(String(envio?.[1]?.body))).toEqual({ reason: "E-mail incorreto" });
+    expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/consent"))).toBe(false);
+});
+
+const candidatoIncluidoRetirada: CandidatoApi = {
+    ...candidatoAceitou,
+    status: "INCLUDED",
+};
 it("T22.3: registra retirada sem devolver vaga nem permitir reinclusão", async () => {
     const participante = {
         id: 501,
         studyId: 10,
-        candidateId: candidatoElegivel.id,
-        candidateName: candidatoElegivel.name,
+        candidateId: candidatoIncluidoRetirada.id,
+        candidateName: candidatoIncluidoRetirada.name,
         includedAt: "2026-11-09T12:00:00Z",
         status: "ACTIVE",
     };
@@ -687,13 +790,15 @@ it("T22.3: registra retirada sem devolver vaga nem permitir reinclusão", async 
         },
     };
     const fetchMock = mockApiPorRota({
-        ...rotasDoEstudo([candidatoElegivel], "GRANTED"),
+        ...rotasDoEstudo([candidatoIncluidoRetirada]),
         "GET /api/studies/10/participants": resposta([participante]),
         "POST /api/studies/10/participants/501/withdrawal": resposta(retirado),
     });
     renderPage();
     fireEvent.click(
-        await screen.findByRole("button", { name: `Registrar retirada: ${candidatoElegivel.name}` })
+        await screen.findByRole("button", {
+            name: `Registrar retirada: ${candidatoIncluidoRetirada.name}`,
+        })
     );
     fireEvent.change(screen.getByRole("textbox", { name: "Motivo da retirada" }), {
         target: { value: "  Desistência  " },
@@ -708,7 +813,7 @@ it("T22.3: registra retirada sem devolver vaga nem permitir reinclusão", async 
     expect(indicador).toHaveTextContent("1 de 50");
     expect(indicador).toHaveTextContent("49 vagas");
     const lista = screen.getByRole("list", { name: "Lista de participantes incluídos" });
-    expect(within(lista).getByText(candidatoElegivel.name)).toBeInTheDocument();
+    expect(within(lista).getByText(candidatoIncluidoRetirada.name)).toBeInTheDocument();
     expect(
         fetchMock.mock.calls.filter(
             ([input, options]) =>
@@ -724,13 +829,13 @@ it("T22.3: mantém o participante ativo e mostra o erro da API no modal", async 
     const participante = {
         id: 501,
         studyId: 10,
-        candidateId: candidatoElegivel.id,
-        candidateName: candidatoElegivel.name,
+        candidateId: candidatoIncluidoRetirada.id,
+        candidateName: candidatoIncluidoRetirada.name,
         includedAt: "2026-11-09T12:00:00Z",
         status: "ACTIVE",
     };
     mockApiPorRota({
-        ...rotasDoEstudo([candidatoElegivel], "GRANTED"),
+        ...rotasDoEstudo([candidatoIncluidoRetirada]),
         "GET /api/studies/10/participants": resposta([participante]),
         "POST /api/studies/10/participants/501/withdrawal": resposta(
             {
@@ -742,7 +847,9 @@ it("T22.3: mantém o participante ativo e mostra o erro da API no modal", async 
     });
     renderPage();
     fireEvent.click(
-        await screen.findByRole("button", { name: `Registrar retirada: ${candidatoElegivel.name}` })
+        await screen.findByRole("button", {
+            name: `Registrar retirada: ${candidatoIncluidoRetirada.name}`,
+        })
     );
     fireEvent.change(screen.getByRole("textbox", { name: "Motivo da retirada" }), {
         target: { value: "Desistência" },
@@ -755,7 +862,9 @@ it("T22.3: mantém o participante ativo e mostra o erro da API no modal", async 
     fireEvent.click(within(modal).getByRole("button", { name: "Voltar" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(
-        screen.getByRole("button", { name: `Registrar retirada: ${candidatoElegivel.name}` })
+        screen.getByRole("button", {
+            name: `Registrar retirada: ${candidatoIncluidoRetirada.name}`,
+        })
     ).toBeInTheDocument();
     expect(screen.getByText("Ativo")).toBeInTheDocument();
 });

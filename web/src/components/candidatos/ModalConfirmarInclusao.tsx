@@ -3,6 +3,7 @@ import { calcularVagasDisponiveis } from "../../utils/estudos";
 import { UserCheck, X } from "lucide-react";
 import { ApiClientError } from "../../services/api/apiClient";
 import type { CandidatoApi } from "../../types/candidato";
+import { candidatoPodeSerIncluido } from "../../utils/candidatos";
 import { Button } from "../ui/Button";
 import { ErrorMessage } from "../ui/ErrorMessage";
 
@@ -15,6 +16,7 @@ type Props = {
     onConfirmar: () => Promise<void>;
 };
 
+/** Confirma a inclusão sem permitir alterações no consentimento do candidato. @author Lívia */
 export function ModalConfirmarInclusao({
     estudoTitulo,
     candidato,
@@ -28,9 +30,14 @@ export function ModalConfirmarInclusao({
     const requisicaoEmAndamentoRef = useRef(false);
 
     const vagasRestantes = calcularVagasDisponiveis(limiteVagas, vagasOcupadas);
+    const candidatoApto = candidatoPodeSerIncluido(candidato);
 
     async function handleConfirmar() {
         if (requisicaoEmAndamentoRef.current || incluindo) {
+            return;
+        }
+        if (!candidatoApto || vagasRestantes <= 0) {
+            setErro("O candidato não atende às condições para inclusão ou não há vaga disponível.");
             return;
         }
 
@@ -138,8 +145,8 @@ export function ModalConfirmarInclusao({
                     </dl>
 
                     <p className="rounded-lg border border-[var(--color-warning-border)] bg-[var(--color-warning-soft)] px-3.5 py-2.5 text-xs text-[var(--color-warning)]">
-                        Após confirmar a inclusão, uma vaga será ocupada no estudo e a decisão do
-                        consentimento simulado ficará bloqueada contra alterações.
+                        A inclusão ocupará uma vaga no estudo. O consentimento já foi decidido pelo
+                        candidato e não pode ser alterado pelo coordenador.
                     </p>
 
                     <footer className="mt-1 flex justify-end gap-3 border-t border-[var(--color-border)] pt-4">
@@ -155,7 +162,7 @@ export function ModalConfirmarInclusao({
                             type="button"
                             variant="primary"
                             loading={incluindo}
-                            disabled={incluindo}
+                            disabled={incluindo || !candidatoApto || vagasRestantes <= 0}
                             onClick={() => void handleConfirmar()}
                             className="btn btn-primary inline-flex items-center gap-2 font-semibold"
                         >

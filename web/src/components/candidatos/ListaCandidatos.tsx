@@ -4,10 +4,9 @@ import { CardCandidato, type ContextoCandidatos } from "./CardCandidato";
 
 type Props = ContextoCandidatos & {
     candidatos: CandidatoApi[];
-    participantesCandidatoIds?: ReadonlySet<number>;
 };
 
-export function ListaCandidatos({ candidatos, participantesCandidatoIds, ...contexto }: Props) {
+export function ListaCandidatos({ candidatos, ...contexto }: Props) {
     if (candidatos.length === 0) {
         return (
             <div className="flex flex-col items-center gap-2 px-3 py-12 text-center">
@@ -24,11 +23,7 @@ export function ListaCandidatos({ candidatos, participantesCandidatoIds, ...cont
         <GradeCards rotulo="Lista de candidatos">
             {candidatos.map((candidato) => (
                 <li key={candidato.id}>
-                    <CardCandidato
-                        candidato={candidato}
-                        jaIncluido={Boolean(participantesCandidatoIds?.has(candidato.id))}
-                        {...contexto}
-                    />
+                    <CardCandidato candidato={candidato} {...contexto} />
                 </li>
             ))}
         </GradeCards>

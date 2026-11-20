@@ -9,6 +9,8 @@ package clinicalstudypb.visits.domain;
  */
 public class ProtocolConflictException extends RuntimeException {
 
+    private final String code;
+
     /**
      * Descreve a regra do protocolo violada.
      *
@@ -16,5 +18,22 @@ public class ProtocolConflictException extends RuntimeException {
      */
     public ProtocolConflictException(String message) {
         super(message);
+        this.code = null;
+    }
+
+    /**
+     * Cria um conflito de protocolo com código estável para a API.
+     *
+     * @param code código do conflito
+     * @param message explicação do conflito
+     */
+    public ProtocolConflictException(String code, String message) {
+        super(message);
+        this.code = code;
+    }
+
+    /** Retorna o código do conflito, quando definido. */
+    public String getCode() {
+        return code;
     }
 }

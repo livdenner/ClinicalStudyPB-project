@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import type { CandidatoApi } from "../../src/types/candidato";
 
 const titulos = [
     "Estudo do sono",
@@ -21,11 +22,15 @@ const estudos = titulos.map((title, i) => ({
     endDate: "2027-03-31",
     version: 0,
 }));
-const candidatos = nomes.map((name, i) => ({
+const candidatos = nomes.map((name, i): CandidatoApi => ({
     id: 101 + i,
     studyId: 11,
+    userId: 301 + i,
     name,
     age: 42 + i,
+    email: `candidato${i}@example.test`,
+    phone: "(83) 99999-0001",
+    status: i === 0 ? "INCLUDED" : i === 1 ? "GRANTED" : "CONSENT_PENDING",
     eligibilityStatus: i === 2 ? "INELIGIBLE" : "ELIGIBLE",
     consentStatus: i === 2 ? "PENDING" : "GRANTED",
 }));
@@ -65,12 +70,6 @@ async function preparar(page: Page, role: "RESEARCHER" | "COORDINATOR") {
         else if (url === "/api/studies/11") dados = estudos[0];
         else if (url.endsWith("/participants")) dados = participantes;
         else if (url.endsWith("/candidates")) dados = candidatos;
-        else if (url.endsWith("/consent"))
-            dados = {
-                studyId: 11,
-                candidateId: Number(url.split("/").slice(-2)[0]),
-                status: url.includes("/103/") ? "PENDING" : "GRANTED",
-            };
         else dados = [];
         return route.fulfill({
             status: 200,
@@ -155,7 +154,19 @@ for (const largura of [1366, 375]) {
         ).toBeEnabled();
         await expect(
             page.getByRole("button", { name: `Incluir participante: ${nomes[2]}` })
-        ).toBeDisabled();
+        ).toHaveCount(0);
+        await expect(page.getByRole("button", { name: /consentimento/i })).toHaveCount(0);
+        const candidatosNaTela = page.getByRole("list", {
+            name: "Lista de candidatos",
+            exact: true,
+        });
+        await expect(candidatosNaTela.getByText("Incluído", { exact: true })).toBeVisible();
+        await expect(
+            candidatosNaTela.getByText("Aguardando decisão", { exact: true })
+        ).toBeVisible();
+        await expect(
+            page.getByRole("button", { name: `Cancelar candidatura: ${nomes[1]}` })
+        ).toBeEnabled();
         await page.screenshot({
             path: testInfo.outputPath(`recrutamento-${largura}.png`),
             fullPage: true,

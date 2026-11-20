@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import type { CandidatoApi } from "../../src/types/candidato";
 
 const estudo = {
     id: 10,
@@ -10,6 +11,18 @@ const estudo = {
     startDate: "2026-11-01",
     endDate: "2027-03-31",
     version: 0,
+};
+const candidato: CandidatoApi = {
+    id: 101,
+    studyId: 10,
+    userId: 301,
+    name: "Ana Silva",
+    age: 42,
+    email: "ana@example.test",
+    phone: "(83) 99999-0001",
+    status: "INCLUDED",
+    eligibilityStatus: "ELIGIBLE",
+    consentStatus: "GRANTED",
 };
 const ativo = {
     id: 501,
@@ -81,19 +94,7 @@ for (const contexto of [
             else if (path === "/api/studies/10/participants") {
                 consultasParticipantes += 1;
                 json = [atualizado, retirado];
-            } else if (path === "/api/studies/10/candidates")
-                json = [
-                    {
-                        id: 101,
-                        studyId: 10,
-                        name: "Ana Silva",
-                        age: 42,
-                        eligibilityStatus: "ELIGIBLE",
-                        consentStatus: "GRANTED",
-                    },
-                ];
-            else if (path.endsWith("/consent"))
-                json = { studyId: 10, candidateId: 101, status: "GRANTED" };
+            } else if (path === "/api/studies/10/candidates") json = [candidato];
             return route.fulfill({ json });
         });
         await page.goto(contexto.caminho);
