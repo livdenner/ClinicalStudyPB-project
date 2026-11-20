@@ -224,6 +224,26 @@ O formulário usa o modal acessível já adotado no Web, com foco inicial, naveg
 
 **Critério de aceite pendente — aplicativo (T17.9):** usar o e-mail e o código exibido no cadastro para definir a senha pelo aplicativo; em seguida, tentar reutilizar o mesmo código e confirmar sua rejeição. A validação direta pela API não substitui essa verificação pela interface mobile.
 
+### Acompanhamento dos candidatos na Sprint 3 (T17.7)
+
+Em `/recrutamento`, a coluna **Situação** apresenta diretamente o `status` recebido da API: Convidado (`INVITED`), Conta ativa (`ACTIVE`), Aguardando decisão (`CONSENT_PENDING`), Aceitou (`GRANTED`), Recusou (`DECLINED`), Incluído (`INCLUDED`) ou Cancelado (`CANCELLED`, quando retornado pela consulta). A elegibilidade permanece em uma coluna separada. O Web não deduz a situação a partir de cache, da lista de participantes ou do resultado de uma avaliação.
+
+Na Sprint 3, o coordenador não registra nem reverte consentimento: a decisão é exclusiva do candidato autenticado no aplicativo e é final. O formulário antigo e sua chamada `PUT /api/studies/{studyId}/candidates/{candidateId}/consent` foram retirados do fluxo Web. A própria lista de candidatos já fornece `status` e `consentStatus`, sem consultas individuais de consentimento ou armazenamento local da decisão.
+
+A ação **Incluir participante** aparece somente com `status=GRANTED`, `consentStatus=GRANTED` e `eligibilityStatus=ELIGIBLE`. Ela permanece desabilitada fora de `RECRUITMENT`, sem vagas ou enquanto a consulta de vagas não estiver disponível. Candidatos que recusaram, foram cancelados ou já foram incluídos não recebem essa ação; o backend mantém suas validações transacionais e rejeita inclusão sem aceite com HTTP 409.
+
+O botão **Atualizar lista** consulta novamente candidatos e participantes do estudo selecionado. Recarregar a página também consulta os dados atuais, incluindo a decisão registrada no app. Após avaliação, a lista é buscada novamente; após inclusão, candidatos e painel de vagas são recarregados pela API. Participantes retirados continuam na contagem de vagas, conforme o contrato. Não há notificações nesta sprint.
+
+O coordenador também pode **Cancelar candidatura**, somente em estudo `RECRUITMENT` e antes de `INCLUDED` ou `CANCELLED`. A confirmação exige motivo de 1 a 500 caracteres, desconsiderando espaços nas extremidades, e envia `POST /api/studies/{studyId}/candidates/{candidateId}/cancellation` com `{ "reason": "..." }`. Enquanto o envio está em andamento, o formulário impede nova confirmação e fechamento. O cancelamento preserva o histórico; a saída de quem já foi incluído pertence ao fluxo de retirada do participante.
+
+Após sucesso, candidatos e painel de vagas são consultados novamente. A opção **Exibir candidaturas canceladas**, desmarcada por padrão, envia `includeCancelled=true` na listagem e permanece respeitada nas recargas após avaliação, inclusão, cancelamento e atualização manual. O filtro inclui os cancelados junto aos demais candidatos; não é uma lista exclusiva de cancelados. Quando retornado pela API, o cancelamento aparece com selo vermelho e motivo. Para corrigir um cadastro após cancelá-lo, use **Novo candidato** e informe os dados corretos; o cadastro e o vínculo de conta continuam sob validação do backend.
+
+Os erros da operação de cancelamento são exibidos com o texto recebido da API. Em HTTP 409, incluindo `CANDIDATE_ALREADY_INCLUDED`, `CANDIDATE_ALREADY_CANCELLED` e `STUDY_NOT_RECRUITING`, o formulário mantém o motivo e consulta novamente candidato e estudo, além de atualizar as listas. Não há reenvio automático. A confirmação fica bloqueada enquanto faltarem dados atuais ou a situação não permitir o cancelamento; se a consulta falhar, o coordenador pode usar **Atualizar dados** na própria confirmação.
+
+O serviço `obterConsentimentoSimulado` e o tipo `ConsentimentoSimuladoApi`, sem uso no fluxo atual, foram removidos. `StatusConsentimentoApi` continua necessário para conferir o aceite retornado na candidatura.
+
+Os testes existentes afetados pelo novo fluxo foram adaptados; os testes do formulário descontinuado foram removidos junto com o componente. Os novos cenários específicos pertencem à T17.8, incluindo validação do motivo, controle de acesso, bloqueios por situação, HTTP 409, atualização das listas e manutenção do filtro de cancelados. Os testes de componente devem simular HTTP, sem chamar a API real. A validação ponta a ponta pelo aplicativo depende da T17.9.
+
 ### Sessão por aba (T24.4)
 
 Agora dá para usar perfis diferentes em abas do mesmo navegador. A sessão fica no `sessionStorage`: recarregar mantém o login, mas sair ou deixar a sessão expirar afeta apenas aquela aba. Depois da expiração, é preciso entrar novamente.

@@ -1,20 +1,21 @@
 import { Chip, Table } from "@heroui/react";
-import { CheckCircle2, ClipboardCheck, FileSignature, UserPlus } from "lucide-react";
+import { ClipboardCheck, UserPlus, XCircle } from "lucide-react";
 import {
     ELEGIBILIDADE_LABELS,
+    SITUACAO_CANDIDATO_LABELS,
     type CandidatoApi,
+    type StatusCandidatoApi,
     type StatusElegibilidadeApi,
 } from "../../types/candidato";
-import { CONSENTIMENTO_LABELS, type StatusConsentimentoApi } from "../../types/consentimento";
+import { candidatoPodeSerCancelado, candidatoPodeSerIncluido } from "../../utils/candidatos";
 
 type Props = {
     candidatos: CandidatoApi[];
-    participantesCandidatoIds?: ReadonlySet<number>;
     vagasDisponiveis?: number;
     estudoEmRecrutamento?: boolean;
     onSelecionarCandidato?: (candidato: CandidatoApi) => void;
-    onAbrirConsentimento?: (candidato: CandidatoApi) => void;
     onIncluirParticipante?: (candidato: CandidatoApi) => void;
+    onCancelarCandidatura?: (candidato: CandidatoApi) => void;
 };
 
 const ELEGIBILIDADE_CLASSES: Record<StatusElegibilidadeApi, string> = {
@@ -23,25 +24,24 @@ const ELEGIBILIDADE_CLASSES: Record<StatusElegibilidadeApi, string> = {
     INELIGIBLE: "bg-[var(--color-neutral-soft)] text-[var(--color-neutral)]",
 };
 
-const CONSENTIMENTO_CLASSES: Record<StatusConsentimentoApi, string> = {
-    PENDING: "bg-[var(--color-warning-soft)] text-[var(--color-warning)]",
+const SITUACAO_CLASSES: Record<StatusCandidatoApi, string> = {
+    INVITED: "bg-[var(--color-info-soft)] text-[var(--color-info)]",
+    ACTIVE: "bg-[var(--color-neutral-soft)] text-[var(--color-neutral)]",
+    CONSENT_PENDING: "bg-[var(--color-warning-soft)] text-[var(--color-warning)]",
     GRANTED: "bg-[var(--color-success-soft)] text-[var(--color-success)]",
     DECLINED: "bg-[var(--color-neutral-soft)] text-[var(--color-neutral)]",
+    INCLUDED: "bg-[var(--color-success-soft)] text-[var(--color-success)]",
+    CANCELLED: "bg-[var(--color-error-soft)] text-[var(--color-error)]",
 };
 
-const CONSENTIMENTO_TABELA_LABELS: Record<StatusConsentimentoApi, string> = {
-    ...CONSENTIMENTO_LABELS,
-    PENDING: "Não registrado",
-};
-
+/** Exibe a situação da API e oferece ações permitidas ao coordenador. @author Lívia */
 export function TabelaCandidatos({
     candidatos,
-    participantesCandidatoIds,
     vagasDisponiveis,
-    estudoEmRecrutamento = true,
+    estudoEmRecrutamento = false,
     onSelecionarCandidato,
-    onAbrirConsentimento,
     onIncluirParticipante,
+    onCancelarCandidatura,
 }: Props) {
     if (candidatos.length === 0) {
         return (
@@ -56,31 +56,37 @@ export function TabelaCandidatos({
         );
     }
 
-    const exibirConsentimento = Boolean(onAbrirConsentimento);
     const exibirAcoes = Boolean(
-        onSelecionarCandidato || onAbrirConsentimento || onIncluirParticipante
+        onSelecionarCandidato || onIncluirParticipante || onCancelarCandidatura
     );
+    const itens = candidatos.map((candidato) => ({
+        ...candidato,
+        cancelamentoPermitido:
+            Boolean(onCancelarCandidatura) &&
+            estudoEmRecrutamento &&
+            candidatoPodeSerCancelado(candidato),
+    }));
     const colunas = [
         "Identificação",
         "Idade",
+        "Situação",
         "Elegibilidade",
-        ...(exibirConsentimento ? ["Consentimento"] : []),
-        ...(exibirAcoes ? ["Avaliação"] : []),
+        ...(exibirAcoes ? ["Ações"] : []),
     ];
-
-    const itensTabela = candidatos.map((candidato) => ({
-        ...candidato,
-        jaIncluido: Boolean(participantesCandidatoIds?.has(candidato.id)),
-        vagasDisponiveis,
-        estudoEmRecrutamento,
-    }));
+    const inclusaoHabilitada =
+        estudoEmRecrutamento && vagasDisponiveis !== undefined && vagasDisponiveis > 0;
+    const motivoBloqueioInclusao = !estudoEmRecrutamento
+        ? "A inclusão só é permitida com o estudo em recrutamento."
+        : vagasDisponiveis === undefined
+          ? "Consulte as vagas disponíveis antes de incluir o participante."
+          : "O estudo atingiu o limite de vagas disponíveis.";
 
     return (
         <Table variant="secondary">
             <Table.ScrollContainer className="overflow-x-auto">
                 <Table.Content
                     aria-label="Lista de candidatos"
-                    className="w-full min-w-[520px] text-left text-sm"
+                    className="w-full min-w-[620px] text-left text-sm"
                 >
                     <Table.Header>
                         {colunas.map((titulo) => (
@@ -94,88 +100,64 @@ export function TabelaCandidatos({
                             </Table.Column>
                         ))}
                     </Table.Header>
-                    <Table.Body items={itensTabela}>
-                        {(candidato) => {
-                            const candidatoJaIncluido = candidato.jaIncluido;
-                            const elegibilidade: StatusElegibilidadeApi =
-                                candidato.eligibilityStatus ?? "PENDING";
-                            const consentimento: StatusConsentimentoApi = candidatoJaIncluido
-                                ? "GRANTED"
-                                : (candidato.consentStatus ?? "PENDING");
-                            const semVagas =
-                                vagasDisponiveis !== undefined && vagasDisponiveis <= 0;
-                            const aptoParaInclusao =
-                                estudoEmRecrutamento &&
-                                elegibilidade === "ELIGIBLE" &&
-                                consentimento === "GRANTED" &&
-                                !semVagas &&
-                                !candidatoJaIncluido;
-
-                            let motivoBloqueioInclusao = "";
-                            if (!estudoEmRecrutamento) {
-                                motivoBloqueioInclusao =
-                                    "A inclusão só é permitida com o estudo em recrutamento.";
-                            } else if (semVagas) {
-                                motivoBloqueioInclusao =
-                                    "O estudo atingiu o limite de vagas disponíveis.";
-                            } else if (elegibilidade !== "ELIGIBLE") {
-                                motivoBloqueioInclusao =
-                                    "Exige candidato com elegibilidade aprovada (Elegível).";
-                            } else if (consentimento !== "GRANTED") {
-                                motivoBloqueioInclusao =
-                                    "Exige consentimento simulado aceito pelo candidato.";
-                            }
-
-                            const rotuloAcao = `Avaliar elegibilidade: ${candidato.name}`;
-                            const rotuloConsentimento = `Consentimento simulado: ${candidato.name}`;
-                            const rotuloInclusao = `Incluir participante: ${candidato.name}`;
-
-                            return (
-                                <Table.Row
-                                    id={candidato.id}
-                                    textValue={candidato.name}
-                                    className="group border-b border-[var(--color-border)]"
-                                >
-                                    <Table.Cell className="break-words border-[var(--color-border)] px-5 py-4 font-semibold text-[var(--color-title)] group-hover:bg-slate-50">
-                                        {candidato.name}
-                                    </Table.Cell>
-                                    <Table.Cell className="border-[var(--color-border)] px-5 py-4 text-[var(--color-text)] group-hover:bg-slate-50">
-                                        {candidato.age} anos
-                                    </Table.Cell>
-                                    <Table.Cell className="border-[var(--color-border)] px-5 py-4 group-hover:bg-slate-50">
-                                        <Chip
-                                            size="sm"
-                                            variant="soft"
-                                            className={`font-semibold ${ELEGIBILIDADE_CLASSES[elegibilidade]}`}
-                                        >
-                                            <Chip.Label>
-                                                {ELEGIBILIDADE_LABELS[elegibilidade]}
-                                            </Chip.Label>
-                                        </Chip>
-                                    </Table.Cell>
-                                    {exibirConsentimento && (
-                                        <Table.Cell className="border-[var(--color-border)] px-5 py-4 group-hover:bg-slate-50">
-                                            <Chip
-                                                size="sm"
-                                                variant="soft"
-                                                className={`font-semibold ${CONSENTIMENTO_CLASSES[consentimento]}`}
-                                            >
-                                                <Chip.Label>
-                                                    {CONSENTIMENTO_TABELA_LABELS[consentimento]}
-                                                </Chip.Label>
-                                            </Chip>
-                                        </Table.Cell>
+                    <Table.Body items={itens}>
+                        {(candidato) => (
+                            <Table.Row
+                                id={candidato.id}
+                                textValue={candidato.name}
+                                className="group border-b border-[var(--color-border)]"
+                            >
+                                <Table.Cell className="break-words border-[var(--color-border)] px-5 py-4 font-semibold text-[var(--color-title)] group-hover:bg-slate-50">
+                                    {candidato.name}
+                                </Table.Cell>
+                                <Table.Cell className="border-[var(--color-border)] px-5 py-4 text-[var(--color-text)] group-hover:bg-slate-50">
+                                    {candidato.age} anos
+                                </Table.Cell>
+                                <Table.Cell className="border-[var(--color-border)] px-5 py-4 group-hover:bg-slate-50">
+                                    <Chip
+                                        size="sm"
+                                        variant="soft"
+                                        className={`font-semibold ${SITUACAO_CLASSES[candidato.status] ?? SITUACAO_CLASSES.ACTIVE}`}
+                                    >
+                                        <Chip.Label>
+                                            {SITUACAO_CANDIDATO_LABELS[candidato.status] ??
+                                                "Situação indisponível"}
+                                        </Chip.Label>
+                                    </Chip>
+                                    {candidato.status === "DECLINED" && (
+                                        <p className="mt-1 text-xs text-[var(--color-muted)]">
+                                            Decisão final do candidato.
+                                        </p>
                                     )}
-                                    {exibirAcoes && (
-                                        <Table.Cell className="border-[var(--color-border)] px-5 py-4 group-hover:bg-slate-50">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                {onSelecionarCandidato && (
+                                    {candidato.status === "CANCELLED" && candidato.cancellation && (
+                                        <p className="mt-1 max-w-sm whitespace-pre-wrap break-words text-xs text-[var(--color-muted)]">
+                                            Motivo: {candidato.cancellation.reason}
+                                        </p>
+                                    )}
+                                </Table.Cell>
+                                <Table.Cell className="border-[var(--color-border)] px-5 py-4 group-hover:bg-slate-50">
+                                    <Chip
+                                        size="sm"
+                                        variant="soft"
+                                        className={`font-semibold ${ELEGIBILIDADE_CLASSES[candidato.eligibilityStatus]}`}
+                                    >
+                                        <Chip.Label>
+                                            {ELEGIBILIDADE_LABELS[candidato.eligibilityStatus]}
+                                        </Chip.Label>
+                                    </Chip>
+                                </Table.Cell>
+                                {exibirAcoes && (
+                                    <Table.Cell className="border-[var(--color-border)] px-5 py-4 group-hover:bg-slate-50">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            {onSelecionarCandidato &&
+                                                candidato.status !== "INCLUDED" &&
+                                                candidato.status !== "CANCELLED" && (
                                                     <button
                                                         type="button"
                                                         onClick={() =>
                                                             onSelecionarCandidato(candidato)
                                                         }
-                                                        aria-label={rotuloAcao}
+                                                        aria-label={`Avaliar elegibilidade: ${candidato.name}`}
                                                         className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--color-border)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--color-primary)] transition hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]"
                                                     >
                                                         <ClipboardCheck
@@ -185,62 +167,45 @@ export function TabelaCandidatos({
                                                         Avaliar elegibilidade
                                                     </button>
                                                 )}
-                                                {onAbrirConsentimento && (
+                                            {onIncluirParticipante &&
+                                                candidatoPodeSerIncluido(candidato) && (
+                                                    <button
+                                                        type="button"
+                                                        disabled={!inclusaoHabilitada}
+                                                        title={
+                                                            inclusaoHabilitada
+                                                                ? "Incluir candidato como participante do estudo"
+                                                                : motivoBloqueioInclusao
+                                                        }
+                                                        onClick={() =>
+                                                            onIncluirParticipante(candidato)
+                                                        }
+                                                        aria-label={`Incluir participante: ${candidato.name}`}
+                                                        className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--color-primary)] bg-[var(--color-primary)] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[var(--color-primary-dark)] disabled:cursor-not-allowed disabled:border-[var(--color-border)] disabled:bg-slate-100 disabled:text-[var(--color-muted)]"
+                                                    >
+                                                        <UserPlus size={15} aria-hidden="true" />
+                                                        Incluir participante
+                                                    </button>
+                                                )}
+                                            {onCancelarCandidatura &&
+                                                candidato.cancelamentoPermitido && (
                                                     <button
                                                         type="button"
                                                         onClick={() =>
-                                                            onAbrirConsentimento(candidato)
+                                                            onCancelarCandidatura(candidato)
                                                         }
-                                                        aria-label={rotuloConsentimento}
-                                                        className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--color-border)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--color-primary)] transition hover:border-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]"
+                                                        aria-label={`Cancelar candidatura: ${candidato.name}`}
+                                                        className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--color-error)] bg-white px-3 py-1.5 text-xs font-semibold text-[var(--color-error)] transition hover:bg-[var(--color-error-soft)]"
                                                     >
-                                                        <FileSignature
-                                                            size={15}
-                                                            aria-hidden="true"
-                                                        />
-                                                        Consentimento simulado
+                                                        <XCircle size={15} aria-hidden="true" />
+                                                        Cancelar candidatura
                                                     </button>
                                                 )}
-                                                {onIncluirParticipante &&
-                                                    (candidatoJaIncluido ? (
-                                                        <span
-                                                            aria-label={`Paciente Incluído: ${candidato.name}`}
-                                                            className="inline-flex cursor-default select-none items-center gap-1.5 rounded-lg border border-[var(--color-success-border)] bg-[var(--color-success-soft)] px-3 py-1.5 text-xs font-semibold text-[var(--color-success)]"
-                                                        >
-                                                            <CheckCircle2
-                                                                size={15}
-                                                                aria-hidden="true"
-                                                            />
-                                                            Paciente Incluído
-                                                        </span>
-                                                    ) : (
-                                                        <button
-                                                            type="button"
-                                                            disabled={!aptoParaInclusao}
-                                                            title={
-                                                                aptoParaInclusao
-                                                                    ? "Incluir candidato como participante do estudo"
-                                                                    : motivoBloqueioInclusao
-                                                            }
-                                                            onClick={() =>
-                                                                onIncluirParticipante(candidato)
-                                                            }
-                                                            aria-label={rotuloInclusao}
-                                                            className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-[var(--color-primary)] bg-[var(--color-primary)] px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-[var(--color-primary-dark)] disabled:cursor-not-allowed disabled:border-[var(--color-border)] disabled:bg-slate-100 disabled:text-[var(--color-muted)]"
-                                                        >
-                                                            <UserPlus
-                                                                size={15}
-                                                                aria-hidden="true"
-                                                            />
-                                                            Incluir participante
-                                                        </button>
-                                                    ))}
-                                            </div>
-                                        </Table.Cell>
-                                    )}
-                                </Table.Row>
-                            );
-                        }}
+                                        </div>
+                                    </Table.Cell>
+                                )}
+                            </Table.Row>
+                        )}
                     </Table.Body>
                 </Table.Content>
             </Table.ScrollContainer>
