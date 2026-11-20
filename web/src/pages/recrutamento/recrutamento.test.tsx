@@ -726,3 +726,42 @@ it.each(["999", "abc", "0", "1e1"])(
         expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     }
 );
+
+it("T24.3: preserva o cancelamento e a consulta de cancelados na lista de cards", async () => {
+    const cancelado: CandidatoApi = {
+        ...candidatoPendente,
+        status: "CANCELLED",
+        cancellation: {
+            reason: "E-mail incorreto",
+            cancelledAt: "2026-11-20T12:00:00Z",
+            cancelledByUserId: 9,
+        },
+    };
+    const fetchMock = mockApiPorRota({
+        ...rotasDoEstudo([candidatoPendente]),
+        "GET /api/studies/10/candidates": [resposta([candidatoPendente]), resposta([])],
+        "POST /api/studies/10/candidates/101/cancellation": resposta(cancelado),
+        "GET /api/studies/10/candidates?includeCancelled=true": resposta([cancelado]),
+    });
+    renderPage();
+    fireEvent.click(
+        await screen.findByRole("button", { name: "Cancelar candidatura: Candidato 014" })
+    );
+    const modal = screen.getByRole("dialog", { name: "Cancelar candidatura" });
+    fireEvent.change(within(modal).getByRole("textbox", { name: /Motivo do cancelamento/ }), {
+        target: { value: "  E-mail incorreto  " },
+    });
+    fireEvent.click(within(modal).getByRole("button", { name: "Confirmar cancelamento" }));
+    expect(await screen.findByText("Nenhum candidato encontrado")).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    fireEvent.click(screen.getByRole("checkbox", { name: "Exibir candidaturas canceladas" }));
+    const lista = await screen.findByRole("list", { name: "Lista de candidatos" });
+    expect(within(lista).getByText("Cancelado")).toBeInTheDocument();
+    expect(within(lista).getByText("Motivo: E-mail incorreto")).toBeInTheDocument();
+    expect(within(lista).queryByRole("button")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /consentimento/i })).not.toBeInTheDocument();
+    const envio = fetchMock.mock.calls.find(([, options]) => options?.method === "POST");
+    expect(envio?.[0]).toBe("/api/studies/10/candidates/101/cancellation");
+    expect(JSON.parse(String(envio?.[1]?.body))).toEqual({ reason: "E-mail incorreto" });
+    expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/consent"))).toBe(false);
+});
