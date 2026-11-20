@@ -1,6 +1,6 @@
 # Aplicativo mobile
 
-Aplicativo do participante, desenvolvido em React Native com Expo e TypeScript. O app usa Expo Router para navegação por arquivos. Nesta etapa, o aplicativo tem login do participante, ativação de primeiro acesso, sessão protegida persistida em armazenamento seguro e troca de senha. As telas de início e estudos continuam provisórias quanto ao conteúdo de negócio: a de estudos ainda não lista os estudos reais do participante.
+Aplicativo do participante, desenvolvido em React Native com Expo e TypeScript. O app usa Expo Router para navegação por arquivos. Nesta etapa, o aplicativo tem login do participante, ativação de primeiro acesso, sessão protegida persistida em armazenamento seguro, troca de senha e consulta/decisão de convites de estudo. A tela de estudos continua provisória quanto ao conteúdo de negócio: ela ainda não lista os estudos reais do participante.
 
 ## Escopo e estado atual
 
@@ -9,6 +9,7 @@ Aplicativo do participante, desenvolvido em React Native com Expo e TypeScript. 
 - `src/app/activation.tsx` ativa um candidato convidado com e-mail e código de ativação.
 - `src/app/change-password.tsx` define a senha inicial de uma sessão restrita ou troca a senha de uma conta já ativa.
 - `src/app/index.tsx` é o início autenticado, com dados públicos do participante, aviso de persistência, acesso a estudos, troca de senha e saída.
+- `src/app/invitations/` lista os convites visíveis da própria conta e exibe o detalhe autorizado, protocolo e termo simulado.
 - `src/app/studies.tsx` é um destino protegido provisório; a listagem real fica para uma entrega posterior.
 - `src/auth/AuthProvider.tsx` mantém a sessão em memória, restaura do armazenamento, executa login/ativação/troca de senha/logout e centraliza o tratamento de falhas autenticadas.
 - `src/auth/secureSessionStorage.ts` grava apenas token, validade absoluta e dados públicos mínimos do usuário em um registro versionado no `expo-secure-store`.
@@ -79,6 +80,27 @@ npm.cmd start
 A variável de processo tem precedência sobre o `.env` na inicialização do bundle. Reinicie o Expo depois de qualquer alteração. O Expo injeta variáveis `EXPO_PUBLIC_*` no bundle do app; nunca coloque senhas, chaves privadas ou tokens nesse prefixo nem versione segredos.
 
 Os caminhos usados pelo app são relativos à base: `auth/login`, `auth/activation`, `auth/password` e `auth/logout`. O [contrato OpenAPI](../backend/openapi.yaml) descreve os RF01–RF11 da Release 1.
+
+## Convites e consentimento simulado
+
+O acesso **Ver convites** na tela inicial consulta apenas os convites da conta participante autenticada. Os caminhos são relativos à base `/api` configurada: `me/invitations`, `me/invitations/{candidateId}` e `me/invitations/{candidateId}/decision`. O aplicativo nunca envia `studyId`, `userId` ou outro identificador como identidade da pessoa.
+
+O detalhe mostra objetivo, período, pesquisador responsável, visitas/atividades previstas e o `termText` devolvido pela API. O aviso de que o consentimento é simulado, acadêmico e sem validade legal acompanha o termo. Datas de protocolo (`YYYY-MM-DD`) são apresentadas como datas civis, sem conversão de fuso horário.
+
+Para um convite em `CONSENT_PENDING`, **Aceitar convite** e **Recusar convite** sempre abrem uma confirmação. Cancelar não envia uma requisição. A confirmação envia exatamente um `POST` com `GRANTED` ou `DECLINED`; somente a resposta da API altera a tela. A decisão é única: resultados `GRANTED` e `DECLINED` permanecem em modo somente leitura, inclusive depois de reabrir o aplicativo. Aceitar não inclui automaticamente a pessoa no estudo nem reserva vaga; a inclusão continua sendo responsabilidade do coordenador, após as demais condições do backend.
+
+Se a resposta ao envio se perder, houver falha de rede/servidor ou `CONSENT_ALREADY_DECIDED`, o app relê o detalhe antes de liberar uma nova confirmação e nunca repete o `POST` automaticamente. Conflitos de candidatura cancelada, consentimento indisponível ou estudo fora de recrutamento bloqueiam nova decisão naquele detalhe e exibem uma mensagem segura. Erros 401 e exigência de troca de senha continuam delegados ao fluxo central de sessão.
+
+### Roteiro manual de demonstração
+
+Use somente contas e dados fictícios em um backend local que contenha as rotas de convites.
+
+1. Crie duas candidaturas elegíveis, ativas e sem decisão, em um estudo em recrutamento; ative as duas contas participantes.
+2. Na primeira conta, abra o convite, cancele uma confirmação e confirme o aceite. Reabra o detalhe e confira `GRANTED`, sem ações para mudar a decisão. Com as demais pré-condições satisfeitas, valide a inclusão pelo coordenador.
+3. Na segunda conta, confirme a recusa. Reabra o detalhe e confira `DECLINED`, sem ações para mudar a decisão. A tentativa posterior de inclusão pelo coordenador deve ser recusada pelo backend.
+4. Confira também uma conta sem convites, uma falha de consulta recuperável, sessão expirada e um convite cancelado enquanto o detalhe estiver aberto.
+
+Não registre senhas, códigos de ativação, JWTs ou dados pessoais reais em capturas, logs ou documentação.
 
 ## Fluxo de autenticação
 

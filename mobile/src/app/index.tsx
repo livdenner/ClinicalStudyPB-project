@@ -74,8 +74,13 @@ export default function HomeScreen() {
 
       <View style={styles.actions}>
         <ActionButton
+          label="Ver convites"
+          onPress={() => router.push('/invitations')}
+        />
+        <ActionButton
           label="Ver estudos"
           onPress={() => router.push('/studies')}
+          variant="secondary"
         />
         <ActionButton
           label="Trocar senha"
