@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: ClinicalStudyPB API
-  version: 1.7.0
+  version: 1.7.1
   description: |
     Contrato da Release 1 (RF01 a RF11) e da Release 2 em andamento. As rotas
     da Sprint 3 (identidade, ativação e decisão de consentimento do candidato;
@@ -1343,16 +1343,20 @@ paths:
       - $ref: '#/components/parameters/ParticipantId'
     get:
       tags: [Participantes]
-      summary: Consulta o histórico do participante (RF15, T20.1)
+      summary: Consulta o histórico do participante (RF15, T20.1, T21.1)
       description: |
         Somente leitura. RESEARCHER ou COORDINATOR; outros perfis recebem 403.
         Participante de outro estudo, ou inexistente, responde 404.
 
         Reúne em uma consulta a situação do participante (ativo ou retirado), a
         inclusão, a retirada (quando houver) e as visitas agendadas em ordem
-        cronológica de scheduledAt, cada uma com o desfecho e os resultados por
-        atividade. Visitas canceladas pela retirada aparecem como CANCELLED.
-        Participante sem visitas retorna visits=[], não erro.
+        cronológica de scheduledAt (empate pelo id da visita), cada uma com o
+        desfecho e os resultados por atividade na ordem do protocolo. Visitas
+        canceladas pela retirada aparecem como CANCELLED. Participante sem
+        visitas retorna visits=[], e visita sem resultado traz results=[]; nenhum
+        dos dois é erro. Sem paginação: a lista é limitada às visitas do
+        protocolo agendadas para o participante. Os dados vêm dos registros de
+        inclusão, retirada, agendamento, desfecho e resultado, sem cópia.
       security:
         - bearerAuth: []
       responses:
@@ -1362,6 +1366,55 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ParticipantHistory'
+              example:
+                participant:
+                  id: 12
+                  studyId: 3
+                  candidateId: 41
+                  candidateName: Ana Souza
+                  includedAt: '2026-11-10T13:00:00Z'
+                  status: WITHDRAWN
+                  withdrawal:
+                    reason: Mudou de cidade
+                    withdrawnAt: '2026-12-01T12:00:00Z'
+                    withdrawnByUserId: 2
+                    cancelledVisitCount: 1
+                visits:
+                  - id: 101
+                    studyId: 3
+                    participantId: 12
+                    participantName: Ana Souza
+                    plannedVisitId: 7
+                    plannedVisitName: Avaliação inicial
+                    scheduledAt: '2026-11-20T12:00:00Z'
+                    status: DONE
+                    createdByUserId: 2
+                    createdAt: '2026-11-11T12:00:00Z'
+                    outcomeByUserId: 2
+                    outcomeAt: '2026-11-20T13:00:00Z'
+                    version: 1
+                    results:
+                      - visitId: 101
+                        activityId: 15
+                        value: 120x80 mmHg
+                        note: Medida após 5 minutos em repouso
+                        recordedByUserId: 1
+                        recordedAt: '2026-11-20T14:00:00Z'
+                  - id: 102
+                    studyId: 3
+                    participantId: 12
+                    participantName: Ana Souza
+                    plannedVisitId: 8
+                    plannedVisitName: Retorno
+                    scheduledAt: '2026-12-15T12:00:00Z'
+                    status: CANCELLED
+                    createdByUserId: 2
+                    createdAt: '2026-11-21T12:00:00Z'
+                    outcomeByUserId: 2
+                    outcomeAt: '2026-12-01T12:00:00Z'
+                    outcomeNote: Retirada do participante
+                    version: 1
+                    results: []
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
