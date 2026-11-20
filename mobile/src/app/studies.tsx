@@ -1,58 +1,82 @@
-import { Link } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
+import { StyleSheet, Text, View } from 'react-native';
 
+import { ActionButton } from '../components/ActionButton';
+import { BrandHeader } from '../components/BrandHeader';
+import { ScreenContainer } from '../components/ScreenContainer';
+import { colors, radii, spacing } from '../theme/colors';
+
+/**
+ * Destino provisório protegido. A listagem real de estudos do participante
+ * será implementada em uma entrega posterior; o acesso já exige sessão ativa.
+ */
 export default function StudiesScreen() {
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
+    <ScreenContainer>
+      <BrandHeader />
+
+      <View style={styles.heading}>
         <Text accessibilityRole="header" style={styles.title}>
           Estudos
         </Text>
-        <Text style={styles.description}>
+        <Text style={styles.subtitle}>
           Esta tela é apenas um destino provisório para demonstrar a navegação.
         </Text>
-        <Link href="/" asChild>
-          <Pressable accessibilityRole="button" style={styles.button}>
-            <Text style={styles.buttonText}>Voltar ao início</Text>
-          </Pressable>
-        </Link>
       </View>
-    </SafeAreaView>
+
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Em breve</Text>
+        <Text style={styles.cardText}>
+          Seus estudos e visitas aparecerão aqui em uma próxima atualização do
+          aplicativo.
+        </Text>
+      </View>
+
+      <ActionButton
+        label="Voltar ao início"
+        onPress={() => {
+          if (router.canGoBack()) {
+            router.back();
+          } else {
+            router.replace('/');
+          }
+        }}
+        variant="secondary"
+      />
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f7fa',
-    justifyContent: 'center',
-    padding: 24,
-  },
-  content: {
-    alignItems: 'center',
-    gap: 16,
+  heading: {
+    gap: spacing.xs,
   },
   title: {
-    color: '#17324d',
-    fontSize: 28,
+    color: colors.text,
+    fontSize: 26,
     fontWeight: '700',
   },
-  description: {
-    color: '#526274',
-    fontSize: 16,
-    textAlign: 'center',
+  subtitle: {
+    color: colors.textMuted,
+    fontSize: 15,
+    lineHeight: 21,
   },
-  button: {
-    alignItems: 'center',
-    backgroundColor: '#176b87',
-    borderRadius: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+  card: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    gap: spacing.sm,
+    padding: spacing.lg,
   },
-  buttonText: {
-    color: '#ffffff',
-    fontSize: 16,
+  cardTitle: {
+    color: colors.text,
+    fontSize: 17,
     fontWeight: '600',
+  },
+  cardText: {
+    color: colors.textMuted,
+    fontSize: 14,
+    lineHeight: 20,
   },
 });

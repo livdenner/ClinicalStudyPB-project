@@ -58,11 +58,13 @@ A revisão técnica consolidada preserva a [regressão de usuários e estudos e 
 
 ## Revisão da Sprint 2
 
-O protocolo passou a controlar critérios, ordem de visitas/atividades e estados; o recrutamento ganhou candidatos, avaliação persistida, consentimento simulado e inclusão atômica. As [capturas web](../images/README.md) demonstram os fluxos e as validações. Os [relatórios de testes](../tests/README.md) medem a versão consolidada e distinguem testes de componentes, integração PostgreSQL, concorrência e abertura mobile.
+O protocolo passou a controlar critérios, ordem de visitas/atividades e estados; o recrutamento ganhou candidatos, avaliação persistida, consentimento simulado e inclusão atômica. As [capturas web](../images/README.md) demonstram os fluxos e as validações. Os [relatórios de testes](../tests/README.md) medem a versão publicada na tag `release1` e distinguem testes de componentes, integração PostgreSQL, concorrência e abertura mobile.
 
 Foram incorporadas as correções de limite de participantes (#51), build Docker/Checkstyle (#47), regressão de usuários/estudos (#28) e atualização de permissões e integração do protocolo (#49/#58). A carga de recrutamento/última vaga (#55) permite repetir os cenários sem dados pessoais.
 
-O fechamento funcional e as pendências específicas ficam na [matriz RF01–RF11](../README.md#rastreabilidade-dos-requisitos), incluindo a integração da interface de inclusão. Tag/GitHub Release e integração final dos PRs pertencem à T16.15 da Gerência.
+O fechamento funcional e as pendências específicas ficam na [matriz RF01–RF11](../README.md#rastreabilidade-dos-requisitos), incluindo a integração da interface de inclusão.
+
+**Fechamento da release (T16.15).** Depois do corte da Sprint 2, em 10/11/2026 (America/Fortaleza), entraram na `development` os PRs #65 (E2E do fluxo completo), #66 (consolidação do RF11), #67 (consentimento consultado na API), #68 e #69 (testes de componentes de RF09–RF11). O PR #70 levou a `development` para a `main` (**8e88d15**), e a tag `release1` e a GitHub Release foram publicadas sobre esse commit. Esses PRs ficaram fora do [CSV de integrações](integracoes-pr.csv) e do burndown, que usam o recorte da sprint até 09/11; a [versão publicada](../README.md#versão-publicada) os lista. Correção documental registrada na T26.1 (Sprint 3).
 
 ## Aprendizados e ações para a continuidade
 

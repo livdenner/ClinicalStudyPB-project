@@ -13,16 +13,60 @@ export type StatusElegibilidadeApi = "PENDING" | "ELIGIBLE" | "INELIGIBLE";
 export type DadosCandidatoApi = {
     name: string;
     age: number;
+    email: string;
+    phone: string;
 };
 
-export type CandidatoApi = {
+export type StatusCandidatoApi =
+    "INVITED" | "ACTIVE" | "CONSENT_PENDING" | "GRANTED" | "DECLINED" | "INCLUDED" | "CANCELLED";
+
+/** Rótulos da situação consolidada pelo backend, sem inferência local. @author Lívia */
+export const SITUACAO_CANDIDATO_LABELS: Record<StatusCandidatoApi, string> = {
+    INVITED: "Convidado",
+    ACTIVE: "Conta ativa",
+    CONSENT_PENDING: "Aguardando decisão",
+    GRANTED: "Aceitou",
+    DECLINED: "Recusou",
+    INCLUDED: "Incluído",
+    CANCELLED: "Cancelado",
+};
+
+export type AtivacaoCandidatoApi = {
+    expiresAt: string;
+    expired: boolean;
+};
+
+/** Motivo obrigatório enviado ao cancelar uma candidatura antes da inclusão. @author Lívia */
+export type DadosCancelamentoCandidatoApi = {
+    reason: string;
+};
+
+/** Histórico de cancelamento preservado pela API, sem apagar a candidatura. @author Lívia */
+export type CancelamentoCandidatoApi = DadosCancelamentoCandidatoApi & {
+    cancelledAt: string;
+    cancelledByUserId: number;
+};
+
+export type CandidatoApi = DadosCandidatoApi & {
     id: number;
     studyId: number;
-    name: string;
-    age: number;
+    userId: number;
+    status: StatusCandidatoApi;
     eligibilityStatus: StatusElegibilidadeApi;
-    consentStatus?: StatusConsentimentoApi;
+    consentStatus: StatusConsentimentoApi;
+    activation?: AtivacaoCandidatoApi;
+    cancellation?: CancelamentoCandidatoApi;
 };
+
+/** Resposta exclusiva do cadastro; o código não faz parte dos dados da listagem. @author Lívia */
+export type CadastroCandidatoApi = CandidatoApi &
+    (
+        | { status: "ACTIVE"; activation?: never }
+        | {
+              status: "INVITED";
+              activation: AtivacaoCandidatoApi & { activationCode: string };
+          }
+    );
 
 export const STATUS_ESTUDO_LABELS: Record<StatusEstudoCandidato, string> = {
     PLANNING: "Planejamento",

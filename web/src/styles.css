@@ -362,3 +362,17 @@ a {
     border-color: var(--color-primary);
     background: var(--color-primary-soft);
 }
+
+.acao-candidato--cancelar {
+    border-color: var(--color-error-border);
+    color: var(--color-error);
+}
+
+.acao-candidato--cancelar:hover {
+    border-color: var(--color-error);
+    background: var(--color-error-soft);
+}
+
+.acoes-candidato {
+    min-height: calc(3 * 44px + 2 * 0.5rem);
+}

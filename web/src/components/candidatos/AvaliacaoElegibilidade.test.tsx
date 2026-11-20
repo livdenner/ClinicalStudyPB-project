@@ -33,7 +33,12 @@ const candidatoBase: CandidatoApi = {
     studyId: 10,
     name: "Candidato 014",
     age: 42,
+    email: "candidato014@exemplo.test",
+    phone: "(83) 99999-0014",
+    userId: 201,
+    status: "ACTIVE",
     eligibilityStatus: "PENDING",
+    consentStatus: "PENDING",
 };
 
 const criteriosEstudo: CriterioEstudoApi[] = [
