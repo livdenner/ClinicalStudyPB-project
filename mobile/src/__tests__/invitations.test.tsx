@@ -424,9 +424,39 @@ describe('convites do participante', () => {
     expect(api.decideInvitation).toHaveBeenCalledTimes(1);
   });
 
-  it('não anuncia sucesso quando a API falha e permite reconsultar', async () => {
+  it('não anuncia sucesso após resposta perdida e relê o resultado persistido', async () => {
     storeSession();
-    api.getInvitation.mockResolvedValue(pendingDetail);
+    api.getInvitation
+      .mockResolvedValueOnce(pendingDetail)
+      .mockResolvedValueOnce({
+        ...pendingDetail,
+        status: 'GRANTED',
+        decidedAt: '2026-11-20T15:45:00.000Z',
+      });
+    api.decideInvitation.mockRejectedValue(new ApiError('falha', 500));
+
+    await renderAuthenticatedAt('/invitations/31');
+    await screen.findByText('Aceitar convite');
+
+    await fireEvent.press(screen.getByText('Aceitar convite'));
+    await fireEvent.press(screen.getByText('Aceitar'));
+
+    expect(
+      await screen.findByText(
+        'Consentimento aceito. A equipe responsável poderá prosseguir com a avaliação da sua inclusão no estudo.',
+      ),
+    ).toBeTruthy();
+    expect(screen.queryByText('Aceitar convite')).toBeNull();
+    expect(screen.queryByText('Recusar convite')).toBeNull();
+    expect(api.getInvitation).toHaveBeenCalledTimes(2);
+    expect(api.decideInvitation).toHaveBeenCalledTimes(1);
+  });
+
+  it('mantém a decisão bloqueada quando a recuperação não confirma o resultado', async () => {
+    storeSession();
+    api.getInvitation
+      .mockResolvedValueOnce(pendingDetail)
+      .mockRejectedValueOnce(new ApiError('falha', 500));
     api.decideInvitation.mockRejectedValue(new ApiError('falha', 500));
 
     await renderAuthenticatedAt('/invitations/31');
@@ -438,29 +468,103 @@ describe('convites do participante', () => {
     expect(
       await screen.findByText(INVITATION_DECISION_MESSAGES.uncertain),
     ).toBeTruthy();
-    expect(
-      screen.queryByText(
-        'Consentimento aceito. A equipe responsável poderá prosseguir com a avaliação da sua inclusão no estudo.',
-      ),
-    ).toBeNull();
     expect(screen.queryByText('Aceitar convite')).toBeNull();
     expect(screen.queryByText('Recusar convite')).toBeNull();
-    expect(screen.getByText('Atualizar convite')).toBeTruthy();
+    expect(api.decideInvitation).toHaveBeenCalledTimes(1);
+  });
 
-    api.getInvitation.mockResolvedValue({
-      ...pendingDetail,
-      status: 'GRANTED',
-      decidedAt: '2026-11-20T15:45:00.000Z',
-    });
+  it('consulta a decisão persistida após conflito de decisão única', async () => {
+    storeSession();
+    api.getInvitation
+      .mockResolvedValueOnce(pendingDetail)
+      .mockResolvedValueOnce({
+        ...pendingDetail,
+        status: 'DECLINED',
+        decidedAt: '2026-11-20T15:46:00.000Z',
+      });
+    api.decideInvitation.mockRejectedValue(
+      new ApiError('já decidido', 409, 'CONSENT_ALREADY_DECIDED'),
+    );
 
-    await fireEvent.press(screen.getByText('Atualizar convite'));
+    await renderAuthenticatedAt('/invitations/31');
+    await screen.findByText('Aceitar convite');
+
+    await fireEvent.press(screen.getByText('Aceitar convite'));
+    await fireEvent.press(screen.getByText('Aceitar'));
+
+    expect(await screen.findByText('Consentimento recusado')).toBeTruthy();
+    expect(screen.queryByText('Aceitar convite')).toBeNull();
+    expect(screen.queryByText('Recusar convite')).toBeNull();
+    expect(api.decideInvitation).toHaveBeenCalledWith(
+      31,
+      'GRANTED',
+      'header.payload.signature',
+    );
+  });
+
+  it('bloqueia novas decisões em estudo que não está recrutando', async () => {
+    storeSession();
+    api.getInvitation.mockResolvedValue(pendingDetail);
+    api.decideInvitation.mockRejectedValue(
+      new ApiError('encerrado', 409, 'STUDY_NOT_RECRUITING'),
+    );
+
+    await renderAuthenticatedAt('/invitations/31');
+    await screen.findByText('Aceitar convite');
+
+    await fireEvent.press(screen.getByText('Aceitar convite'));
+    await fireEvent.press(screen.getByText('Aceitar'));
 
     expect(
       await screen.findByText(
-        'Consentimento aceito. A equipe responsável poderá prosseguir com a avaliação da sua inclusão no estudo.',
+        INVITATION_DECISION_MESSAGES.studyNotRecruiting,
       ),
     ).toBeTruthy();
+    expect(screen.queryByText('Aceitar convite')).toBeNull();
+    expect(screen.queryByText('Recusar convite')).toBeNull();
     expect(api.decideInvitation).toHaveBeenCalledTimes(1);
+  });
+
+  it('descarta a resposta de decisão de outro convite aberto depois', async () => {
+    storeSession();
+    const secondDetail: StudyInvitation = {
+      ...pendingDetail,
+      candidateId: 32,
+      studyId: 9,
+      studyTitle: 'Estudo de acompanhamento',
+    };
+    let resolveDecision:
+      | ((value: StudyInvitation) => void)
+      | undefined;
+    api.getInvitation
+      .mockResolvedValueOnce(pendingDetail)
+      .mockResolvedValueOnce(secondDetail);
+    api.decideInvitation.mockImplementation(
+      () =>
+        new Promise<StudyInvitation>((resolve) => {
+          resolveDecision = resolve;
+        }),
+    );
+
+    await renderAuthenticatedAt('/invitations/31');
+    await screen.findByText('Aceitar convite');
+    await fireEvent.press(screen.getByText('Aceitar convite'));
+    await fireEvent.press(screen.getByText('Aceitar'));
+
+    await testRouter.replace('/invitations/32');
+    expect(await screen.findByText('Estudo de acompanhamento')).toBeTruthy();
+
+    await act(async () => {
+      resolveDecision?.({
+        ...pendingDetail,
+        status: 'GRANTED',
+        decidedAt: '2026-11-20T15:48:00.000Z',
+      });
+    });
+
+    expect(screen.getByText('Estudo de acompanhamento')).toBeTruthy();
+    expect(screen.getByText('Aceitar convite')).toBeTruthy();
+    expect(screen.getByText('Recusar convite')).toBeTruthy();
   });
 
   it('atualiza a lista ao voltar depois de registrar a decisão', async () => {

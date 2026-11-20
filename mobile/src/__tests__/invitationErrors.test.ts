@@ -1,11 +1,13 @@
 import { ApiError } from '../services/api/apiClient';
 import { AuthFlowError } from '../services/auth/authErrors';
 import {
+  blocksInvitationDecision,
   getInvitationDecisionErrorMessage,
   getInvitationLoadErrorMessage,
   INVITATION_DECISION_MESSAGES,
   INVITATION_MESSAGES,
   isHandledSessionError,
+  shouldRefreshInvitationAfterDecisionError,
 } from '../services/invitations/invitationErrors';
 
 describe('invitationErrors', () => {
@@ -75,6 +77,57 @@ describe('invitationErrors', () => {
     expect(
       getInvitationDecisionErrorMessage(new TypeError('Network request failed')),
     ).toBe(INVITATION_DECISION_MESSAGES.uncertain);
+  });
+
+  it('classifica conflitos que bloqueiam nova decisão e exigem atualização', () => {
+    const cancelled = new ApiError('cancelada', 409, 'CANDIDATE_CANCELLED');
+    const unavailable = new ApiError(
+      'indisponível',
+      409,
+      'CONSENT_NOT_AVAILABLE',
+    );
+    const closedStudy = new ApiError(
+      'recrutamento encerrado',
+      409,
+      'STUDY_NOT_RECRUITING',
+    );
+
+    expect(getInvitationDecisionErrorMessage(cancelled)).toBe(
+      INVITATION_DECISION_MESSAGES.cancelled,
+    );
+    expect(getInvitationDecisionErrorMessage(unavailable)).toBe(
+      INVITATION_DECISION_MESSAGES.unavailable,
+    );
+    expect(getInvitationDecisionErrorMessage(closedStudy)).toBe(
+      INVITATION_DECISION_MESSAGES.studyNotRecruiting,
+    );
+    expect(blocksInvitationDecision(cancelled)).toBe(true);
+    expect(blocksInvitationDecision(unavailable)).toBe(true);
+    expect(blocksInvitationDecision(closedStudy)).toBe(true);
+    expect(
+      blocksInvitationDecision(
+        new ApiError('já decidido', 409, 'CONSENT_ALREADY_DECIDED'),
+      ),
+    ).toBe(false);
+  });
+
+  it('reconsulta apenas quando o estado remoto pode ter mudado', () => {
+    expect(
+      shouldRefreshInvitationAfterDecisionError(
+        new ApiError('conflito', 409, 'CONSENT_ALREADY_DECIDED'),
+      ),
+    ).toBe(true);
+    expect(
+      shouldRefreshInvitationAfterDecisionError(new ApiError('falha', 500)),
+    ).toBe(true);
+    expect(
+      shouldRefreshInvitationAfterDecisionError(new TypeError('Network request failed')),
+    ).toBe(true);
+    expect(
+      shouldRefreshInvitationAfterDecisionError(
+        new ApiError('status inválido', 400, 'INVALID_STATUS'),
+      ),
+    ).toBe(false);
   });
 
   it('ignora erros de sessão já tratados pelo provider', () => {

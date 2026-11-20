@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   StyleSheet,
@@ -20,10 +20,12 @@ import {
   getInvitation,
 } from '../../services/invitations/invitationApi';
 import {
+  blocksInvitationDecision,
   getInvitationDecisionErrorMessage,
   getInvitationLoadErrorMessage,
   INVITATION_MESSAGES,
   isHandledSessionError,
+  shouldRefreshInvitationAfterDecisionError,
 } from '../../services/invitations/invitationErrors';
 import {
   formatCivilDate,
@@ -120,13 +122,46 @@ export default function InvitationDetailScreen() {
   const [decision, setDecision] = useState<InvitationDecision | null>(null);
   const [deciding, setDeciding] = useState(false);
   const [decisionError, setDecisionError] = useState('');
+  const candidateIdRef = useRef<number | null>(candidateId);
+  const mountedRef = useRef(true);
+  const decisionRequestRef = useRef(0);
+  const recoveryRef = useRef(false);
+  const decisionBlockedRef = useRef(false);
+  const previousCandidateIdRef = useRef<number | null>(candidateId);
+
+  candidateIdRef.current = candidateId;
 
   useEffect(() => {
+    mountedRef.current = true;
+
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  function refreshInvitation(): void {
+    recoveryRef.current = true;
+    setReloadKey((key) => key + 1);
+  }
+
+  useEffect(() => {
+    const candidateChanged = previousCandidateIdRef.current !== candidateId;
+    previousCandidateIdRef.current = candidateId;
+    if (candidateChanged) {
+      decisionRequestRef.current += 1;
+      recoveryRef.current = false;
+      decisionBlockedRef.current = false;
+      setDecision(null);
+      setDeciding(false);
+      setDecisionError('');
+    }
+
     if (candidateId === null) {
       setInvitation(null);
       setError('');
       setDecision(null);
       setDecisionError('');
+      decisionBlockedRef.current = false;
       setLoading(false);
       return;
     }
@@ -134,10 +169,12 @@ export default function InvitationDetailScreen() {
     const controller = new AbortController();
     let active = true;
 
-    setInvitation(null);
+    const recoveringDecision = recoveryRef.current;
+    if (!recoveringDecision) {
+      setInvitation(null);
+    }
     setLoading(true);
     setError('');
-    setDecisionError('');
 
     async function load(id: number): Promise<void> {
       try {
@@ -148,6 +185,15 @@ export default function InvitationDetailScreen() {
           return;
         }
         setInvitation(result);
+        if (recoveringDecision) {
+          recoveryRef.current = false;
+          if (
+            normalizeInvitationStatus(result.status) !== 'CONSENT_PENDING' ||
+            !decisionBlockedRef.current
+          ) {
+            setDecisionError('');
+          }
+        }
       } catch (caught) {
         if (!active || controller.signal.aborted) {
           return;
@@ -187,21 +233,41 @@ export default function InvitationDetailScreen() {
       return;
     }
 
+    const requestId = decisionRequestRef.current + 1;
+    decisionRequestRef.current = requestId;
+    const isCurrentDecision = (): boolean =>
+      mountedRef.current &&
+      candidateIdRef.current === id &&
+      decisionRequestRef.current === requestId;
+
     setDeciding(true);
     setDecisionError('');
+    decisionBlockedRef.current = false;
 
     try {
       const updated = await sendDecision(id, requested);
+      if (!isCurrentDecision()) {
+        return;
+      }
       setInvitation(updated);
       setDecision(null);
     } catch (caught) {
+      if (!isCurrentDecision()) {
+        return;
+      }
       setDecision(null);
       if (isHandledSessionError(caught)) {
         return;
       }
       setDecisionError(getInvitationDecisionErrorMessage(caught));
+      decisionBlockedRef.current = blocksInvitationDecision(caught);
+      if (shouldRefreshInvitationAfterDecisionError(caught)) {
+        refreshInvitation();
+      }
     } finally {
-      setDeciding(false);
+      if (isCurrentDecision()) {
+        setDeciding(false);
+      }
     }
   }
 
@@ -329,7 +395,7 @@ export default function InvitationDetailScreen() {
             <Text style={styles.termText}>{visited.termText}</Text>
           </View>
 
-          {status === 'CONSENT_PENDING' || decisionError ? (
+          {status === 'CONSENT_PENDING' ? (
             <View style={styles.decision}>
               <Text accessibilityRole="header" style={styles.sectionTitle}>
                 Sua decisão
@@ -339,7 +405,7 @@ export default function InvitationDetailScreen() {
                   <MessageBanner message={decisionError} tone="error" />
                   <ActionButton
                     label="Atualizar convite"
-                    onPress={() => setReloadKey((key) => key + 1)}
+                    onPress={refreshInvitation}
                     variant="secondary"
                   />
                 </>

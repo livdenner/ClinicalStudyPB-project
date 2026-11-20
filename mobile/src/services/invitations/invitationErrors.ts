@@ -23,6 +23,12 @@ export const INVITATION_DECISION_MESSAGES = {
     'Este convite não aceita mais uma decisão pelo aplicativo. Atualize o convite para conferir a situação registrada.',
   uncertain:
     'Não foi possível confirmar se sua decisão foi registrada. Atualize o convite para verificar a situação antes de tentar novamente.',
+  cancelled:
+    'Este convite não está mais disponível para decisão. Atualize a lista de convites para conferir a situação.',
+  unavailable:
+    'Este convite não está disponível para decisão neste momento. Atualize a lista para conferir a situação.',
+  studyNotRecruiting:
+    'Este estudo não aceita decisões neste momento. A decisão não foi registrada.',
 } as const;
 
 /** Operação de leitura que originou o erro. */
@@ -74,6 +80,16 @@ export function getInvitationDecisionErrorMessage(error: unknown): string {
       return INVITATION_MESSAGES.forbidden;
     }
     if (error.status === 409) {
+      switch (error.code) {
+        case 'CANDIDATE_CANCELLED':
+          return INVITATION_DECISION_MESSAGES.cancelled;
+        case 'CONSENT_NOT_AVAILABLE':
+          return INVITATION_DECISION_MESSAGES.unavailable;
+        case 'STUDY_NOT_RECRUITING':
+          return INVITATION_DECISION_MESSAGES.studyNotRecruiting;
+        default:
+          break;
+      }
       return INVITATION_DECISION_MESSAGES.conflict;
     }
     if (error.status >= 400 && error.status < 500) {
@@ -82,6 +98,32 @@ export function getInvitationDecisionErrorMessage(error: unknown): string {
   }
 
   return INVITATION_DECISION_MESSAGES.uncertain;
+}
+
+/**
+ * Indica se uma falha pode ter deixado a decisão gravada ou o estado remoto
+ * alterado. A tela relê o detalhe, mas nunca repete o POST automaticamente.
+ */
+export function shouldRefreshInvitationAfterDecisionError(error: unknown): boolean {
+  if (error instanceof ApiError) {
+    return error.status === 409 || error.status >= 500;
+  }
+
+  return true;
+}
+
+/**
+ * Indica conflitos que impedem nova tentativa enquanto o mesmo detalhe estiver
+ * aberto. A pessoa ainda pode atualizar a lista para obter o estado remoto.
+ */
+export function blocksInvitationDecision(error: unknown): boolean {
+  return (
+    error instanceof ApiError &&
+    error.status === 409 &&
+    (error.code === 'CANDIDATE_CANCELLED' ||
+      error.code === 'CONSENT_NOT_AVAILABLE' ||
+      error.code === 'STUDY_NOT_RECRUITING')
+  );
 }
 
 /**
