@@ -28,7 +28,11 @@ export function ConfirmDialog({
   return (
     <Modal
       animationType="fade"
-      onRequestClose={onCancel}
+      onRequestClose={() => {
+        if (!loading) {
+          onCancel();
+        }
+      }}
       transparent
       visible={visible}
     >

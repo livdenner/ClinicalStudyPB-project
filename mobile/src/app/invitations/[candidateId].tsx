@@ -11,11 +11,16 @@ import { useSession } from '../../auth/AuthProvider';
 import { ActionButton } from '../../components/ActionButton';
 import { BackLink } from '../../components/BackLink';
 import { BrandHeader } from '../../components/BrandHeader';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { MessageBanner } from '../../components/MessageBanner';
 import { ScreenContainer } from '../../components/ScreenContainer';
 import { InvitationStatusBadge } from '../../components/invitations/InvitationStatusBadge';
-import { getInvitation } from '../../services/invitations/invitationApi';
 import {
+  decideInvitation,
+  getInvitation,
+} from '../../services/invitations/invitationApi';
+import {
+  getInvitationDecisionErrorMessage,
   getInvitationLoadErrorMessage,
   INVITATION_MESSAGES,
   isHandledSessionError,
@@ -27,6 +32,7 @@ import {
   parseCandidateId,
 } from '../../services/invitations/invitationPresentation';
 import type {
+  InvitationDecision,
   PlannedVisit,
   StudyInvitation,
 } from '../../services/invitations/invitationTypes';
@@ -57,6 +63,19 @@ function ResultBanner({ invitation }: { invitation: StudyInvitation }) {
   );
 }
 
+function decisionDialogTitle(decision: InvitationDecision): string {
+  return decision === 'DECLINED' ? 'Confirmar recusa?' : 'Confirmar aceite?';
+}
+
+function decisionDialogMessage(
+  decision: InvitationDecision,
+  studyTitle: string,
+): string {
+  return decision === 'DECLINED'
+    ? `Você vai recusar o convite do estudo "${studyTitle}". A recusa é uma decisão válida e não poderá ser alterada pelo aplicativo.`
+    : `Você vai aceitar o convite do estudo "${studyTitle}". A decisão é única e não poderá ser alterada pelo aplicativo.`;
+}
+
 function VisitCard({ visit }: { visit: PlannedVisit }) {
   const plannedDate = formatCivilDate(visit.plannedDate);
   const activities = Array.isArray(visit.activities) ? visit.activities : [];
@@ -84,8 +103,9 @@ function VisitCard({ visit }: { visit: PlannedVisit }) {
 }
 
 /**
- * Detalhe de um convite com protocolo e termo simulados. Nesta entrega a
- * tela é somente leitura; as ações de decisão entram na próxima entrega.
+ * Detalhe de um convite com protocolo e termo simulados. Convites pendentes
+ * permitem aceite ou recusa com confirmação; resultados já gravados abrem em
+ * modo somente leitura.
  */
 export default function InvitationDetailScreen() {
   const params = useLocalSearchParams<{
@@ -97,11 +117,16 @@ export default function InvitationDetailScreen() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(candidateId !== null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [decision, setDecision] = useState<InvitationDecision | null>(null);
+  const [deciding, setDeciding] = useState(false);
+  const [decisionError, setDecisionError] = useState('');
 
   useEffect(() => {
     if (candidateId === null) {
       setInvitation(null);
       setError('');
+      setDecision(null);
+      setDecisionError('');
       setLoading(false);
       return;
     }
@@ -112,6 +137,7 @@ export default function InvitationDetailScreen() {
     setInvitation(null);
     setLoading(true);
     setError('');
+    setDecisionError('');
 
     async function load(id: number): Promise<void> {
       try {
@@ -144,6 +170,47 @@ export default function InvitationDetailScreen() {
       controller.abort();
     };
   }, [candidateId, reloadKey, runAuthenticated]);
+
+  async function sendDecision(
+    id: number,
+    requested: InvitationDecision,
+  ): Promise<StudyInvitation> {
+    return runAuthenticated((accessToken) =>
+      decideInvitation(id, requested, accessToken),
+    );
+  }
+
+  async function confirmDecision(): Promise<void> {
+    const requested = decision;
+    const id = candidateId;
+    if (deciding || requested === null || id === null) {
+      return;
+    }
+
+    setDeciding(true);
+    setDecisionError('');
+
+    try {
+      const updated = await sendDecision(id, requested);
+      setInvitation(updated);
+      setDecision(null);
+    } catch (caught) {
+      setDecision(null);
+      if (isHandledSessionError(caught)) {
+        return;
+      }
+      setDecisionError(getInvitationDecisionErrorMessage(caught));
+    } finally {
+      setDeciding(false);
+    }
+  }
+
+  function cancelDecision(): void {
+    if (deciding) {
+      return;
+    }
+    setDecision(null);
+  }
 
   const visited = invitation;
   const visits =
@@ -261,8 +328,66 @@ export default function InvitationDetailScreen() {
             <Text style={styles.cardTitle}>Termo de participação</Text>
             <Text style={styles.termText}>{visited.termText}</Text>
           </View>
+
+          {status === 'CONSENT_PENDING' || decisionError ? (
+            <View style={styles.decision}>
+              <Text accessibilityRole="header" style={styles.sectionTitle}>
+                Sua decisão
+              </Text>
+              {decisionError ? (
+                <>
+                  <MessageBanner message={decisionError} tone="error" />
+                  <ActionButton
+                    label="Atualizar convite"
+                    onPress={() => setReloadKey((key) => key + 1)}
+                    variant="secondary"
+                  />
+                </>
+              ) : (
+                <>
+                  <Text style={styles.muted}>
+                    A decisão é única e não poderá ser alterada pelo aplicativo.
+                    O aceite não confirma sua inclusão; a equipe responsável fará
+                    essa etapa.
+                  </Text>
+                  <ActionButton
+                    accessibilityHint="Abre a confirmação do aceite"
+                    disabled={deciding}
+                    label="Aceitar convite"
+                    onPress={() => setDecision('GRANTED')}
+                  />
+                  <ActionButton
+                    accessibilityHint="Abre a confirmação da recusa"
+                    disabled={deciding}
+                    label="Recusar convite"
+                    onPress={() => setDecision('DECLINED')}
+                    variant="secondary"
+                  />
+                </>
+              )}
+            </View>
+          ) : null}
         </>
       ) : null}
+
+      <ConfirmDialog
+        cancelLabel="Cancelar"
+        confirmLabel={decision === 'DECLINED' ? 'Recusar' : 'Aceitar'}
+        loading={deciding}
+        message={
+          decision === null
+            ? ''
+            : decisionDialogMessage(decision, visited?.studyTitle ?? '')
+        }
+        onCancel={cancelDecision}
+        onConfirm={() => {
+          void confirmDecision();
+        }}
+        title={
+          decision === null ? 'Confirmar aceite?' : decisionDialogTitle(decision)
+        }
+        visible={decision !== null}
+      />
     </ScreenContainer>
   );
 }
@@ -325,6 +450,10 @@ const styles = StyleSheet.create({
   },
   section: {
     gap: spacing.sm + 4,
+  },
+  decision: {
+    gap: spacing.sm + 4,
+    paddingTop: spacing.xs,
   },
   sectionTitle: {
     color: colors.text,

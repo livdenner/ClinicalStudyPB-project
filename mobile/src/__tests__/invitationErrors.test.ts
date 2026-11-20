@@ -1,7 +1,9 @@
 import { ApiError } from '../services/api/apiClient';
 import { AuthFlowError } from '../services/auth/authErrors';
 import {
+  getInvitationDecisionErrorMessage,
   getInvitationLoadErrorMessage,
+  INVITATION_DECISION_MESSAGES,
   INVITATION_MESSAGES,
   isHandledSessionError,
 } from '../services/invitations/invitationErrors';
@@ -46,6 +48,33 @@ describe('invitationErrors', () => {
     expect(
       getInvitationLoadErrorMessage(new TypeError('Network request failed'), 'list'),
     ).toBe(INVITATION_MESSAGES.listFailed);
+  });
+
+  it('trata rejeição conhecida da decisão sem sugerir sucesso', () => {
+    expect(
+      getInvitationDecisionErrorMessage(
+        new ApiError('decisão inválida', 400, 'INVALID_STATUS'),
+      ),
+    ).toBe(INVITATION_DECISION_MESSAGES.rejected);
+    expect(
+      getInvitationDecisionErrorMessage(
+        new ApiError('conflito', 409, 'CONSENT_ALREADY_DECIDED'),
+      ),
+    ).toBe(INVITATION_DECISION_MESSAGES.conflict);
+    expect(
+      getInvitationDecisionErrorMessage(
+        new ApiError('não encontrado', 404, 'NOT_FOUND'),
+      ),
+    ).toBe(INVITATION_MESSAGES.notAvailable);
+  });
+
+  it('trata falha incerta da decisão como possível gravação', () => {
+    expect(
+      getInvitationDecisionErrorMessage(new ApiError('falha', 500)),
+    ).toBe(INVITATION_DECISION_MESSAGES.uncertain);
+    expect(
+      getInvitationDecisionErrorMessage(new TypeError('Network request failed')),
+    ).toBe(INVITATION_DECISION_MESSAGES.uncertain);
   });
 
   it('ignora erros de sessão já tratados pelo provider', () => {

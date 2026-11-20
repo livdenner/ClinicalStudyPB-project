@@ -15,6 +15,16 @@ export const INVITATION_MESSAGES = {
     'Os convites exibidos são de uma consulta anterior e podem estar desatualizados.',
 } as const;
 
+/** Mensagens das decisões de convite. */
+export const INVITATION_DECISION_MESSAGES = {
+  rejected:
+    'Não foi possível registrar sua decisão. Atualize o convite para conferir a situação antes de tentar novamente.',
+  conflict:
+    'Este convite não aceita mais uma decisão pelo aplicativo. Atualize o convite para conferir a situação registrada.',
+  uncertain:
+    'Não foi possível confirmar se sua decisão foi registrada. Atualize o convite para verificar a situação antes de tentar novamente.',
+} as const;
+
 /** Operação de leitura que originou o erro. */
 export type InvitationLoadScope = 'list' | 'detail';
 
@@ -44,6 +54,34 @@ export function getInvitationLoadErrorMessage(
   return scope === 'detail'
     ? INVITATION_MESSAGES.detailFailed
     : INVITATION_MESSAGES.listFailed;
+}
+
+/**
+ * Traduz uma falha ao registrar a decisão para uma mensagem segura.
+ * Falhas de rede/5xx são tratadas como resultado incerto: a decisão pode ter
+ * sido gravada mesmo sem resposta, então a tela orienta a reconsultar em vez
+ * de reenviar automaticamente.
+ *
+ * @param error Erro lançado pelo cliente HTTP ou pelo provider de sessão.
+ * @returns Mensagem pronta para exibição.
+ */
+export function getInvitationDecisionErrorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    if (error.status === 404) {
+      return INVITATION_MESSAGES.notAvailable;
+    }
+    if (error.status === 403) {
+      return INVITATION_MESSAGES.forbidden;
+    }
+    if (error.status === 409) {
+      return INVITATION_DECISION_MESSAGES.conflict;
+    }
+    if (error.status >= 400 && error.status < 500) {
+      return INVITATION_DECISION_MESSAGES.rejected;
+    }
+  }
+
+  return INVITATION_DECISION_MESSAGES.uncertain;
 }
 
 /**

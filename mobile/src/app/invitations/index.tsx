@@ -1,5 +1,5 @@
-import { router } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -78,46 +78,49 @@ export default function InvitationsScreen() {
   const [loading, setLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    let active = true;
+  useFocusEffect(
+    useCallback(() => {
+      const controller = new AbortController();
+      let active = true;
 
-    setLoading(true);
-    setError('');
+      setLoading(true);
+      setError('');
 
-    async function load(): Promise<void> {
-      try {
-        const result = await runAuthenticated((accessToken) =>
-          listInvitations(accessToken, { signal: controller.signal }),
-        );
-        if (!active) {
-          return;
-        }
-        setInvitations(Array.isArray(result) ? result : []);
-      } catch (caught) {
-        if (!active || controller.signal.aborted) {
-          return;
-        }
-        if (isHandledSessionError(caught)) {
-          return;
-        }
-        setError(getInvitationLoadErrorMessage(caught, 'list'));
-      } finally {
-        if (active) {
-          setLoading(false);
+      async function load(): Promise<void> {
+        try {
+          const result = await runAuthenticated((accessToken) =>
+            listInvitations(accessToken, { signal: controller.signal }),
+          );
+          if (!active) {
+            return;
+          }
+          setInvitations(Array.isArray(result) ? result : []);
+        } catch (caught) {
+          if (!active || controller.signal.aborted) {
+            return;
+          }
+          if (isHandledSessionError(caught)) {
+            return;
+          }
+          setError(getInvitationLoadErrorMessage(caught, 'list'));
+        } finally {
+          if (active) {
+            setLoading(false);
+          }
         }
       }
-    }
 
-    void load();
+      void load();
 
-    return () => {
-      active = false;
-      controller.abort();
-    };
-  }, [reloadKey, runAuthenticated]);
+      return () => {
+        active = false;
+        controller.abort();
+      };
+    }, [reloadKey, runAuthenticated]),
+  );
 
   const list = invitations ?? [];
+  const initialLoading = loading && invitations === null;
   const pending = list.filter(
     (invitation) =>
       normalizeInvitationStatus(invitation.status) === 'CONSENT_PENDING',
@@ -161,7 +164,7 @@ export default function InvitationsScreen() {
 
       {error ? <MessageBanner message={errorMessage} tone="error" /> : null}
 
-      {loading ? (
+      {initialLoading ? (
         <View
           accessibilityLabel="Carregando convites"
           accessibilityRole="progressbar"
@@ -172,14 +175,20 @@ export default function InvitationsScreen() {
         </View>
       ) : null}
 
-      {!loading && invitations !== null && list.length === 0 ? (
+      {loading && invitations !== null ? (
+        <Text accessibilityLiveRegion="polite" style={styles.loadingText}>
+          Atualizando convites…
+        </Text>
+      ) : null}
+
+      {!initialLoading && invitations !== null && list.length === 0 ? (
         <MessageBanner
           message="Você não tem convites disponíveis no momento. Quando a equipe responsável enviar um convite, ele aparecerá aqui."
           tone="info"
         />
       ) : null}
 
-      {!loading && list.length > 0 ? (
+      {!initialLoading && list.length > 0 ? (
         <>
           <View style={styles.section}>
             <Text accessibilityRole="header" style={styles.sectionTitle}>
