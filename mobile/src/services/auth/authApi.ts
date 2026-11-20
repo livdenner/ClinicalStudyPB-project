@@ -1,4 +1,5 @@
 import { apiRequest } from '../api/apiClient';
+import { bearerHeader } from '../api/authorization';
 import type {
   ActivationRequest,
   LoginRequest,
@@ -7,14 +8,6 @@ import type {
 } from './authTypes';
 
 // A URL base configurada já termina em `/api`; os caminhos são relativos a ela.
-
-function bearerHeader(accessToken: string): Record<string, string> {
-  const token = accessToken.trim();
-  if (token.length === 0) {
-    throw new Error('Token de acesso ausente.');
-  }
-  return { Authorization: `Bearer ${token}` };
-}
 
 /**
  * Autentica uma conta ativa com e-mail e senha.
