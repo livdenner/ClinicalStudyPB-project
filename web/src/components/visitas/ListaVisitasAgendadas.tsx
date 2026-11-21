@@ -92,6 +92,14 @@ export function ListaVisitasAgendadas({ visitas, exibirParticipante = false, onD
                                                 "Situação indisponível"}
                                         </Chip.Label>
                                     </Chip>
+                                    {visita.outcomeNote && (
+                                        <p className="mt-2 max-w-xs whitespace-pre-wrap break-words text-xs text-[var(--color-muted)]">
+                                            {visita.status === "CANCELLED"
+                                                ? "Justificativa"
+                                                : "Observação"}
+                                            : {visita.outcomeNote}
+                                        </p>
+                                    )}
                                 </Table.Cell>
                                 {onDesfecho && (
                                     <Table.Cell className="border-b border-[var(--color-border)] px-5 py-4">
