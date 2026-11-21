@@ -16,15 +16,23 @@ describe("RF12 — lista de agendamentos (T18.5)", () => {
         expect(screen.queryByRole("grid")).not.toBeInTheDocument();
     });
 
-    it.each<[StatusVisitaAgendada, string]>([
-        ["SCHEDULED", "Agendada"],
-        ["DONE", "Realizada"],
-        ["ABSENT", "Ausente"],
-        ["CANCELLED", "Cancelada"],
-    ])("RF12-LS02: situação %s da API é exibida como %s", (status, rotulo) => {
-        render(<ListaVisitasAgendadas visitas={[{ ...visitaAgendada, status }]} />);
+    it.each<[StatusVisitaAgendada, string, string | undefined]>([
+        ["SCHEDULED", "Agendada", undefined],
+        ["DONE", "Realizada", "Observação fictícia da visita realizada."],
+        ["ABSENT", "Ausente", "Observação fictícia da ausência."],
+        ["CANCELLED", "Cancelada", "Participante solicitou remarcar a visita."],
+    ])("RF12-LS02: situação %s da API é exibida como %s", (status, rotulo, outcomeNote) => {
+        render(<ListaVisitasAgendadas visitas={[{ ...visitaAgendada, status, outcomeNote }]} />);
         const tabela = screen.getByRole("grid", { name: "Visitas agendadas do participante" });
         expect(within(tabela).getByText(rotulo)).toBeInTheDocument();
+        if (outcomeNote) {
+            const prefixo = status === "CANCELLED" ? "Justificativa" : "Observação";
+            expect(within(tabela).getByText(`${prefixo}: ${outcomeNote}`)).toBeInTheDocument();
+        } else {
+            expect(
+                within(tabela).queryByText(/^(Justificativa|Observação):/)
+            ).not.toBeInTheDocument();
+        }
     });
 
     it("RF12-LS03: instante UTC é apresentado no horário de Fortaleza", () => {
