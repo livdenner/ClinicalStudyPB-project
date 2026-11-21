@@ -5,10 +5,12 @@ import clinicalstudypb.participants.domain.Participant;
 import clinicalstudypb.participants.domain.ParticipantStatus;
 import clinicalstudypb.studies.domain.Study;
 import clinicalstudypb.studies.domain.StudyStatus;
+import clinicalstudypb.visits.api.PlannedVisitResponse;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * Estudo em que a conta autenticada participa, como o app exibe (RF17).
@@ -24,6 +26,7 @@ import java.time.LocalDate;
  * @param participationStatus situação da participação (ACTIVE ou WITHDRAWN)
  * @param includedAt instante da inclusão
  * @param withdrawnAt instante da retirada; omitido quando a participação está ativa
+ * @param plannedVisits visitas previstas na ordem do protocolo com suas atividades
  * @author Allan Guilherme
  * @since 2026-11-17
  * @version 0.0.1
@@ -31,7 +34,7 @@ import java.time.LocalDate;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(name = "ParticipantStudy", requiredProperties = {
     "participantId", "studyId", "studyTitle", "studyObjective", "studyStatus", "startDate", "endDate",
-    "responsibleName", "participationStatus", "includedAt"
+    "responsibleName", "participationStatus", "includedAt", "plannedVisits"
 })
 public record ParticipantStudyResponse(
         Long participantId,
@@ -44,12 +47,20 @@ public record ParticipantStudyResponse(
         String responsibleName,
         ParticipantStatus participationStatus,
         Instant includedAt,
-        Instant withdrawnAt) {
+        Instant withdrawnAt,
+        List<PlannedVisitResponse> plannedVisits) {
+
+    /**
+     * Garante array não nulo de visitas previstas no contrato da API.
+     */
+    public ParticipantStudyResponse {
+        plannedVisits = plannedVisits == null ? List.of() : List.copyOf(plannedVisits);
+    }
 
     /**
      * Converte a participação no payload do contrato, sem motivo nem autoria da retirada.
      *
-     * @param view participação com o estudo e o responsável
+     * @param view participação com o estudo, o responsável e o protocolo previsto
      * @return resposta da rota GET /api/me/studies
      */
     public static ParticipantStudyResponse from(ParticipantStudyView view) {
@@ -66,6 +77,7 @@ public record ParticipantStudyResponse(
                 view.responsibleName(),
                 participant.getStatus(),
                 participant.getIncludedAt(),
-                participant.getWithdrawnAt());
+                participant.getWithdrawnAt(),
+                view.plannedVisits());
     }
 }

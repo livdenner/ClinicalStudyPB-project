@@ -15,6 +15,7 @@ import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { MessageBanner } from '../../components/MessageBanner';
 import { ScreenContainer } from '../../components/ScreenContainer';
 import { InvitationStatusBadge } from '../../components/invitations/InvitationStatusBadge';
+import { PlannedVisitCard } from '../../components/protocol/PlannedVisitCard';
 import {
   decideInvitation,
   getInvitation,
@@ -35,7 +36,6 @@ import {
 } from '../../services/invitations/invitationPresentation';
 import type {
   InvitationDecision,
-  PlannedVisit,
   StudyInvitation,
 } from '../../services/invitations/invitationTypes';
 import { colors, radii, spacing } from '../../theme/colors';
@@ -76,32 +76,6 @@ function decisionDialogMessage(
   return decision === 'DECLINED'
     ? `Você vai recusar o convite do estudo "${studyTitle}". A recusa é uma decisão válida e não poderá ser alterada pelo aplicativo.`
     : `Você vai aceitar o convite do estudo "${studyTitle}". A decisão é única e não poderá ser alterada pelo aplicativo.`;
-}
-
-function VisitCard({ visit }: { visit: PlannedVisit }) {
-  const plannedDate = formatCivilDate(visit.plannedDate);
-  const activities = Array.isArray(visit.activities) ? visit.activities : [];
-
-  return (
-    <View style={styles.visitCard}>
-      <View style={styles.visitHeader}>
-        <Text style={styles.visitName}>{visit.name}</Text>
-        <Text style={styles.visitDate}>
-          {plannedDate ?? 'Data não informada'}
-        </Text>
-      </View>
-      {activities.length === 0 ? (
-        <Text style={styles.muted}>Sem atividades previstas.</Text>
-      ) : (
-        activities.map((activity) => (
-          <Text key={activity.id} style={styles.activity}>
-            • {activity.name}
-            {activity.description ? ` — ${activity.description}` : ''}
-          </Text>
-        ))
-      )}
-    </View>
-  );
 }
 
 /**
@@ -385,7 +359,7 @@ export default function InvitationDetailScreen() {
               </Text>
             ) : (
               visits.map((visit) => (
-                <VisitCard key={visit.id} visit={visit} />
+                <PlannedVisitCard key={visit.id} visit={visit} />
               ))
             )}
           </View>
@@ -525,32 +499,6 @@ const styles = StyleSheet.create({
     color: colors.text,
     fontSize: 17,
     fontWeight: '700',
-  },
-  visitCard: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    gap: spacing.xs + 2,
-    padding: spacing.md,
-  },
-  visitHeader: {
-    gap: 2,
-  },
-  visitName: {
-    color: colors.text,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  visitDate: {
-    color: colors.brandDark,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  activity: {
-    color: colors.textMuted,
-    fontSize: 13,
-    lineHeight: 19,
   },
   muted: {
     color: colors.textMuted,

@@ -47,8 +47,8 @@ public class ParticipantSelfController {
      */
     @GetMapping("/studies")
     @Operation(summary = "Lista os estudos do participante autenticado (RF17, T23.1)",
-            description = "Somente PARTICIPANT. Participações ativas ou retiradas da própria conta; "
-                    + "retorna [] sem inclusão.",
+            description = "Somente PARTICIPANT. Participações ativas ou retiradas da própria conta "
+                    + "com visitas previstas do protocolo; retorna [] sem inclusão.",
             responses = {
                 @ApiResponse(responseCode = "200", description = "Estudos do participante",
                         content = @Content(array = @ArraySchema(

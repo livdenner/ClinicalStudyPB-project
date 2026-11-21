@@ -28,6 +28,8 @@ import clinicalstudypb.studies.domain.Study;
 import clinicalstudypb.users.application.UserService;
 import clinicalstudypb.users.domain.User;
 import clinicalstudypb.users.domain.UserRole;
+import clinicalstudypb.visits.api.PlannedActivityResponse;
+import clinicalstudypb.visits.api.PlannedVisitResponse;
 import clinicalstudypb.visits.application.PlannedVisitLookup;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -82,21 +84,58 @@ class ParticipantSelfServiceTest {
         Participant inA = participant(1L, 10L);
         Participant inB = participant(2L, 20L);
         inB.withdraw("Mudou de cidade", INCLUDED.plusSeconds(60), 9L, 0);
+        List<PlannedVisitResponse> studyAVisits = List.of(
+                plannedVisit(100L, 10L, "Inicial", 1, List.of(
+                        new PlannedActivityResponse(501L, "Triagem", "Dados iniciais", 1))),
+                plannedVisit(101L, 10L, "Retorno", 2, List.of()));
         when(participantQueryService.listByAccount(ACCOUNT)).thenReturn(List.of(inB, inA));
         when(studyService.getStudy(10L)).thenReturn(study(10L, "Estudo A", 7L));
         when(studyService.getStudy(20L)).thenReturn(study(20L, "Estudo B", 7L));
         when(userService.getUser(7L)).thenReturn(new User("Paula", "paula@test.local", "hash", UserRole.RESEARCHER));
+        when(plannedVisitLookup.findByStudy(10L)).thenReturn(studyAVisits);
+        when(plannedVisitLookup.findByStudy(20L)).thenReturn(List.of());
 
         List<ParticipantStudyView> studies = service.listStudies();
 
         assertEquals(List.of(2L, 1L), studies.stream().map(view -> view.participant().getId()).toList());
         verify(userService, times(1)).getUser(7L);
+        verify(plannedVisitLookup, times(1)).findByStudy(10L);
+        verify(plannedVisitLookup, times(1)).findByStudy(20L);
         ParticipantStudyResponse withdrawn = ParticipantStudyResponse.from(studies.get(0));
         assertEquals(ParticipantStatus.WITHDRAWN, withdrawn.participationStatus());
         assertEquals(INCLUDED.plusSeconds(60), withdrawn.withdrawnAt());
         assertEquals("Paula", withdrawn.responsibleName());
         assertEquals("Estudo B", withdrawn.studyTitle());
-        assertNull(ParticipantStudyResponse.from(studies.get(1)).withdrawnAt());
+        assertTrue(withdrawn.plannedVisits().isEmpty());
+        ParticipantStudyResponse active = ParticipantStudyResponse.from(studies.get(1));
+        assertNull(active.withdrawnAt());
+        assertEquals(studyAVisits, active.plannedVisits());
+    }
+
+    @Test
+    void studiesCachePlannedVisitsPerStudyAndNormalizeNullToEmptyList() {
+        Participant first = participant(1L, 10L);
+        Participant second = participant(2L, 10L);
+        List<PlannedVisitResponse> visits = List.of(
+                plannedVisit(100L, 10L, "Inicial", 1, List.of()),
+                plannedVisit(101L, 10L, "Final", 2, List.of()));
+        Study study = study(10L, "Estudo A", 7L);
+        when(participantQueryService.listByAccount(ACCOUNT)).thenReturn(List.of(second, first));
+        when(studyService.getStudy(10L)).thenReturn(study);
+        when(userService.getUser(7L)).thenReturn(new User("Paula", "paula@test.local", "hash", UserRole.RESEARCHER));
+        when(plannedVisitLookup.findByStudy(10L)).thenReturn(visits);
+
+        List<ParticipantStudyView> result = service.listStudies();
+
+        assertEquals(2, result.size());
+        assertEquals(visits, result.get(0).plannedVisits());
+        assertEquals(visits, result.get(1).plannedVisits());
+        verify(studyService, times(1)).getStudy(10L);
+        verify(plannedVisitLookup, times(1)).findByStudy(10L);
+
+        ParticipantStudyResponse normalized = ParticipantStudyResponse.from(
+                new ParticipantStudyView(first, study, "Paula", null));
+        assertTrue(normalized.plannedVisits().isEmpty());
     }
 
     @Test
@@ -190,5 +229,10 @@ class ParticipantSelfServiceTest {
             visit.registerOutcome(outcome, 9L, Instant.parse("2027-01-30T12:00:00Z"), "Nota " + outcome.name());
         }
         return visit;
+    }
+
+    private static PlannedVisitResponse plannedVisit(Long id, Long studyId, String name, int position,
+                                                     List<PlannedActivityResponse> activities) {
+        return new PlannedVisitResponse(id, studyId, name, LocalDate.of(2027, 6, 1), position, activities);
     }
 }

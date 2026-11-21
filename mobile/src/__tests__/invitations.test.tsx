@@ -15,7 +15,8 @@ import HomeScreen from '../app/index';
 import InvitationDetailScreen from '../app/invitations/[candidateId]';
 import InvitationsScreen from '../app/invitations/index';
 import LoginScreen from '../app/login';
-import StudiesScreen from '../app/studies';
+import StudiesScreen from '../app/studies/index';
+import StudyDetailScreen from '../app/studies/[participantId]';
 import { ApiError } from '../services/api/apiClient';
 import * as invitationApi from '../services/invitations/invitationApi';
 import {
@@ -131,7 +132,8 @@ async function renderApp(initialUrl: string) {
       login: LoginScreen,
       activation: ActivationScreen,
       index: HomeScreen,
-      studies: StudiesScreen,
+      'studies/index': StudiesScreen,
+      'studies/[participantId]': StudyDetailScreen,
       'change-password': ChangePasswordScreen,
       'invitations/index': InvitationsScreen,
       'invitations/[candidateId]': InvitationDetailScreen,
