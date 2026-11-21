@@ -21,6 +21,8 @@ export const STUDY_MESSAGES = {
     'Sua participação neste estudo foi retirada. Os dados do estudo e do protocolo permanecem disponíveis apenas para consulta.',
   previousData:
     'Os estudos exibidos são de uma consulta anterior e podem estar desatualizados.',
+  previousDetailData:
+    'Os dados exibidos são de uma consulta anterior e podem estar desatualizados.',
   empty:
     'Você ainda não foi incluído em um estudo. A inclusão é realizada pela coordenação após as etapas necessárias.',
 } as const;

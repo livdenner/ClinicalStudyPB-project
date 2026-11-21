@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import {
   act,
   fireEvent,
@@ -18,6 +19,7 @@ import LoginScreen from '../app/login';
 import StudiesScreen from '../app/studies/index';
 import StudyDetailScreen from '../app/studies/[participantId]';
 import { ApiError } from '../services/api/apiClient';
+import * as authApi from '../services/auth/authApi';
 import { AUTH_MESSAGES } from '../services/auth/authErrors';
 import * as invitationApi from '../services/invitations/invitationApi';
 import * as studyApi from '../services/studies/studyApi';
@@ -30,6 +32,13 @@ jest.mock('expo-secure-store', () => ({
   getItemAsync: jest.fn(),
   setItemAsync: jest.fn(),
   deleteItemAsync: jest.fn(),
+}));
+
+jest.mock('../services/auth/authApi', () => ({
+  activateAccountWithCode: jest.fn(),
+  loginWithPassword: jest.fn(),
+  changeAccountPassword: jest.fn(),
+  logoutSession: jest.fn(),
 }));
 
 jest.mock('../services/studies/studyApi', () => ({
@@ -46,6 +55,7 @@ jest.mock('../services/invitations/invitationApi', () => ({
 }));
 
 const secureStore = SecureStore as jest.Mocked<typeof SecureStore>;
+const auth = authApi as jest.Mocked<typeof authApi>;
 const api = studyApi as jest.Mocked<typeof studyApi>;
 const invitations = invitationApi as jest.Mocked<typeof invitationApi>;
 
@@ -97,6 +107,10 @@ const activeStudy: ParticipantStudy = {
 let storedValue: string | null = null;
 
 beforeEach(() => {
+  auth.activateAccountWithCode.mockReset();
+  auth.loginWithPassword.mockReset();
+  auth.changeAccountPassword.mockReset();
+  auth.logoutSession.mockReset();
   api.listMyStudies.mockReset();
   invitations.listInvitations.mockReset();
   invitations.getInvitation.mockReset();
@@ -108,6 +122,7 @@ beforeEach(() => {
 
   storedValue = null;
 
+  auth.logoutSession.mockResolvedValue(undefined);
   secureStore.isAvailableAsync.mockResolvedValue(true);
   secureStore.getItemAsync.mockImplementation(async () => storedValue);
   secureStore.setItemAsync.mockImplementation(async (_key, value) => {
@@ -118,7 +133,11 @@ beforeEach(() => {
   });
 });
 
-function storeSession(): void {
+function storeSession(
+  options: { mustChangePassword?: boolean } = {},
+): void {
+  const { mustChangePassword = false } = options;
+
   storedValue = JSON.stringify({
     version: 1,
     accessToken: 'header.payload.signature',
@@ -129,7 +148,7 @@ function storeSession(): void {
       email: 'raffael@exemplo.test',
       role: 'PARTICIPANT',
       active: true,
-      mustChangePassword: false,
+      mustChangePassword,
     },
   });
 }
@@ -547,5 +566,217 @@ describe('estudos do participante', () => {
     expect(await screen.findByText('Login')).toBeTruthy();
     await waitFor(() => expect(screen).toHavePathname('/login'));
     expect(api.listMyStudies).not.toHaveBeenCalled();
+  });
+
+  it('não conserva estudos da conta anterior após logout e entrada em outra conta', async () => {
+    storeSession();
+    api.listMyStudies
+      .mockResolvedValueOnce([withdrawnStudy, activeStudy])
+      .mockResolvedValueOnce([]);
+    auth.loginWithPassword.mockResolvedValue({
+      accessToken: 'token.conta.b',
+      tokenType: 'Bearer',
+      expiresIn: 3600,
+      user: {
+        id: 8,
+        name: 'Bruno Lima',
+        email: 'bruno@exemplo.test',
+        role: 'PARTICIPANT',
+        active: true,
+        mustChangePassword: false,
+      },
+    });
+
+    await renderApp('/');
+    await screen.findByText(/Olá, Raffael!/);
+
+    await fireEvent.press(screen.getByText('Ver estudos'));
+    expect(
+      await screen.findByText('Acompanhamento de hipertensão'),
+    ).toBeTruthy();
+
+    await fireEvent.press(screen.getByLabelText('Voltar'));
+    await waitFor(() => expect(screen).toHavePathname('/'));
+
+    await fireEvent.press(screen.getByText('Sair'));
+    await fireEvent.press(screen.getByText('Sair da conta'));
+    expect(await screen.findByText('Login')).toBeTruthy();
+
+    await fireEvent.changeText(
+      screen.getByLabelText('E-mail institucional'),
+      'bruno@exemplo.test',
+    );
+    await fireEvent.changeText(screen.getByLabelText('Senha'), 'Senha12345');
+    await fireEvent.press(screen.getByText('Entrar'));
+
+    expect(await screen.findByText(/Olá, Bruno!/)).toBeTruthy();
+
+    await fireEvent.press(screen.getByText('Ver estudos'));
+    expect(await screen.findByText(STUDY_MESSAGES.empty)).toBeTruthy();
+    expect(screen.queryByText('Acompanhamento de hipertensão')).toBeNull();
+    expect(screen.queryByText('Estudo de hábitos de sono')).toBeNull();
+    expect(api.listMyStudies).toHaveBeenLastCalledWith(
+      'token.conta.b',
+      expect.anything(),
+    );
+  });
+
+  it('restringe a sessão ao receber 403 PASSWORD_CHANGE_REQUIRED na lista', async () => {
+    storeSession();
+    api.listMyStudies.mockRejectedValue(
+      new ApiError('troca pendente', 403, 'PASSWORD_CHANGE_REQUIRED'),
+    );
+
+    await renderApp('/');
+    await screen.findByText(/Olá, Raffael!/);
+
+    await fireEvent.press(screen.getByText('Ver estudos'));
+
+    expect(await screen.findByText('Defina sua nova senha')).toBeTruthy();
+    await waitFor(() =>
+      expect(screen).toHavePathname('/change-password'),
+    );
+    expect(screen.queryByText(STUDY_MESSAGES.forbidden)).toBeNull();
+    expect(screen.queryByText(STUDY_MESSAGES.listFailed)).toBeNull();
+  });
+
+  it('restringe a sessão ao receber 403 PASSWORD_CHANGE_REQUIRED no detalhe', async () => {
+    storeSession();
+    api.listMyStudies
+      .mockResolvedValueOnce([activeStudy])
+      .mockRejectedValueOnce(
+        new ApiError('troca pendente', 403, 'PASSWORD_CHANGE_REQUIRED'),
+      );
+
+    await renderApp('/');
+    await screen.findByText(/Olá, Raffael!/);
+
+    await fireEvent.press(screen.getByText('Ver estudos'));
+    await screen.findByText('Acompanhamento de hipertensão');
+
+    await fireEvent.press(
+      screen.getByLabelText(
+        'Acompanhamento de hipertensão. Em execução. Participação ativa',
+      ),
+    );
+
+    expect(await screen.findByText('Defina sua nova senha')).toBeTruthy();
+    await waitFor(() =>
+      expect(screen).toHavePathname('/change-password'),
+    );
+    expect(screen.queryByText(STUDY_MESSAGES.forbidden)).toBeNull();
+    expect(screen.queryByText(STUDY_MESSAGES.detailFailed)).toBeNull();
+  });
+
+  it('bloqueia acesso à lista e ao detalhe quando mustChangePassword está ativo', async () => {
+    storeSession({ mustChangePassword: true });
+
+    await renderApp('/');
+    await screen.findByText('Defina sua nova senha');
+
+    await act(async () => {
+      router.push('/studies');
+    });
+    await waitFor(() =>
+      expect(screen).toHavePathname('/change-password'),
+    );
+
+    await act(async () => {
+      router.push('/studies/11');
+    });
+    await waitFor(() =>
+      expect(screen).toHavePathname('/change-password'),
+    );
+    expect(api.listMyStudies).not.toHaveBeenCalled();
+  });
+
+  it('leva ao login quando a sessão expira com 401 no detalhe sem erro adicional', async () => {
+    storeSession();
+    api.listMyStudies
+      .mockResolvedValueOnce([activeStudy])
+      .mockRejectedValueOnce(new ApiError('não autorizado', 401));
+
+    await renderApp('/');
+    await screen.findByText(/Olá, Raffael!/);
+
+    await fireEvent.press(screen.getByText('Ver estudos'));
+    await screen.findByText('Acompanhamento de hipertensão');
+
+    await fireEvent.press(
+      screen.getByLabelText(
+        'Acompanhamento de hipertensão. Em execução. Participação ativa',
+      ),
+    );
+
+    expect(await screen.findByText(AUTH_MESSAGES.sessionExpired)).toBeTruthy();
+    await waitFor(() => expect(screen).toHavePathname('/login'));
+    await waitFor(() => expect(storedValue).toBeNull());
+    expect(screen.queryByText(STUDY_MESSAGES.detailFailed)).toBeNull();
+  });
+
+  it('reconsulta o detalhe ao voltar ao foco e indica dados anteriores em caso de erro', async () => {
+    storeSession();
+    api.listMyStudies
+      .mockResolvedValueOnce([activeStudy])
+      .mockRejectedValueOnce(new ApiError('indisponível', 503))
+      .mockResolvedValueOnce([activeStudy]);
+
+    await renderAuthenticatedAt('/studies/11');
+    expect(
+      await screen.findByText('Acompanhamento de hipertensão'),
+    ).toBeTruthy();
+
+    await testRouter.push('/change-password');
+    await waitFor(() =>
+      expect(screen).toHavePathname('/change-password'),
+    );
+
+    await testRouter.back();
+    await waitFor(() => expect(screen).toHavePathname('/studies/11'));
+
+    expect(
+      await screen.findByText(
+        `${STUDY_MESSAGES.serviceUnavailable} ${STUDY_MESSAGES.previousDetailData}`,
+      ),
+    ).toBeTruthy();
+    expect(
+      screen.getByText('Acompanhamento de hipertensão'),
+    ).toBeTruthy();
+
+    await fireEvent.press(screen.getByText('Tentar novamente'));
+
+    await waitFor(() =>
+      expect(screen.queryByText(/consulta anterior/)).toBeNull(),
+    );
+    expect(screen.getByText('Visita inicial')).toBeTruthy();
+    expect(api.listMyStudies).toHaveBeenCalledTimes(3);
+  });
+
+  it('descarta resposta tardia quando a sessão é encerrada durante a consulta', async () => {
+    storeSession();
+    let resolveList: ((value: ParticipantStudy[]) => void) | undefined;
+    api.listMyStudies.mockImplementation(
+      () =>
+        new Promise<ParticipantStudy[]>((resolve) => {
+          resolveList = resolve;
+        }),
+    );
+
+    await renderAuthenticatedAt('/studies');
+    expect(await screen.findByText('Carregando estudos…')).toBeTruthy();
+
+    await fireEvent.press(screen.getByLabelText('Voltar'));
+    await waitFor(() => expect(screen).toHavePathname('/'));
+
+    await fireEvent.press(screen.getByText('Sair'));
+    await fireEvent.press(screen.getByText('Sair da conta'));
+    expect(await screen.findByText('Login')).toBeTruthy();
+
+    await act(async () => {
+      resolveList?.([activeStudy]);
+    });
+
+    await waitFor(() => expect(screen).toHavePathname('/login'));
+    expect(screen.queryByText('Acompanhamento de hipertensão')).toBeNull();
   });
 });

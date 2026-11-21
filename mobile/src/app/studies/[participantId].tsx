@@ -121,7 +121,7 @@ export default function StudyDetailScreen() {
     study !== null &&
     normalizeParticipationStatus(study.participationStatus) === 'WITHDRAWN';
   const errorMessage =
-    study !== null ? `${error} ${STUDY_MESSAGES.previousData}` : error;
+    study !== null ? `${error} ${STUDY_MESSAGES.previousDetailData}` : error;
 
   return (
     <ScreenContainer>
