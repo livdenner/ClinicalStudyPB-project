@@ -57,3 +57,7 @@ export function filtrarEstudos(
             (!estado || estudo.status === estado)
     );
 }
+
+export function calcularVagasDisponiveis(limite: number, ocupadas: number): number {
+    return Math.max(0, limite - ocupadas);
+}

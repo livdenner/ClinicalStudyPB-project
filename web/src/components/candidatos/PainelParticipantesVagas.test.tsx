@@ -56,7 +56,7 @@ describe("Participantes e vagas (RF11)", () => {
             ],
         });
 
-        const lista = screen.getByRole("grid", { name: "Lista de participantes incluídos" });
+        const lista = screen.getByRole("list", { name: "Lista de participantes incluídos" });
         expect(within(lista).getByText("Tereza Azevedo Cunha")).toBeInTheDocument();
         expect(within(lista).getByText("Ubirajara Santos Melo")).toBeInTheDocument();
         expect(within(lista).getByText("Participante #1")).toBeInTheDocument();
