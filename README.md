@@ -244,6 +244,18 @@ O serviço `obterConsentimentoSimulado` e o tipo `ConsentimentoSimuladoApi`, sem
 
 Os testes existentes afetados pelo novo fluxo foram adaptados; os testes do formulário descontinuado foram removidos junto com o componente. Os novos cenários específicos pertencem à T17.8, incluindo validação do motivo, controle de acesso, bloqueios por situação, HTTP 409, atualização das listas e manutenção do filtro de cancelados. Os testes de componente devem simular HTTP, sem chamar a API real. A validação ponta a ponta pelo aplicativo depende da T17.9.
 
+### Agendamento de visitas do participante (T18.4)
+
+Em `/recrutamento`, o painel **Participantes e vagas do estudo** oferece **Ver visitas** aos perfis autorizados para consulta e **Agendar** ao coordenador, somente para participantes `ACTIVE` em estudo `RECRUITMENT` ou `EXECUTION`. Participantes `WITHDRAWN` são identificados como retirados, mantêm o histórico consultável e continuam ocupando vaga; não recebem a ação de agendamento.
+
+O formulário contém apenas visita prevista e data/hora, com o participante e o estudo identificados. As opções vêm de `GET /api/studies/{studyId}/planned-visits`. A data informada é interpretada em `America/Fortaleza` e enviada como instante ISO 8601 em `POST /api/studies/{studyId}/participants/{participantId}/visits`, independentemente do fuso do computador. O período do estudo é exibido como orientação; as regras de data futura, período e duplicidade são validadas pela API.
+
+A agenda usa `GET /api/studies/{studyId}/participants/{participantId}/visits`, com horários em Fortaleza e filtro por situação: Agendada (`SCHEDULED`), Realizada (`DONE`), Ausente (`ABSENT`) ou Cancelada (`CANCELLED`). Após HTTP 201, a resposta confirmada é adicionada à lista em ordem cronológica, sem recarregar a página; o filtro volta para todas as situações para apresentar o novo registro.
+
+Erros da API, inclusive HTTP 400 e 409, são exibidos no formulário com o texto recebido e sem limpar a visita ou a data/hora preenchida. Agendamentos `SCHEDULED` ou `DONE` bloqueiam outro para a mesma visita prevista e participante; `ABSENT` e `CANCELLED` permitem novo agendamento. O registro dos desfechos segue o fluxo próprio de RF13.
+
+Os testes Web da T18.5 verificam formulário, mensagens literais, atualização da lista, filtros e restrições de agendamento, com HTTP simulado e dados fictícios. A [matriz de rastreabilidade RF12](docs/tests/rastreabilidade-agendamento-web.md) relaciona os casos aos arquivos. O comando `npm run test:coverage` exige pelo menos 81% de linhas individualmente nos três novos componentes, e seus resultados integram o relatório do PBI-25.
+
 ### Sessão por aba (T24.4)
 
 Agora dá para usar perfis diferentes em abas do mesmo navegador. A sessão fica no `sessionStorage`: recarregar mantém o login, mas sair ou deixar a sessão expirar afeta apenas aquela aba. Depois da expiração, é preciso entrar novamente.

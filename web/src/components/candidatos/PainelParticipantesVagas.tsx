@@ -1,6 +1,6 @@
 import { calcularVagasDisponiveis } from "../../utils/estudos";
 import { CardsParticipantes } from "../estudos/CardsParticipantes";
-import { Users } from "lucide-react";
+import { CalendarDays, CalendarPlus, Users } from "lucide-react";
 import type { ParticipanteApi } from "../../types/participante";
 import { Button } from "../ui/Button";
 import { ErrorMessage } from "../ui/ErrorMessage";
@@ -12,8 +12,11 @@ type Props = {
     carregando: boolean;
     erro: string;
     onTentarNovamente: () => void;
+    onVerVisitas?: (participante: ParticipanteApi) => void;
+    onAgendarVisita?: (participante: ParticipanteApi) => void;
 };
 
+/** Preserva os cards e o painel de vagas com acesso à agenda autorizada. @author Lívia */
 export function PainelParticipantesVagas({
     estudoTitulo,
     limiteVagas,
@@ -21,6 +24,8 @@ export function PainelParticipantesVagas({
     carregando,
     erro,
     onTentarNovamente,
+    onVerVisitas,
+    onAgendarVisita,
 }: Props) {
     const vagasOcupadas = participantes.length;
     const vagasDisponiveis = calcularVagasDisponiveis(limiteVagas, vagasOcupadas);
@@ -128,7 +133,43 @@ export function PainelParticipantesVagas({
                     </span>
                 </div>
             ) : (
-                <CardsParticipantes participantes={participantes} contexto="inclusao" />
+                <CardsParticipantes
+                    participantes={participantes}
+                    contexto="inclusao"
+                    exibirSituacao
+                    acoes={(participante) => {
+                        const permiteAgendar =
+                            Boolean(onAgendarVisita) && participante.status === "ACTIVE";
+                        if (!onVerVisitas && !permiteAgendar) return null;
+                        return (
+                            <div className="acoes-agenda-participante">
+                                {onVerVisitas && (
+                                    <Button
+                                        type="button"
+                                        variant="secondary"
+                                        className="btn btn-secondary inline-flex items-center gap-1.5 text-xs"
+                                        aria-label={`Ver visitas: ${participante.candidateName}`}
+                                        onClick={() => onVerVisitas(participante)}
+                                    >
+                                        <CalendarDays size={15} aria-hidden="true" />
+                                        Ver visitas
+                                    </Button>
+                                )}
+                                {permiteAgendar && onAgendarVisita && (
+                                    <Button
+                                        type="button"
+                                        className="btn button--create inline-flex items-center gap-1.5 text-xs"
+                                        aria-label={`Agendar visita: ${participante.candidateName}`}
+                                        onClick={() => onAgendarVisita(participante)}
+                                    >
+                                        <CalendarPlus size={15} aria-hidden="true" />
+                                        Agendar
+                                    </Button>
+                                )}
+                            </div>
+                        );
+                    }}
+                />
             )}
         </section>
     );

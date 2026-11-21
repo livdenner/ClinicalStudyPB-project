@@ -1,4 +1,5 @@
 import { Chip } from "@heroui/react";
+import type { ReactNode } from "react";
 import { CheckCircle2 } from "lucide-react";
 import type { ParticipanteApi } from "../../types/participante";
 import { CardPadrao, GradeCards } from "../ui/CardPadrao";
@@ -7,9 +8,17 @@ import { SELOS_PARTICIPANTE, formatarDataInclusao } from "../../utils/participan
 type Props = {
     participantes: ParticipanteApi[];
     contexto: "inclusao" | "situacao";
+    exibirSituacao?: boolean;
+    acoes?: (participante: ParticipanteApi) => ReactNode;
 };
 
-export function CardsParticipantes({ participantes, contexto }: Props) {
+/** Compartilha cards de participantes, com situação e ações opcionais da agenda. @author Lívia */
+export function CardsParticipantes({
+    participantes,
+    contexto,
+    exibirSituacao = false,
+    acoes,
+}: Props) {
     const incluido = contexto === "inclusao";
     return (
         <GradeCards
@@ -20,14 +29,15 @@ export function CardsParticipantes({ participantes, contexto }: Props) {
             }
         >
             {participantes.map((participante) => {
-                const selo = incluido
-                    ? SELOS_PARTICIPANTE.inclusao
-                    : (SELOS_PARTICIPANTE[participante.status] ?? SELOS_PARTICIPANTE.indisponivel);
+                const seloSituacao =
+                    SELOS_PARTICIPANTE[participante.status] ?? SELOS_PARTICIPANTE.indisponivel;
+                const selo = incluido ? SELOS_PARTICIPANTE.inclusao : seloSituacao;
 
                 return (
                     <li key={participante.id}>
                         <CardPadrao
                             titulo={participante.candidateName}
+                            acoes={acoes?.(participante)}
                             selo={
                                 <Chip size="sm" variant="soft" className={selo.classes}>
                                     <Chip.Label>
@@ -52,6 +62,20 @@ export function CardsParticipantes({ participantes, contexto }: Props) {
                                     <dt>Data de inclusão</dt>
                                     <dd>{formatarDataInclusao(participante.includedAt)}</dd>
                                 </div>
+                                {exibirSituacao && (
+                                    <div>
+                                        <dt>Situação</dt>
+                                        <dd>
+                                            <Chip
+                                                size="sm"
+                                                variant="soft"
+                                                className={seloSituacao.classes}
+                                            >
+                                                <Chip.Label>{seloSituacao.rotulo}</Chip.Label>
+                                            </Chip>
+                                        </dd>
+                                    </div>
+                                )}
                             </dl>
                         </CardPadrao>
                     </li>
