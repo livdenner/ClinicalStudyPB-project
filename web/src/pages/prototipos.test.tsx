@@ -91,6 +91,9 @@ describe("Visão geral e relatórios de demonstração; visitas integradas (T7.2
         expect(
             within(atualizada).queryByRole("button", { name: /^(Realizada|Ausente|Cancelar):/ })
         ).not.toBeInTheDocument();
+        expect(
+            await within(atualizada).findByRole("button", { name: /^Ver resultados:/ })
+        ).toBeInTheDocument();
         const chamadas = fetchMock.mock.calls.filter(([, init]) => init?.method === "POST");
         expect(chamadas).toHaveLength(1);
         expect(new Headers(chamadas[0][1]?.headers).get("If-Match")).toBe('"0"');
