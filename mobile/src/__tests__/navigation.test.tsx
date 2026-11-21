@@ -12,6 +12,8 @@ import * as SecureStore from 'expo-secure-store';
 import ActivationScreen from '../app/activation';
 import ChangePasswordScreen from '../app/change-password';
 import HomeScreen from '../app/index';
+import InvitationDetailScreen from '../app/invitations/[candidateId]';
+import InvitationsScreen from '../app/invitations/index';
 import LoginScreen from '../app/login';
 import RootLayout from '../app/_layout';
 import StudiesScreen from '../app/studies';
@@ -119,6 +121,8 @@ async function renderApp(initialUrl = '/') {
       index: HomeScreen,
       studies: StudiesScreen,
       'change-password': ChangePasswordScreen,
+      'invitations/index': InvitationsScreen,
+      'invitations/[candidateId]': InvitationDetailScreen,
     },
     { initialUrl },
   );
