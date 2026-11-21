@@ -5,10 +5,10 @@ import { SELOS_PARTICIPANTE, formatarDataInclusao } from "../../utils/participan
 
 type Props = {
     participantes: ParticipanteApi[];
-    renderizarAcoes?: (participante: ParticipanteApi) => ReactNode;
+    acoes?: (participante: ParticipanteApi) => ReactNode;
 };
 
-export function TabelaParticipantes({ participantes, renderizarAcoes }: Props) {
+export function TabelaParticipantes({ participantes, acoes }: Props) {
     return (
         <Table
             variant="secondary"
@@ -39,7 +39,7 @@ export function TabelaParticipantes({ participantes, renderizarAcoes }: Props) {
                         >
                             Situação
                         </Table.Column>
-                        {renderizarAcoes && (
+                        {acoes && (
                             <Table.Column
                                 id="acoes"
                                 className="rounded-none border-b border-[var(--color-border)] bg-[var(--color-neutral-soft)] px-5 py-3 font-semibold text-[var(--color-neutral)] after:hidden"
@@ -70,9 +70,9 @@ export function TabelaParticipantes({ participantes, renderizarAcoes }: Props) {
                                             <Chip.Label>{selo.rotulo}</Chip.Label>
                                         </Chip>
                                     </Table.Cell>
-                                    {renderizarAcoes && (
+                                    {acoes && (
                                         <Table.Cell className="border-[var(--color-border)] px-5 py-4 group-hover:bg-[var(--color-row-hover)]">
-                                            {renderizarAcoes(participante)}
+                                            {acoes(participante)}
                                         </Table.Cell>
                                     )}
                                 </Table.Row>

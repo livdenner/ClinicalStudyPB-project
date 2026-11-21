@@ -770,7 +770,7 @@ const candidatoIncluidoRetirada: CandidatoApi = {
     ...candidatoAceitou,
     status: "INCLUDED",
 };
-it("T22.3: registra retirada sem devolver vaga nem permitir reinclusão", async () => {
+it("T22.3: registra retirada, oculta Agendar e mantém histórico e vaga ocupada", async () => {
     const participante = {
         id: 501,
         studyId: 10,
@@ -795,6 +795,14 @@ it("T22.3: registra retirada sem devolver vaga nem permitir reinclusão", async 
         "POST /api/studies/10/participants/501/withdrawal": resposta(retirado),
     });
     renderPage();
+    expect(
+        await screen.findByRole("button", {
+            name: `Agendar visita: ${candidatoIncluidoRetirada.name}`,
+        })
+    ).toBeInTheDocument();
+    expect(
+        screen.getByRole("button", { name: `Ver visitas: ${candidatoIncluidoRetirada.name}` })
+    ).toBeInTheDocument();
     fireEvent.click(
         await screen.findByRole("button", {
             name: `Registrar retirada: ${candidatoIncluidoRetirada.name}`,
@@ -806,6 +814,10 @@ it("T22.3: registra retirada sem devolver vaga nem permitir reinclusão", async 
     fireEvent.click(screen.getByRole("button", { name: "Confirmar retirada" }));
     expect(await screen.findByText("Retirado")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^Registrar retirada:/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Agendar visita:/ })).not.toBeInTheDocument();
+    expect(
+        screen.getByRole("button", { name: `Ver visitas: ${candidatoIncluidoRetirada.name}` })
+    ).toBeInTheDocument();
     expect(
         screen.queryByRole("button", { name: /^Incluir participante:/ })
     ).not.toBeInTheDocument();
@@ -867,4 +879,7 @@ it("T22.3: mantém o participante ativo e mostra o erro da API no modal", async 
         })
     ).toBeInTheDocument();
     expect(screen.getByText("Ativo")).toBeInTheDocument();
+    expect(
+        screen.getByRole("button", { name: `Agendar visita: ${candidatoIncluidoRetirada.name}` })
+    ).toBeInTheDocument();
 });

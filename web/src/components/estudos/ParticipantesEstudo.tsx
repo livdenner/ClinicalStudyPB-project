@@ -58,7 +58,7 @@ export function ParticipantesEstudo({ estudo, token, perfil }: Props) {
         setMensagem("Retirada registrada com sucesso.");
     }
 
-    const renderizarAcoes = criarAcaoRetirada({
+    const acoes = criarAcaoRetirada({
         perfil,
         estadoEstudo: estudo.status,
         estudoTitulo: estudo.title,
@@ -118,13 +118,10 @@ export function ParticipantesEstudo({ estudo, token, perfil }: Props) {
                 <CardsParticipantes
                     participantes={participantes}
                     contexto="situacao"
-                    renderizarAcoes={renderizarAcoes}
+                    acoes={acoes}
                 />
             ) : (
-                <TabelaParticipantes
-                    participantes={participantes}
-                    renderizarAcoes={renderizarAcoes}
-                />
+                <TabelaParticipantes participantes={participantes} acoes={acoes} />
             )}
         </section>
     );

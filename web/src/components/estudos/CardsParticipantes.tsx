@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
 import { Chip } from "@heroui/react";
+import type { ReactNode } from "react";
+import { CheckCircle2 } from "lucide-react";
 import type { ParticipanteApi } from "../../types/participante";
 import { CardPadrao, GradeCards } from "../ui/CardPadrao";
 import { SELOS_PARTICIPANTE, formatarDataInclusao } from "../../utils/participantes";
@@ -7,10 +8,17 @@ import { SELOS_PARTICIPANTE, formatarDataInclusao } from "../../utils/participan
 type Props = {
     participantes: ParticipanteApi[];
     contexto: "inclusao" | "situacao";
-    renderizarAcoes?: (participante: ParticipanteApi) => ReactNode;
+    exibirSituacao?: boolean;
+    acoes?: (participante: ParticipanteApi) => ReactNode;
 };
 
-export function CardsParticipantes({ participantes, contexto, renderizarAcoes }: Props) {
+/** Compartilha cards de participantes, com situação e ações opcionais da agenda. @author Lívia */
+export function CardsParticipantes({
+    participantes,
+    contexto,
+    exibirSituacao = false,
+    acoes,
+}: Props) {
     const incluido = contexto === "inclusao";
     return (
         <GradeCards
@@ -21,17 +29,25 @@ export function CardsParticipantes({ participantes, contexto, renderizarAcoes }:
             }
         >
             {participantes.map((participante) => {
-                const selo =
+                const seloSituacao =
                     SELOS_PARTICIPANTE[participante.status] ?? SELOS_PARTICIPANTE.indisponivel;
+                const selo = incluido ? SELOS_PARTICIPANTE.inclusao : seloSituacao;
 
                 return (
                     <li key={participante.id}>
                         <CardPadrao
                             titulo={participante.candidateName}
-                            acoes={renderizarAcoes?.(participante)}
+                            acoes={acoes?.(participante)}
                             selo={
                                 <Chip size="sm" variant="soft" className={selo.classes}>
-                                    <Chip.Label>{selo.rotulo}</Chip.Label>
+                                    <Chip.Label>
+                                        <span className="inline-flex items-center gap-1">
+                                            {incluido && (
+                                                <CheckCircle2 size={13} aria-hidden="true" />
+                                            )}
+                                            {selo.rotulo}
+                                        </span>
+                                    </Chip.Label>
                                 </Chip>
                             }
                         >
@@ -46,6 +62,20 @@ export function CardsParticipantes({ participantes, contexto, renderizarAcoes }:
                                     <dt>Data de inclusão</dt>
                                     <dd>{formatarDataInclusao(participante.includedAt)}</dd>
                                 </div>
+                                {exibirSituacao && (
+                                    <div>
+                                        <dt>Situação</dt>
+                                        <dd>
+                                            <Chip
+                                                size="sm"
+                                                variant="soft"
+                                                className={seloSituacao.classes}
+                                            >
+                                                <Chip.Label>{seloSituacao.rotulo}</Chip.Label>
+                                            </Chip>
+                                        </dd>
+                                    </div>
+                                )}
                             </dl>
                         </CardPadrao>
                     </li>

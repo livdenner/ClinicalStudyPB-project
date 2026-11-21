@@ -42,6 +42,7 @@ const retirado = {
 
 for (const contexto of [
     { tela: "recrutamento", largura: 1366, caminho: "/recrutamento" },
+    { tela: "recrutamento", largura: 375, caminho: "/recrutamento" },
     { tela: "participantes do estudo", largura: 1366, caminho: "/estudos/10" },
     { tela: "participantes do estudo", largura: 375, caminho: "/estudos/10" },
 ]) {
@@ -102,6 +103,17 @@ for (const contexto of [
             await page.getByRole("tab", { name: "Participantes", exact: true }).click();
         const acao = page.getByRole("button", { name: "Registrar retirada: Ana Silva" });
         await expect(acao).toBeVisible();
+        if (contexto.caminho === "/recrutamento") {
+            await expect(
+                page.getByRole("button", { name: "Agendar visita: Ana Silva" })
+            ).toBeVisible();
+            await expect(
+                page.getByRole("button", { name: "Ver visitas: Ana Silva" })
+            ).toBeVisible();
+            await expect(
+                page.getByRole("button", { name: "Agendar visita: Bruno Costa" })
+            ).toHaveCount(0);
+        }
         await expect(
             page.getByRole("button", { name: "Registrar retirada: Bruno Costa" })
         ).toHaveCount(0);
@@ -135,7 +147,17 @@ for (const contexto of [
                     : "Participantes do estudo",
             exact: true,
         });
-        await expect(listaParticipantes.locator(".card-padrao__acoes")).toHaveCount(0);
+        if (contexto.caminho === "/recrutamento") {
+            await expect(page.getByRole("button", { name: /^Agendar visita:/ })).toHaveCount(0);
+            await expect(
+                page.getByRole("button", { name: "Ver visitas: Ana Silva" })
+            ).toBeVisible();
+            await expect(
+                page.getByRole("button", { name: "Ver visitas: Bruno Costa" })
+            ).toBeVisible();
+        } else {
+            await expect(listaParticipantes.locator(".card-padrao__acoes")).toHaveCount(0);
+        }
         expect(consultasParticipantes).toBe(consultasAntes);
         if (contexto.caminho === "/recrutamento") {
             await expect(

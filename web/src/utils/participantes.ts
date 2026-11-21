@@ -1,4 +1,8 @@
 export const SELOS_PARTICIPANTE = {
+    inclusao: {
+        rotulo: "Incluído",
+        classes: "bg-[var(--color-success-soft)] text-[var(--color-success)]",
+    },
     ACTIVE: { rotulo: "Ativo", classes: "bg-[var(--color-info-soft)] text-[var(--color-info)]" },
     WITHDRAWN: {
         rotulo: "Retirado",
