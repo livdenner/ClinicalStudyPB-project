@@ -80,3 +80,7 @@ Em 18/11/2026, o [README da Release 1](../release1/README.md) foi corrigido para
 | Processo e galeria | Registram o fechamento da release depois do corte da Sprint 2 e que as capturas são anteriores à tag. |
 
 Alteração apenas documental, integrada pela `development`: o conteúdo da tag `release1` não mudou.
+
+## Regressão web de UX e sessão (T24.5)
+
+A [matriz da T24.5](tests/t24-5/README.md) relaciona as observações sobre ações, cores, cards e sessão aos testes executados, com a regressão das telas RF04–RF11 e os resultados locais de Vitest e Playwright. O fluxo completo de recrutamento continua pendente da T17.11.
