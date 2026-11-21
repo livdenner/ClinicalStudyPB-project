@@ -9,10 +9,12 @@ import {
   STUDY_MESSAGES,
 } from '../services/studies/studyErrors';
 import {
+  formatStudyPeriod,
   getParticipationStatusVisual,
   getStudyStatusVisual,
   normalizeParticipationStatus,
   normalizeStudyStatus,
+  parseParticipantId,
   participationStatusLabel,
   studyStatusLabel,
 } from '../services/studies/studyPresentation';
@@ -108,15 +110,27 @@ describe('studyPresentation', () => {
       STUDY_MESSAGES.invalidResponse,
     );
     expect(getStudyLoadErrorMessage(forbidden)).toBe(STUDY_MESSAGES.forbidden);
+    expect(getStudyLoadErrorMessage(forbidden, 'detail')).toBe(
+      STUDY_MESSAGES.forbidden,
+    );
     expect(getStudyLoadErrorMessage(serverError)).toBe(
       STUDY_MESSAGES.serviceUnavailable,
     );
     expect(getStudyLoadErrorMessage(badRequest)).toBe(
       STUDY_MESSAGES.listFailed,
     );
+    expect(getStudyLoadErrorMessage(badRequest, 'detail')).toBe(
+      STUDY_MESSAGES.detailFailed,
+    );
     expect(
       getStudyLoadErrorMessage(new TypeError('Network request failed')),
     ).toBe(STUDY_MESSAGES.listFailed);
+    expect(
+      getStudyLoadErrorMessage(
+        new TypeError('Network request failed'),
+        'detail',
+      ),
+    ).toBe(STUDY_MESSAGES.detailFailed);
     expect(getStudyLoadErrorMessage(new Error('erro interno'))).toBe(
       STUDY_MESSAGES.listFailed,
     );
@@ -125,6 +139,23 @@ describe('studyPresentation', () => {
     expect(getStudyLoadErrorMessage(serverError)).not.toContain(
       'NullPointerException',
     );
+  });
+
+  it('valida identificador de participação e formata período civil', () => {
+    expect(parseParticipantId('11')).toBe(11);
+    expect(parseParticipantId(['12', '13'])).toBe(12);
+    expect(parseParticipantId(' 11')).toBeNull();
+    expect(parseParticipantId('11.5')).toBeNull();
+    expect(parseParticipantId('0')).toBeNull();
+    expect(parseParticipantId('-4')).toBeNull();
+    expect(parseParticipantId('abc')).toBeNull();
+    expect(parseParticipantId(undefined)).toBeNull();
+
+    expect(formatStudyPeriod('2027-01-01', '2027-12-31')).toBe(
+      '01/01/2027 a 31/12/2027',
+    );
+    expect(formatStudyPeriod('2027-01-01', undefined)).toBe('01/01/2027');
+    expect(formatStudyPeriod('invalida', '')).toBeNull();
   });
 
   it('formata data civil sem deslocamento por fuso e instante no fuso local', () => {

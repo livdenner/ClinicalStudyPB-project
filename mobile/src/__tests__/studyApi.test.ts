@@ -135,6 +135,15 @@ describe('studyApi', () => {
     await expect(listMyStudies('token-abc')).rejects.toBeInstanceOf(
       InvalidStudiesResponseError,
     );
+
+    const invalidVisitStudy = {
+      ...activeStudy,
+      plannedVisits: [{ ...activeStudy.plannedVisits[0], activities: null }],
+    };
+    fetchSpy.mockResolvedValueOnce(mockResponse(200, [invalidVisitStudy]));
+    await expect(listMyStudies('token-abc')).rejects.toBeInstanceOf(
+      InvalidStudiesResponseError,
+    );
   });
 
   it('propaga erros HTTP sem convertê-los em lista vazia', async () => {

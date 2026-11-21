@@ -1,5 +1,9 @@
 import { apiRequest } from '../api/apiClient';
 import { bearerHeader } from '../api/authorization';
+import type {
+  PlannedActivity,
+  PlannedVisit,
+} from '../protocol/protocolTypes';
 import type { ParticipantStudy } from './studyTypes';
 
 // A URL base configurada já termina em `/api`; os caminhos são relativos a ela.
@@ -27,6 +31,37 @@ function isNonNullableString(value: unknown): value is string {
   return typeof value === 'string';
 }
 
+function isPlannedActivity(value: unknown): value is PlannedActivity {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    return false;
+  }
+
+  const record = value as Record<string, unknown>;
+  return (
+    isPositiveSafeInteger(record.id) &&
+    isNonNullableString(record.name) &&
+    isNonNullableString(record.description) &&
+    isPositiveSafeInteger(record.position)
+  );
+}
+
+function isPlannedVisit(value: unknown): value is PlannedVisit {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    return false;
+  }
+
+  const record = value as Record<string, unknown>;
+  return (
+    isPositiveSafeInteger(record.id) &&
+    isPositiveSafeInteger(record.studyId) &&
+    isNonNullableString(record.name) &&
+    isNonNullableString(record.plannedDate) &&
+    isPositiveSafeInteger(record.position) &&
+    Array.isArray(record.activities) &&
+    record.activities.every(isPlannedActivity)
+  );
+}
+
 function isParticipantStudy(value: unknown): value is ParticipantStudy {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {
     return false;
@@ -50,7 +85,8 @@ function isParticipantStudy(value: unknown): value is ParticipantStudy {
     isNonNullableString(record.participationStatus) &&
     isNonNullableString(record.includedAt) &&
     validWithdrawnAt &&
-    Array.isArray(record.plannedVisits)
+    Array.isArray(record.plannedVisits) &&
+    record.plannedVisits.every(isPlannedVisit)
   );
 }
 

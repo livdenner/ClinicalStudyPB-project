@@ -16,7 +16,8 @@ import InvitationDetailScreen from '../app/invitations/[candidateId]';
 import InvitationsScreen from '../app/invitations/index';
 import LoginScreen from '../app/login';
 import RootLayout from '../app/_layout';
-import StudiesScreen from '../app/studies';
+import StudiesScreen from '../app/studies/index';
+import StudyDetailScreen from '../app/studies/[participantId]';
 import { ACTIVATION_MESSAGES } from '../auth/activationForm';
 import { ApiError } from '../services/api/apiClient';
 import { AUTH_MESSAGES } from '../services/auth/authErrors';
@@ -130,7 +131,8 @@ async function renderApp(initialUrl = '/') {
       login: LoginScreen,
       activation: ActivationScreen,
       index: HomeScreen,
-      studies: StudiesScreen,
+      'studies/index': StudiesScreen,
+      'studies/[participantId]': StudyDetailScreen,
       'change-password': ChangePasswordScreen,
       'invitations/index': InvitationsScreen,
       'invitations/[candidateId]': InvitationDetailScreen,
@@ -179,6 +181,12 @@ describe('navegação autenticada do participante', () => {
 
     await waitFor(() => expect(screen).toHavePathname('/login'));
     expect(screen.queryByText('Meus estudos')).toBeNull();
+
+    await act(async () => {
+      router.push('/studies/11');
+    });
+
+    await waitFor(() => expect(screen).toHavePathname('/login'));
     expect(studiesApi.listMyStudies).not.toHaveBeenCalled();
   });
 

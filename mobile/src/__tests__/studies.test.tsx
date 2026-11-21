@@ -15,7 +15,8 @@ import HomeScreen from '../app/index';
 import InvitationDetailScreen from '../app/invitations/[candidateId]';
 import InvitationsScreen from '../app/invitations/index';
 import LoginScreen from '../app/login';
-import StudiesScreen from '../app/studies';
+import StudiesScreen from '../app/studies/index';
+import StudyDetailScreen from '../app/studies/[participantId]';
 import { ApiError } from '../services/api/apiClient';
 import { AUTH_MESSAGES } from '../services/auth/authErrors';
 import * as invitationApi from '../services/invitations/invitationApi';
@@ -140,7 +141,8 @@ async function renderApp(initialUrl: string) {
       login: LoginScreen,
       activation: ActivationScreen,
       index: HomeScreen,
-      studies: StudiesScreen,
+      'studies/index': StudiesScreen,
+      'studies/[participantId]': StudyDetailScreen,
       'change-password': ChangePasswordScreen,
       'invitations/index': InvitationsScreen,
       'invitations/[candidateId]': InvitationDetailScreen,
@@ -204,6 +206,190 @@ describe('estudos do participante', () => {
       'header.payload.signature',
       expect.anything(),
     );
+  });
+
+  it('navega da lista para o detalhe com objetivo e visitas previstas e volta à lista', async () => {
+    storeSession();
+    api.listMyStudies.mockResolvedValue([withdrawnStudy, activeStudy]);
+
+    await renderAuthenticatedAt('/studies');
+    await screen.findByText('Acompanhamento de hipertensão');
+
+    await fireEvent.press(
+      screen.getByLabelText(
+        'Acompanhamento de hipertensão. Em execução. Participação ativa',
+      ),
+    );
+
+    await waitFor(() => expect(screen).toHavePathname('/studies/11'));
+    expect(
+      await screen.findByText('Avaliar a adesão ao acompanhamento fictício.'),
+    ).toBeTruthy();
+    expect(
+      screen.getAllByText(/Paula Pesquisadora/).length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText(/01\/01\/2027 a 31\/12\/2027/).length,
+    ).toBeGreaterThan(0);
+    expect(screen.getByText('Visita inicial')).toBeTruthy();
+    expect(screen.getByText('Data prevista: 01/02/2027')).toBeTruthy();
+    expect(
+      screen.getByText('• Triagem inicial — Registro de acompanhamento.'),
+    ).toBeTruthy();
+
+    await fireEvent.press(screen.getByLabelText('Voltar'));
+
+    await waitFor(() => expect(screen).toHavePathname('/studies'));
+    expect(
+      await screen.findByText('Estudo de hábitos de sono'),
+    ).toBeTruthy();
+  });
+
+  it('exibe protocolo vazio e orientação para participação retirada no detalhe', async () => {
+    storeSession();
+    api.listMyStudies.mockResolvedValue([withdrawnStudy, activeStudy]);
+
+    await renderAuthenticatedAt('/studies');
+    await screen.findByText('Estudo de hábitos de sono');
+
+    await fireEvent.press(
+      screen.getByLabelText(
+        'Estudo de hábitos de sono. Cancelado. Participação retirada',
+      ),
+    );
+
+    await waitFor(() => expect(screen).toHavePathname('/studies/12'));
+    expect(
+      await screen.findByText(STUDY_MESSAGES.withdrawnNotice),
+    ).toBeTruthy();
+    expect(screen.getByText(STUDY_MESSAGES.emptyVisits)).toBeTruthy();
+    expect(screen.getByText('Cancelado')).toBeTruthy();
+    expect(screen.getByText('Participação retirada')).toBeTruthy();
+    expect(screen.getByText(/12\/11\/2026 09:30/)).toBeTruthy();
+  });
+
+  it('resolve o detalhe ao abrir diretamente a rota sem depender de parâmetros da lista', async () => {
+    storeSession();
+    api.listMyStudies.mockResolvedValue([withdrawnStudy, activeStudy]);
+
+    await renderAuthenticatedAt('/studies/11');
+
+    expect(
+      await screen.findByText('Acompanhamento de hipertensão'),
+    ).toBeTruthy();
+    expect(
+      screen.getByText('Avaliar a adesão ao acompanhamento fictício.'),
+    ).toBeTruthy();
+    expect(api.listMyStudies).toHaveBeenCalledWith(
+      'header.payload.signature',
+      expect.anything(),
+    );
+  });
+
+  it('recusa identificador inválido no detalhe sem consultar a API e volta à lista', async () => {
+    storeSession();
+    api.listMyStudies.mockResolvedValue([activeStudy]);
+
+    await renderAuthenticatedAt('/studies/abc');
+
+    expect(await screen.findByText(STUDY_MESSAGES.invalidId)).toBeTruthy();
+    expect(api.listMyStudies).not.toHaveBeenCalled();
+
+    await fireEvent.press(screen.getByText('Voltar aos estudos'));
+    await waitFor(() => expect(screen).toHavePathname('/studies'));
+    expect(
+      await screen.findByText('Acompanhamento de hipertensão'),
+    ).toBeTruthy();
+
+    await testRouter.replace('/studies/0');
+    expect(await screen.findByText(STUDY_MESSAGES.invalidId)).toBeTruthy();
+    expect(api.listMyStudies).toHaveBeenCalledTimes(1);
+  });
+
+  it('exibe indisponibilidade quando a participação não pertence à conta autenticada', async () => {
+    storeSession();
+    api.listMyStudies.mockResolvedValue([activeStudy]);
+
+    await renderAuthenticatedAt('/studies/999');
+
+    expect(await screen.findByText(STUDY_MESSAGES.notAvailable)).toBeTruthy();
+    expect(screen.queryByText('Acompanhamento de hipertensão')).toBeNull();
+    expect(
+      screen.queryByText('Avaliar a adesão ao acompanhamento fictício.'),
+    ).toBeNull();
+
+    await fireEvent.press(screen.getByText('Voltar aos estudos'));
+    await waitFor(() => expect(screen).toHavePathname('/studies'));
+  });
+
+  it('trata erro no detalhe com retry sem confundir falha com protocolo vazio', async () => {
+    storeSession();
+    api.listMyStudies
+      .mockRejectedValueOnce(new TypeError('Network request failed'))
+      .mockResolvedValueOnce([activeStudy]);
+
+    await renderAuthenticatedAt('/studies/11');
+
+    expect(await screen.findByText(STUDY_MESSAGES.detailFailed)).toBeTruthy();
+    expect(screen.queryByText(STUDY_MESSAGES.emptyVisits)).toBeNull();
+
+    await fireEvent.press(screen.getByText('Tentar novamente'));
+
+    expect(
+      await screen.findByText('Acompanhamento de hipertensão'),
+    ).toBeTruthy();
+    expect(screen.getByText('Visita inicial')).toBeTruthy();
+    expect(api.listMyStudies).toHaveBeenCalledTimes(2);
+  });
+
+  it('aborta a consulta anterior e descarta resposta tardia ao trocar o detalhe', async () => {
+    storeSession();
+    let firstSignal: AbortSignal | undefined;
+    let resolveFirst: ((value: ParticipantStudy[]) => void) | undefined;
+    api.listMyStudies
+      .mockImplementationOnce((_token, signal) => {
+        firstSignal = signal;
+        return new Promise<ParticipantStudy[]>((resolve) => {
+          resolveFirst = resolve;
+        });
+      })
+      .mockResolvedValueOnce([withdrawnStudy, activeStudy]);
+
+    await renderAuthenticatedAt('/studies/11');
+    expect(await screen.findByText('Carregando estudo…')).toBeTruthy();
+    expect(firstSignal?.aborted).toBe(false);
+
+    await testRouter.replace('/studies/12');
+
+    expect(firstSignal?.aborted).toBe(true);
+    expect(
+      await screen.findByText('Estudo de hábitos de sono'),
+    ).toBeTruthy();
+
+    await act(async () => {
+      resolveFirst?.([
+        { ...withdrawnStudy, studyTitle: 'Título desatualizado' },
+      ]);
+    });
+
+    expect(screen.getByText('Estudo de hábitos de sono')).toBeTruthy();
+    expect(screen.queryByText('Título desatualizado')).toBeNull();
+  });
+
+  it('trata estado desconhecido no detalhe com rótulo neutro', async () => {
+    storeSession();
+    api.listMyStudies.mockResolvedValue([
+      {
+        ...activeStudy,
+        studyStatus: 'DESCONHECIDO',
+      },
+    ]);
+
+    await renderAuthenticatedAt('/studies/11');
+
+    expect(
+      await screen.findByText('Situação não reconhecida'),
+    ).toBeTruthy();
   });
 
   it('exibe orientação na lista vazia e permite abrir convites', async () => {
@@ -347,8 +533,16 @@ describe('estudos do participante', () => {
     expect(screen.queryByText('Acompanhamento de hipertensão')).toBeNull();
   });
 
-  it('bloqueia acesso direto sem sessão autenticada', async () => {
+  it('bloqueia acesso direto à lista sem sessão autenticada', async () => {
     await renderApp('/studies');
+
+    expect(await screen.findByText('Login')).toBeTruthy();
+    await waitFor(() => expect(screen).toHavePathname('/login'));
+    expect(api.listMyStudies).not.toHaveBeenCalled();
+  });
+
+  it('bloqueia acesso direto ao detalhe sem sessão autenticada', async () => {
+    await renderApp('/studies/11');
 
     expect(await screen.findByText('Login')).toBeTruthy();
     await waitFor(() => expect(screen).toHavePathname('/login'));

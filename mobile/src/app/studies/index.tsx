@@ -1,31 +1,59 @@
 import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
-import { useSession } from '../auth/AuthProvider';
-import { ActionButton } from '../components/ActionButton';
-import { BackLink } from '../components/BackLink';
-import { BrandHeader } from '../components/BrandHeader';
-import { MessageBanner } from '../components/MessageBanner';
-import { ScreenContainer } from '../components/ScreenContainer';
-import { ParticipationStatusBadge } from '../components/studies/ParticipationStatusBadge';
-import { StudyStatusBadge } from '../components/studies/StudyStatusBadge';
-import { isHandledSessionError } from '../services/auth/authErrors';
-import { formatDateTime } from '../services/format/dateFormat';
-import { listMyStudies } from '../services/studies/studyApi';
+import { useSession } from '../../auth/AuthProvider';
+import { ActionButton } from '../../components/ActionButton';
+import { BackLink } from '../../components/BackLink';
+import { BrandHeader } from '../../components/BrandHeader';
+import { MessageBanner } from '../../components/MessageBanner';
+import { ScreenContainer } from '../../components/ScreenContainer';
+import { ParticipationStatusBadge } from '../../components/studies/ParticipationStatusBadge';
+import { StudyStatusBadge } from '../../components/studies/StudyStatusBadge';
+import { isHandledSessionError } from '../../services/auth/authErrors';
+import { formatDateTime } from '../../services/format/dateFormat';
+import { listMyStudies } from '../../services/studies/studyApi';
 import {
   getStudyLoadErrorMessage,
   STUDY_MESSAGES,
-} from '../services/studies/studyErrors';
-import type { ParticipantStudy } from '../services/studies/studyTypes';
-import { colors, radii, spacing } from '../theme/colors';
+} from '../../services/studies/studyErrors';
+import {
+  participationStatusLabel,
+  studyStatusLabel,
+} from '../../services/studies/studyPresentation';
+import type { ParticipantStudy } from '../../services/studies/studyTypes';
+import { colors, radii, spacing } from '../../theme/colors';
+
+function openStudy(participantId: number): void {
+  router.push({
+    pathname: '/studies/[participantId]',
+    params: { participantId: String(participantId) },
+  });
+}
 
 function StudyCard({ study }: { study: ParticipantStudy }) {
   const includedAt = formatDateTime(study.includedAt);
   const withdrawnAt = formatDateTime(study.withdrawnAt);
 
   return (
-    <View style={styles.card}>
+    <Pressable
+      accessibilityHint="Abre os detalhes do estudo"
+      accessibilityLabel={`${study.studyTitle}. ${studyStatusLabel(
+        study.studyStatus,
+      )}. ${participationStatusLabel(study.participationStatus)}`}
+      accessibilityRole="button"
+      onPress={() => openStudy(study.participantId)}
+      style={({ pressed }) => [
+        styles.card,
+        pressed ? styles.cardPressed : null,
+      ]}
+    >
       <Text style={styles.cardTitle}>{study.studyTitle}</Text>
       <View style={styles.badges}>
         <StudyStatusBadge status={study.studyStatus} />
@@ -39,7 +67,7 @@ function StudyCard({ study }: { study: ParticipantStudy }) {
       {withdrawnAt ? (
         <Text style={styles.cardMeta}>{`Retirado em ${withdrawnAt}`}</Text>
       ) : null}
-    </View>
+    </Pressable>
   );
 }
 
@@ -89,7 +117,7 @@ export default function StudiesScreen() {
           if (isHandledSessionError(caught)) {
             return;
           }
-          setError(getStudyLoadErrorMessage(caught));
+          setError(getStudyLoadErrorMessage(caught, 'list'));
         } finally {
           if (active) {
             setLoading(false);
@@ -220,6 +248,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: spacing.sm,
     padding: spacing.md,
+  },
+  cardPressed: {
+    opacity: 0.85,
   },
   cardTitle: {
     color: colors.text,

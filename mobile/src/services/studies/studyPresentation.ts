@@ -1,4 +1,5 @@
 import { colors } from '../../theme/colors';
+import { formatCivilDate } from '../format/dateFormat';
 import {
   PARTICIPATION_STATUSES,
   STUDY_STATUSES,
@@ -149,4 +150,37 @@ export function getParticipationStatusVisual(
   status: string | null | undefined,
 ): BadgeVisual {
   return PARTICIPATION_STATUS_VISUALS[normalizeParticipationStatus(status)];
+}
+
+/**
+ * Valida o identificador de participação recebido na rota antes de consultar
+ * ou exibir dados do participante.
+ *
+ * @param value Parâmetro recebido do Expo Router.
+ * @returns Inteiro positivo seguro ou `null` quando inválido.
+ */
+export function parseParticipantId(
+  value: string | string[] | null | undefined,
+): number | null {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (raw === undefined || raw === null || !/^[0-9]+$/.test(raw)) {
+    return null;
+  }
+
+  const parsed = Number(raw);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+}
+
+/**
+ * Formata o período civil do estudo (`DD/MM/AAAA a DD/MM/AAAA`) sem deslocar
+ * os dias por fuso horário.
+ */
+export function formatStudyPeriod(
+  startDate: string | null | undefined,
+  endDate: string | null | undefined,
+): string | null {
+  const start = formatCivilDate(startDate);
+  const end = formatCivilDate(endDate);
+  const parts = [start, end].filter((part): part is string => part !== null);
+  return parts.length > 0 ? parts.join(' a ') : null;
 }
