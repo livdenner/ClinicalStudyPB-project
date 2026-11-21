@@ -44,7 +44,7 @@ Os arquivos mantêm a notação UML, as cores e o modelo Draw.io preexistentes. 
 | Mobile           | Estrutura inicial com navegação Início ↔ Estudos provisórios.                                                              | Escopo inicial concluído; login integrado na Sprint 3. |
 | DevOps/Qualidade | Compose, Flyway, carga fictícia e CI de backend, web, E2E e mobile.                                                        | Ambiente e pipeline validados; relatórios na release.  |
 
-O [quadro RF01–RF11 da Release 1](releases/release1/README.md#rastreabilidade-dos-requisitos) identifica implementação, testes e integração de cada tela. A navegação de painel, visitas e relatórios que ainda usa protótipos não constitui evidência de persistência dessas funcionalidades.
+O [quadro RF01–RF11 da Release 1](releases/release1/README.md#rastreabilidade-dos-requisitos) identifica implementação, testes e integração de cada tela. Painel e relatórios ainda usam protótipos; essa navegação não constitui evidência de persistência dessas funcionalidades. A tela de visitas consulta a API real, conforme o fluxo da T19.3 abaixo.
 
 O [roteiro da Release 1](releases/release1/README.md#roteiro-de-demonstração) detalha a demonstração por perfil, do cadastro de usuários à inclusão. Para o mobile, confira **ClinicalStudyPB → Ver estudos → Voltar ao início**.
 
@@ -243,6 +243,34 @@ Os erros da operação de cancelamento são exibidos com o texto recebido da API
 O serviço `obterConsentimentoSimulado` e o tipo `ConsentimentoSimuladoApi`, sem uso no fluxo atual, foram removidos. `StatusConsentimentoApi` continua necessário para conferir o aceite retornado na candidatura.
 
 Os testes existentes afetados pelo novo fluxo foram adaptados; os testes do formulário descontinuado foram removidos junto com o componente. Os novos cenários específicos pertencem à T17.8, incluindo validação do motivo, controle de acesso, bloqueios por situação, HTTP 409, atualização das listas e manutenção do filtro de cancelados. Os testes de componente devem simular HTTP, sem chamar a API real. A validação ponta a ponta pelo aplicativo depende da T17.9.
+
+### Agendamento de visitas do participante (T18.4)
+
+Em `/recrutamento`, o painel **Participantes e vagas do estudo** oferece **Ver visitas** aos perfis autorizados para consulta e **Agendar** ao coordenador, somente para participantes `ACTIVE` em estudo `RECRUITMENT` ou `EXECUTION`. Participantes `WITHDRAWN` são identificados como retirados, mantêm o histórico consultável e continuam ocupando vaga; não recebem a ação de agendamento.
+
+O formulário contém apenas visita prevista e data/hora, com o participante e o estudo identificados. As opções vêm de `GET /api/studies/{studyId}/planned-visits`. A data informada é interpretada em `America/Fortaleza` e enviada como instante ISO 8601 em `POST /api/studies/{studyId}/participants/{participantId}/visits`, independentemente do fuso do computador. O período do estudo é exibido como orientação; as regras de data futura, período e duplicidade são validadas pela API.
+
+A agenda usa `GET /api/studies/{studyId}/participants/{participantId}/visits`, com horários em Fortaleza e filtro por situação: Agendada (`SCHEDULED`), Realizada (`DONE`), Ausente (`ABSENT`) ou Cancelada (`CANCELLED`). Após HTTP 201, a resposta confirmada é adicionada à lista em ordem cronológica, sem recarregar a página; o filtro volta para todas as situações para apresentar o novo registro.
+
+Erros da API, inclusive HTTP 400 e 409, são exibidos no formulário com o texto recebido e sem limpar a visita ou a data/hora preenchida. Agendamentos `SCHEDULED` ou `DONE` bloqueiam outro para a mesma visita prevista e participante; `ABSENT` e `CANCELLED` permitem novo agendamento. O registro dos desfechos segue o fluxo próprio de RF13.
+
+Os testes Web da T18.5 verificam formulário, mensagens literais, atualização da lista, filtros e restrições de agendamento, com HTTP simulado e dados fictícios. A [matriz de rastreabilidade RF12](docs/tests/rastreabilidade-agendamento-web.md) relaciona os casos aos arquivos. O comando `npm run test:coverage` exige pelo menos 81% de linhas individualmente nos três novos componentes, e seus resultados integram o relatório do PBI-25.
+
+### Lista de visitas e registro de desfechos (T19.3)
+
+Em `/visitas`, coordenador e pesquisador autorizado consultam as visitas agendadas do estudo selecionado. A listagem usa `GET /api/studies/{studyId}/visits`, com os filtros `status` e `participantId` enviados à API. Cada linha mostra participante, visita prevista, horário em Fortaleza e situação, sem repetir os dados do estudo. Participantes retirados permanecem disponíveis para consulta do histórico.
+
+Somente o coordenador pode registrar **Realizada**, **Ausente** ou **Cancelar**, e as ações aparecem apenas para visitas `SCHEDULED` em estudos que permitem alterações. Estudos `CLOSED` ou `CANCELLED` ficam em consulta. Cada ação abre uma confirmação; o cancelamento exige justificativa não vazia de até 500 caracteres. O formulário bloqueia novo envio enquanto aguarda a resposta.
+
+O registro usa `POST /api/studies/{studyId}/participants/{participantId}/visits/{visitId}/outcome`, com `If-Match` contendo a versão da própria visita entre aspas. Após sucesso, a resposta da API atualiza a linha e o feedback sem recarregar a página. As ações desaparecem quando o desfecho é final; se o novo estado não corresponder ao filtro escolhido, a linha deixa a lista filtrada.
+
+A nota persistida em `outcomeNote` é apresentada abaixo do selo de situação nas listas do estudo e do participante. Para visitas canceladas, o texto é identificado como **Justificativa**; nos demais desfechos, como **Observação**. Registros sem nota não exibem esse complemento. O formulário Web solicita o campo somente no cancelamento, como justificativa obrigatória; observações de outros desfechos recebidas da API também podem ser consultadas.
+
+Em HTTP 409, o texto retornado pela API permanece na confirmação e os dados atuais da visita e do estudo são consultados novamente. Não há reenvio automático: uma nova confirmação só é permitida depois da atualização e se a visita ainda estiver agendada e o estudo permitir alterações. Se a consulta falhar, é preciso usar **Atualizar visita** antes de confirmar. Outros erros da API também são apresentados com a mensagem recebida.
+
+As listas do estudo e do participante compartilham as cores semânticas: agendada neutra, realizada verde, ausente amarela e cancelada vermelha. O teste existente da antiga página de visitas foi adaptado para o fluxo real com HTTP simulado. Os novos cenários específicos de desfecho pertencem à T19.4; os resultados das suítes executadas ficam em `docs/test-runs/`.
+
+As evidências finais da implementação inicial, anteriores a esta revisão, estão na [execução completa da Web](docs/test-runs/2026-11-19_00-40_T19-3_completa-final.md) e na [conferência final de navegador com HTTP simulado](docs/test-runs/2026-11-19_00-32_T19-3_navegador-final.md). As execuções intermediárias também são preservadas, conforme as [regras de registro das execuções](docs/test-runs/README.md).
 
 ### Sessão por aba (T24.4)
 

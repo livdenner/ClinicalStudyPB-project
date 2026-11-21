@@ -1,6 +1,6 @@
 # T24.5 — Regressão web de ações, cores e sessões
 
-Task 4033. Branch `test/4033-ux-session-regression-web`, criada da `development` em `574125d`. Os resultados locais foram obtidos em 21/11/2026. A CI precisa ser confirmada na PR.
+Task 4033. Branch `test/4033-ux-session-regression-web`, criada da `development` em `574125d`. Os resultados locais foram obtidos em 21/11/2026, após integrar a `development` em `21e5c2f` (PRs #99 e #100). A CI precisa ser confirmada na PR.
 
 ## Observações verificadas
 
@@ -30,12 +30,12 @@ Os testes de cor verificam os tokens e o rótulo exibido; não são uma mediçã
 
 | Verificação | Resultado |
 | --- | --- |
-| Vitest completo com cobertura | 312 passaram; 0 falhas. Cobertura de linhas: 86,39%. |
+| Vitest: suíte e reexecução do arquivo que não iniciou | 349 passaram (298 + 51); 0 falhas de asserção. A execução completa teve um timeout de inicialização do worker. |
 | Playwright completo, Chromium | 16 passaram; 0 falhas; 1 ignorado. Os três cenários de sessão passaram. |
 | Lint, TypeScript e build | Passaram. |
 | Formatação | Os sete arquivos de teste da task passaram no Prettier. Nos arquivos antigos com CRLF, a conferência em memória, normalizando para LF, passou. |
 
-O Vitest foi executado com `npm run test:coverage -- --pool=forks --maxWorkers=1`, após uma falha local de inicialização com threads. O Playwright foi executado com `npm run test:e2e -- --workers=1`, usando a stack descartável `compose.e2e.yaml`.
+O Vitest foi executado com `npm run test:coverage -- --pool=forks --maxWorkers=1`: 35 arquivos passaram e o worker de `visualizar.test.tsx` não iniciou por timeout. Os 51 testes desse arquivo passaram ao repetir `npm run test -- src/pages/estudos/visualizar.test.tsx --pool=forks --maxWorkers=1`. A cobertura dessa tentativa ficou parcial, por isso não é apresentada como cobertura da suíte completa. O Playwright foi executado com `npm run test:e2e -- --workers=1`, usando a stack descartável `compose.e2e.yaml`.
 
 ## Relatório automático da CI
 
