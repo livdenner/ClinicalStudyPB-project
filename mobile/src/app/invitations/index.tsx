@@ -135,7 +135,7 @@ export default function InvitationsScreen() {
   );
 
   const errorMessage =
-    invitations !== null
+    list.length > 0
       ? `${error} ${INVITATION_MESSAGES.previousData}`
       : error;
 
@@ -181,7 +181,7 @@ export default function InvitationsScreen() {
         </Text>
       ) : null}
 
-      {!initialLoading && invitations !== null && list.length === 0 ? (
+      {!initialLoading && !error && invitations !== null && list.length === 0 ? (
         <MessageBanner
           message="Você não tem convites disponíveis no momento. Quando a equipe responsável enviar um convite, ele aparecerá aqui."
           tone="info"

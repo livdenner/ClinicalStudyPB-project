@@ -138,3 +138,13 @@ export function isHandledSessionError(error: unknown): boolean {
       error.code === 'PASSWORD_CHANGE_REQUIRED')
   );
 }
+
+/**
+ * Indica que o convite não está mais disponível ou acessível para a conta,
+ * exigindo limpar dados exibidos anteriormente em vez de mantê-los na tela.
+ */
+export function isInvitationUnavailableError(error: unknown): boolean {
+  return (
+    error instanceof ApiError && (error.status === 404 || error.status === 403)
+  );
+}

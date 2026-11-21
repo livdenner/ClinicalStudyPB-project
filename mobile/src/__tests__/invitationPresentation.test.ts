@@ -50,6 +50,10 @@ describe('invitationPresentation', () => {
   it('formata data civil sem deslocar o dia pelo fuso', () => {
     expect(formatCivilDate('2026-11-17')).toBe('17/11/2026');
     expect(formatCivilDate('2026-01-01')).toBe('01/01/2026');
+    expect(formatCivilDate('2024-02-29')).toBe('29/02/2024');
+    expect(formatCivilDate('2026-02-31')).toBeNull();
+    expect(formatCivilDate('2026-02-29')).toBeNull();
+    expect(formatCivilDate('2026-04-31')).toBeNull();
     expect(formatCivilDate('2026-13-01')).toBeNull();
     expect(formatCivilDate('17/11/2026')).toBeNull();
     expect(formatCivilDate(undefined)).toBeNull();

@@ -70,7 +70,8 @@ export function parseCandidateId(
 
 /**
  * Formata uma data civil `YYYY-MM-DD` sem converter fuso horário.
- * A conversão por `Date` poderia exibir o dia anterior no Brasil.
+ * Valida dias por mês e anos bissextos em UTC, evitando que a conversão
+ * para o fuso local exiba o dia anterior no Brasil.
  *
  * @param value Data no formato devolvido pela API.
  * @returns Data no padrão brasileiro ou `null` quando inválida.
@@ -88,9 +89,19 @@ export function formatCivilDate(
   }
 
   const [, year, month, day] = match;
+  const yearNumber = Number(year);
   const monthNumber = Number(month);
   const dayNumber = Number(day);
   if (monthNumber < 1 || monthNumber > 12 || dayNumber < 1 || dayNumber > 31) {
+    return null;
+  }
+
+  const utcDate = new Date(Date.UTC(yearNumber, monthNumber - 1, dayNumber));
+  if (
+    utcDate.getUTCFullYear() !== yearNumber ||
+    utcDate.getUTCMonth() !== monthNumber - 1 ||
+    utcDate.getUTCDate() !== dayNumber
+  ) {
     return null;
   }
 

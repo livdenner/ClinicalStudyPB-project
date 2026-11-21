@@ -8,13 +8,13 @@ Aplicativo do participante, desenvolvido em React Native com Expo e TypeScript. 
 - `src/app/login.tsx` é a entrada do aplicativo quando não há sessão válida. Também leva à ativação de primeiro acesso.
 - `src/app/activation.tsx` ativa um candidato convidado com e-mail e código de ativação.
 - `src/app/change-password.tsx` define a senha inicial de uma sessão restrita ou troca a senha de uma conta já ativa.
-- `src/app/index.tsx` é o início autenticado, com dados públicos do participante, aviso de persistência, acesso a estudos, troca de senha e saída.
+- `src/app/index.tsx` é o início autenticado, com dados públicos do participante, aviso de persistência, acesso a convites e estudos, troca de senha e saída.
 - `src/app/invitations/` lista os convites visíveis da própria conta e exibe o detalhe autorizado, protocolo e termo simulado.
 - `src/app/studies.tsx` é um destino protegido provisório; a listagem real fica para uma entrega posterior.
 - `src/auth/AuthProvider.tsx` mantém a sessão em memória, restaura do armazenamento, executa login/ativação/troca de senha/logout e centraliza o tratamento de falhas autenticadas.
 - `src/auth/secureSessionStorage.ts` grava apenas token, validade absoluta e dados públicos mínimos do usuário em um registro versionado no `expo-secure-store`.
 - `src/services/api/apiClient.ts` fornece a requisição JSON e converte respostas fora de 2xx em `ApiError`.
-- `src/__tests__/` cobre sessão, armazenamento seguro, cliente HTTP, formulários, política de senha, mensagens de erro e a navegação protegida.
+- `src/__tests__/` cobre sessão, armazenamento seguro, cliente HTTP, formulários, política de senha, mensagens de erro, convites e a navegação protegida.
 
 O papel de cada integrante pode mudar entre sprints. Antes de iniciar uma alteração, confira no board e no planejamento da sprint quem está responsável por Mobile e quais critérios de aceite pertencem à tarefa atual. Este guia documenta o projeto para qualquer pessoa que assuma essa responsabilidade.
 
@@ -79,7 +79,7 @@ npm.cmd start
 
 A variável de processo tem precedência sobre o `.env` na inicialização do bundle. Reinicie o Expo depois de qualquer alteração. O Expo injeta variáveis `EXPO_PUBLIC_*` no bundle do app; nunca coloque senhas, chaves privadas ou tokens nesse prefixo nem versione segredos.
 
-Os caminhos usados pelo app são relativos à base: `auth/login`, `auth/activation`, `auth/password` e `auth/logout`. O [contrato OpenAPI](../backend/openapi.yaml) descreve os RF01–RF11 da Release 1.
+Os caminhos usados pelo app são relativos à base `/api`: `auth/login`, `auth/activation`, `auth/password`, `auth/logout`, `me/invitations`, `me/invitations/{candidateId}` e `me/invitations/{candidateId}/decision`. O [contrato OpenAPI](../backend/openapi.yaml) descreve os endpoints da API, incluindo as rotas do participante autenticado.
 
 ## Convites e consentimento simulado
 
@@ -151,7 +151,7 @@ npx.cmd expo install --check
 - `tsc --noEmit` verifica o TypeScript.
 - `expo install --check` compara as dependências com o catálogo do SDK do Expo.
 
-Os testes Jest cobrem login, ativação, troca de senha, expiração, persistência segura, tratamento de 401 e concorrência de sessão, além da navegação protegida e do cliente HTTP. Não há script de lint mobile configurado nesta base. O CI instala pelo lockfile e executa `npm run test:report -- --coverage`, publicando os artefatos `mobile-coverage` e `resultados-mobile`.
+Os testes Jest cobrem login, ativação, troca de senha, expiração, persistência segura, tratamento de 401 e concorrência de sessão, convites, além da navegação protegida e do cliente HTTP. Não há script de lint mobile configurado nesta base. O CI instala pelo lockfile e executa `npm run test:report -- --coverage`, publicando os artefatos `mobile-coverage` e `resultados-mobile`.
 
 O comando `expo install --check` pode recomendar atualizações de pacotes dentro do mesmo SDK ao consultar o catálogo online. Registre as versões e o resultado; não atualize dependências nem o lockfile automaticamente durante a conferência de instalação. Na validação da T16.13, o catálogo recomendou atualizações do SDK 58, enquanto os testes, o TypeScript e a navegação em Android passaram com as versões fixadas. A consulta offline usa os dados locais e não substitui o diagnóstico online. Veja o [relatório da execução](../releases/release1/tests/t16-13/README.md). Nesta task, os patches recomendados dentro do SDK 58 para `@expo/ui`, `expo`, `expo-router`, `expo-web-browser` e `jest-expo` foram aplicados de forma deliberada e os testes foram reexecutados; repita o `expo install --check` após a atualização e registre a saída.
 
