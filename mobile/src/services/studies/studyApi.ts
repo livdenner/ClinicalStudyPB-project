@@ -1,9 +1,12 @@
 import { apiRequest } from '../api/apiClient';
 import { bearerHeader } from '../api/authorization';
-import type {
-  PlannedActivity,
-  PlannedVisit,
-} from '../protocol/protocolTypes';
+import type { PlannedVisit } from '../protocol/protocolTypes';
+import {
+  isNonNullableString,
+  isOptionalString,
+  isPlannedActivity,
+  isPositiveSafeInteger,
+} from '../protocol/protocolValidation';
 import type { ParticipantStudy } from './studyTypes';
 
 // A URL base configurada já termina em `/api`; os caminhos são relativos a ela.
@@ -19,30 +22,6 @@ export class InvalidStudiesResponseError extends Error {
     super('Resposta inválida ao consultar os estudos do participante.');
     this.name = 'InvalidStudiesResponseError';
   }
-}
-
-function isPositiveSafeInteger(value: unknown): value is number {
-  return (
-    typeof value === 'number' && Number.isSafeInteger(value) && value > 0
-  );
-}
-
-function isNonNullableString(value: unknown): value is string {
-  return typeof value === 'string';
-}
-
-function isPlannedActivity(value: unknown): value is PlannedActivity {
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
-    return false;
-  }
-
-  const record = value as Record<string, unknown>;
-  return (
-    isPositiveSafeInteger(record.id) &&
-    isNonNullableString(record.name) &&
-    isNonNullableString(record.description) &&
-    isPositiveSafeInteger(record.position)
-  );
 }
 
 function isPlannedVisit(value: unknown): value is PlannedVisit {
@@ -68,10 +47,6 @@ function isParticipantStudy(value: unknown): value is ParticipantStudy {
   }
 
   const record = value as Record<string, unknown>;
-  const validWithdrawnAt =
-    record.withdrawnAt === undefined ||
-    record.withdrawnAt === null ||
-    typeof record.withdrawnAt === 'string';
 
   return (
     isPositiveSafeInteger(record.participantId) &&
@@ -84,7 +59,7 @@ function isParticipantStudy(value: unknown): value is ParticipantStudy {
     isNonNullableString(record.responsibleName) &&
     isNonNullableString(record.participationStatus) &&
     isNonNullableString(record.includedAt) &&
-    validWithdrawnAt &&
+    isOptionalString(record.withdrawnAt) &&
     Array.isArray(record.plannedVisits) &&
     record.plannedVisits.every(isPlannedVisit)
   );
