@@ -25,5 +25,17 @@ export default defineConfig({
         // O JSON alimenta o relatório de execução dos testes (scripts/relatorio-testes, T25.1).
         reporters: ["default", "json"],
         outputFile: { json: "test-reports/vitest.json" },
+        coverage: {
+            thresholds: {
+                // Na descrição da task que tá no azure, diz que T22.4 exige mais de 80% em cada componente novo da retirada
+                "src/components/participantes/*Retirada.tsx": {
+                    perFile: true,
+                    lines: 81,
+                    statements: 81,
+                    functions: 81,
+                    branches: 81,
+                },
+            },
+        },
     },
 });

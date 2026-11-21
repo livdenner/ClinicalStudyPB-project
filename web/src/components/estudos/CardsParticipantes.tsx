@@ -1,5 +1,5 @@
+import type { ReactNode } from "react";
 import { Chip } from "@heroui/react";
-import { CheckCircle2 } from "lucide-react";
 import type { ParticipanteApi } from "../../types/participante";
 import { CardPadrao, GradeCards } from "../ui/CardPadrao";
 import { SELOS_PARTICIPANTE, formatarDataInclusao } from "../../utils/participantes";
@@ -7,9 +7,10 @@ import { SELOS_PARTICIPANTE, formatarDataInclusao } from "../../utils/participan
 type Props = {
     participantes: ParticipanteApi[];
     contexto: "inclusao" | "situacao";
+    renderizarAcoes?: (participante: ParticipanteApi) => ReactNode;
 };
 
-export function CardsParticipantes({ participantes, contexto }: Props) {
+export function CardsParticipantes({ participantes, contexto, renderizarAcoes }: Props) {
     const incluido = contexto === "inclusao";
     return (
         <GradeCards
@@ -20,24 +21,17 @@ export function CardsParticipantes({ participantes, contexto }: Props) {
             }
         >
             {participantes.map((participante) => {
-                const selo = incluido
-                    ? SELOS_PARTICIPANTE.inclusao
-                    : (SELOS_PARTICIPANTE[participante.status] ?? SELOS_PARTICIPANTE.indisponivel);
+                const selo =
+                    SELOS_PARTICIPANTE[participante.status] ?? SELOS_PARTICIPANTE.indisponivel;
 
                 return (
                     <li key={participante.id}>
                         <CardPadrao
                             titulo={participante.candidateName}
+                            acoes={renderizarAcoes?.(participante)}
                             selo={
                                 <Chip size="sm" variant="soft" className={selo.classes}>
-                                    <Chip.Label>
-                                        <span className="inline-flex items-center gap-1">
-                                            {incluido && (
-                                                <CheckCircle2 size={13} aria-hidden="true" />
-                                            )}
-                                            {selo.rotulo}
-                                        </span>
-                                    </Chip.Label>
+                                    <Chip.Label>{selo.rotulo}</Chip.Label>
                                 </Chip>
                             }
                         >

@@ -341,8 +341,9 @@ function DetalhesEstudo({
                 >
                     <ParticipantesEstudo
                         key={`${estudo.id}:${token}`}
-                        estudoId={estudo.id}
+                        estudo={estudo}
                         token={token}
+                        perfil={pesquisador.role}
                     />
                 </Tabs.Panel>
             </Tabs>
