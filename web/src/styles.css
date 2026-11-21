@@ -376,3 +376,12 @@ a {
 .acoes-candidato {
     min-height: calc(3 * 44px + 2 * 0.5rem);
 }
+
+/* Reserva as duas ações da agenda, mesmo quando apenas a consulta está disponível. */
+.acoes-agenda-participante {
+    min-height: calc(2 * 44px + 0.5rem);
+}
+
+.acoes-agenda-participante .btn {
+    padding-block: 0.375rem;
+}

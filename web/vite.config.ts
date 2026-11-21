@@ -1,5 +1,5 @@
 import { defineConfig } from "vite";
-import { configDefaults } from "vitest/config";
+import { configDefaults, coverageConfigDefaults } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
@@ -20,6 +20,15 @@ export default defineConfig({
         environment: "jsdom",
         setupFiles: "./src/setupTests.ts",
         globals: true,
+        coverage: {
+            exclude: [...coverageConfigDefaults.exclude, "src/test/**"],
+            reporter: [...coverageConfigDefaults.reporter, "json-summary"],
+            thresholds: {
+                "src/components/visitas/ModalAgendarVisita.tsx": { lines: 81, perFile: true },
+                "src/components/visitas/VisitasParticipante.tsx": { lines: 81, perFile: true },
+                "src/components/visitas/ListaVisitasAgendadas.tsx": { lines: 81, perFile: true },
+            },
+        },
         // Testes de tela com popovers do HeroUI passam de 5 s quando a suíte roda em paralelo.
         testTimeout: 15_000,
         // O JSON alimenta o relatório de execução dos testes (scripts/relatorio-testes, T25.1).

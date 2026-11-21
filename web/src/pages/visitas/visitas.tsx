@@ -1,441 +1,494 @@
-import { useState, type FormEvent } from "react";
-import { ArrowLeft, ChevronRight, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Navigate, useSearchParams } from "react-router-dom";
+import { RefreshCw } from "lucide-react";
+import { ListaVisitasAgendadas } from "../../components/visitas/ListaVisitasAgendadas";
+import { ModalDesfechoVisita } from "../../components/visitas/ModalDesfechoVisita";
+import { Button } from "../../components/ui/Button";
+import { STATUS_VISITA_CLASSES } from "../../config/visitas";
+import { useAuth } from "../../context/AuthContext";
+import { ApiClientError } from "../../services/api/apiClient";
+import { listarEstudos, obterEstudo } from "../../services/estudos";
+import { listarParticipantesPorEstudo } from "../../services/participantes";
 import {
-    PrototipoBadge,
-    PrototipoEmpty,
-    PrototipoModal,
-    usePrototipos,
-} from "../../context/PrototiposContext";
+    listarVisitasDoEstudo,
+    obterVisitaAgendada,
+    registrarDesfechoVisita,
+} from "../../services/visitas-agendadas";
+import type { UserRole } from "../../types/auth";
+import type { EstudoApi } from "../../types/estudo";
+import type { ParticipanteApi } from "../../types/participante";
 import {
-    formatarDataPrototipo,
-    type EstudoPrototipo,
-    type ParticipantePrototipo,
-    type VisitaPrototipo,
-} from "../../data/prototipos-mock";
+    STATUS_VISITA_LABELS,
+    type DadosDesfechoVisita,
+    type DesfechoVisita,
+    type StatusVisitaAgendada,
+    type VisitaAgendada,
+} from "../../types/visita-agendada";
+import { podeRegistrarDesfecho } from "../../utils/desfecho-visita";
 
+function mensagemErro(error: unknown, padrao: string): string {
+    return error instanceof ApiClientError ? error.message : padrao;
+}
+
+/** Consulta visitas reais por estudo e permite desfechos ao coordenador. @author Lívia */
 export function VisitasPage() {
-    const { studies, participants, visits, addVisit, completeVisit } = usePrototipos();
-    const [modalAgendar, setModalAgendar] = useState(false);
-    const [modalRegistrar, setModalRegistrar] = useState(false);
-    const [estudoFiltro, setEstudoFiltro] = useState("Todos");
-    const [statusFiltro, setStatusFiltro] = useState("Todos");
-    const [visitaSelecionadaId, setVisitaSelecionadaId] = useState<number | null>(null);
-
-    const visitaSelecionada = visitaSelecionadaId
-        ? (visits.find((v) => v.id === visitaSelecionadaId) ?? null)
-        : null;
-
-    if (visitaSelecionada) {
-        const participante = participants.find((p) => p.id === visitaSelecionada.participantId);
-        const estudo = studies.find((s) => s.id === visitaSelecionada.studyId);
-
+    const { session } = useAuth();
+    const [params] = useSearchParams();
+    if (!session) return <Navigate to="/login" replace />;
+    if (session.user.role !== "COORDINATOR" && session.user.role !== "RESEARCHER") {
         return (
-            <section className="flex flex-col gap-6">
-                <div>
-                    <button
-                        type="button"
-                        onClick={() => setVisitaSelecionadaId(null)}
-                        className="inline-flex cursor-pointer items-center gap-1.5 text-sm font-semibold text-[var(--color-primary)] hover:underline"
-                    >
-                        <ArrowLeft size={16} aria-hidden="true" />
-                        Voltar para visitas
-                    </button>
-                </div>
-
-                <header className="flex flex-wrap items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-[28px] font-bold tracking-tight text-[var(--color-title)]">
-                            {visitaSelecionada.type}
-                        </h1>
-                        <p className="mt-1 text-sm text-[var(--color-muted)]">
-                            {participante?.name} · {formatarDataPrototipo(visitaSelecionada.date)}
-                        </p>
-                    </div>
-
-                    {visitaSelecionada.status !== "Realizada" && (
-                        <button
-                            type="button"
-                            onClick={() => setModalRegistrar(true)}
-                            className="cursor-pointer rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white hover:opacity-95"
-                        >
-                            Registrar acompanhamento
-                        </button>
-                    )}
-                </header>
-
-                <div className="grid grid-cols-2 gap-5 max-[800px]:grid-cols-1">
-                    <section className="rounded-xl border border-[var(--color-border)] bg-white p-5">
-                        <h2 className="mb-4 text-base font-bold text-[var(--color-title)]">
-                            Detalhes da visita
-                        </h2>
-                        <dl className="grid grid-cols-[140px_1fr] gap-y-2.5 text-sm">
-                            <dt className="text-[var(--color-muted)]">Participante</dt>
-                            <dd className="font-semibold text-[var(--color-title)]">
-                                {participante?.name}
-                            </dd>
-                            <dt className="text-[var(--color-muted)]">Estudo</dt>
-                            <dd className="font-semibold text-[var(--color-title)]">
-                                {estudo?.title}
-                            </dd>
-                            <dt className="text-[var(--color-muted)]">Data</dt>
-                            <dd className="font-semibold text-[var(--color-title)]">
-                                {formatarDataPrototipo(visitaSelecionada.date)}
-                            </dd>
-                            <dt className="text-[var(--color-muted)]">Situação</dt>
-                            <dd>
-                                <PrototipoBadge>{visitaSelecionada.status}</PrototipoBadge>
-                            </dd>
-                        </dl>
-                    </section>
-
-                    <section className="rounded-xl border border-[var(--color-border)] bg-white p-5">
-                        <h2 className="mb-3 text-base font-bold text-[var(--color-title)]">
-                            Registro de acompanhamento
-                        </h2>
-                        <p className="text-sm text-[var(--color-text)]">
-                            {visitaSelecionada.notes ||
-                                "O acompanhamento ainda não foi registrado."}
-                        </p>
-                    </section>
-                </div>
-
-                {modalRegistrar && (
-                    <PrototipoModal
-                        title="Registrar acompanhamento"
-                        subtitle="Registre somente as informações previstas no protocolo."
-                        onClose={() => setModalRegistrar(false)}
-                    >
-                        <form
-                            onSubmit={(e) => {
-                                e.preventDefault();
-                                const formData = new FormData(e.currentTarget);
-                                completeVisit(
-                                    visitaSelecionada.id,
-                                    String(formData.get("notes") || "")
-                                );
-                                setModalRegistrar(false);
-                            }}
-                            className="flex flex-col gap-4"
-                        >
-                            <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--color-title)]">
-                                <span>
-                                    Resumo do acompanhamento{" "}
-                                    <b className="text-[var(--color-error)]">*</b>
-                                </span>
-                                <textarea
-                                    name="notes"
-                                    required
-                                    rows={4}
-                                    placeholder="Descreva o registro da visita..."
-                                    className="rounded-lg border border-[var(--color-border)] bg-white p-3 text-sm text-[var(--color-text)]"
-                                />
-                            </label>
-
-                            <div className="flex justify-end gap-2.5 pt-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setModalRegistrar(false)}
-                                    className="cursor-pointer rounded-lg border border-[var(--color-border)] bg-white px-4 py-2 text-sm font-semibold text-[var(--color-title)] hover:bg-slate-50"
-                                >
-                                    Cancelar
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="cursor-pointer rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white hover:opacity-95"
-                                >
-                                    Salvar registro
-                                </button>
-                            </div>
-                        </form>
-                    </PrototipoModal>
-                )}
+            <section className="p-8">
+                <h1 className="text-2xl font-bold text-[var(--color-title)]">Acesso restrito</h1>
+                <p className="mt-2">
+                    As visitas estão disponíveis para coordenadores e pesquisadores autorizados.
+                </p>
             </section>
         );
     }
-
-    const filtradas = visits.filter(
-        (v) =>
-            (estudoFiltro === "Todos" || String(v.studyId) === estudoFiltro) &&
-            (statusFiltro === "Todos" || v.status === statusFiltro)
+    return (
+        <EstudosVisitas
+            key={`${session.accessToken}:${params.get("studyId") ?? ""}`}
+            token={session.accessToken}
+            role={session.user.role}
+            estudoSolicitado={params.get("studyId")}
+        />
     );
-    const ordenadas = [...filtradas].sort((a, b) => a.date.localeCompare(b.date));
+}
+
+function EstudosVisitas({
+    token,
+    role,
+    estudoSolicitado,
+}: {
+    token: string;
+    role: UserRole;
+    estudoSolicitado: string | null;
+}) {
+    const [estudos, setEstudos] = useState<EstudoApi[]>([]);
+    const [studyId, setStudyId] = useState<number | null>(null);
+    const [carregando, setCarregando] = useState(true);
+    const [erro, setErro] = useState("");
+    const [tentativa, setTentativa] = useState(0);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        listarEstudos(token, controller.signal)
+            .then((dados) => {
+                if (controller.signal.aborted) return;
+                setEstudos(dados);
+                const solicitado =
+                    estudoSolicitado &&
+                    /^[1-9]\d*$/.test(estudoSolicitado) &&
+                    Number.isSafeInteger(Number(estudoSolicitado))
+                        ? Number(estudoSolicitado)
+                        : null;
+                setStudyId(
+                    estudoSolicitado === null
+                        ? (dados[0]?.id ?? null)
+                        : (dados.find((estudo) => estudo.id === solicitado)?.id ?? null)
+                );
+            })
+            .catch((error: unknown) => {
+                if (!controller.signal.aborted)
+                    setErro(
+                        mensagemErro(
+                            error,
+                            "Não foi possível carregar os estudos. Tente novamente."
+                        )
+                    );
+            })
+            .finally(() => {
+                if (!controller.signal.aborted) setCarregando(false);
+            });
+        return () => controller.abort();
+    }, [token, estudoSolicitado, tentativa]);
+
+    const selecionado = estudos.find((estudo) => estudo.id === studyId);
 
     return (
-        <section className="flex flex-col gap-6" aria-labelledby="visitas-heading">
-            <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[#dce5ed] bg-gradient-to-r from-[#1b2d40] to-[#29435c] p-6 text-white">
-                <div>
-                    <span className="text-xs font-bold tracking-wider uppercase opacity-80">
-                        AGENDA DE ACOMPANHAMENTO
-                    </span>
-                    <h1 id="visitas-heading" className="mt-1 text-[28px] font-bold tracking-tight">
-                        Visitas (Protótipo)
-                    </h1>
-                    <p className="mt-1 text-sm opacity-90">
-                        Organize compromissos e registre o acompanhamento dos participantes.
-                    </p>
-                </div>
-
-                <button
-                    type="button"
-                    onClick={() => setModalAgendar(true)}
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg bg-[var(--color-primary)] px-4 py-2.5 text-sm font-semibold text-white hover:opacity-95"
+        <section className="flex flex-col gap-5" aria-labelledby="visitas-heading">
+            <header>
+                <h1
+                    id="visitas-heading"
+                    className="text-[28px] font-bold text-[var(--color-title)]"
                 >
-                    <Plus size={18} aria-hidden="true" />
-                    Agendar visita
-                </button>
-            </div>
-
-            <div className="grid grid-cols-[280px_1fr] gap-5 max-[900px]:grid-cols-1">
-                <aside className="flex flex-col gap-4 rounded-xl border border-[var(--color-border)] bg-white p-5">
-                    <h2 className="text-base font-bold text-[var(--color-title)]">
-                        Filtrar agenda
-                    </h2>
-
-                    <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--color-title)]">
-                        <span>Estudo</span>
-                        <select
-                            value={estudoFiltro}
-                            onChange={(e) => setEstudoFiltro(e.target.value)}
-                            className="h-10 rounded-lg border border-[var(--color-border)] bg-white px-3 text-sm text-[var(--color-text)]"
-                        >
-                            <option value="Todos">Todos</option>
-                            {studies.map((s) => (
-                                <option key={s.id} value={s.id}>
-                                    {s.title}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
-
-                    <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--color-title)]">
-                        <span>Situação</span>
-                        <select
-                            value={statusFiltro}
-                            onChange={(e) => setStatusFiltro(e.target.value)}
-                            className="h-10 rounded-lg border border-[var(--color-border)] bg-white px-3 text-sm text-[var(--color-text)]"
-                        >
-                            <option value="Todos">Todos</option>
-                            <option value="Agendada">Agendada</option>
-                            <option value="Pendente">Pendente</option>
-                            <option value="Realizada">Realizada</option>
-                        </select>
-                    </label>
-
-                    <div className="mt-2 flex flex-col gap-2 border-t border-[#e2e8f0] pt-4 text-xs font-medium text-[var(--color-muted)]">
-                        <span className="flex items-center gap-2">
-                            <i className="h-2.5 w-2.5 rounded-full bg-[var(--color-info)]" />
-                            {visits.filter((v) => v.status === "Agendada").length} agendadas
-                        </span>
-                        <span className="flex items-center gap-2">
-                            <i className="h-2.5 w-2.5 rounded-full bg-[var(--color-warning)]" />
-                            {visits.filter((v) => v.status === "Pendente").length} pendentes
-                        </span>
-                        <span className="flex items-center gap-2">
-                            <i className="h-2.5 w-2.5 rounded-full bg-[var(--color-success)]" />
-                            {visits.filter((v) => v.status === "Realizada").length} realizadas
-                        </span>
-                    </div>
-                </aside>
-
-                <section className="flex flex-col rounded-xl border border-[var(--color-border)] bg-white p-5">
-                    <div className="mb-4 flex items-center justify-between border-b border-[#e2e8f0] pb-4">
-                        <div>
-                            <h2 className="text-base font-bold text-[var(--color-title)]">
-                                Próximos registros
-                            </h2>
-                            <p className="mt-0.5 text-xs text-[var(--color-muted)]">
-                                Agenda cronológica do período selecionado
-                            </p>
-                        </div>
-                        <span className="rounded-full bg-[#f1f5f9] px-3 py-1 text-xs font-bold text-[var(--color-title)]">
-                            {ordenadas.length} visitas
-                        </span>
-                    </div>
-
-                    {ordenadas.length > 0 ? (
-                        <div className="flex flex-col gap-3">
-                            {ordenadas.map((v) => {
-                                const d = new Date(`${v.date}T12:00:00`);
-                                const participanteNome =
-                                    participants.find((p) => p.id === v.participantId)?.name ?? "";
-                                const estudoTitulo =
-                                    studies.find((s) => s.id === v.studyId)?.title ?? "";
-
-                                return (
-                                    <button
-                                        key={v.id}
-                                        type="button"
-                                        onClick={() => setVisitaSelecionadaId(v.id)}
-                                        className="flex cursor-pointer items-center gap-4 rounded-xl border border-[#e2e8f0] bg-[#f8fafc] p-4 text-left transition hover:border-[var(--color-primary)] hover:bg-white"
-                                    >
-                                        <div className="flex min-w-[54px] flex-col items-center justify-center rounded-lg bg-white px-2.5 py-2 text-center shadow-2xs">
-                                            <strong className="text-lg leading-none font-bold text-[var(--color-title)]">
-                                                {d.getDate()}
-                                            </strong>
-                                            <span className="mt-1 text-[11px] font-semibold uppercase text-[var(--color-muted)]">
-                                                {d
-                                                    .toLocaleDateString("pt-BR", { month: "short" })
-                                                    .replace(".", "")}
-                                            </span>
-                                        </div>
-
-                                        <div className="flex min-w-0 flex-1 flex-col gap-1">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <PrototipoBadge>{v.status}</PrototipoBadge>
-                                                <small className="text-xs font-medium text-[var(--color-muted)]">
-                                                    {v.type}
-                                                </small>
-                                            </div>
-                                            <h3 className="text-sm font-bold text-[var(--color-title)]">
-                                                {participanteNome}
-                                            </h3>
-                                            <p className="text-xs text-[var(--color-muted)]">
-                                                {estudoTitulo}
-                                            </p>
-                                        </div>
-
-                                        <ChevronRight
-                                            size={18}
-                                            className="shrink-0 text-[var(--color-muted)]"
-                                            aria-hidden="true"
-                                        />
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    ) : (
-                        <PrototipoEmpty text="Não há visitas para os filtros selecionados." />
+                    Visitas agendadas
+                </h1>
+                <p className="mt-1 text-sm text-[var(--color-muted)]">
+                    Consulte a agenda e confirme os desfechos. Realizada, ausente e cancelada são
+                    situações finais.
+                </p>
+            </header>
+            <div className="flex flex-col gap-1.5 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+                <label
+                    htmlFor="visitas-estudo"
+                    className="text-sm font-medium text-[var(--color-title)]"
+                >
+                    Estudo
+                </label>
+                <select
+                    id="visitas-estudo"
+                    value={studyId ?? ""}
+                    disabled={carregando || estudos.length === 0}
+                    onChange={(event) =>
+                        setStudyId(event.target.value ? Number(event.target.value) : null)
+                    }
+                    className="h-10 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]"
+                >
+                    {studyId === null && (
+                        <option value="">
+                            {estudos.length ? "Selecione um estudo" : "Nenhum estudo disponível"}
+                        </option>
                     )}
-                </section>
+                    {estudos.map((estudo) => (
+                        <option key={estudo.id} value={estudo.id}>
+                            {estudo.title}
+                        </option>
+                    ))}
+                </select>
             </div>
-
-            {modalAgendar && (
-                <ModalAgendarVisita
-                    studies={studies}
-                    participants={participants}
-                    aoFechar={() => setModalAgendar(false)}
-                    aoSalvar={addVisit}
+            {carregando ? (
+                <p role="status" className="text-sm text-[var(--color-muted)]">
+                    Carregando estudos...
+                </p>
+            ) : erro ? (
+                <div className="flex flex-col items-start gap-2">
+                    <p role="alert" className="text-sm text-[var(--color-error)]">
+                        {erro}
+                    </p>
+                    <Button
+                        variant="secondary"
+                        type="button"
+                        onClick={() => {
+                            setErro("");
+                            setCarregando(true);
+                            setTentativa((atual) => atual + 1);
+                        }}
+                    >
+                        Tentar novamente
+                    </Button>
+                </div>
+            ) : selecionado ? (
+                <AgendaEstudo
+                    key={selecionado.id}
+                    estudo={selecionado}
+                    role={role}
+                    token={token}
+                    onEstudoAtualizado={(atual) =>
+                        setEstudos((anteriores) =>
+                            anteriores.map((estudo) => (estudo.id === atual.id ? atual : estudo))
+                        )
+                    }
                 />
+            ) : (
+                <p
+                    role={estudoSolicitado !== null ? "alert" : "status"}
+                    className="text-sm text-[var(--color-muted)]"
+                >
+                    {estudoSolicitado !== null
+                        ? "O estudo solicitado não está disponível."
+                        : "Nenhum estudo disponível para consultar visitas."}
+                </p>
             )}
         </section>
     );
 }
 
-function ModalAgendarVisita({
-    studies,
-    participants,
-    aoFechar,
-    aoSalvar,
+function AgendaEstudo({
+    estudo,
+    role,
+    token,
+    onEstudoAtualizado,
 }: {
-    studies: EstudoPrototipo[];
-    participants: ParticipantePrototipo[];
-    aoFechar: () => void;
-    aoSalvar: (visita: Omit<VisitaPrototipo, "id">) => void;
+    estudo: EstudoApi;
+    role: UserRole;
+    token: string;
+    onEstudoAtualizado: (estudo: EstudoApi) => void;
 }) {
-    const [studyId, setStudyId] = useState<number>(studies[0]?.id ?? 1);
-    const participantesEstudo = participants.filter((p) => p.studyId === studyId);
+    const [status, setStatus] = useState<StatusVisitaAgendada | "">("");
+    const [participantId, setParticipantId] = useState("");
+    const [participantes, setParticipantes] = useState<ParticipanteApi[]>([]);
+    const [carregandoParticipantes, setCarregandoParticipantes] = useState(true);
+    const [erroParticipantes, setErroParticipantes] = useState("");
+    const [tentativaParticipantes, setTentativaParticipantes] = useState(0);
+    const [visitas, setVisitas] = useState<VisitaAgendada[]>([]);
+    const [carregando, setCarregando] = useState(true);
+    const [erro, setErro] = useState("");
+    const [tentativa, setTentativa] = useState(0);
+    const [selecao, setSelecao] = useState<{
+        visita: VisitaAgendada;
+        outcome: DesfechoVisita;
+    } | null>(null);
+    const [registrando, setRegistrando] = useState(false);
+    const [feedback, setFeedback] = useState<{
+        texto: string;
+        status: StatusVisitaAgendada;
+    } | null>(null);
 
-    function handleSubmit(e: FormEvent<HTMLFormElement>) {
-        e.preventDefault();
-        const formData = new FormData(e.currentTarget);
-        aoSalvar({
-            studyId,
-            participantId: Number(formData.get("participant")),
-            date: String(formData.get("date")),
-            type: String(formData.get("type")),
-            status: "Agendada",
-        });
-        aoFechar();
+    useEffect(() => {
+        const controller = new AbortController();
+        listarParticipantesPorEstudo(estudo.id, token, controller.signal)
+            .then((dados) => {
+                if (!controller.signal.aborted) setParticipantes(dados);
+            })
+            .catch((error: unknown) => {
+                if (!controller.signal.aborted)
+                    setErroParticipantes(
+                        mensagemErro(error, "Não foi possível carregar os participantes.")
+                    );
+            })
+            .finally(() => {
+                if (!controller.signal.aborted) setCarregandoParticipantes(false);
+            });
+        return () => controller.abort();
+    }, [estudo.id, token, tentativaParticipantes]);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        listarVisitasDoEstudo(
+            estudo.id,
+            {
+                ...(status ? { status } : {}),
+                ...(participantId ? { participantId: Number(participantId) } : {}),
+            },
+            token,
+            controller.signal
+        )
+            .then((dados) => {
+                if (!controller.signal.aborted) setVisitas(dados);
+            })
+            .catch((error: unknown) => {
+                if (!controller.signal.aborted)
+                    setErro(
+                        mensagemErro(
+                            error,
+                            "Não foi possível carregar as visitas. Tente novamente."
+                        )
+                    );
+            })
+            .finally(() => {
+                if (!controller.signal.aborted) setCarregando(false);
+            });
+        return () => controller.abort();
+    }, [estudo.id, token, status, participantId, tentativa]);
+
+    function prepararConsulta() {
+        setCarregando(true);
+        setErro("");
+        setFeedback(null);
     }
 
+    function atualizarLinha(atual: VisitaAgendada) {
+        setVisitas((anteriores) => {
+            const outras = anteriores.filter((visita) => visita.id !== atual.id);
+            const corresponde =
+                (!status || atual.status === status) &&
+                (!participantId || atual.participantId === Number(participantId));
+            return (corresponde ? [...outras, atual] : outras).sort(
+                (a, b) => Date.parse(a.scheduledAt) - Date.parse(b.scheduledAt) || a.id - b.id
+            );
+        });
+        setSelecao((anterior) =>
+            anterior?.visita.id === atual.id ? { ...anterior, visita: atual } : anterior
+        );
+    }
+
+    function abrirDesfecho(visita: VisitaAgendada, outcome: DesfechoVisita) {
+        if (!podeRegistrarDesfecho(role, estudo.status, visita) || visita.studyId !== estudo.id)
+            return;
+        setFeedback(null);
+        setSelecao({ visita, outcome });
+    }
+
+    async function confirmarDesfecho(dados: DadosDesfechoVisita) {
+        if (
+            !selecao ||
+            registrando ||
+            dados.outcome !== selecao.outcome ||
+            !podeRegistrarDesfecho(role, estudo.status, selecao.visita)
+        ) {
+            throw new ApiClientError("A visita não está disponível para registrar esse desfecho.", {
+                status: 409,
+            });
+        }
+        setRegistrando(true);
+        try {
+            const atual = await registrarDesfechoVisita(selecao.visita, dados, token);
+            atualizarLinha(atual);
+            setSelecao(null);
+            setFeedback({
+                texto: `Desfecho registrado: ${STATUS_VISITA_LABELS[atual.status]}.`,
+                status: atual.status,
+            });
+        } finally {
+            setRegistrando(false);
+        }
+    }
+
+    async function atualizarItem() {
+        if (!selecao) return;
+        const visita = selecao.visita;
+        const [atual, estudoAtual] = await Promise.all([
+            obterVisitaAgendada(estudo.id, visita.participantId, visita.id, token),
+            obterEstudo(estudo.id, token),
+        ]);
+        atualizarLinha(atual);
+        onEstudoAtualizado(estudoAtual);
+    }
+
+    const estudoEditavel = estudo.status !== "CLOSED" && estudo.status !== "CANCELLED";
+    const filtrosBloqueados = registrando || Boolean(selecao);
+
     return (
-        <PrototipoModal
-            title="Agendar visita"
-            subtitle="Vincule a visita a um estudo e participante."
-            onClose={aoFechar}
-        >
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--color-title)]">
-                    <span>
-                        Estudo <b className="text-[var(--color-error)]">*</b>
-                    </span>
+        <section className="flex flex-col gap-4" aria-label="Agenda do estudo">
+            {!estudoEditavel && (
+                <p
+                    role="note"
+                    className="rounded-lg bg-[var(--color-neutral-soft)] p-3 text-sm text-[var(--color-neutral)]"
+                >
+                    Estudo em consulta: novos desfechos estão indisponíveis.
+                </p>
+            )}
+            {feedback && (
+                <p
+                    role="status"
+                    className={`rounded-lg p-3 text-sm font-medium ${STATUS_VISITA_CLASSES[feedback.status]}`}
+                >
+                    {feedback.texto}
+                </p>
+            )}
+            <div className="flex flex-wrap items-end gap-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-5">
+                <div className="flex min-w-[160px] flex-1 flex-col gap-1.5">
+                    <label htmlFor="visitas-status" className="text-sm font-medium">
+                        Situação
+                    </label>
                     <select
-                        value={studyId}
-                        onChange={(e) => setStudyId(Number(e.target.value))}
-                        className="h-10 rounded-lg border border-[var(--color-border)] bg-white px-3 text-sm text-[var(--color-text)]"
+                        id="visitas-status"
+                        value={status}
+                        disabled={filtrosBloqueados}
+                        onChange={(event) => {
+                            prepararConsulta();
+                            setStatus(event.target.value as StatusVisitaAgendada | "");
+                        }}
+                        className="h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]"
                     >
-                        {studies.map((s) => (
-                            <option key={s.id} value={s.id}>
-                                {s.title}
+                        <option value="">Todas as situações</option>
+                        {Object.entries(STATUS_VISITA_LABELS).map(([valor, rotulo]) => (
+                            <option key={valor} value={valor}>
+                                {rotulo}
                             </option>
                         ))}
                     </select>
-                </label>
-
-                <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--color-title)]">
-                    <span>
-                        Participante <b className="text-[var(--color-error)]">*</b>
-                    </span>
-                    <select
-                        name="participant"
-                        required
-                        className="h-10 rounded-lg border border-[var(--color-border)] bg-white px-3 text-sm text-[var(--color-text)]"
-                    >
-                        {participantesEstudo.map((p) => (
-                            <option key={p.id} value={p.id}>
-                                {p.name}
-                            </option>
-                        ))}
-                    </select>
-                </label>
-
-                <div className="grid grid-cols-2 gap-3 max-[540px]:grid-cols-1">
-                    <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--color-title)]">
-                        <span>
-                            Data <b className="text-[var(--color-error)]">*</b>
-                        </span>
-                        <input
-                            name="date"
-                            type="date"
-                            required
-                            defaultValue="2026-05-25"
-                            className="h-10 rounded-lg border border-[var(--color-border)] bg-white px-3 text-sm text-[var(--color-text)]"
-                        />
-                    </label>
-
-                    <label className="flex flex-col gap-1.5 text-sm font-medium text-[var(--color-title)]">
-                        <span>
-                            Tipo <b className="text-[var(--color-error)]">*</b>
-                        </span>
-                        <select
-                            name="type"
-                            className="h-10 rounded-lg border border-[var(--color-border)] bg-white px-3 text-sm text-[var(--color-text)]"
-                        >
-                            <option value="Visita de acompanhamento">
-                                Visita de acompanhamento
-                            </option>
-                            <option value="Avaliação inicial">Avaliação inicial</option>
-                            <option value="Visita de encerramento">Visita de encerramento</option>
-                        </select>
-                    </label>
                 </div>
-
-                <div className="flex justify-end gap-2.5 pt-2">
-                    <button
+                <div className="flex min-w-[200px] flex-1 flex-col gap-1.5">
+                    <label htmlFor="visitas-participante" className="text-sm font-medium">
+                        Participante
+                    </label>
+                    <select
+                        id="visitas-participante"
+                        value={participantId}
+                        disabled={
+                            filtrosBloqueados ||
+                            carregandoParticipantes ||
+                            Boolean(erroParticipantes)
+                        }
+                        onChange={(event) => {
+                            prepararConsulta();
+                            setParticipantId(event.target.value);
+                        }}
+                        className="h-10 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-3 text-sm focus-visible:outline-2 focus-visible:outline-[var(--color-primary)]"
+                    >
+                        <option value="">Todos os participantes</option>
+                        {participantes.map((participante) => (
+                            <option key={participante.id} value={participante.id}>
+                                {participante.candidateName}
+                                {participante.status === "WITHDRAWN" ? " — Retirado" : ""}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={filtrosBloqueados || carregando}
+                    onClick={() => {
+                        prepararConsulta();
+                        setTentativa((atual) => atual + 1);
+                    }}
+                    className="btn btn-secondary inline-flex items-center gap-2"
+                >
+                    <RefreshCw size={16} aria-hidden="true" />
+                    Atualizar visitas
+                </Button>
+            </div>
+            {erroParticipantes && (
+                <div className="flex flex-wrap items-center gap-3">
+                    <p role="alert" className="text-sm text-[var(--color-error)]">
+                        {erroParticipantes}
+                    </p>
+                    <Button
                         type="button"
-                        onClick={aoFechar}
-                        className="cursor-pointer rounded-lg border border-[var(--color-border)] bg-white px-4 py-2 text-sm font-semibold text-[var(--color-title)] hover:bg-slate-50"
+                        variant="secondary"
+                        disabled={carregandoParticipantes || filtrosBloqueados}
+                        onClick={() => {
+                            setErroParticipantes("");
+                            setCarregandoParticipantes(true);
+                            setTentativaParticipantes((atual) => atual + 1);
+                        }}
                     >
-                        Cancelar
-                    </button>
-                    <button
-                        type="submit"
-                        className="cursor-pointer rounded-lg bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white hover:opacity-95"
-                    >
-                        Agendar visita
-                    </button>
+                        Consultar participantes novamente
+                    </Button>
                 </div>
-            </form>
-        </PrototipoModal>
+            )}
+            <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)]">
+                {carregando ? (
+                    <p role="status" className="p-8 text-center text-sm text-[var(--color-muted)]">
+                        Carregando visitas...
+                    </p>
+                ) : erro ? (
+                    <div className="flex flex-col items-center gap-3 p-6">
+                        <p role="alert" className="text-sm text-[var(--color-error)]">
+                            {erro}
+                        </p>
+                        <Button
+                            type="button"
+                            variant="secondary"
+                            onClick={() => {
+                                prepararConsulta();
+                                setTentativa((atual) => atual + 1);
+                            }}
+                        >
+                            Tentar novamente
+                        </Button>
+                    </div>
+                ) : (
+                    <>
+                        <ListaVisitasAgendadas
+                            visitas={visitas}
+                            exibirParticipante
+                            onDesfecho={
+                                role === "COORDINATOR" && estudoEditavel ? abrirDesfecho : undefined
+                            }
+                        />
+                        <p className="border-t border-[var(--color-border)] px-5 py-3 text-xs text-[var(--color-muted)]">
+                            {visitas.length}{" "}
+                            {visitas.length === 1 ? "visita encontrada" : "visitas encontradas"}.
+                            Horários de Fortaleza.
+                        </p>
+                    </>
+                )}
+            </div>
+            {selecao && (
+                <ModalDesfechoVisita
+                    key={`${selecao.visita.id}:${selecao.outcome}`}
+                    visita={selecao.visita}
+                    outcome={selecao.outcome}
+                    permitido={podeRegistrarDesfecho(role, estudo.status, selecao.visita)}
+                    onFechar={() => setSelecao(null)}
+                    onConfirmar={confirmarDesfecho}
+                    onAtualizar={atualizarItem}
+                />
+            )}
+        </section>
     );
 }
