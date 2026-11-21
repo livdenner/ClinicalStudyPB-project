@@ -111,7 +111,9 @@ describe("estudos conectados à API", () => {
         renderPage();
         expect(screen.getByRole("status")).toHaveTextContent("Carregando estudos...");
         expect(screen.getByRole("button", { name: "Novo estudo" })).toBeDisabled();
-        expect(screen.queryByRole("grid")).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole("list", { name: "Lista de estudos clínicos" })
+        ).not.toBeInTheDocument();
         await act(async () => concluir(resposta([])));
         expect(await screen.findByText("Nenhum estudo encontrado")).toBeInTheDocument();
         expect(screen.getByText("Exibindo 0 de 0 estudos")).toBeInTheDocument();
@@ -134,13 +136,9 @@ describe("estudos conectados à API", () => {
         await screen.findByText(estudo.title);
         expect(screen.getByText("Pesquisador #11")).toBeInTheDocument();
         expect(screen.getByText("Ana Silva")).toBeInTheDocument();
-        expect(
-            screen.getByRole("columnheader", { name: "Limite de participantes" })
-        ).toBeInTheDocument();
-        expect(screen.queryByRole("columnheader", { name: "Status" })).not.toBeInTheDocument();
-        expect(
-            screen.queryByRole("columnheader", { name: "Participantes" })
-        ).not.toBeInTheDocument();
+        expect(screen.getAllByText("Limite de participantes")).toHaveLength(2);
+        expect(screen.queryByText("Status", { exact: true })).not.toBeInTheDocument();
+        expect(screen.queryByText("Participantes", { exact: true })).not.toBeInTheDocument();
         expect(screen.queryByLabelText("Filtrar por status")).not.toBeInTheDocument();
         expect(screen.queryByLabelText("Resumo dos estudos")).not.toBeInTheDocument();
         fireEvent.change(screen.getByLabelText("Buscar por nome do estudo"), {
@@ -206,7 +204,7 @@ describe("estudos conectados à API", () => {
             endDate: "2026-12-01",
             participantLimit: 30,
         });
-        expect(screen.getByRole("rowheader", { name: "Novo estudo" })).toBeInTheDocument();
+        expect(screen.getByRole("heading", { name: "Novo estudo" })).toBeInTheDocument();
         expect(toast.success).toHaveBeenCalledWith("Estudo cadastrado com sucesso.");
     });
 
@@ -289,7 +287,7 @@ describe("estudos conectados à API", () => {
         });
         fireEvent.click(within(dialog).getByRole("button", { name: "Cancelar" }));
         await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
-        expect(screen.getByRole("rowheader", { name: estudo.title })).toBeInTheDocument();
+        expect(screen.getByRole("heading", { name: estudo.title })).toBeInTheDocument();
         expect(fetchMock).toHaveBeenCalledTimes(1);
         fireEvent.click(screen.getByRole("button", { name: `Editar estudo: ${estudo.title}` }));
         const novoDialog = await screen.findByRole("dialog");
@@ -326,7 +324,9 @@ describe("estudos conectados à API", () => {
         expect(await screen.findByRole("alert")).toHaveTextContent(
             "Não foi possível carregar os estudos."
         );
-        expect(screen.queryByRole("grid")).not.toBeInTheDocument();
+        expect(
+            screen.queryByRole("list", { name: "Lista de estudos clínicos" })
+        ).not.toBeInTheDocument();
         fireEvent.click(screen.getByRole("button", { name: "Tentar novamente" }));
         expect(await screen.findByText(estudo.title)).toBeInTheDocument();
     });
@@ -342,7 +342,9 @@ describe("estudos conectados à API", () => {
             );
             renderPage();
             expect(await screen.findByRole("alert")).toHaveTextContent(mensagem);
-            expect(screen.queryByRole("grid")).not.toBeInTheDocument();
+            expect(
+                screen.queryByRole("list", { name: "Lista de estudos clínicos" })
+            ).not.toBeInTheDocument();
             expect(screen.getByRole("button", { name: "Novo estudo" })).toBeDisabled();
             expect(screen.getByRole("link", { name: "Ir para o login" })).toHaveAttribute(
                 "href",
