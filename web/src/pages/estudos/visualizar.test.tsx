@@ -518,7 +518,7 @@ const cenariosAcoes = [
 );
 
 it.each(cenariosAcoes)(
-    "T24.1: ações e limite de uma primária nas quatro abas em $status para $papel",
+    "T24.5 — Hierarquia das ações: no máximo uma primária nas quatro abas em $status para $papel",
     async ({ status, role, responsavel, editavel }) => {
         vi.spyOn(Tabs, "Indicator").mockImplementation(() => <span aria-hidden="true" />);
         const atual = { ...estudo, status, responsibleUserId: responsavel ? 7 : 11 };
@@ -584,6 +584,25 @@ it.each(cenariosAcoes)(
         }
     }
 );
+
+it("T24.5 — Confirmação de estado: Voltar preserva o estudo sem enviar alteração", async () => {
+    const fetchMock = vi
+        .spyOn(globalThis, "fetch")
+        .mockResolvedValue(resposta({ ...estudo, responsibleUserId: 7 }));
+    renderPage();
+    fireEvent.click(await encontrarAcaoEstado("Cancelar estudo"));
+    const dialog = await screen.findByRole("dialog", { name: "Cancelar estudo" });
+    fireEvent.change(within(dialog).getByLabelText("Justificativa"), {
+        target: { value: "Cancelamento não confirmado" },
+    });
+    fireEvent.click(within(dialog).getByRole("button", { name: "Voltar" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(
+        within(screen.getByLabelText("Resumo do estudo")).getByText("Planejamento")
+    ).toBeInTheDocument();
+});
 
 it("T24.1: coordenador abre o recrutamento com o estudo atual selecionado", async () => {
     vi.spyOn(Tabs, "Indicator").mockImplementation(() => <span aria-hidden="true" />);
