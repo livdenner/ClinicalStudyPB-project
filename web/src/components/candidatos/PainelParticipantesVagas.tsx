@@ -142,7 +142,7 @@ export function PainelParticipantesVagas({
                             Boolean(onAgendarVisita) && participante.status === "ACTIVE";
                         if (!onVerVisitas && !permiteAgendar) return null;
                         return (
-                            <div className="flex flex-wrap items-center gap-2">
+                            <div className="acoes-agenda-participante">
                                 {onVerVisitas && (
                                     <Button
                                         type="button"
