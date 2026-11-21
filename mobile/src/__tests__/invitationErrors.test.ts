@@ -7,6 +7,7 @@ import {
   INVITATION_DECISION_MESSAGES,
   INVITATION_MESSAGES,
   isHandledSessionError,
+  isInvitationUnavailableError,
   shouldRefreshInvitationAfterDecisionError,
 } from '../services/invitations/invitationErrors';
 
@@ -144,5 +145,25 @@ describe('invitationErrors', () => {
       false,
     );
     expect(isHandledSessionError(new Error('falha qualquer'))).toBe(false);
+  });
+
+  it('identifica apenas 404 e 403 como convite indisponível ou sem acesso', () => {
+    expect(
+      isInvitationUnavailableError(new ApiError('não encontrado', 404)),
+    ).toBe(true);
+    expect(
+      isInvitationUnavailableError(new ApiError('sem acesso', 403)),
+    ).toBe(true);
+    expect(
+      isInvitationUnavailableError(
+        new ApiError('cancelada', 409, 'CANDIDATE_CANCELLED'),
+      ),
+    ).toBe(false);
+    expect(
+      isInvitationUnavailableError(new ApiError('falha', 500)),
+    ).toBe(false);
+    expect(
+      isInvitationUnavailableError(new TypeError('Network request failed')),
+    ).toBe(false);
   });
 });

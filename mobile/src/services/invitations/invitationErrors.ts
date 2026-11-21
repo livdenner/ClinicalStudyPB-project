@@ -126,3 +126,13 @@ export function blocksInvitationDecision(error: unknown): boolean {
       error.code === 'STUDY_NOT_RECRUITING')
   );
 }
+
+/**
+ * Indica que o convite não está mais disponível ou acessível para a conta,
+ * exigindo limpar dados exibidos anteriormente em vez de mantê-los na tela.
+ */
+export function isInvitationUnavailableError(error: unknown): boolean {
+  return (
+    error instanceof ApiError && (error.status === 404 || error.status === 403)
+  );
+}

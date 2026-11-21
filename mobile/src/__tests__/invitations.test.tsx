@@ -470,6 +470,9 @@ describe('convites do participante', () => {
     expect(
       await screen.findByText(INVITATION_DECISION_MESSAGES.uncertain),
     ).toBeTruthy();
+    expect(screen.queryByText(INVITATION_MESSAGES.detailFailed)).toBeNull();
+    expect(screen.queryByText('Tentar novamente')).toBeNull();
+    expect(screen.getByText('Atualizar convite')).toBeTruthy();
     expect(screen.queryByText('Aceitar convite')).toBeNull();
     expect(screen.queryByText('Recusar convite')).toBeNull();
     expect(api.decideInvitation).toHaveBeenCalledTimes(1);
@@ -678,6 +681,174 @@ describe('convites do participante', () => {
     expect(
       await screen.findByText(INVITATION_MESSAGES.notAvailable),
     ).toBeTruthy();
+    expect(screen.getByText('Voltar aos convites')).toBeTruthy();
+    expect(screen.getByText('Tentar novamente')).toBeTruthy();
+  });
+
+  it('limpa dados antigos e evita banners duplicados após CANDIDATE_CANCELLED seguido de 404', async () => {
+    storeSession();
+    api.getInvitation
+      .mockResolvedValueOnce(pendingDetail)
+      .mockRejectedValueOnce(new ApiError('não encontrado', 404, 'NOT_FOUND'));
+    api.decideInvitation.mockRejectedValue(
+      new ApiError('cancelada', 409, 'CANDIDATE_CANCELLED'),
+    );
+    api.listInvitations.mockResolvedValue([]);
+
+    await renderAuthenticatedAt('/invitations/31');
+    await screen.findByText('Aceitar convite');
+
+    await fireEvent.press(screen.getByText('Aceitar convite'));
+    await fireEvent.press(screen.getByText('Aceitar'));
+
+    expect(
+      await screen.findByText(INVITATION_MESSAGES.notAvailable),
+    ).toBeTruthy();
+    expect(screen.getByText('Voltar aos convites')).toBeTruthy();
+    expect(screen.getByText('Tentar novamente')).toBeTruthy();
+    expect(screen.queryByText('Estudo de hábitos de sono')).toBeNull();
+    expect(
+      screen.queryByText(INVITATION_DECISION_MESSAGES.cancelled),
+    ).toBeNull();
+    expect(screen.queryByText('Atualizar convite')).toBeNull();
+
+    await fireEvent.press(screen.getByText('Voltar aos convites'));
+    await waitFor(() => expect(screen).toHavePathname('/invitations'));
+  });
+
+  it('libera nova tentativa ao clicar em Atualizar convite após STUDY_NOT_RECRUITING', async () => {
+    storeSession();
+    api.getInvitation
+      .mockResolvedValueOnce(pendingDetail)
+      .mockResolvedValueOnce(pendingDetail)
+      .mockResolvedValueOnce(pendingDetail);
+    api.decideInvitation
+      .mockRejectedValueOnce(
+        new ApiError('encerrado', 409, 'STUDY_NOT_RECRUITING'),
+      )
+      .mockResolvedValueOnce({
+        ...pendingDetail,
+        status: 'GRANTED',
+        decidedAt: '2026-11-20T15:55:00.000Z',
+      });
+
+    await renderAuthenticatedAt('/invitations/31');
+    await screen.findByText('Aceitar convite');
+
+    await fireEvent.press(screen.getByText('Aceitar convite'));
+    await fireEvent.press(screen.getByText('Aceitar'));
+
+    expect(
+      await screen.findByText(
+        INVITATION_DECISION_MESSAGES.studyNotRecruiting,
+      ),
+    ).toBeTruthy();
+    await waitFor(() => expect(api.getInvitation).toHaveBeenCalledTimes(2));
+    expect(screen.queryByText('Aceitar convite')).toBeNull();
+    expect(screen.queryByText('Recusar convite')).toBeNull();
+    expect(screen.getByText('Atualizar convite')).toBeTruthy();
+
+    await fireEvent.press(screen.getByText('Atualizar convite'));
+
+    expect(await screen.findByText('Aceitar convite')).toBeTruthy();
+    expect(screen.getByText('Recusar convite')).toBeTruthy();
+    expect(
+      screen.queryByText(INVITATION_DECISION_MESSAGES.studyNotRecruiting),
+    ).toBeNull();
+
+    await fireEvent.press(screen.getByText('Aceitar convite'));
+    await fireEvent.press(screen.getByText('Aceitar'));
+
+    expect(await screen.findByText('Consentimento aceito')).toBeTruthy();
+    expect(api.decideInvitation).toHaveBeenCalledTimes(2);
+  });
+
+  it('evita banner duplicado quando Atualizar convite falha de forma transitória', async () => {
+    storeSession();
+    api.getInvitation
+      .mockResolvedValueOnce(pendingDetail)
+      .mockResolvedValueOnce(pendingDetail)
+      .mockRejectedValueOnce(new ApiError('falha', 500))
+      .mockResolvedValueOnce(pendingDetail);
+    api.decideInvitation.mockRejectedValue(
+      new ApiError('encerrado', 409, 'STUDY_NOT_RECRUITING'),
+    );
+
+    await renderAuthenticatedAt('/invitations/31');
+    await screen.findByText('Aceitar convite');
+
+    await fireEvent.press(screen.getByText('Aceitar convite'));
+    await fireEvent.press(screen.getByText('Aceitar'));
+
+    expect(
+      await screen.findByText(
+        INVITATION_DECISION_MESSAGES.studyNotRecruiting,
+      ),
+    ).toBeTruthy();
+    await waitFor(() => expect(api.getInvitation).toHaveBeenCalledTimes(2));
+
+    await fireEvent.press(screen.getByText('Atualizar convite'));
+
+    expect(
+      await screen.findByText(INVITATION_MESSAGES.detailFailed),
+    ).toBeTruthy();
+    expect(screen.getByText('Atualizar convite')).toBeTruthy();
+    expect(screen.queryByText('Tentar novamente')).toBeNull();
+    expect(screen.queryByText('Aceitar convite')).toBeNull();
+    expect(
+      screen.queryByText(INVITATION_DECISION_MESSAGES.studyNotRecruiting),
+    ).toBeNull();
+
+    await fireEvent.press(screen.getByText('Atualizar convite'));
+    expect(await screen.findByText('Aceitar convite')).toBeTruthy();
+  });
+
+  it('não exibe aviso de dados anteriores quando falha atualização após lista vazia', async () => {
+    storeSession();
+    api.listInvitations
+      .mockResolvedValueOnce([])
+      .mockRejectedValueOnce(new ApiError('falha', 500));
+
+    await renderAuthenticatedAt('/invitations');
+    await screen.findByText(/Você não tem convites disponíveis/);
+
+    await testRouter.push('/change-password');
+    await waitFor(() => expect(screen).toHavePathname('/change-password'));
+    await testRouter.back();
+    await waitFor(() => expect(screen).toHavePathname('/invitations'));
+
+    expect(
+      await screen.findByText(INVITATION_MESSAGES.listFailed),
+    ).toBeTruthy();
+    expect(
+      screen.queryByText(new RegExp(INVITATION_MESSAGES.previousData)),
+    ).toBeNull();
+    expect(
+      screen.queryByText(/Você não tem convites disponíveis/),
+    ).toBeNull();
+    expect(screen.getByText('Tentar novamente')).toBeTruthy();
+  });
+
+  it('exibe aviso de dados anteriores quando falha atualização com convites já listados', async () => {
+    storeSession();
+    api.listInvitations
+      .mockResolvedValueOnce([pendingSummary])
+      .mockRejectedValueOnce(new ApiError('falha', 500));
+
+    await renderAuthenticatedAt('/invitations');
+    await screen.findByText('Estudo de hábitos de sono');
+
+    await testRouter.push('/change-password');
+    await waitFor(() => expect(screen).toHavePathname('/change-password'));
+    await testRouter.back();
+    await waitFor(() => expect(screen).toHavePathname('/invitations'));
+
+    expect(
+      await screen.findByText(
+        `${INVITATION_MESSAGES.listFailed} ${INVITATION_MESSAGES.previousData}`,
+      ),
+    ).toBeTruthy();
+    expect(screen.getByText('Estudo de hábitos de sono')).toBeTruthy();
     expect(screen.getByText('Tentar novamente')).toBeTruthy();
   });
 

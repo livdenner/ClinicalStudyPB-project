@@ -24,8 +24,10 @@ import {
   blocksInvitationDecision,
   getInvitationDecisionErrorMessage,
   getInvitationLoadErrorMessage,
+  INVITATION_DECISION_MESSAGES,
   INVITATION_MESSAGES,
   isHandledSessionError,
+  isInvitationUnavailableError,
   shouldRefreshInvitationAfterDecisionError,
 } from '../../services/invitations/invitationErrors';
 import {
@@ -78,6 +80,14 @@ function decisionDialogMessage(
     : `Você vai aceitar o convite do estudo "${studyTitle}". A decisão é única e não poderá ser alterada pelo aplicativo.`;
 }
 
+type ReloadMode = 'load' | 'decision-recovery' | 'manual-refresh';
+
+interface ReloadRequest {
+  key: number;
+  mode: ReloadMode;
+  candidateId: number | null;
+}
+
 /**
  * Detalhe de um convite com protocolo e termo simulados. Convites pendentes
  * permitem aceite ou recusa com confirmação; resultados já gravados abrem em
@@ -92,18 +102,25 @@ export default function InvitationDetailScreen() {
   const [invitation, setInvitation] = useState<StudyInvitation | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(candidateId !== null);
-  const [reloadKey, setReloadKey] = useState(0);
+  const [reloadRequest, setReloadRequest] = useState<ReloadRequest>({
+    key: 0,
+    mode: 'load',
+    candidateId: null,
+  });
   const [decision, setDecision] = useState<InvitationDecision | null>(null);
   const [deciding, setDeciding] = useState(false);
   const [decisionError, setDecisionError] = useState('');
   const candidateIdRef = useRef<number | null>(candidateId);
   const mountedRef = useRef(true);
   const decisionRequestRef = useRef(0);
-  const recoveryRef = useRef(false);
   const decisionBlockedRef = useRef(false);
+  const hasInvitationRef = useRef(false);
+  const decisionErrorRef = useRef('');
   const previousCandidateIdRef = useRef<number | null>(candidateId);
 
   candidateIdRef.current = candidateId;
+  hasInvitationRef.current = invitation !== null;
+  decisionErrorRef.current = decisionError;
 
   useEffect(() => {
     mountedRef.current = true;
@@ -113,9 +130,31 @@ export default function InvitationDetailScreen() {
     };
   }, []);
 
+  function retryLoad(): void {
+    decisionBlockedRef.current = false;
+    setDecisionError('');
+    setReloadRequest((current) => ({
+      key: current.key + 1,
+      mode: 'load',
+      candidateId,
+    }));
+  }
+
+  function refreshAfterDecisionError(id: number): void {
+    setReloadRequest((current) => ({
+      key: current.key + 1,
+      mode: 'decision-recovery',
+      candidateId: id,
+    }));
+  }
+
   function refreshInvitation(): void {
-    recoveryRef.current = true;
-    setReloadKey((key) => key + 1);
+    decisionBlockedRef.current = false;
+    setReloadRequest((current) => ({
+      key: current.key + 1,
+      mode: 'manual-refresh',
+      candidateId,
+    }));
   }
 
   useEffect(() => {
@@ -123,7 +162,6 @@ export default function InvitationDetailScreen() {
     previousCandidateIdRef.current = candidateId;
     if (candidateChanged) {
       decisionRequestRef.current += 1;
-      recoveryRef.current = false;
       decisionBlockedRef.current = false;
       setDecision(null);
       setDeciding(false);
@@ -143,8 +181,12 @@ export default function InvitationDetailScreen() {
     const controller = new AbortController();
     let active = true;
 
-    const recoveringDecision = recoveryRef.current;
-    if (!recoveringDecision) {
+    const loadMode: ReloadMode =
+      !candidateChanged && reloadRequest.candidateId === candidateId
+        ? reloadRequest.mode
+        : 'load';
+    const preserveInvitation = loadMode !== 'load';
+    if (!preserveInvitation) {
       setInvitation(null);
     }
     setLoading(true);
@@ -159,8 +201,10 @@ export default function InvitationDetailScreen() {
           return;
         }
         setInvitation(result);
-        if (recoveringDecision) {
-          recoveryRef.current = false;
+        if (loadMode === 'manual-refresh') {
+          decisionBlockedRef.current = false;
+          setDecisionError('');
+        } else if (loadMode === 'decision-recovery') {
           if (
             normalizeInvitationStatus(result.status) !== 'CONSENT_PENDING' ||
             !decisionBlockedRef.current
@@ -173,6 +217,26 @@ export default function InvitationDetailScreen() {
           return;
         }
         if (isHandledSessionError(caught)) {
+          return;
+        }
+        if (isInvitationUnavailableError(caught)) {
+          setInvitation(null);
+          setDecisionError('');
+          decisionBlockedRef.current = false;
+          setError(getInvitationLoadErrorMessage(caught, 'detail'));
+          return;
+        }
+        if (
+          preserveInvitation &&
+          hasInvitationRef.current &&
+          decisionErrorRef.current !== ''
+        ) {
+          if (
+            loadMode === 'manual-refresh' &&
+            decisionErrorRef.current !== INVITATION_DECISION_MESSAGES.uncertain
+          ) {
+            setDecisionError(getInvitationLoadErrorMessage(caught, 'detail'));
+          }
           return;
         }
         setError(getInvitationLoadErrorMessage(caught, 'detail'));
@@ -189,7 +253,7 @@ export default function InvitationDetailScreen() {
       active = false;
       controller.abort();
     };
-  }, [candidateId, reloadKey, runAuthenticated]);
+  }, [candidateId, reloadRequest, runAuthenticated]);
 
   async function sendDecision(
     id: number,
@@ -233,10 +297,17 @@ export default function InvitationDetailScreen() {
       if (isHandledSessionError(caught)) {
         return;
       }
+      if (isInvitationUnavailableError(caught)) {
+        setInvitation(null);
+        setDecisionError('');
+        decisionBlockedRef.current = false;
+        setError(getInvitationDecisionErrorMessage(caught));
+        return;
+      }
       setDecisionError(getInvitationDecisionErrorMessage(caught));
       decisionBlockedRef.current = blocksInvitationDecision(caught);
       if (shouldRefreshInvitationAfterDecisionError(caught)) {
-        refreshInvitation();
+        refreshAfterDecisionError(id);
       }
     } finally {
       if (isCurrentDecision()) {
@@ -305,9 +376,17 @@ export default function InvitationDetailScreen() {
       {!loading && error ? (
         <>
           <MessageBanner message={error} tone="error" />
+          {error === INVITATION_MESSAGES.notAvailable ||
+          error === INVITATION_MESSAGES.forbidden ? (
+            <ActionButton
+              label="Voltar aos convites"
+              onPress={() => router.replace('/invitations')}
+              variant="secondary"
+            />
+          ) : null}
           <ActionButton
             label="Tentar novamente"
-            onPress={() => setReloadKey((key) => key + 1)}
+            onPress={retryLoad}
             variant="secondary"
           />
         </>
