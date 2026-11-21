@@ -285,6 +285,8 @@ npm run build
 
 Se houver falha de inicialização dos workers por recursos da máquina, repita `npm run test:coverage -- --maxWorkers=1`. Os relatórios ficam em `web/coverage/index.html`.
 
+Nos componentes `ModalRegistrarRetirada` e `AcaoRegistrarRetirada`, a T22.4 exige cobertura acima de 80%. O comando de cobertura também verifica esse limite na CI: cada componente precisa atingir pelo menos 81% em linhas, instruções, funções e ramificações.
+
 Para os E2E existentes, ainda na pasta `web/`, mantenha as portas 18080 e 4173 livres:
 
 ```bash
