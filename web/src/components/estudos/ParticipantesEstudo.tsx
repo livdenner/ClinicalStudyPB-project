@@ -1,5 +1,8 @@
+import { CardsParticipantes } from "./CardsParticipantes";
+import { TabelaParticipantes } from "./TabelaParticipantes";
+import { useTelaEstreita } from "../../hooks/useTelaEstreita";
 import { useEffect, useState } from "react";
-import { Button, Chip, Spinner } from "@heroui/react";
+import { Button, Spinner } from "@heroui/react";
 import { BotaoAtualizar } from "../ui/BotaoAtualizar";
 import { listarParticipantesPorEstudo } from "../../services/participantes";
 import type { ParticipanteApi } from "../../types/participante";
@@ -7,6 +10,7 @@ import { obterMensagemErroApi } from "../../utils/erros-api";
 import { ErrorMessage } from "../ui/ErrorMessage";
 
 export function ParticipantesEstudo({ estudoId, token }: { estudoId: number; token: string }) {
+    const telaEstreita = useTelaEstreita();
     const [participantes, setParticipantes] = useState<ParticipanteApi[]>([]);
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState("");
@@ -43,7 +47,7 @@ export function ParticipantesEstudo({ estudoId, token }: { estudoId: number; tok
                 <div>
                     <h2
                         id="participantes-estudo-heading"
-                        className="text-lg font-semibold text-[var(--color-title)]"
+                        className="text-lg font-semibold text-[var(--color-title)] [overflow-wrap:anywhere]"
                     >
                         Participantes do estudo
                     </h2>
@@ -70,80 +74,17 @@ export function ParticipantesEstudo({ estudoId, token }: { estudoId: number; tok
                 </div>
             ) : participantes.length === 0 ? (
                 <div className="rounded-xl border border-[var(--color-border)] bg-white p-8 text-center">
-                    <p className="font-semibold text-[var(--color-title)]">
+                    <p className="font-semibold text-[var(--color-title)] [overflow-wrap:anywhere]">
                         Nenhum participante incluído
                     </p>
                     <p className="mt-2 text-sm text-[var(--color-muted)]">
                         Os candidatos aparecerão aqui após a inclusão pelo recrutamento.
                     </p>
                 </div>
+            ) : telaEstreita ? (
+                <CardsParticipantes participantes={participantes} contexto="situacao" />
             ) : (
-                <div className="overflow-x-auto rounded-xl border border-[var(--color-border)] bg-white">
-                    <table
-                        aria-label="Participantes do estudo"
-                        className="w-full min-w-[520px] text-left text-sm"
-                    >
-                        <thead className="bg-[var(--color-neutral-soft)] text-[var(--color-neutral)]">
-                            <tr>
-                                {["Nome", "Data de inclusão", "Situação"].map((coluna) => (
-                                    <th
-                                        key={coluna}
-                                        scope="col"
-                                        className="px-5 py-3 font-semibold"
-                                    >
-                                        {coluna}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {participantes.map((participante) => {
-                                const data = new Date(participante.includedAt);
-                                const ativo = participante.status === "ACTIVE";
-                                return (
-                                    <tr
-                                        key={participante.id}
-                                        className="border-t border-[var(--color-border)] hover:bg-[var(--color-row-hover)]"
-                                    >
-                                        <th
-                                            scope="row"
-                                            className="px-5 py-4 font-semibold text-[var(--color-title)]"
-                                        >
-                                            {participante.candidateName}
-                                        </th>
-                                        <td className="px-5 py-4 text-[var(--color-text)]">
-                                            {Number.isNaN(data.getTime())
-                                                ? "—"
-                                                : data.toLocaleString("pt-BR", {
-                                                      dateStyle: "short",
-                                                      timeStyle: "short",
-                                                  })}
-                                        </td>
-                                        <td className="px-5 py-4">
-                                            <Chip
-                                                size="sm"
-                                                variant="soft"
-                                                className={
-                                                    ativo
-                                                        ? "bg-[var(--color-info-soft)] text-[var(--color-info)]"
-                                                        : "bg-[var(--color-neutral-soft)] text-[var(--color-neutral)]"
-                                                }
-                                            >
-                                                <Chip.Label>
-                                                    {ativo
-                                                        ? "Ativo"
-                                                        : participante.status === "WITHDRAWN"
-                                                          ? "Retirado"
-                                                          : "Situação indisponível"}
-                                                </Chip.Label>
-                                            </Chip>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
+                <TabelaParticipantes participantes={participantes} />
             )}
         </section>
     );

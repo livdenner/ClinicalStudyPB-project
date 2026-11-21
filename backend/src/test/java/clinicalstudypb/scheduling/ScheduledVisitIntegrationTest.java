@@ -13,11 +13,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import clinicalstudypb.scheduling.domain.VisitOutcome;
 import clinicalstudypb.studies.domain.Study;
 import clinicalstudypb.support.IntegrationTestSupport;
 import clinicalstudypb.users.domain.User;
 import clinicalstudypb.users.domain.UserRole;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -444,8 +446,8 @@ class ScheduledVisitIntegrationTest extends IntegrationTestSupport {
         CountDownLatch release = new CountDownLatch(1);
         try {
             List<Future<String>> responses = List.of(
-                    executor.submit(() -> concurrentOutcome(visitId, ready, release)),
-                    executor.submit(() -> concurrentOutcome(visitId, ready, release)));
+                    executor.submit(() -> concurrentOutcome(visitId, "{\"outcome\":\"DONE\"}", ready, release)),
+                    executor.submit(() -> concurrentOutcome(visitId, "{\"outcome\":\"DONE\"}", ready, release)));
             org.junit.jupiter.api.Assertions.assertTrue(ready.await(10, TimeUnit.SECONDS));
             release.countDown();
             List<String> results = List.of(responses.get(0).get(30, TimeUnit.SECONDS),
@@ -460,7 +462,165 @@ class ScheduledVisitIntegrationTest extends IntegrationTestSupport {
         }
     }
 
-    private String concurrentOutcome(Long visitId, CountDownLatch ready, CountDownLatch release) throws Exception {
+    @Test
+    void simultaneousConflictingOutcomesAcceptOneAndKeepWinningOutcomeConsistent() throws Exception {
+        Long visitId = schedule(plannedVisitId);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        CountDownLatch ready = new CountDownLatch(2);
+        CountDownLatch release = new CountDownLatch(1);
+        String donePayload = "{\"outcome\":\"DONE\",\"note\":\"Concluída primeiro\"}";
+        String cancelledPayload = "{\"outcome\":\"CANCELLED\",\"note\":\"Cancelada depois\"}";
+        try {
+            List<Future<String>> responses = List.of(
+                    executor.submit(() -> concurrentOutcome(visitId, donePayload, ready, release)),
+                    executor.submit(() -> concurrentOutcome(visitId, cancelledPayload, ready, release)));
+            org.junit.jupiter.api.Assertions.assertTrue(ready.await(10, TimeUnit.SECONDS));
+            release.countDown();
+            List<String> results = List.of(responses.get(0).get(30, TimeUnit.SECONDS),
+                    responses.get(1).get(30, TimeUnit.SECONDS));
+            assertEquals(1L, results.stream().filter("200"::equals).count());
+            assertEquals(1L, results.stream().filter("409 VERSION_MISMATCH"::equals).count());
+            assertEquals(1L, jdbc.queryForObject(
+                    "SELECT version FROM scheduled_visits WHERE id = ?", Long.class, visitId));
+
+            String finalStatus = jdbc.queryForObject(
+                    "SELECT status FROM scheduled_visits WHERE id = ?", String.class, visitId);
+            String finalNote = jdbc.queryForObject(
+                    "SELECT outcome_note FROM scheduled_visits WHERE id = ?", String.class, visitId);
+            String expectedNote = "DONE".equals(finalStatus) ? "Concluída primeiro" : "Cancelada depois";
+            org.junit.jupiter.api.Assertions.assertTrue(
+                    "DONE".equals(finalStatus) || "CANCELLED".equals(finalStatus));
+            assertEquals(expectedNote, finalNote);
+        } finally {
+            release.countDown();
+            executor.shutdownNow();
+        }
+    }
+
+    @ParameterizedTest(name = "{0} -> {1}")
+    @MethodSource("allFinalToAnyOutcomeTransitions")
+    void finalOutcomesCannotBeOverwrittenBySubsequentRequests(
+            VisitOutcome initialOutcome,
+            VisitOutcome attemptedOutcome) throws Exception {
+        Long visitId = schedule(plannedVisitId);
+        String initialBody = initialOutcome == VisitOutcome.CANCELLED
+                ? "{\"outcome\":\"CANCELLED\",\"note\":\"Motivo original\"}"
+                : "{\"outcome\":\"" + initialOutcome.name() + "\",\"note\":\"Nota original\"}";
+        mockMvc.perform(post(OUTCOME_PATH, studyId, participantId, visitId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .header(HttpHeaders.IF_MATCH, "\"0\"")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(initialBody))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.ETAG, "\"1\""));
+
+        Long originalActorId = jdbc.queryForObject(
+                "SELECT outcome_by_user_id FROM scheduled_visits WHERE id = ?", Long.class, visitId);
+        OffsetDateTime originalOutcomeAt = jdbc.queryForObject(
+                "SELECT outcome_at FROM scheduled_visits WHERE id = ?", OffsetDateTime.class, visitId);
+        String originalNote = jdbc.queryForObject(
+                "SELECT outcome_note FROM scheduled_visits WHERE id = ?", String.class, visitId);
+
+        String attemptedBody = "{\"outcome\":\"" + attemptedOutcome.name() + "\",\"note\":\"Tentativa posterior\"}";
+        mockMvc.perform(post(OUTCOME_PATH, studyId, participantId, visitId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .header(HttpHeaders.IF_MATCH, "\"1\"")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(attemptedBody))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("VISIT_OUTCOME_FINAL"));
+
+        assertEquals(initialOutcome.name(), jdbc.queryForObject(
+                "SELECT status FROM scheduled_visits WHERE id = ?", String.class, visitId));
+        assertEquals(originalActorId, jdbc.queryForObject(
+                "SELECT outcome_by_user_id FROM scheduled_visits WHERE id = ?", Long.class, visitId));
+        assertEquals(originalOutcomeAt, jdbc.queryForObject(
+                "SELECT outcome_at FROM scheduled_visits WHERE id = ?", OffsetDateTime.class, visitId));
+        assertEquals(originalNote, jdbc.queryForObject(
+                "SELECT outcome_note FROM scheduled_visits WHERE id = ?", String.class, visitId));
+        assertEquals(1L, jdbc.queryForObject(
+                "SELECT version FROM scheduled_visits WHERE id = ?", Long.class, visitId));
+    }
+
+    @Test
+    void cancelledOutcomeAllowsReschedulingForSamePlannedVisit() throws Exception {
+        Long visitId = schedule(plannedVisitId);
+        mockMvc.perform(post(OUTCOME_PATH, studyId, participantId, visitId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .header(HttpHeaders.IF_MATCH, "\"0\"")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"CANCELLED\",\"note\":\"Participante pediu remarcação\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELLED"));
+
+        Long replacementId = schedule(plannedVisitId);
+
+        assertNotEquals(visitId, replacementId);
+        assertEquals(2L, countVisitsForPlanned(plannedVisitId));
+    }
+
+    @Test
+    void outcomeRejectsCancelledStudyMissingStudyAndMissingIfMatch() throws Exception {
+        Long visitId = schedule(plannedVisitId);
+
+        mockMvc.perform(post(OUTCOME_PATH, studyId, participantId, visitId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"DONE\"}"))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(post(OUTCOME_PATH, studyId + 999L, participantId, visitId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .header(HttpHeaders.IF_MATCH, "\"0\"")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"DONE\"}"))
+                .andExpect(status().isNotFound());
+
+        jdbc.update("UPDATE studies SET status = 'CANCELLED' WHERE id = ?", studyId);
+        mockMvc.perform(post(OUTCOME_PATH, studyId, participantId, visitId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .header(HttpHeaders.IF_MATCH, "\"0\"")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"DONE\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("STUDY_READ_ONLY"));
+
+        assertEquals("SCHEDULED", jdbc.queryForObject(
+                "SELECT status FROM scheduled_visits WHERE id = ?", String.class, visitId));
+        assertEquals(0L, jdbc.queryForObject(
+                "SELECT version FROM scheduled_visits WHERE id = ?", Long.class, visitId));
+    }
+
+    @ParameterizedTest(name = "{0} -> POST outcome ({1})")
+    @MethodSource("outcomeRoleAuthorizationMatrix")
+    void outcomeRoleMatrixEnforcesCoordinatorOnlyWithoutSideEffects(UserRole role, int expectedStatus)
+            throws Exception {
+        Long visitId = schedule(plannedVisitId);
+
+        var result = mockMvc.perform(post(OUTCOME_PATH, studyId, participantId, visitId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(tokenForRole(role)))
+                        .header(HttpHeaders.IF_MATCH, "\"0\"")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"DONE\"}"))
+                .andExpect(status().is(expectedStatus));
+
+        if (expectedStatus == 403) {
+            result.andExpect(jsonPath("$.code").value("FORBIDDEN"));
+            assertEquals("SCHEDULED", jdbc.queryForObject(
+                    "SELECT status FROM scheduled_visits WHERE id = ?", String.class, visitId));
+            assertEquals(0L, jdbc.queryForObject(
+                    "SELECT version FROM scheduled_visits WHERE id = ?", Long.class, visitId));
+        } else {
+            result.andExpect(header().string(HttpHeaders.ETAG, "\"1\""));
+            assertEquals("DONE", jdbc.queryForObject(
+                    "SELECT status FROM scheduled_visits WHERE id = ?", String.class, visitId));
+            assertEquals(1L, jdbc.queryForObject(
+                    "SELECT version FROM scheduled_visits WHERE id = ?", Long.class, visitId));
+        }
+    }
+
+    private String concurrentOutcome(Long visitId, String body, CountDownLatch ready, CountDownLatch release)
+            throws Exception {
         ready.countDown();
         if (!release.await(10, TimeUnit.SECONDS)) {
             throw new IllegalStateException("A requisição concorrente não foi liberada.");
@@ -469,7 +629,7 @@ class ScheduledVisitIntegrationTest extends IntegrationTestSupport {
                         .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
                         .header(HttpHeaders.IF_MATCH, "\"0\"")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"outcome\":\"DONE\"}"))
+                        .content(body))
                 .andReturn().getResponse();
         if (response.getStatus() == 200) {
             return "200";
@@ -676,9 +836,14 @@ class ScheduledVisitIntegrationTest extends IntegrationTestSupport {
     @ParameterizedTest(name = "anonymous -> {0} {1}")
     @MethodSource("allSchedulingEndpoints")
     void unauthenticatedRequestsReturnUnauthorized(HttpMethod method, String pathTemplate) throws Exception {
-        Long visitId = method == HttpMethod.GET ? schedule(plannedVisitId) : null;
+        boolean requiresVisit = method == HttpMethod.GET || OUTCOME_PATH.equals(pathTemplate);
+        Long visitId = requiresVisit ? schedule(plannedVisitId) : null;
         MockHttpServletRequestBuilder request = request(method, resolvePath(pathTemplate, visitId));
-        if (method == HttpMethod.POST) {
+        if (OUTCOME_PATH.equals(pathTemplate)) {
+            request.header(HttpHeaders.IF_MATCH, "\"0\"")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"outcome\":\"DONE\"}");
+        } else if (method == HttpMethod.POST) {
             request.contentType(MediaType.APPLICATION_JSON).content(requestBody(plannedVisitId));
         }
 
@@ -711,9 +876,24 @@ class ScheduledVisitIntegrationTest extends IntegrationTestSupport {
     private static Stream<Arguments> allSchedulingEndpoints() {
         return Stream.of(
                 Arguments.of(HttpMethod.POST, CREATE_PATH),
+                Arguments.of(HttpMethod.POST, OUTCOME_PATH),
                 Arguments.of(HttpMethod.GET, "/api/studies/{studyId}/visits"),
                 Arguments.of(HttpMethod.GET, CREATE_PATH),
                 Arguments.of(HttpMethod.GET, CREATE_PATH + "/{visitId}"));
+    }
+
+    private static Stream<Arguments> outcomeRoleAuthorizationMatrix() {
+        return Stream.of(
+                Arguments.of(UserRole.COORDINATOR, 200),
+                Arguments.of(UserRole.ADMINISTRATOR, 403),
+                Arguments.of(UserRole.RESEARCHER, 403),
+                Arguments.of(UserRole.PARTICIPANT, 403));
+    }
+
+    private static Stream<Arguments> allFinalToAnyOutcomeTransitions() {
+        return Stream.of(VisitOutcome.values())
+                .flatMap(initial -> Stream.of(VisitOutcome.values())
+                        .map(attempted -> Arguments.of(initial, attempted)));
     }
 
     private Long addPlannedVisit(Long targetStudyId, int position, String name) {

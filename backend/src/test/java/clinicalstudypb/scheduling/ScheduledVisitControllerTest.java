@@ -17,6 +17,7 @@ import clinicalstudypb.scheduling.domain.InvalidScheduledVisitException;
 import clinicalstudypb.scheduling.domain.ScheduledVisit;
 import clinicalstudypb.scheduling.domain.ScheduledVisitStatus;
 import clinicalstudypb.scheduling.domain.SchedulingConflictException;
+import clinicalstudypb.scheduling.domain.VisitOutcome;
 import clinicalstudypb.shared.ResourceNotFoundException;
 import java.time.Instant;
 import java.util.List;
@@ -24,6 +25,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -45,6 +47,7 @@ import org.springframework.test.web.servlet.MockMvc;
 class ScheduledVisitControllerTest {
 
     private static final String PARTICIPANT_VISITS_PATH = "/api/studies/{studyId}/participants/{participantId}/visits";
+    private static final String OUTCOME_PATH = PARTICIPANT_VISITS_PATH + "/{visitId}/outcome";
     private static final String VALID_BODY =
             "{\"plannedVisitId\":4,\"scheduledAt\":\"2027-06-01T09:00:00-03:00\"}";
 
@@ -145,6 +148,92 @@ class ScheduledVisitControllerTest {
                 .andExpect(jsonPath("$.detail").value("Agendamento não encontrado."));
     }
 
+    @Test
+    void recordOutcomeReturnsOkWithUpdatedETagAndPayload() throws Exception {
+        ScheduledVisitResult result = sampleOutcomeResult(15L, 2L, 3L, 4L);
+        when(scheduledVisitService.recordOutcome(2L, 3L, 15L, 0L, VisitOutcome.DONE, "Concluída"))
+                .thenReturn(result);
+
+        mockMvc.perform(post(OUTCOME_PATH, 2L, 3L, 15L)
+                        .header(HttpHeaders.IF_MATCH, "\"0\"")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"DONE\",\"note\":\"Concluída\"}"))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.ETAG, "\"1\""))
+                .andExpect(jsonPath("$.status").value("DONE"))
+                .andExpect(jsonPath("$.version").value(1))
+                .andExpect(jsonPath("$.outcomeByUserId").value(7))
+                .andExpect(jsonPath("$.outcomeAt").value("2027-06-01T12:30:00Z"))
+                .andExpect(jsonPath("$.outcomeNote").value("Concluída"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"0", "W/\"0\"", "\"\"", "\"abc\"", "\"9999999999999999999999\""})
+    void recordOutcomeRejectsInvalidIfMatchBeforeCallingService(String invalidIfMatch) throws Exception {
+        mockMvc.perform(post(OUTCOME_PATH, 2L, 3L, 15L)
+                        .header(HttpHeaders.IF_MATCH, invalidIfMatch)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"DONE\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.code").value("INVALID_IF_MATCH"));
+
+        verifyNoInteractions(scheduledVisitService);
+    }
+
+    @Test
+    void recordOutcomeRejectsMissingIfMatchHeaderBeforeCallingService() throws Exception {
+        mockMvc.perform(post(OUTCOME_PATH, 2L, 3L, 15L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"DONE\"}"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(scheduledVisitService);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"{}", "{\"outcome\":null}", "{\"outcome\":\"SCHEDULED\"}"})
+    void recordOutcomeRejectsInvalidBodyBeforeCallingService(String payload) throws Exception {
+        mockMvc.perform(post(OUTCOME_PATH, 2L, 3L, 15L)
+                        .header(HttpHeaders.IF_MATCH, "\"0\"")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(scheduledVisitService);
+    }
+
+    @Test
+    void recordOutcomeMapsValidationConflictAndNotFoundToProblemDetail() throws Exception {
+        when(scheduledVisitService.recordOutcome(2L, 3L, 15L, 0L, VisitOutcome.CANCELLED, null))
+                .thenThrow(new InvalidScheduledVisitException(
+                        "CANCELLATION_REASON_REQUIRED", "O cancelamento exige uma justificativa."));
+        when(scheduledVisitService.recordOutcome(2L, 3L, 15L, 0L, VisitOutcome.DONE, null))
+                .thenThrow(new SchedulingConflictException("VERSION_MISMATCH", "Versão desatualizada."));
+        when(scheduledVisitService.recordOutcome(2L, 3L, 99L, 0L, VisitOutcome.DONE, null))
+                .thenThrow(new ResourceNotFoundException("Agendamento não encontrado."));
+
+        mockMvc.perform(post(OUTCOME_PATH, 2L, 3L, 15L)
+                        .header(HttpHeaders.IF_MATCH, "\"0\"")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"CANCELLED\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("CANCELLATION_REASON_REQUIRED"));
+
+        mockMvc.perform(post(OUTCOME_PATH, 2L, 3L, 15L)
+                        .header(HttpHeaders.IF_MATCH, "\"0\"")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"DONE\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("VERSION_MISMATCH"));
+
+        mockMvc.perform(post(OUTCOME_PATH, 2L, 3L, 99L)
+                        .header(HttpHeaders.IF_MATCH, "\"0\"")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"outcome\":\"DONE\"}"))
+                .andExpect(status().isNotFound());
+    }
+
     private static Stream<String> invalidCreatePayloads() {
         return Stream.of(
                 "{\"plannedVisitId\":null,\"scheduledAt\":\"2027-06-01T09:00:00-03:00\"}",
@@ -158,6 +247,15 @@ class ScheduledVisitControllerTest {
                 Instant.parse("2027-06-01T12:00:00Z"), 7L, Instant.parse("2026-11-15T12:00:00Z"));
         ReflectionTestUtils.setField(visit, "id", id);
         ReflectionTestUtils.setField(visit, "version", 0L);
+        return new ScheduledVisitResult(visit, "Pessoa teste", "Visita inicial");
+    }
+
+    private ScheduledVisitResult sampleOutcomeResult(Long id, Long studyId, Long participantId, Long plannedVisitId) {
+        ScheduledVisit visit = new ScheduledVisit(studyId, participantId, plannedVisitId,
+                Instant.parse("2027-06-01T12:00:00Z"), 6L, Instant.parse("2026-11-15T12:00:00Z"));
+        visit.registerOutcome(ScheduledVisitStatus.DONE, 7L, Instant.parse("2027-06-01T12:30:00Z"), "Concluída");
+        ReflectionTestUtils.setField(visit, "id", id);
+        ReflectionTestUtils.setField(visit, "version", 1L);
         return new ScheduledVisitResult(visit, "Pessoa teste", "Visita inicial");
     }
 }

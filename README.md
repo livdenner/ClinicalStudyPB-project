@@ -264,9 +264,13 @@ Somente o coordenador pode registrar **Realizada**, **Ausente** ou **Cancelar**,
 
 O registro usa `POST /api/studies/{studyId}/participants/{participantId}/visits/{visitId}/outcome`, com `If-Match` contendo a versão da própria visita entre aspas. Após sucesso, a resposta da API atualiza a linha e o feedback sem recarregar a página. As ações de desfecho desaparecem quando ele é final; se o novo estado não corresponder ao filtro escolhido, a linha deixa a lista filtrada.
 
+A nota persistida em `outcomeNote` é apresentada abaixo do selo de situação nas listas do estudo e do participante. Para visitas canceladas, o texto é identificado como **Justificativa**; nos demais desfechos, como **Observação**. Registros sem nota não exibem esse complemento. O formulário Web solicita o campo somente no cancelamento, como justificativa obrigatória; observações de outros desfechos recebidas da API também podem ser consultadas.
+
 Em HTTP 409, o texto retornado pela API permanece na confirmação e os dados atuais da visita e do estudo são consultados novamente. Não há reenvio automático: uma nova confirmação só é permitida depois da atualização e se a visita ainda estiver agendada e o estudo permitir alterações. Se a consulta falhar, é preciso usar **Atualizar visita** antes de confirmar. Outros erros da API também são apresentados com a mensagem recebida.
 
 As listas do estudo e do participante compartilham as cores semânticas: agendada neutra, realizada verde, ausente amarela e cancelada vermelha. O teste existente da antiga página de visitas foi adaptado para o fluxo real com HTTP simulado. Os novos cenários específicos de desfecho pertencem à T19.4; os resultados das suítes executadas ficam em `docs/test-runs/`.
+
+As evidências finais da implementação inicial, anteriores a esta revisão, estão na [execução completa da Web](docs/test-runs/2026-11-19_00-40_T19-3_completa-final.md) e na [conferência final de navegador com HTTP simulado](docs/test-runs/2026-11-19_00-32_T19-3_navegador-final.md). As execuções intermediárias também são preservadas, conforme as [regras de registro das execuções](docs/test-runs/README.md).
 
 ### Resultados fictícios das atividades de uma visita (T20.4)
 

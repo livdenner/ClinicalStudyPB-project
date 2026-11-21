@@ -4,7 +4,11 @@ export type StatusVisitaAgendada = "SCHEDULED" | "DONE" | "ABSENT" | "CANCELLED"
 /** Desfechos finais aceitos pela API de visitas. @author Lívia */
 export type DesfechoVisita = Exclude<StatusVisitaAgendada, "SCHEDULED">;
 
-/** Justificativa obrigatória para cancelamento e opcional nos demais desfechos. @author Lívia */
+/**
+ * Dados do desfecho previstos na API.
+ * O formulário Web envia note somente no cancelamento, como justificativa obrigatória.
+ * @author Lívia
+ */
 export type DadosDesfechoVisita = {
     outcome: DesfechoVisita;
     note?: string;
