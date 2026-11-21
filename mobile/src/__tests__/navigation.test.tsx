@@ -22,6 +22,8 @@ import { ApiError } from '../services/api/apiClient';
 import { AUTH_MESSAGES } from '../services/auth/authErrors';
 import * as authApi from '../services/auth/authApi';
 import type { LoginResponse, UserRole } from '../services/auth/authTypes';
+import * as studyApi from '../services/studies/studyApi';
+import { STUDY_MESSAGES } from '../services/studies/studyErrors';
 
 jest.mock('expo-secure-store', () => ({
   isAvailableAsync: jest.fn(),
@@ -37,8 +39,16 @@ jest.mock('../services/auth/authApi', () => ({
   logoutSession: jest.fn(),
 }));
 
+jest.mock('../services/studies/studyApi', () => ({
+  ...jest.requireActual<typeof import('../services/studies/studyApi')>(
+    '../services/studies/studyApi',
+  ),
+  listMyStudies: jest.fn(),
+}));
+
 const secureStore = SecureStore as jest.Mocked<typeof SecureStore>;
 const api = authApi as jest.Mocked<typeof authApi>;
+const studiesApi = studyApi as jest.Mocked<typeof studyApi>;
 
 let storedValue: string | null = null;
 
@@ -47,6 +57,7 @@ beforeEach(() => {
   api.loginWithPassword.mockReset();
   api.changeAccountPassword.mockReset();
   api.logoutSession.mockReset();
+  studiesApi.listMyStudies.mockReset();
   secureStore.isAvailableAsync.mockReset();
   secureStore.getItemAsync.mockReset();
   secureStore.setItemAsync.mockReset();
@@ -167,7 +178,8 @@ describe('navegação autenticada do participante', () => {
     });
 
     await waitFor(() => expect(screen).toHavePathname('/login'));
-    expect(screen.queryByText('Estudos')).toBeNull();
+    expect(screen.queryByText('Meus estudos')).toBeNull();
+    expect(studiesApi.listMyStudies).not.toHaveBeenCalled();
   });
 
   it('valida os campos antes de chamar a API', async () => {
@@ -289,6 +301,7 @@ describe('navegação autenticada do participante', () => {
 
   it('entra como participante e acessa os estudos', async () => {
     api.loginWithPassword.mockResolvedValue(loginResponse());
+    studiesApi.listMyStudies.mockResolvedValue([]);
     await renderApp('/');
     await screen.findByText('Login');
 
@@ -303,11 +316,8 @@ describe('navegação autenticada do participante', () => {
 
     await testRouter.push('/studies');
 
-    expect(
-      await screen.findByText(
-        'Esta tela é apenas um destino provisório para demonstrar a navegação.',
-      ),
-    ).toBeTruthy();
+    expect(await screen.findByText('Meus estudos')).toBeTruthy();
+    expect(await screen.findByText(STUDY_MESSAGES.empty)).toBeTruthy();
   });
 
   it('leva o primeiro acesso direto para a definição de senha', async () => {

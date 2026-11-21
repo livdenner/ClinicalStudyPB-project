@@ -1,7 +1,7 @@
 /**
- * Tokens nativos alinhados à identidade do ClinicalStudyPB. O verde-petróleo
- * da marca é usado em ações e navegação; o verde de sucesso continua reservado
- * a confirmações de resultado.
+ * Tokens nativos alinhados à identidade do ClinicalStudyPB e à tabela semântica
+ * do PBI-24. O verde-petróleo da marca é usado em ações e navegação; o verde de
+ * sucesso continua reservado a confirmações de resultado.
  */
 export const colors = {
   brand: '#0F766E',
@@ -19,7 +19,13 @@ export const colors = {
   warningSoft: '#FFF3D6',
   info: '#0B5FA5',
   infoSoft: '#E6F1FB',
+  neutral: '#475569',
   neutralSoft: '#EEF2F1',
+  neutralBorder: '#CBD5E1',
+  studyRecruitment: '#5B3A91',
+  studyRecruitmentSoft: '#EDE9FE',
+  studyClosed: '#334155',
+  studyClosedSoft: '#E2E8F0',
 } as const;
 
 export const spacing = {

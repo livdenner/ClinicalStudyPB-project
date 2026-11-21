@@ -1940,9 +1940,11 @@ paths:
         nunca de parâmetro, e só as participações da própria conta aparecem.
         Lista os estudos em que a conta foi incluída, com participação ativa
         (ACTIVE) ou retirada (WITHDRAWN), da inclusão mais recente para a mais
-        antiga. Estudos encerrados ou cancelados continuam na lista, com
-        studyStatus atualizado. Candidaturas ainda não incluídas ficam em
-        /api/me/invitations. Retorna [] quando a conta não tem inclusão.
+        antiga, incluindo as visitas previstas do protocolo na ordem
+        (plannedVisits, [] quando não houver). Estudos encerrados ou cancelados
+        continuam na lista, com studyStatus atualizado. Candidaturas ainda não
+        incluídas ficam em /api/me/invitations. Retorna [] quando a conta não
+        tem inclusão.
       security:
         - bearerAuth: []
       responses:
@@ -1965,6 +1967,17 @@ paths:
                   responsibleName: Paula Pesquisadora
                   participationStatus: ACTIVE
                   includedAt: '2026-11-10T14:00:00Z'
+                  plannedVisits:
+                    - id: 10
+                      studyId: 1
+                      name: Visita inicial
+                      plannedDate: '2027-02-01'
+                      position: 1
+                      activities:
+                        - id: 21
+                          name: Coleta inicial
+                          description: Registro de acompanhamento previsto
+                          position: 1
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -2755,7 +2768,7 @@ components:
       type: object
       description: Estudo em que a conta autenticada participa (RF17)
       required: [participantId, studyId, studyTitle, studyObjective, studyStatus, startDate,
-                 endDate, responsibleName, participationStatus, includedAt]
+                 endDate, responsibleName, participationStatus, includedAt, plannedVisits]
       properties:
         participantId:
           type: integer
@@ -2799,6 +2812,12 @@ components:
           description: |
             Instante da retirada; ausente quando participationStatus=ACTIVE. O
             motivo e a autoria da retirada não são expostos ao participante.
+        plannedVisits:
+          type: array
+          readOnly: true
+          description: Visitas previstas do protocolo, na ordem, com suas atividades; [] quando não houver
+          items:
+            $ref: '#/components/schemas/PlannedVisit'
     ParticipantVisit:
       type: object
       description: Visita agendada da conta autenticada (RF18)
