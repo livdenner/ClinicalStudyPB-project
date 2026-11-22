@@ -364,3 +364,11 @@ No PowerShell, ambos devem responder `200`:
 Em bash, use `curl -f http://localhost:8080/v3/api-docs`. Se a conexão falhar, consulte `docker compose ps` e `docker compose logs backend`.
 
 Autentique com as credenciais fictícias em `POST /api/auth/login` e use **Authorize** com o JWT retornado. As rotas usam `/api`. Consulte operações, permissões, controle de versão e regras de negócio no [resumo da API](backend/docs/release1-api.md), incluindo `GET/POST /api/studies/{studyId}/criteria` e a inclusão de participantes.
+
+## Retirada de participantes na web (T22.3)
+
+O coordenador pode registrar a retirada no painel de participantes do recrutamento ou na aba Participantes do estudo. A ação aparece apenas para participantes ativos de estudos que não estejam encerrados ou cancelados. O modal pede um motivo de 1 a 500 caracteres e a confirmação. Em caso de falha, o erro da API fica no próprio modal.
+
+Ao confirmar, a resposta da API atualiza o participante na tela, o selo passa para Retirado (neutro) e a ação desaparece. A retirada é definitiva: a vaga continua ocupada, o candidato não pode ser reincluído e o backend cancela as visitas futuras agendadas.
+
+No painel de recrutamento, as ações **Ver visitas**, **Agendar** e **Registrar retirada** compartilham a mesma área do card. **Agendar** aparece apenas para participantes ativos, para o coordenador e em estudos em recrutamento ou execução. Após a retirada, **Agendar** e **Registrar retirada** desaparecem imediatamente, enquanto **Ver visitas** continua disponível para consultar o histórico. A regra é aplicada também na agenda do participante, que impede iniciar novos agendamentos para quem está retirado. Se a retirada ocorrer em outra sessão enquanto o formulário estiver aberto, o erro `PARTICIPANT_WITHDRAWN` da API é exibido sem cadastrar uma nova visita.

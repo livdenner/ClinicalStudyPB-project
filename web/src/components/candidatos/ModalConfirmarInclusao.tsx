@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { calcularVagasDisponiveis } from "../../utils/estudos";
 import { UserCheck, X } from "lucide-react";
 import { ApiClientError } from "../../services/api/apiClient";
 import type { CandidatoApi } from "../../types/candidato";
@@ -28,7 +29,7 @@ export function ModalConfirmarInclusao({
     const [erro, setErro] = useState("");
     const requisicaoEmAndamentoRef = useRef(false);
 
-    const vagasRestantes = Math.max(0, limiteVagas - vagasOcupadas);
+    const vagasRestantes = calcularVagasDisponiveis(limiteVagas, vagasOcupadas);
     const candidatoApto = candidatoPodeSerIncluido(candidato);
 
     async function handleConfirmar() {
