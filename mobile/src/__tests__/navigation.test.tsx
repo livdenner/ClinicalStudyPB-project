@@ -183,8 +183,8 @@ async function fillActivation(
   await fireEvent.press(screen.getByText('Ativar minha conta'));
 }
 
-describe('navegação autenticada do participante', () => {
-  it('abre o login e bloqueia rotas privadas sem sessão', async () => {
+describe('RF02/RF03 — navegação autenticada do participante', () => {
+  it('RF03: abre o login e bloqueia rotas privadas sem sessão', async () => {
     await renderApp('/');
 
     expect(await screen.findByText('Login')).toBeTruthy();
@@ -221,7 +221,7 @@ describe('navegação autenticada do participante', () => {
     expect(visitsApi.getMyVisits).not.toHaveBeenCalled();
   });
 
-  it('valida os campos antes de chamar a API', async () => {
+  it('RF02: valida os campos antes de chamar a API', async () => {
     await renderApp('/');
     await screen.findByText('Login');
 
@@ -234,7 +234,7 @@ describe('navegação autenticada do participante', () => {
     expect(api.loginWithPassword).not.toHaveBeenCalled();
   });
 
-  it('abre o primeiro acesso a partir do login', async () => {
+  it('RF02: abre o primeiro acesso a partir do login', async () => {
     await renderApp('/');
     await screen.findByText('Login');
 
@@ -244,7 +244,7 @@ describe('navegação autenticada do participante', () => {
     await waitFor(() => expect(screen).toHavePathname('/activation'));
   });
 
-  it('valida o formulário de ativação antes de chamar a API', async () => {
+  it('RF02: valida o formulário de ativação antes de chamar a API', async () => {
     await renderApp('/activation');
     await screen.findByText('Primeiro acesso');
 
@@ -259,7 +259,7 @@ describe('navegação autenticada do participante', () => {
     expect(api.activateAccountWithCode).not.toHaveBeenCalled();
   });
 
-  it('ativa a conta e encaminha para a definição da senha inicial', async () => {
+  it('RF02/RF03: ativa a conta e encaminha para a definição da senha inicial', async () => {
     api.activateAccountWithCode.mockResolvedValue(
       loginResponse('PARTICIPANT', true),
     );
@@ -283,7 +283,7 @@ describe('navegação autenticada do participante', () => {
     );
   });
 
-  it('explica quando o código de ativação expirou', async () => {
+  it('RF02: explica quando o código de ativação expirou', async () => {
     api.activateAccountWithCode.mockRejectedValue(
       new ApiError('detalhe interno', 410, 'ACTIVATION_EXPIRED'),
     );
@@ -299,7 +299,7 @@ describe('navegação autenticada do participante', () => {
     expect(storedValue).toBeNull();
   });
 
-  it('mostra a mensagem genérica para um código inválido', async () => {
+  it('RF02: mostra a mensagem genérica para um código inválido', async () => {
     api.activateAccountWithCode.mockRejectedValue(
       new ApiError('detalhe interno', 400, 'ACTIVATION_INVALID'),
     );
@@ -315,7 +315,7 @@ describe('navegação autenticada do participante', () => {
     expect(storedValue).toBeNull();
   });
 
-  it('não mantém a sessão quando a ativação devolve outro perfil', async () => {
+  it('RF03: não mantém a sessão quando a ativação devolve outro perfil', async () => {
     api.activateAccountWithCode.mockResolvedValue(
       loginResponse('COORDINATOR', true),
     );
@@ -329,7 +329,7 @@ describe('navegação autenticada do participante', () => {
     expect(storedValue).toBeNull();
   });
 
-  it('bloqueia a ativação quando já existe sessão ativa', async () => {
+  it('RF03: bloqueia a ativação quando já existe sessão ativa', async () => {
     storeSession();
 
     await renderApp('/activation');
@@ -338,7 +338,7 @@ describe('navegação autenticada do participante', () => {
     await waitFor(() => expect(screen).toHavePathname('/'));
   });
 
-  it('entra como participante e acessa os estudos', async () => {
+  it('RF02/RF17: entra como participante e acessa os estudos', async () => {
     api.loginWithPassword.mockResolvedValue(loginResponse());
     studiesApi.listMyStudies.mockResolvedValue([]);
     await renderApp('/');
@@ -359,7 +359,7 @@ describe('navegação autenticada do participante', () => {
     expect(await screen.findByText(STUDY_MESSAGES.empty)).toBeTruthy();
   });
 
-  it('acessa as visitas pelo início quando autenticado', async () => {
+  it('RF02/RF18: acessa as visitas pelo início quando autenticado', async () => {
     storeSession();
     visitsApi.getMyVisits.mockResolvedValue({ upcoming: [], history: [] });
 
@@ -375,7 +375,7 @@ describe('navegação autenticada do participante', () => {
     ).toBeTruthy();
   });
 
-  it('leva o primeiro acesso direto para a definição de senha', async () => {
+  it('RF02/RF03: leva o primeiro acesso direto para a definição de senha', async () => {
     api.loginWithPassword.mockResolvedValue(loginResponse('PARTICIPANT', true));
     await renderApp('/');
     await screen.findByText('Login');
@@ -397,7 +397,7 @@ describe('navegação autenticada do participante', () => {
     expect(screen.queryByText(/Olá, Raffael!/)).toBeNull();
   });
 
-  it('restaura uma sessão restrita somente na definição de senha', async () => {
+  it('RF02/RF03: restaura uma sessão restrita somente na definição de senha', async () => {
     storeSession({ mustChangePassword: true });
 
     await renderApp('/');
@@ -409,7 +409,7 @@ describe('navegação autenticada do participante', () => {
     expect(screen.getByText('Sair')).toBeTruthy();
   });
 
-  it('descarta a sessão vencida e volta ao login', async () => {
+  it('RF02: descarta a sessão vencida e volta ao login', async () => {
     storeSession({ expiresAt: Date.now() - 60_000 });
 
     await renderApp('/');
@@ -421,7 +421,7 @@ describe('navegação autenticada do participante', () => {
     await waitFor(() => expect(storedValue).toBeNull());
   });
 
-  it('recusa uma sessão persistida de outro perfil', async () => {
+  it('RF03: recusa uma sessão persistida de outro perfil', async () => {
     storeSession({ role: 'COORDINATOR' });
 
     await renderApp('/');
@@ -431,7 +431,7 @@ describe('navegação autenticada do participante', () => {
     await waitFor(() => expect(storedValue).toBeNull());
   });
 
-  it('sai da conta mesmo com falha na API de logout', async () => {
+  it('RF02: sai da conta mesmo com falha na API de logout', async () => {
     storeSession();
     api.logoutSession.mockRejectedValue(new Error('offline'));
 
@@ -453,7 +453,7 @@ describe('navegação autenticada do participante', () => {
     );
   });
 
-  it('conclui o primeiro acesso e chega ao início autenticado', async () => {
+  it('RF02/RF03: conclui o primeiro acesso e chega ao início autenticado', async () => {
     storeSession({ mustChangePassword: true });
     api.changeAccountPassword.mockResolvedValue(loginResponse());
 
@@ -478,7 +478,7 @@ describe('navegação autenticada do participante', () => {
     );
   });
 
-  it('permite trocar a senha de uma conta já ativa', async () => {
+  it('RF02: permite trocar a senha de uma conta já ativa', async () => {
     storeSession();
     api.changeAccountPassword.mockResolvedValue(loginResponse());
 
