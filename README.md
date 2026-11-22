@@ -284,6 +284,14 @@ As mensagens gerais e de campo recebidas da API são exibidas no formulário. Em
 
 Os campos não salvos são descartados ao fechar o formulário. A interface usa as cores semânticas do PBI-24 e os botões de criação já adotados na Web. O teste existente da página foi adaptado para a opção de consulta após o desfecho; os novos cenários específicos de resultados pertencem à task de testes Web correspondente. Testes, lint e build desta implementação devem ser executados na pasta `web/` do worktree da T20.4.
 
+### Testes Web de candidatos, desfechos e resultados (T17.8, T19.4 e T20.5)
+
+As três tasks de testes são reunidas em uma branch própria a partir da `development`, com HTTP simulado e dados fictícios. A [matriz de rastreabilidade](docs/tests/rastreabilidade-candidatos-desfechos-resultados-web.md) relaciona cenários, requisitos e arquivos para o PBI-25.
+
+As suítes existentes de elegibilidade e recrutamento foram preservadas e ampliadas. `ConsentimentoSimulado.test.tsx` foi recuperado e adaptado ao fluxo atual: a Web consulta a decisão do candidato e não registra nem reverte consentimento. Cadastro, convite, cancelamento e filtro de cancelados, desfechos com confirmação/conflito e resultados por atividade possuem cobertura própria. O controle exige 81% de linhas individualmente nos componentes abrangidos e mantém os limites de agendamento existentes. A confirmação desse percentual depende da execução de `npm run test:coverage -- --maxWorkers=2`.
+
+Executar testes, lint e build em `web/` do worktree da branch de testes. O relatório JSON continua alimentando o PBI-25; as evidências locais devem seguir `docs/test-runs/README.md`. A preparação dos testes não representa uma execução aprovada.
+
 ### Sessão por aba (T24.4)
 
 Agora dá para usar perfis diferentes em abas do mesmo navegador. A sessão fica no `sessionStorage`: recarregar mantém o login, mas sair ou deixar a sessão expirar afeta apenas aquela aba. Depois da expiração, é preciso entrar novamente.

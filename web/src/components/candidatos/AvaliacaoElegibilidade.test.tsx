@@ -8,6 +8,7 @@ import type {
 } from "../../types/candidato";
 import type { AvaliacaoElegibilidadeApi, CriterioEstudoApi } from "../../types/elegibilidade";
 import { AvaliacaoElegibilidade } from "./AvaliacaoElegibilidade";
+import { respostaHttp, simularHttp } from "../../test/fixtures/agendamento";
 
 const estudoRecrutamento: EstudoComStatusApi = {
     id: 10,
@@ -92,6 +93,49 @@ function renderAvaliacao({
 afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
+});
+
+/** A avaliação RF09 não concede o consentimento RF10 nem inventa situação de candidatura. @author Lívia */
+describe("RF09 / RF10 — integração com o andamento (T17.8)", () => {
+    it("RF09-E01: respostas locais completas não antecipam o parecer retornado pela API", async () => {
+        const http = simularHttp({
+            "GET /api/studies/10/criteria": respostaHttp(criteriosEstudo),
+            "GET /api/studies/10/candidates/101/eligibility": respostaHttp({
+                studyId: 10,
+                candidateId: 101,
+                status: "PENDING",
+                answers: [],
+            }),
+            "PUT /api/studies/10/candidates/101/eligibility": respostaHttp({
+                studyId: 10,
+                candidateId: 101,
+                status: "PENDING",
+                answers: [{ criterionId: 1, matches: true }],
+            }),
+        });
+        const { onAtualizarStatusCandidato } = renderAvaliacao();
+        fireEvent.change(await screen.findByLabelText("Idade mínima de 18 anos completos"), {
+            target: { value: "true" },
+        });
+        fireEvent.change(screen.getByLabelText("Diagnóstico prévio confirmado"), {
+            target: { value: "true" },
+        });
+        fireEvent.change(screen.getByLabelText("Alergia grave ao princípio ativo"), {
+            target: { value: "false" },
+        });
+        fireEvent.click(screen.getByRole("button", { name: "Salvar avaliação" }));
+        expect(
+            await screen.findByText("Avaliação de elegibilidade registrada com sucesso.")
+        ).toBeInTheDocument();
+        expect(
+            screen.getByRole("status", { name: "Parecer resultante do candidato" })
+        ).toHaveTextContent("Pendente");
+        expect(onAtualizarStatusCandidato).toHaveBeenCalledExactlyOnceWith(101, "PENDING");
+        expect(http.mock.calls.some(([url]) => String(url).includes("/consent"))).toBe(false);
+        expect(
+            screen.queryByRole("button", { name: /Incluir participante|Registrar consentimento/i })
+        ).not.toBeInTheDocument();
+    });
 });
 
 describe("Tela de avaliação de elegibilidade (RF09 - T13.3 / T13.4)", () => {
