@@ -8,6 +8,7 @@ import { listarParticipantesPorEstudo } from "../../services/participantes";
 import type { ParticipanteApi } from "../../types/participante";
 import { obterMensagemErroApi } from "../../utils/erros-api";
 import { ErrorMessage } from "../ui/ErrorMessage";
+import { HistoricoParticipante } from "./HistoricoParticipante";
 
 export function ParticipantesEstudo({ estudoId, token }: { estudoId: number; token: string }) {
     const telaEstreita = useTelaEstreita();
@@ -15,6 +16,7 @@ export function ParticipantesEstudo({ estudoId, token }: { estudoId: number; tok
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState("");
     const [tentativa, setTentativa] = useState(0);
+    const [historicoId, setHistoricoId] = useState<number | null>(null);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -40,6 +42,28 @@ export function ParticipantesEstudo({ estudoId, token }: { estudoId: number; tok
         setErro("");
         setTentativa((atual) => atual + 1);
     }
+
+    if (historicoId !== null) {
+        return (
+            <HistoricoParticipante
+                key={`${estudoId}:${historicoId}:${token}`}
+                estudoId={estudoId}
+                participanteId={historicoId}
+                token={token}
+                onVoltar={() => setHistoricoId(null)}
+            />
+        );
+    }
+
+    const acoes = (participante: ParticipanteApi) => (
+        <Button
+            variant="secondary"
+            aria-label={`Ver histórico: ${participante.candidateName}`}
+            onPress={() => setHistoricoId(participante.id)}
+        >
+            Ver histórico
+        </Button>
+    );
 
     return (
         <section aria-labelledby="participantes-estudo-heading" className="flex flex-col gap-4">
@@ -82,9 +106,13 @@ export function ParticipantesEstudo({ estudoId, token }: { estudoId: number; tok
                     </p>
                 </div>
             ) : telaEstreita ? (
-                <CardsParticipantes participantes={participantes} contexto="situacao" />
+                <CardsParticipantes
+                    participantes={participantes}
+                    contexto="situacao"
+                    acoes={acoes}
+                />
             ) : (
-                <TabelaParticipantes participantes={participantes} />
+                <TabelaParticipantes participantes={participantes} acoes={acoes} />
             )}
         </section>
     );

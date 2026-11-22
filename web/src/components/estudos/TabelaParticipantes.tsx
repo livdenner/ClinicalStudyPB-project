@@ -1,8 +1,15 @@
 import { Chip, Table } from "@heroui/react";
+import type { ReactNode } from "react";
 import type { ParticipanteApi } from "../../types/participante";
 import { SELOS_PARTICIPANTE, formatarDataInclusao } from "../../utils/participantes";
 
-export function TabelaParticipantes({ participantes }: { participantes: ParticipanteApi[] }) {
+export function TabelaParticipantes({
+    participantes,
+    acoes,
+}: {
+    participantes: ParticipanteApi[];
+    acoes?: (participante: ParticipanteApi) => ReactNode;
+}) {
     return (
         <Table
             variant="secondary"
@@ -17,7 +24,7 @@ export function TabelaParticipantes({ participantes }: { participantes: Particip
                         <Table.Column
                             id="nome"
                             isRowHeader
-                            className="w-1/2 rounded-none border-b border-[var(--color-border)] bg-[var(--color-neutral-soft)] px-5 py-3 font-semibold text-[var(--color-neutral)] after:hidden"
+                            className="w-1/3 rounded-none border-b border-[var(--color-border)] bg-[var(--color-neutral-soft)] px-5 py-3 font-semibold text-[var(--color-neutral)] after:hidden"
                         >
                             Nome
                         </Table.Column>
@@ -33,6 +40,14 @@ export function TabelaParticipantes({ participantes }: { participantes: Particip
                         >
                             Situação
                         </Table.Column>
+                        {acoes && (
+                            <Table.Column
+                                id="acoes"
+                                className="bg-[var(--color-neutral-soft)] px-5 py-3 font-semibold text-[var(--color-neutral)]"
+                            >
+                                Ações
+                            </Table.Column>
+                        )}
                     </Table.Header>
                     <Table.Body items={participantes}>
                         {(participante) => {
@@ -56,6 +71,11 @@ export function TabelaParticipantes({ participantes }: { participantes: Particip
                                             <Chip.Label>{selo.rotulo}</Chip.Label>
                                         </Chip>
                                     </Table.Cell>
+                                    {acoes && (
+                                        <Table.Cell className="px-5 py-4">
+                                            {acoes(participante)}
+                                        </Table.Cell>
+                                    )}
                                 </Table.Row>
                             );
                         }}
