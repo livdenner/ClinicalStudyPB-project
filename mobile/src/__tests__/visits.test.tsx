@@ -18,6 +18,7 @@ import InvitationsScreen from '../app/invitations/index';
 import LoginScreen from '../app/login';
 import StudiesScreen from '../app/studies/index';
 import StudyDetailScreen from '../app/studies/[participantId]';
+import VisitDetailScreen from '../app/visits/[visitId]';
 import VisitsScreen from '../app/visits/index';
 import { ApiError } from '../services/api/apiClient';
 import * as authApi from '../services/auth/authApi';
@@ -191,6 +192,7 @@ async function renderApp(initialUrl: string) {
       'studies/index': StudiesScreen,
       'studies/[participantId]': StudyDetailScreen,
       'visits/index': VisitsScreen,
+      'visits/[visitId]': VisitDetailScreen,
       'change-password': ChangePasswordScreen,
       'invitations/index': InvitationsScreen,
       'invitations/[candidateId]': InvitationDetailScreen,
@@ -500,6 +502,296 @@ describe('visitas do participante', () => {
     });
 
     await waitFor(() => expect(screen).toHavePathname('/login'));
+    expect(api.getMyVisits).not.toHaveBeenCalled();
+  });
+
+  it('abre o detalhe de Próximas com atividades e espaço reservado para RF19 sem botões ativos', async () => {
+    storeSession();
+    const visitWithActivities: ParticipantVisit = {
+      ...scheduledVisit,
+      activities: [
+        ...scheduledVisit.activities,
+        {
+          id: 23,
+          name: 'Entrega de diário',
+          description: '   ',
+          position: 2,
+        },
+      ],
+    };
+    api.getMyVisits.mockResolvedValue({
+      upcoming: [visitWithActivities],
+      history: [doneVisit],
+    });
+
+    await renderAuthenticatedAt('/visits');
+    expect(await screen.findByText('Visita de retorno')).toBeTruthy();
+
+    await fireEvent.press(
+      screen.getByLabelText(
+        'Visita de retorno. Agendada. Acompanhamento de hipertensão',
+      ),
+    );
+
+    await waitFor(() => expect(screen).toHavePathname('/visits/15'));
+    expect(await screen.findByText('Detalhes da visita')).toBeTruthy();
+    expect(screen.getByText('Agendada')).toBeTruthy();
+    expect(screen.getByText('Visita de retorno')).toBeTruthy();
+    expect(
+      screen.getAllByText(/Acompanhamento de hipertensão/).length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getByText(
+        new RegExp(formatDateTime(visitWithActivities.scheduledAt) as string),
+      ),
+    ).toBeTruthy();
+    expect(
+      screen.getByText('• Aferição clínica — Acompanhamento dos sinais vitais.'),
+    ).toBeTruthy();
+    expect(screen.getByText('• Entrega de diário')).toBeTruthy();
+    expect(screen.queryByText(/Entrega de diário —/)).toBeNull();
+    expect(screen.getByText(VISIT_MESSAGES.rf19ReservedTitle)).toBeTruthy();
+    expect(screen.getByText(VISIT_MESSAGES.rf19ReservedBody)).toBeTruthy();
+    expect(
+      screen.queryByText(VISIT_MESSAGES.finalizedOutcomeNotice),
+    ).toBeNull();
+    expect(
+      screen.queryByRole('button', { name: /Confirmar presença/i }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole('button', { name: /Solicitar reagendamento/i }),
+    ).toBeNull();
+
+    await fireEvent.press(screen.getByLabelText('Voltar'));
+
+    await waitFor(() => expect(screen).toHavePathname('/visits'));
+    expect(await screen.findByText('Visita de retorno')).toBeTruthy();
+  });
+
+  it('exibe detalhe do Histórico para visita cancelada sem atividades e para visita realizada', async () => {
+    storeSession();
+    api.getMyVisits.mockResolvedValue({
+      upcoming: [],
+      history: [cancelledVisit, doneVisit],
+    });
+
+    await renderAuthenticatedAt('/visits');
+    await fireEvent.press(screen.getByRole('tab', { name: 'Histórico' }));
+
+    await fireEvent.press(
+      await screen.findByLabelText(
+        'Avaliação intermediária. Cancelada. Estudo de hábitos de sono',
+      ),
+    );
+
+    await waitFor(() => expect(screen).toHavePathname('/visits/12'));
+    expect(await screen.findByText('Detalhes da visita')).toBeTruthy();
+    expect(screen.getByText('Cancelada')).toBeTruthy();
+    expect(screen.getByText(/Desfecho registrado em:/)).toBeTruthy();
+    expect(
+      screen.getByText(
+        /Motivo do cancelamento:\s*Participante pediu para remarcar/,
+      ),
+    ).toBeTruthy();
+    expect(screen.getByText(VISIT_MESSAGES.emptyActivities)).toBeTruthy();
+    expect(
+      screen.getByText(VISIT_MESSAGES.finalizedOutcomeNotice),
+    ).toBeTruthy();
+    expect(screen.queryByText(VISIT_MESSAGES.rf19ReservedTitle)).toBeNull();
+
+    await fireEvent.press(screen.getByLabelText('Voltar'));
+    await waitFor(() => expect(screen).toHavePathname('/visits'));
+
+    await fireEvent.press(
+      await screen.findByLabelText(
+        'Visita inicial. Realizada. Acompanhamento de hipertensão',
+      ),
+    );
+
+    await waitFor(() => expect(screen).toHavePathname('/visits/10'));
+    expect(await screen.findByText('Realizada')).toBeTruthy();
+    expect(screen.getByText(/Desfecho registrado em:/)).toBeTruthy();
+    expect(screen.queryByText(/Motivo do cancelamento:/)).toBeNull();
+    expect(
+      screen.getByText(VISIT_MESSAGES.finalizedOutcomeNotice),
+    ).toBeTruthy();
+    expect(screen.queryByText(VISIT_MESSAGES.rf19ReservedTitle)).toBeNull();
+  });
+
+  it('resolve o detalhe diretamente pela rota /visits/15 sem depender da lista', async () => {
+    storeSession();
+    api.getMyVisits.mockResolvedValue({
+      upcoming: [scheduledVisit],
+      history: [],
+    });
+
+    await renderAuthenticatedAt('/visits/15');
+
+    expect(await screen.findByText('Detalhes da visita')).toBeTruthy();
+    expect(screen.getByText('Visita de retorno')).toBeTruthy();
+    expect(
+      screen.getByText('• Aferição clínica — Acompanhamento dos sinais vitais.'),
+    ).toBeTruthy();
+    expect(screen.getByText(VISIT_MESSAGES.rf19ReservedTitle)).toBeTruthy();
+    expect(api.getMyVisits).toHaveBeenCalledWith(
+      'header.payload.signature',
+      expect.anything(),
+    );
+  });
+
+  it('recusa identificador de texto no detalhe sem chamar API e volta às visitas', async () => {
+    storeSession();
+    api.getMyVisits.mockResolvedValue({
+      upcoming: [scheduledVisit],
+      history: [],
+    });
+
+    await renderAuthenticatedAt('/visits/abc');
+
+    expect(await screen.findByText(VISIT_MESSAGES.invalidId)).toBeTruthy();
+    expect(api.getMyVisits).not.toHaveBeenCalled();
+
+    await fireEvent.press(screen.getByText('Voltar às visitas'));
+
+    await waitFor(() => expect(screen).toHavePathname('/visits'));
+    expect(await screen.findByText('Visita de retorno')).toBeTruthy();
+  });
+
+  it('recusa identificador zero no detalhe sem chamar API', async () => {
+    storeSession();
+
+    await renderAuthenticatedAt('/visits/0');
+
+    expect(await screen.findByText(VISIT_MESSAGES.invalidId)).toBeTruthy();
+    expect(api.getMyVisits).not.toHaveBeenCalled();
+  });
+
+  it('exibe indisponibilidade para visita ausente no detalhe e permite voltar às visitas', async () => {
+    storeSession();
+    api.getMyVisits.mockResolvedValue({
+      upcoming: [scheduledVisit],
+      history: [],
+    });
+
+    await renderAuthenticatedAt('/visits/999');
+
+    expect(await screen.findByText(VISIT_MESSAGES.notAvailable)).toBeTruthy();
+
+    await fireEvent.press(screen.getByText('Voltar às visitas'));
+
+    await waitFor(() => expect(screen).toHavePathname('/visits'));
+    expect(await screen.findByText('Visita de retorno')).toBeTruthy();
+  });
+
+  it('mantém dados anteriores no detalhe ao falhar no retorno ao foco e reflete migração ao tentar novamente', async () => {
+    storeSession();
+    const completedVisit: ParticipantVisit = {
+      ...scheduledVisit,
+      status: 'DONE',
+      outcomeAt: new Date(2027, 2, 10, 15, 0, 0).toISOString(),
+    };
+    api.getMyVisits
+      .mockResolvedValueOnce({ upcoming: [scheduledVisit], history: [] })
+      .mockRejectedValueOnce(new ApiError('indisponível', 503))
+      .mockResolvedValueOnce({ upcoming: [], history: [completedVisit] });
+
+    await renderAuthenticatedAt('/visits/15');
+    expect(await screen.findByText('Visita de retorno')).toBeTruthy();
+    expect(screen.getByText(VISIT_MESSAGES.rf19ReservedTitle)).toBeTruthy();
+
+    await testRouter.push('/change-password');
+    await waitFor(() =>
+      expect(screen).toHavePathname('/change-password'),
+    );
+
+    await testRouter.back();
+    await waitFor(() => expect(screen).toHavePathname('/visits/15'));
+
+    expect(
+      await screen.findByText(
+        `${VISIT_MESSAGES.serviceUnavailable} ${VISIT_MESSAGES.previousDetailData}`,
+      ),
+    ).toBeTruthy();
+    expect(screen.getByText('Visita de retorno')).toBeTruthy();
+
+    await fireEvent.press(screen.getByText('Tentar novamente'));
+
+    await waitFor(() =>
+      expect(screen.queryByText(/consulta anterior/)).toBeNull(),
+    );
+    expect(screen.getByText('Realizada')).toBeTruthy();
+    expect(screen.getByText(/Desfecho registrado em:/)).toBeTruthy();
+    expect(
+      screen.getByText(VISIT_MESSAGES.finalizedOutcomeNotice),
+    ).toBeTruthy();
+    expect(screen.queryByText(VISIT_MESSAGES.rf19ReservedTitle)).toBeNull();
+    expect(api.getMyVisits).toHaveBeenCalledTimes(3);
+  });
+
+  it('leva ao login sem erro adicional quando a API retorna 401 no detalhe', async () => {
+    storeSession();
+    api.getMyVisits
+      .mockResolvedValueOnce({ upcoming: [scheduledVisit], history: [] })
+      .mockRejectedValueOnce(new ApiError('não autorizado', 401));
+
+    await renderApp('/');
+    await screen.findByText(/Olá, Raffael!/);
+
+    await fireEvent.press(screen.getByText('Ver visitas'));
+    await screen.findByText('Visita de retorno');
+
+    await fireEvent.press(
+      screen.getByLabelText(
+        'Visita de retorno. Agendada. Acompanhamento de hipertensão',
+      ),
+    );
+
+    expect(await screen.findByText(AUTH_MESSAGES.sessionExpired)).toBeTruthy();
+    await waitFor(() => expect(screen).toHavePathname('/login'));
+    await waitFor(() => expect(storedValue).toBeNull());
+    expect(screen.queryByText(VISIT_MESSAGES.detailFailed)).toBeNull();
+  });
+
+  it('restringe a sessão ao receber 403 PASSWORD_CHANGE_REQUIRED no detalhe', async () => {
+    storeSession();
+    api.getMyVisits
+      .mockResolvedValueOnce({ upcoming: [scheduledVisit], history: [] })
+      .mockRejectedValueOnce(
+        new ApiError('troca pendente', 403, 'PASSWORD_CHANGE_REQUIRED'),
+      );
+
+    await renderApp('/');
+    await screen.findByText(/Olá, Raffael!/);
+
+    await fireEvent.press(screen.getByText('Ver visitas'));
+    await screen.findByText('Visita de retorno');
+
+    await fireEvent.press(
+      screen.getByLabelText(
+        'Visita de retorno. Agendada. Acompanhamento de hipertensão',
+      ),
+    );
+
+    expect(await screen.findByText('Defina sua nova senha')).toBeTruthy();
+    await waitFor(() =>
+      expect(screen).toHavePathname('/change-password'),
+    );
+    expect(screen.queryByText(VISIT_MESSAGES.forbidden)).toBeNull();
+    expect(screen.queryByText(VISIT_MESSAGES.detailFailed)).toBeNull();
+  });
+
+  it('bloqueia acesso direto a /visits/15 quando mustChangePassword está ativo', async () => {
+    storeSession({ mustChangePassword: true });
+
+    await renderApp('/');
+    await screen.findByText('Defina sua nova senha');
+
+    await act(async () => {
+      router.push('/visits/15');
+    });
+    await waitFor(() =>
+      expect(screen).toHavePathname('/change-password'),
+    );
     expect(api.getMyVisits).not.toHaveBeenCalled();
   });
 });

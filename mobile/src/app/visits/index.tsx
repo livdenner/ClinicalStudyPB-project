@@ -22,7 +22,10 @@ import {
   getVisitLoadErrorMessage,
   VISIT_MESSAGES,
 } from '../../services/visits/visitErrors';
-import { normalizeVisitStatus } from '../../services/visits/visitPresentation';
+import {
+  normalizeVisitStatus,
+  visitStatusLabel,
+} from '../../services/visits/visitPresentation';
 import type {
   ParticipantVisit,
   ParticipantVisits,
@@ -30,6 +33,13 @@ import type {
 import { colors, radii, spacing } from '../../theme/colors';
 
 type VisitTab = 'upcoming' | 'history';
+
+function openVisit(visitId: number): void {
+  router.push({
+    pathname: '/visits/[visitId]',
+    params: { visitId: String(visitId) },
+  });
+}
 
 function EmptyVisitsSection({ tab }: { tab: VisitTab }) {
   const title =
@@ -70,7 +80,18 @@ function VisitCard({
       : null;
 
   return (
-    <View style={styles.card}>
+    <Pressable
+      accessibilityHint="Abre os detalhes da visita"
+      accessibilityLabel={`${visitTitle}. ${visitStatusLabel(
+        visit.status,
+      )}. ${visit.studyTitle}`}
+      accessibilityRole="button"
+      onPress={() => openVisit(visit.id)}
+      style={({ pressed }) => [
+        styles.card,
+        pressed ? styles.cardPressed : null,
+      ]}
+    >
       <VisitStatusBadge status={visit.status} />
       <Text style={styles.cardTitle}>{visitTitle}</Text>
       <Text style={styles.cardMeta}>
@@ -85,7 +106,7 @@ function VisitCard({
           Motivo: {cancellationReason}
         </Text>
       ) : null}
-    </View>
+    </Pressable>
   );
 }
 
@@ -364,6 +385,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     gap: spacing.xs,
     padding: spacing.md,
+  },
+  cardPressed: {
+    opacity: 0.8,
   },
   cardTitle: {
     color: colors.text,

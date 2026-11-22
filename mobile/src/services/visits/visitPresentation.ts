@@ -1,6 +1,8 @@
 import { type BadgeVisual, colors } from '../../theme/colors';
 import { parseRoutePositiveId } from '../protocol/protocolValidation';
 import {
+  type ParticipantVisit,
+  type ParticipantVisits,
   SCHEDULED_VISIT_STATUSES,
   type ScheduledVisitStatus,
 } from './visitTypes';
@@ -82,4 +84,19 @@ export function parseVisitId(
   value: string | string[] | null | undefined,
 ): number | null {
   return parseRoutePositiveId(value);
+}
+
+/**
+ * Localiza uma visita pelo identificador nas duas seções (`upcoming` e
+ * `history`) devolvidas por `GET /api/me/visits`.
+ */
+export function findParticipantVisitById(
+  visits: ParticipantVisits,
+  visitId: number,
+): ParticipantVisit | null {
+  return (
+    visits.upcoming.find((visit) => visit.id === visitId) ??
+    visits.history.find((visit) => visit.id === visitId) ??
+    null
+  );
 }

@@ -24,6 +24,12 @@ export const VISIT_MESSAGES = {
   emptyHistoryTitle: 'Seu histórico está vazio',
   emptyHistory:
     'Quando alguma visita for realizada, ausente ou cancelada, ela aparecerá aqui.',
+  emptyActivities: 'Sem atividades previstas para esta visita.',
+  rf19ReservedTitle: 'Presença e reagendamento',
+  rf19ReservedBody:
+    'As opções para confirmar presença ou solicitar reagendamento serão disponibilizadas em uma próxima atualização.',
+  finalizedOutcomeNotice:
+    'Esta visita já teve seu desfecho registrado pela equipe do estudo e permanece disponível apenas para consulta.',
 } as const;
 
 /** Escopo da leitura para adaptar a mensagem de erro sem vazar detalhes. */

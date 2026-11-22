@@ -18,6 +18,7 @@ import LoginScreen from '../app/login';
 import RootLayout from '../app/_layout';
 import StudiesScreen from '../app/studies/index';
 import StudyDetailScreen from '../app/studies/[participantId]';
+import VisitDetailScreen from '../app/visits/[visitId]';
 import VisitsScreen from '../app/visits/index';
 import { ACTIVATION_MESSAGES } from '../auth/activationForm';
 import { ApiError } from '../services/api/apiClient';
@@ -146,6 +147,7 @@ async function renderApp(initialUrl = '/') {
       'studies/index': StudiesScreen,
       'studies/[participantId]': StudyDetailScreen,
       'visits/index': VisitsScreen,
+      'visits/[visitId]': VisitDetailScreen,
       'change-password': ChangePasswordScreen,
       'invitations/index': InvitationsScreen,
       'invitations/[candidateId]': InvitationDetailScreen,
@@ -208,6 +210,14 @@ describe('navegação autenticada do participante', () => {
 
     await waitFor(() => expect(screen).toHavePathname('/login'));
     expect(screen.queryByText('Visitas')).toBeNull();
+    expect(visitsApi.getMyVisits).not.toHaveBeenCalled();
+
+    await act(async () => {
+      router.push('/visits/15');
+    });
+
+    await waitFor(() => expect(screen).toHavePathname('/login'));
+    expect(screen.queryByText('Detalhes da visita')).toBeNull();
     expect(visitsApi.getMyVisits).not.toHaveBeenCalled();
   });
 

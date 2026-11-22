@@ -5,11 +5,13 @@ import {
   VISIT_MESSAGES,
 } from '../services/visits/visitErrors';
 import {
+  findParticipantVisitById,
   getVisitStatusVisual,
   normalizeVisitStatus,
   parseVisitId,
   visitStatusLabel,
 } from '../services/visits/visitPresentation';
+import type { ParticipantVisits } from '../services/visits/visitTypes';
 import { colors } from '../theme/colors';
 
 describe('visitPresentation', () => {
@@ -88,5 +90,45 @@ describe('visitPresentation', () => {
     expect(getVisitLoadErrorMessage(new Error('timeout'), 'detail')).toBe(
       VISIT_MESSAGES.detailFailed,
     );
+  });
+
+  it('localiza visita por identificador entre próximas e histórico ou retorna null', () => {
+    const visits: ParticipantVisits = {
+      upcoming: [
+        {
+          id: 15,
+          studyId: 1,
+          studyTitle: 'Estudo A',
+          participantId: 11,
+          plannedVisitId: 3,
+          plannedVisitName: 'Retorno',
+          scheduledAt: '2027-03-10T12:00:00Z',
+          status: 'SCHEDULED',
+          activities: [],
+        },
+      ],
+      history: [
+        {
+          id: 10,
+          studyId: 1,
+          studyTitle: 'Estudo A',
+          participantId: 11,
+          plannedVisitId: 1,
+          plannedVisitName: 'Inicial',
+          scheduledAt: '2027-01-10T12:00:00Z',
+          status: 'DONE',
+          outcomeAt: '2027-01-10T13:00:00Z',
+          activities: [],
+        },
+      ],
+    };
+
+    expect(findParticipantVisitById(visits, 15)?.plannedVisitName).toBe(
+      'Retorno',
+    );
+    expect(findParticipantVisitById(visits, 10)?.plannedVisitName).toBe(
+      'Inicial',
+    );
+    expect(findParticipantVisitById(visits, 999)).toBeNull();
   });
 });
