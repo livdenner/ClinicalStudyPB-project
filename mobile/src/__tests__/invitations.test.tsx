@@ -15,7 +15,8 @@ import HomeScreen from '../app/index';
 import InvitationDetailScreen from '../app/invitations/[candidateId]';
 import InvitationsScreen from '../app/invitations/index';
 import LoginScreen from '../app/login';
-import StudiesScreen from '../app/studies';
+import StudiesScreen from '../app/studies/index';
+import StudyDetailScreen from '../app/studies/[participantId]';
 import { ApiError } from '../services/api/apiClient';
 import * as invitationApi from '../services/invitations/invitationApi';
 import {
@@ -131,7 +132,8 @@ async function renderApp(initialUrl: string) {
       login: LoginScreen,
       activation: ActivationScreen,
       index: HomeScreen,
-      studies: StudiesScreen,
+      'studies/index': StudiesScreen,
+      'studies/[participantId]': StudyDetailScreen,
       'change-password': ChangePasswordScreen,
       'invitations/index': InvitationsScreen,
       'invitations/[candidateId]': InvitationDetailScreen,
@@ -810,8 +812,8 @@ describe('convites do participante', () => {
     await renderAuthenticatedAt('/invitations');
     await screen.findByText(/Você não tem convites disponíveis/);
 
-    await testRouter.push('/studies');
-    await waitFor(() => expect(screen).toHavePathname('/studies'));
+    await testRouter.push('/change-password');
+    await waitFor(() => expect(screen).toHavePathname('/change-password'));
     await testRouter.back();
     await waitFor(() => expect(screen).toHavePathname('/invitations'));
 
@@ -836,8 +838,8 @@ describe('convites do participante', () => {
     await renderAuthenticatedAt('/invitations');
     await screen.findByText('Estudo de hábitos de sono');
 
-    await testRouter.push('/studies');
-    await waitFor(() => expect(screen).toHavePathname('/studies'));
+    await testRouter.push('/change-password');
+    await waitFor(() => expect(screen).toHavePathname('/change-password'));
     await testRouter.back();
     await waitFor(() => expect(screen).toHavePathname('/invitations'));
 

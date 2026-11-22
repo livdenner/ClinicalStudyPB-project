@@ -1,3 +1,7 @@
+import type { PlannedActivity, PlannedVisit } from '../protocol/protocolTypes';
+
+export type { PlannedActivity, PlannedVisit };
+
 /**
  * Situações de convite expostas pelas rotas `/api/me/invitations`.
  * O contrato referencia o enum amplo `CandidateStatus`, mas estas rotas
@@ -30,24 +34,6 @@ export interface StudyInvitationSummary {
   studyTitle: string;
   status: string;
   decidedAt?: string;
-}
-
-/** Atividade prevista em uma visita do protocolo. */
-export interface PlannedActivity {
-  id: number;
-  name: string;
-  description: string;
-  position: number;
-}
-
-/** Visita prevista do protocolo, com data civil `YYYY-MM-DD`. */
-export interface PlannedVisit {
-  id: number;
-  studyId: number;
-  name: string;
-  plannedDate: string;
-  position: number;
-  activities: PlannedActivity[];
 }
 
 /** Detalhe devolvido por `GET /api/me/invitations/{candidateId}`. */

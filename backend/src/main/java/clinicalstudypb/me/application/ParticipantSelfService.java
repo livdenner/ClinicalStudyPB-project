@@ -9,6 +9,7 @@ import clinicalstudypb.shared.CurrentActor;
 import clinicalstudypb.studies.application.StudyService;
 import clinicalstudypb.studies.domain.Study;
 import clinicalstudypb.users.application.UserService;
+import clinicalstudypb.visits.api.PlannedVisitResponse;
 import clinicalstudypb.visits.application.PlannedVisitLookup;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -49,7 +50,7 @@ public class ParticipantSelfService {
      * @param scheduledVisitService agendamentos das participações
      * @param studyService dados dos estudos
      * @param userService nome do pesquisador responsável
-     * @param plannedVisitLookup nomes das visitas previstas
+     * @param plannedVisitLookup nomes e visitas previstas do protocolo
      */
     public ParticipantSelfService(CurrentActor currentActor,
                                   ParticipantQueryService participantQueryService,
@@ -75,12 +76,15 @@ public class ParticipantSelfService {
         List<Participant> participations = participantQueryService.listByAccount(currentActor.userId());
         Map<Long, Study> studies = new HashMap<>();
         Map<Long, String> responsibleNames = new HashMap<>();
+        Map<Long, List<PlannedVisitResponse>> plannedVisitsByStudy = new HashMap<>();
         return participations.stream()
                 .map(participant -> {
                     Study study = studies.computeIfAbsent(participant.getStudyId(), studyService::getStudy);
                     String responsibleName = responsibleNames.computeIfAbsent(study.getResponsibleUserId(),
                             id -> userService.getUser(id).getName());
-                    return new ParticipantStudyView(participant, study, responsibleName);
+                    List<PlannedVisitResponse> plannedVisits = plannedVisitsByStudy.computeIfAbsent(
+                            participant.getStudyId(), plannedVisitLookup::findByStudy);
+                    return new ParticipantStudyView(participant, study, responsibleName, plannedVisits);
                 })
                 .toList();
     }

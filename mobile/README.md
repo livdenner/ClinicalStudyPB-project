@@ -1,6 +1,6 @@
 # Aplicativo mobile
 
-Aplicativo do participante, desenvolvido em React Native com Expo e TypeScript. O app usa Expo Router para navegação por arquivos. Nesta etapa, o aplicativo tem login do participante, ativação de primeiro acesso, sessão protegida persistida em armazenamento seguro, troca de senha e consulta/decisão de convites de estudo. A tela de estudos continua provisória quanto ao conteúdo de negócio: ela ainda não lista os estudos reais do participante.
+Aplicativo do participante, desenvolvido em React Native com Expo e TypeScript. O app usa Expo Router para navegação por arquivos. Nesta etapa, o aplicativo tem login do participante, ativação de primeiro acesso, sessão protegida persistida em armazenamento seguro, troca de senha, consulta/decisão de convites e consulta de estudos em que a conta participa.
 
 ## Escopo e estado atual
 
@@ -10,11 +10,12 @@ Aplicativo do participante, desenvolvido em React Native com Expo e TypeScript. 
 - `src/app/change-password.tsx` define a senha inicial de uma sessão restrita ou troca a senha de uma conta já ativa.
 - `src/app/index.tsx` é o início autenticado, com dados públicos do participante, aviso de persistência, acesso a convites e estudos, troca de senha e saída.
 - `src/app/invitations/` lista os convites visíveis da própria conta e exibe o detalhe autorizado, protocolo e termo simulado.
-- `src/app/studies.tsx` é um destino protegido provisório; a listagem real fica para uma entrega posterior.
+- `src/app/studies/` lista os estudos em que o participante autenticado está incluído (`index.tsx`) e exibe o detalhe protegido com objetivo e visitas previstas (`[participantId].tsx`).
+- `src/components/protocol/PlannedVisitCard.tsx` e os selos em `src/components/` (`StatusBadge.tsx`, `studies/StudyStatusBadge.tsx`, `studies/ParticipationStatusBadge.tsx`) são reutilizados entre convites e estudos com tokens semânticos alinhados ao PBI-24 em `src/theme/colors.ts`.
 - `src/auth/AuthProvider.tsx` mantém a sessão em memória, restaura do armazenamento, executa login/ativação/troca de senha/logout e centraliza o tratamento de falhas autenticadas.
 - `src/auth/secureSessionStorage.ts` grava apenas token, validade absoluta e dados públicos mínimos do usuário em um registro versionado no `expo-secure-store`.
 - `src/services/api/apiClient.ts` fornece a requisição JSON e converte respostas fora de 2xx em `ApiError`.
-- `src/__tests__/` cobre sessão, armazenamento seguro, cliente HTTP, formulários, política de senha, mensagens de erro, convites e a navegação protegida.
+- `src/__tests__/` cobre sessão, armazenamento seguro, cliente HTTP, formulários, política de senha, mensagens de erro, convites, estudos do participante, cartão compartilhado de visitas previstas e a navegação protegida.
 
 O papel de cada integrante pode mudar entre sprints. Antes de iniciar uma alteração, confira no board e no planejamento da sprint quem está responsável por Mobile e quais critérios de aceite pertencem à tarefa atual. Este guia documenta o projeto para qualquer pessoa que assuma essa responsabilidade.
 
@@ -79,7 +80,7 @@ npm.cmd start
 
 A variável de processo tem precedência sobre o `.env` na inicialização do bundle. Reinicie o Expo depois de qualquer alteração. O Expo injeta variáveis `EXPO_PUBLIC_*` no bundle do app; nunca coloque senhas, chaves privadas ou tokens nesse prefixo nem versione segredos.
 
-Os caminhos usados pelo app são relativos à base `/api`: `auth/login`, `auth/activation`, `auth/password`, `auth/logout`, `me/invitations`, `me/invitations/{candidateId}` e `me/invitations/{candidateId}/decision`. O [contrato OpenAPI](../backend/openapi.yaml) descreve os endpoints da API, incluindo as rotas do participante autenticado.
+Os caminhos usados pelo app são relativos à base `/api`: `auth/login`, `auth/activation`, `auth/password`, `auth/logout`, `me/invitations`, `me/invitations/{candidateId}`, `me/invitations/{candidateId}/decision` e `me/studies`. O [contrato OpenAPI](../backend/openapi.yaml) descreve os endpoints da API, incluindo as rotas do participante autenticado.
 
 ## Convites e consentimento simulado
 
@@ -101,6 +102,37 @@ Use somente contas e dados fictícios em um backend local que contenha as rotas 
 4. Confira também uma conta sem convites, uma falha de consulta recuperável, sessão expirada e um convite cancelado enquanto o detalhe estiver aberto.
 
 Não registre senhas, códigos de ativação, JWTs ou dados pessoais reais em capturas, logs ou documentação.
+
+## Estudos do participante
+
+O acesso **Ver estudos** na tela inicial consulta `GET /api/me/studies` (caminho relativo `me/studies`) por meio de `runAuthenticated`. O retorno é um array direto ordenado da inclusão mais recente para a mais antiga e identifica o participante exclusivamente pelo token JWT, sem enviar `userId` ou `participantId` como filtro de conta.
+
+### Complemento de contrato no backend
+
+Como o contrato inicial de `/api/me/studies` ainda não trazia o protocolo de visitas previstas, esta entrega acrescentou `plannedVisits` de forma aditiva em `ParticipantStudy` (sem alterar rotas existentes nem criar migração), reutilizando `PlannedVisitLookup` apenas para os estudos em que a conta autenticada participa e retornando `[]` quando não há visitas cadastradas. Antes de validar no dispositivo ou emulador com Docker Compose, reconstrua o serviço backend preservando o banco:
+
+```powershell
+docker compose up -d --build backend
+```
+
+### Regras de exibição e estados
+
+- **Separação de conceitos e cores semânticas (PBI-24):** `studyStatus` (`PLANNING`, `RECRUITMENT`, `EXECUTION`, `CLOSED`, `CANCELLED` ou desconhecido neutro) e `participationStatus` (`ACTIVE` informativo ou `WITHDRAWN` neutro) possuem rótulos e selos independentes em `src/theme/colors.ts`. Verde de sucesso não é usado para estado de estudo. Participações retiradas (`WITHDRAWN`) e estudos `CLOSED` ou `CANCELLED` continuam visíveis na lista e no detalhe.
+- **Lista (`/studies`):** exibe título, estado do estudo, situação da participação e data/hora de inclusão (`includedAt`, mais `withdrawnAt` quando retirada). Conta sem inclusão exibe orientação informando que a inclusão é realizada pela coordenação, com atalho para **Ver convites**; falhas de rede/servidor ou payload inválido exibem mensagem segura e botão **Tentar novamente** sem mascarar o erro como lista vazia. A consulta é refeita ao retornar ao foco e cancelada ao sair da tela.
+- **Detalhe (`/studies/[participantId]`):** resolve os dados exclusivamente a partir de `GET /api/me/studies` (funcionando também em abertura direta/restauração), exibindo objetivo, pesquisador responsável, período civil (`startDate` e `endDate` em `YYYY-MM-DD`, sem conversão de fuso) e protocolo de visitas previstas reutilizando `PlannedVisitCard`. As datas usam explicitamente o rótulo **Data prevista**, diferenciando protocolo de visitas agendadas (fora do escopo desta entrega). Identificador inválido ou participação ausente exibem mensagem própria e retorno à lista.
+- **Sessão e privacidade:** expiração (`401`) e troca obrigatória de senha (`403 PASSWORD_CHANGE_REQUIRED`) seguem o fluxo central do `AuthProvider`; o estado da lista e do detalhe é limpo na troca de conta e respostas tardias ou canceladas são descartadas.
+
+### Roteiro manual de demonstração
+
+Use somente contas e dados fictícios em um ambiente com o backend atualizado.
+
+1. Prepare **dois estudos distintos** em `RECRUITMENT`, cada um com critérios de inclusão/exclusão, capacidade disponível e visitas previstas com atividades (incluindo ao menos uma visita sem agendamento em `/api/me/visits`, além de testar opcionalmente um protocolo sem visitas).
+2. Cadastre candidaturas para a **mesma conta participante** nos dois estudos, conclua o primeiro acesso (`auth/activation` + `PUT auth/password`), avalie elegibilidade e registre o aceite do convite (`GRANTED`) na tela de convites. Antes da inclusão pelo coordenador, confirme que aceitar o convite ainda não faz o estudo aparecer em **Ver estudos**.
+3. Realize a inclusão pelo coordenador nos dois estudos (e opcionalmente altere o estado de um deles para `EXECUTION`, ou registre retirada/encerramento) para conferir selos distintos da tabela do PBI-24.
+4. Na conta incluída, abra **Ver estudos** e confira **os dois estudos**, seus títulos, selos separados (estado do estudo e situação da participação) e datas reais de inclusão. Toque em cada estudo para conferir objetivo, pesquisador responsável, período civil e as visitas previstas com **Data prevista** e atividades (inclusive a visita sem agendamento).
+5. Entre com uma **conta de controle sem inclusão** e confirme a orientação de lista vazia (sem cartões fictícios) e o atalho para convites. Se usar outra conta com inclusão própria, confirme o isolamento após **Sair** e entrar novamente (nenhum cartão da conta anterior pode permanecer).
+6. Simule indisponibilidade temporária do backend e confira mensagem de erro + **Tentar novamente**; restaure o serviço e repita o carregamento com sucesso. Confira também retorno pela navegação e bloqueio quando a sessão expirar ou exigir troca de senha.
+7. Para registrar evidências reais após a execução manual no dispositivo/emulador, salve o resumo e capturas selecionadas em `docs/test-runs/` com links relativos, data, commit e comandos executados, sem expor códigos de ativação, senhas, JWTs ou dados pessoais reais.
 
 ## Fluxo de autenticação
 
@@ -151,7 +183,7 @@ npx.cmd expo install --check
 - `tsc --noEmit` verifica o TypeScript.
 - `expo install --check` compara as dependências com o catálogo do SDK do Expo.
 
-Os testes Jest cobrem login, ativação, troca de senha, expiração, persistência segura, tratamento de 401 e concorrência de sessão, convites, além da navegação protegida e do cliente HTTP. Não há script de lint mobile configurado nesta base. O CI instala pelo lockfile e executa `npm run test:report -- --coverage`, publicando os artefatos `mobile-coverage` e `resultados-mobile`.
+Os testes Jest cobrem login, ativação, troca de senha, expiração, persistência segura, tratamento de 401 e concorrência de sessão, convites, estudos do participante, cartão compartilhado de visitas previstas, navegação protegida e cliente HTTP. Não há script de lint mobile configurado nesta base. O CI instala pelo lockfile e executa `npm run test:report -- --coverage`, publicando os artefatos `mobile-coverage` e `resultados-mobile`.
 
 O comando `expo install --check` pode recomendar atualizações de pacotes dentro do mesmo SDK ao consultar o catálogo online. Registre as versões e o resultado; não atualize dependências nem o lockfile automaticamente durante a conferência de instalação. Na validação da T16.13, o catálogo recomendou atualizações do SDK 58, enquanto os testes, o TypeScript e a navegação em Android passaram com as versões fixadas. A consulta offline usa os dados locais e não substitui o diagnóstico online. Veja o [relatório da execução](../releases/release1/tests/t16-13/README.md). Nesta task, os patches recomendados dentro do SDK 58 para `@expo/ui`, `expo`, `expo-router`, `expo-web-browser` e `jest-expo` foram aplicados de forma deliberada e os testes foram reexecutados; repita o `expo install --check` após a atualização e registre a saída.
 

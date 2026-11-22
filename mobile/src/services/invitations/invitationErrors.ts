@@ -1,5 +1,6 @@
 import { ApiError } from '../api/apiClient';
-import { AuthFlowError } from '../auth/authErrors';
+
+export { isHandledSessionError } from '../auth/authErrors';
 
 /** Mensagens dos convites; nenhuma revela dados de outra conta. */
 export const INVITATION_MESSAGES = {
@@ -123,19 +124,6 @@ export function blocksInvitationDecision(error: unknown): boolean {
     (error.code === 'CANDIDATE_CANCELLED' ||
       error.code === 'CONSENT_NOT_AVAILABLE' ||
       error.code === 'STUDY_NOT_RECRUITING')
-  );
-}
-
-/**
- * Indica erros já tratados pelo provider, que não devem aparecer como falha
- * de consulta na tela: sessão expirada, resposta obsoleta ou senha pendente.
- */
-export function isHandledSessionError(error: unknown): boolean {
-  return (
-    error instanceof AuthFlowError &&
-    (error.code === 'SESSION_EXPIRED' ||
-      error.code === 'STALE_REQUEST' ||
-      error.code === 'PASSWORD_CHANGE_REQUIRED')
   );
 }
 
