@@ -8,6 +8,30 @@ afterEach(() => {
 });
 const resposta = (dados: unknown, status = 200) => new Response(JSON.stringify(dados), { status });
 
+it("abre o histórico pela lista e retorna sem recarregar os participantes", async () => {
+    const participante = {
+        id: 1,
+        studyId: 3,
+        candidateId: 10,
+        candidateName: "Ana Silva",
+        includedAt: "2026-11-12T12:00:00Z",
+        status: "ACTIVE",
+    };
+    const fetchMock = vi
+        .spyOn(globalThis, "fetch")
+        .mockResolvedValueOnce(resposta([participante]))
+        .mockResolvedValueOnce(resposta({ participant: participante, visits: [] }));
+    render(<ParticipantesEstudo estudoId={3} token="token-teste" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Ver histórico: Ana Silva" }));
+    expect(await screen.findByText("Nenhuma visita no histórico")).toBeInTheDocument();
+    expect(fetchMock.mock.calls[1][0]).toBe("/api/studies/3/participants/1/history");
+    fireEvent.click(screen.getByRole("button", { name: "Voltar para participantes" }));
+    expect(
+        await screen.findByRole("button", { name: "Ver histórico: Ana Silva" })
+    ).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+});
+
 it("consulta apenas o estudo solicitado e diferencia participantes ativos e retirados", async () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
         resposta([
