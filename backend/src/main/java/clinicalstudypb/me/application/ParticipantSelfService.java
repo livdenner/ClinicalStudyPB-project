@@ -9,12 +9,15 @@ import clinicalstudypb.shared.CurrentActor;
 import clinicalstudypb.studies.application.StudyService;
 import clinicalstudypb.studies.domain.Study;
 import clinicalstudypb.users.application.UserService;
+import clinicalstudypb.visits.api.PlannedActivityResponse;
 import clinicalstudypb.visits.api.PlannedVisitResponse;
 import clinicalstudypb.visits.application.PlannedVisitLookup;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -92,9 +95,10 @@ public class ParticipantSelfService {
     /**
      * Lista as visitas da conta autenticada em todos os seus estudos, separadas em próximas
      * (ainda {@code SCHEDULED}, da mais antiga para a mais nova) e histórico de desfechos
-     * ({@code DONE}, {@code ABSENT} e {@code CANCELLED}, da mais recente para a mais antiga).
+     * ({@code DONE}, {@code ABSENT} e {@code CANCELLED}, da mais recente para a mais antiga),
+     * com as atividades previstas de cada visita na ordem do protocolo.
      *
-     * @return próximas visitas e histórico; listas vazias sem participação
+     * @return listas separadas de próximas visitas e histórico; ambas vazias sem inclusão
      */
     @Transactional(readOnly = true)
     public ParticipantVisitsView listVisits() {
@@ -106,27 +110,37 @@ public class ParticipantSelfService {
         }
         List<ScheduledVisit> visits = scheduledVisitService.listByParticipants(participantIds);
         Map<Long, String> studyTitles = new HashMap<>();
-        Map<Long, Map<Long, String>> plannedVisitNames = new HashMap<>();
+        Map<Long, Map<Long, PlannedVisitResponse>> plannedVisitsByStudy = new HashMap<>();
         List<ParticipantVisitView> upcoming = visits.stream()
                 .filter(visit -> visit.getStatus() == ScheduledVisitStatus.SCHEDULED)
-                .map(visit -> toView(visit, studyTitles, plannedVisitNames))
+                .map(visit -> toView(visit, studyTitles, plannedVisitsByStudy))
                 .toList();
         List<ParticipantVisitView> history = visits.stream()
                 .filter(visit -> visit.getStatus() != ScheduledVisitStatus.SCHEDULED)
                 .sorted(MOST_RECENT_FIRST)
-                .map(visit -> toView(visit, studyTitles, plannedVisitNames))
+                .map(visit -> toView(visit, studyTitles, plannedVisitsByStudy))
                 .toList();
         return new ParticipantVisitsView(upcoming, history);
     }
 
     private ParticipantVisitView toView(ScheduledVisit visit,
                                         Map<Long, String> studyTitles,
-                                        Map<Long, Map<Long, String>> plannedVisitNames) {
+                                        Map<Long, Map<Long, PlannedVisitResponse>> plannedVisitsByStudy) {
         String studyTitle = studyTitles.computeIfAbsent(visit.getStudyId(),
                 id -> studyService.getStudy(id).getTitle());
-        String plannedVisitName = plannedVisitNames
-                .computeIfAbsent(visit.getStudyId(), plannedVisitLookup::findNamesByStudy)
-                .getOrDefault(visit.getPlannedVisitId(), "");
-        return new ParticipantVisitView(visit, studyTitle, plannedVisitName);
+        PlannedVisitResponse plannedVisit = plannedVisitsByStudy
+                .computeIfAbsent(visit.getStudyId(), this::indexPlannedVisits)
+                .get(visit.getPlannedVisitId());
+        String plannedVisitName = plannedVisit != null ? plannedVisit.name() : "";
+        List<PlannedActivityResponse> activities = plannedVisit != null
+                ? plannedVisit.activities()
+                : List.of();
+        return new ParticipantVisitView(visit, studyTitle, plannedVisitName, activities);
+    }
+
+    private Map<Long, PlannedVisitResponse> indexPlannedVisits(Long studyId) {
+        return plannedVisitLookup.findByStudy(studyId).stream()
+                .collect(Collectors.toMap(
+                        PlannedVisitResponse::id, Function.identity(), (first, second) -> first));
     }
 }

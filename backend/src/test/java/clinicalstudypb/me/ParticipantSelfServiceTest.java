@@ -34,7 +34,6 @@ import clinicalstudypb.visits.application.PlannedVisitLookup;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -164,18 +163,28 @@ class ParticipantSelfServiceTest {
                 .thenReturn(List.of(done, absent, cancelled, soon, later));
         when(studyService.getStudy(10L)).thenReturn(study(10L, "Estudo A", 7L));
         when(studyService.getStudy(20L)).thenReturn(study(20L, "Estudo B", 7L));
-        when(plannedVisitLookup.findNamesByStudy(10L)).thenReturn(Map.of(100L, "Retorno", 102L, "Inicial"));
-        when(plannedVisitLookup.findNamesByStudy(20L)).thenReturn(Map.of(200L, "Inicial B"));
+        when(plannedVisitLookup.findByStudy(10L)).thenReturn(List.of(
+                plannedVisit(100L, 10L, "Retorno", 2, List.of(
+                        new PlannedActivityResponse(501L, "Pressão", "Aferição", 1),
+                        new PlannedActivityResponse(502L, "Questionário", "Hábitos", 2))),
+                plannedVisit(102L, 10L, "Inicial", 1, List.of())));
+        when(plannedVisitLookup.findByStudy(20L)).thenReturn(List.of(
+                plannedVisit(200L, 20L, "Inicial B", 1, List.of())));
 
         ParticipantVisitsView visits = service.listVisits();
 
         assertEquals(List.of(31L, 32L), ids(visits.upcoming()));
         assertEquals(List.of(35L, 34L, 33L), ids(visits.history()));
         assertEquals("Retorno", visits.upcoming().get(0).plannedVisitName());
+        assertEquals(List.of("Pressão", "Questionário"),
+                visits.upcoming().get(0).activities().stream().map(PlannedActivityResponse::name).toList());
         assertEquals("", visits.upcoming().get(1).plannedVisitName());
+        assertTrue(visits.upcoming().get(1).activities().isEmpty());
         assertEquals("Estudo B", visits.history().get(0).studyTitle());
+        assertTrue(visits.history().get(2).activities().isEmpty());
         verify(studyService, times(1)).getStudy(10L);
-        verify(plannedVisitLookup, times(1)).findNamesByStudy(10L);
+        verify(plannedVisitLookup, times(1)).findByStudy(10L);
+        verify(plannedVisitLookup, times(1)).findByStudy(20L);
     }
 
     @Test
@@ -187,7 +196,9 @@ class ParticipantSelfServiceTest {
         ScheduledVisit scheduled = visit(36L, 10L, 1L, 102L, "2027-06-01T12:00:00Z", null);
         when(scheduledVisitService.listByParticipants(List.of(1L))).thenReturn(List.of(done, cancelled, scheduled));
         when(studyService.getStudy(10L)).thenReturn(study(10L, "Estudo A", 7L));
-        when(plannedVisitLookup.findNamesByStudy(10L)).thenReturn(Map.of());
+        when(plannedVisitLookup.findByStudy(10L)).thenReturn(List.of(
+                plannedVisit(102L, 10L, "Final", 1, List.of(
+                        new PlannedActivityResponse(601L, "Exame", "Coleta final", 1)))));
 
         ParticipantVisitsResponse response = ParticipantVisitsResponse.from(service.listVisits());
 
@@ -196,11 +207,18 @@ class ParticipantSelfServiceTest {
         ParticipantVisitResponse scheduledResponse = response.upcoming().get(0);
         assertEquals("Nota CANCELLED", cancelledResponse.cancellationReason());
         assertNull(doneResponse.cancellationReason());
+        assertTrue(doneResponse.activities().isEmpty());
         assertEquals(Instant.parse("2027-01-30T12:00:00Z"), doneResponse.outcomeAt());
         assertNull(scheduledResponse.outcomeAt());
         assertNull(scheduledResponse.cancellationReason());
         assertSame(ScheduledVisitStatus.SCHEDULED, scheduledResponse.status());
         assertEquals("Estudo A", scheduledResponse.studyTitle());
+        assertEquals(List.of("Exame"),
+                scheduledResponse.activities().stream().map(PlannedActivityResponse::name).toList());
+
+        ParticipantVisitView nullActivitiesView = new ParticipantVisitView(scheduled, "Estudo A", "Final", null);
+        assertTrue(nullActivitiesView.activities().isEmpty());
+        assertTrue(ParticipantVisitResponse.from(nullActivitiesView).activities().isEmpty());
     }
 
     private static List<Long> ids(List<ParticipantVisitView> views) {

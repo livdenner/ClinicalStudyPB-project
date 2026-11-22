@@ -1,5 +1,6 @@
-import { colors } from '../../theme/colors';
+import { type BadgeVisual, colors } from '../../theme/colors';
 import { formatCivilDate } from '../format/dateFormat';
+import { parseRoutePositiveId } from '../protocol/protocolValidation';
 import {
   PARTICIPATION_STATUSES,
   STUDY_STATUSES,
@@ -7,19 +8,13 @@ import {
   type StudyStatus,
 } from './studyTypes';
 
+export type { BadgeVisual };
+
 /** Estado do estudo exibido na interface, incluindo valores desconhecidos. */
 export type StudyDisplayStatus = StudyStatus | 'UNKNOWN';
 
 /** Situação da participação exibida na interface, incluindo desconhecidos. */
 export type ParticipationDisplayStatus = ParticipationStatus | 'UNKNOWN';
-
-/** Aparência semântica de um selo com texto, fundo, borda opcional e símbolo. */
-export interface BadgeVisual {
-  backgroundColor: string;
-  textColor: string;
-  borderColor?: string;
-  symbol: string;
-}
 
 /** Rótulos visíveis para estados de estudo conforme a tabela do PBI-24. */
 export const STUDY_STATUS_LABELS: Record<StudyDisplayStatus, string> = {
@@ -162,13 +157,7 @@ export function getParticipationStatusVisual(
 export function parseParticipantId(
   value: string | string[] | null | undefined,
 ): number | null {
-  const raw = Array.isArray(value) ? value[0] : value;
-  if (raw === undefined || raw === null || !/^[0-9]+$/.test(raw)) {
-    return null;
-  }
-
-  const parsed = Number(raw);
-  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+  return parseRoutePositiveId(value);
 }
 
 /**

@@ -18,6 +18,8 @@ import LoginScreen from '../app/login';
 import RootLayout from '../app/_layout';
 import StudiesScreen from '../app/studies/index';
 import StudyDetailScreen from '../app/studies/[participantId]';
+import VisitDetailScreen from '../app/visits/[visitId]';
+import VisitsScreen from '../app/visits/index';
 import { ACTIVATION_MESSAGES } from '../auth/activationForm';
 import { ApiError } from '../services/api/apiClient';
 import { AUTH_MESSAGES } from '../services/auth/authErrors';
@@ -25,6 +27,8 @@ import * as authApi from '../services/auth/authApi';
 import type { LoginResponse, UserRole } from '../services/auth/authTypes';
 import * as studyApi from '../services/studies/studyApi';
 import { STUDY_MESSAGES } from '../services/studies/studyErrors';
+import * as visitApi from '../services/visits/visitApi';
+import { VISIT_MESSAGES } from '../services/visits/visitErrors';
 
 jest.mock('expo-secure-store', () => ({
   isAvailableAsync: jest.fn(),
@@ -47,9 +51,17 @@ jest.mock('../services/studies/studyApi', () => ({
   listMyStudies: jest.fn(),
 }));
 
+jest.mock('../services/visits/visitApi', () => ({
+  ...jest.requireActual<typeof import('../services/visits/visitApi')>(
+    '../services/visits/visitApi',
+  ),
+  getMyVisits: jest.fn(),
+}));
+
 const secureStore = SecureStore as jest.Mocked<typeof SecureStore>;
 const api = authApi as jest.Mocked<typeof authApi>;
 const studiesApi = studyApi as jest.Mocked<typeof studyApi>;
+const visitsApi = visitApi as jest.Mocked<typeof visitApi>;
 
 let storedValue: string | null = null;
 
@@ -59,6 +71,7 @@ beforeEach(() => {
   api.changeAccountPassword.mockReset();
   api.logoutSession.mockReset();
   studiesApi.listMyStudies.mockReset();
+  visitsApi.getMyVisits.mockReset();
   secureStore.isAvailableAsync.mockReset();
   secureStore.getItemAsync.mockReset();
   secureStore.setItemAsync.mockReset();
@@ -133,6 +146,8 @@ async function renderApp(initialUrl = '/') {
       index: HomeScreen,
       'studies/index': StudiesScreen,
       'studies/[participantId]': StudyDetailScreen,
+      'visits/index': VisitsScreen,
+      'visits/[visitId]': VisitDetailScreen,
       'change-password': ChangePasswordScreen,
       'invitations/index': InvitationsScreen,
       'invitations/[candidateId]': InvitationDetailScreen,
@@ -188,6 +203,22 @@ describe('navegação autenticada do participante', () => {
 
     await waitFor(() => expect(screen).toHavePathname('/login'));
     expect(studiesApi.listMyStudies).not.toHaveBeenCalled();
+
+    await act(async () => {
+      router.push('/visits');
+    });
+
+    await waitFor(() => expect(screen).toHavePathname('/login'));
+    expect(screen.queryByText('Visitas')).toBeNull();
+    expect(visitsApi.getMyVisits).not.toHaveBeenCalled();
+
+    await act(async () => {
+      router.push('/visits/15');
+    });
+
+    await waitFor(() => expect(screen).toHavePathname('/login'));
+    expect(screen.queryByText('Detalhes da visita')).toBeNull();
+    expect(visitsApi.getMyVisits).not.toHaveBeenCalled();
   });
 
   it('valida os campos antes de chamar a API', async () => {
@@ -326,6 +357,22 @@ describe('navegação autenticada do participante', () => {
 
     expect(await screen.findByText('Meus estudos')).toBeTruthy();
     expect(await screen.findByText(STUDY_MESSAGES.empty)).toBeTruthy();
+  });
+
+  it('acessa as visitas pelo início quando autenticado', async () => {
+    storeSession();
+    visitsApi.getMyVisits.mockResolvedValue({ upcoming: [], history: [] });
+
+    await renderApp('/');
+    expect(await screen.findByText(/Olá, Raffael!/)).toBeTruthy();
+
+    await fireEvent.press(screen.getByText('Ver visitas'));
+
+    await waitFor(() => expect(screen).toHavePathname('/visits'));
+    expect(await screen.findByText('Visitas')).toBeTruthy();
+    expect(
+      await screen.findByText(VISIT_MESSAGES.emptyUpcomingTitle),
+    ).toBeTruthy();
   });
 
   it('leva o primeiro acesso direto para a definição de senha', async () => {

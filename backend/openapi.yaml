@@ -1991,6 +1991,8 @@ paths:
         Somente PARTICIPANT; outros perfis recebem 403. A conta vem do token,
         nunca de parâmetro, e só as visitas das participações da própria conta
         aparecem, de todos os seus estudos (inclusive de participação retirada).
+        Cada visita inclui a lista de atividades previstas na ordem do protocolo
+        (`[]` quando não houver).
         - upcoming: visitas SCHEDULED, aguardando desfecho, por scheduledAt
           crescente (a mais próxima primeiro). Inclui visita cuja data já passou
           e que ainda não teve o desfecho registrado.
@@ -2019,6 +2021,11 @@ paths:
                     plannedVisitName: Retorno
                     scheduledAt: '2027-03-10T12:00:00Z'
                     status: SCHEDULED
+                    activities:
+                      - id: 22
+                        name: Aferição clínica
+                        description: Acompanhamento dos sinais vitais
+                        position: 1
                 history:
                   - id: 12
                     studyId: 1
@@ -2030,6 +2037,7 @@ paths:
                     status: CANCELLED
                     outcomeAt: '2027-01-20T13:00:00Z'
                     cancellationReason: Participante pediu para remarcar
+                    activities: []
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -2822,7 +2830,7 @@ components:
       type: object
       description: Visita agendada da conta autenticada (RF18)
       required: [id, studyId, studyTitle, participantId, plannedVisitId, plannedVisitName,
-                 scheduledAt, status]
+                 scheduledAt, status, activities]
       properties:
         id:
           type: integer
@@ -2863,6 +2871,12 @@ components:
           type: string
           readOnly: true
           description: Justificativa do cancelamento; presente só em CANCELLED
+        activities:
+          type: array
+          readOnly: true
+          description: Atividades previstas da visita na ordem do protocolo; [] quando não houver
+          items:
+            $ref: '#/components/schemas/PlannedActivity'
     ParticipantVisits:
       type: object
       description: Visitas da conta autenticada separadas em próximas e histórico (RF18)

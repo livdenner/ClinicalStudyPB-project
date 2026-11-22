@@ -83,6 +83,11 @@ export default function HomeScreen() {
           variant="secondary"
         />
         <ActionButton
+          label="Ver visitas"
+          onPress={() => router.push('/visits')}
+          variant="secondary"
+        />
+        <ActionButton
           label="Trocar senha"
           onPress={() => router.push('/change-password')}
           variant="secondary"
