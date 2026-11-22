@@ -14,7 +14,7 @@ interface ConfirmDialogProps {
   onCancel: () => void;
 }
 
-/** Confirmação em modal usada para sair da conta sem toque acidental. */
+/** Modal reutilizável para confirmar ações sem toque acidental. */
 export function ConfirmDialog({
   visible,
   title,
@@ -28,7 +28,11 @@ export function ConfirmDialog({
   return (
     <Modal
       animationType="fade"
-      onRequestClose={onCancel}
+      onRequestClose={() => {
+        if (!loading) {
+          onCancel();
+        }
+      }}
       transparent
       visible={visible}
     >

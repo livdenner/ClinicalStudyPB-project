@@ -115,7 +115,7 @@ function captureAppStateListeners(): Array<(status: AppStateStatus) => void> {
   return listeners;
 }
 
-describe('AuthProvider', () => {
+describe('RF02/RF03 — AuthProvider', () => {
   beforeEach(() => {
     jest.resetAllMocks();
     api.logoutSession.mockResolvedValue(undefined);
@@ -574,7 +574,7 @@ describe('AuthProvider', () => {
     expect(result.current.notice).toBeNull();
   });
 
-  describe('chamadas autenticadas', () => {
+  describe('RF02/RF03 — chamadas autenticadas', () => {
     it('executa a operação com o token da sessão atual', async () => {
       const stored = createSession();
       const storage = createStorage({ status: 'restored', session: stored });
@@ -915,7 +915,7 @@ describe('AuthProvider', () => {
     });
   });
 
-  describe('expiração por tempo', () => {
+  describe('RF02 — expiração por tempo', () => {
     it('encerra a sessão quando o timer alcança o vencimento', async () => {
       jest.useFakeTimers();
       jest.setSystemTime(new Date('2026-11-18T12:00:00.000Z'));
@@ -1006,7 +1006,7 @@ describe('AuthProvider', () => {
     });
   });
 
-  describe('respostas tardias de autenticação', () => {
+  describe('RF02 — respostas tardias de autenticação', () => {
     it('não autentica quando o login responde depois do logout', async () => {
       const storage = createStorage();
       const { result } = await renderAuth(storage);

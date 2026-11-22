@@ -38,7 +38,12 @@ function RootNavigator() {
 
         <Stack.Protected guard={authenticated && !restricted}>
           <Stack.Screen name="index" />
-          <Stack.Screen name="studies" />
+          <Stack.Screen name="studies/index" />
+          <Stack.Screen name="studies/[participantId]" />
+          <Stack.Screen name="visits/index" />
+          <Stack.Screen name="visits/[visitId]" />
+          <Stack.Screen name="invitations/index" />
+          <Stack.Screen name="invitations/[candidateId]" />
         </Stack.Protected>
 
         <Stack.Protected guard={authenticated}>

@@ -20,9 +20,31 @@ export type DadosCandidatoApi = {
 export type StatusCandidatoApi =
     "INVITED" | "ACTIVE" | "CONSENT_PENDING" | "GRANTED" | "DECLINED" | "INCLUDED" | "CANCELLED";
 
+/** Rótulos da situação consolidada pelo backend, sem inferência local. @author Lívia */
+export const SITUACAO_CANDIDATO_LABELS: Record<StatusCandidatoApi, string> = {
+    INVITED: "Convidado",
+    ACTIVE: "Conta ativa",
+    CONSENT_PENDING: "Aguardando decisão",
+    GRANTED: "Aceitou",
+    DECLINED: "Recusou",
+    INCLUDED: "Incluído",
+    CANCELLED: "Cancelado",
+};
+
 export type AtivacaoCandidatoApi = {
     expiresAt: string;
     expired: boolean;
+};
+
+/** Motivo obrigatório enviado ao cancelar uma candidatura antes da inclusão. @author Lívia */
+export type DadosCancelamentoCandidatoApi = {
+    reason: string;
+};
+
+/** Histórico de cancelamento preservado pela API, sem apagar a candidatura. @author Lívia */
+export type CancelamentoCandidatoApi = DadosCancelamentoCandidatoApi & {
+    cancelledAt: string;
+    cancelledByUserId: number;
 };
 
 export type CandidatoApi = DadosCandidatoApi & {
@@ -33,6 +55,7 @@ export type CandidatoApi = DadosCandidatoApi & {
     eligibilityStatus: StatusElegibilidadeApi;
     consentStatus: StatusConsentimentoApi;
     activation?: AtivacaoCandidatoApi;
+    cancellation?: CancelamentoCandidatoApi;
 };
 
 /** Resposta exclusiva do cadastro; o código não faz parte dos dados da listagem. @author Lívia */
