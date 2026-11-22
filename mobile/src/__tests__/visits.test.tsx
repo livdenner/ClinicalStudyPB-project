@@ -208,8 +208,8 @@ async function renderAuthenticatedAt(pathname: string) {
   return result;
 }
 
-describe('visitas do participante', () => {
-  it('abre pela Home, mostra carregamento, lista Próximas e alterna para Histórico com desfechos e motivo só em cancelada', async () => {
+describe('RF18 — visitas do participante', () => {
+  it('RF18: abre pela Home, mostra carregamento, lista Próximas e alterna para Histórico com desfechos e motivo só em cancelada', async () => {
     storeSession();
     let resolveVisits: ((value: ParticipantVisits) => void) | undefined;
     api.getMyVisits.mockImplementation(
@@ -274,7 +274,7 @@ describe('visitas do participante', () => {
     ).toBeTruthy();
   });
 
-  it('migra visita de Próximas para Histórico após o desfecho registrado (CA1)', async () => {
+  it('RF18: migra visita de Próximas para Histórico após o desfecho registrado (CA1)', async () => {
     storeSession();
     const completedVisit: ParticipantVisit = {
       ...scheduledVisit,
@@ -321,7 +321,7 @@ describe('visitas do participante', () => {
     ).toBeTruthy();
   });
 
-  it('exibe estados vazios distintos para Próximas e Histórico', async () => {
+  it('RF18: exibe estados vazios distintos para Próximas e Histórico', async () => {
     storeSession();
     api.getMyVisits.mockResolvedValue({ upcoming: [], history: [] });
 
@@ -340,7 +340,7 @@ describe('visitas do participante', () => {
     expect(screen.getByText(VISIT_MESSAGES.emptyHistory)).toBeTruthy();
   });
 
-  it('mostra erro na falha inicial sem exibir estado vazio e permite tentar novamente', async () => {
+  it('RF18: mostra erro na falha inicial sem exibir estado vazio e permite tentar novamente', async () => {
     storeSession();
     api.getMyVisits
       .mockRejectedValueOnce(new ApiError('indisponível', 503))
@@ -364,7 +364,7 @@ describe('visitas do participante', () => {
     expect(api.getMyVisits).toHaveBeenCalledTimes(2);
   });
 
-  it('traduz payload inválido e 403 sem vazar detalhes internos', async () => {
+  it('RF18: traduz payload inválido e 403 sem vazar detalhes internos', async () => {
     storeSession();
     api.getMyVisits
       .mockRejectedValueOnce(new InvalidVisitsResponseError())
@@ -382,7 +382,7 @@ describe('visitas do participante', () => {
     expect(screen.queryByText(/detalhe interno/)).toBeNull();
   });
 
-  it('mantém visitas anteriores e indica consulta anterior se falhar ao voltar ao foco', async () => {
+  it('RF18: mantém visitas anteriores e indica consulta anterior se falhar ao voltar ao foco', async () => {
     storeSession();
     api.getMyVisits
       .mockResolvedValueOnce({ upcoming: [scheduledVisit], history: [] })
@@ -415,7 +415,7 @@ describe('visitas do participante', () => {
     expect(api.getMyVisits).toHaveBeenCalledTimes(3);
   });
 
-  it('leva ao login sem exibir erro adicional quando a sessão expira com 401', async () => {
+  it('RF02/RF18: leva ao login sem exibir erro adicional quando a sessão expira com 401', async () => {
     storeSession();
     api.getMyVisits.mockRejectedValue(new ApiError('não autorizado', 401));
 
@@ -430,7 +430,7 @@ describe('visitas do participante', () => {
     expect(screen.queryByText(VISIT_MESSAGES.listFailed)).toBeNull();
   });
 
-  it('restringe a sessão ao receber 403 PASSWORD_CHANGE_REQUIRED na lista', async () => {
+  it('RF03/RF18: restringe a sessão ao receber 403 PASSWORD_CHANGE_REQUIRED na lista', async () => {
     storeSession();
     api.getMyVisits.mockRejectedValue(
       new ApiError('troca pendente', 403, 'PASSWORD_CHANGE_REQUIRED'),
@@ -449,7 +449,7 @@ describe('visitas do participante', () => {
     expect(screen.queryByText(VISIT_MESSAGES.listFailed)).toBeNull();
   });
 
-  it('bloqueia acesso a /visits quando mustChangePassword está ativo', async () => {
+  it('RF03/RF18: bloqueia acesso a /visits quando mustChangePassword está ativo', async () => {
     storeSession({ mustChangePassword: true });
 
     await renderApp('/');
@@ -464,7 +464,7 @@ describe('visitas do participante', () => {
     expect(api.getMyVisits).not.toHaveBeenCalled();
   });
 
-  it('descarta resposta tardia quando a sessão é encerrada durante a consulta', async () => {
+  it('RF02/RF18: descarta resposta tardia quando a sessão é encerrada durante a consulta', async () => {
     storeSession();
     let resolveVisits: ((value: ParticipantVisits) => void) | undefined;
     api.getMyVisits.mockImplementation(
@@ -492,7 +492,7 @@ describe('visitas do participante', () => {
     expect(screen.queryByText('Visita de retorno')).toBeNull();
   });
 
-  it('bloqueia acesso direto a /visits sem sessão', async () => {
+  it('RF03/RF18: bloqueia acesso direto a /visits sem sessão', async () => {
     await renderApp('/');
     await screen.findByText('Login');
     await waitFor(() => expect(screen).toHavePathname('/login'));
@@ -505,7 +505,7 @@ describe('visitas do participante', () => {
     expect(api.getMyVisits).not.toHaveBeenCalled();
   });
 
-  it('abre o detalhe de Próximas com atividades e espaço reservado para RF19 sem botões ativos', async () => {
+  it('RF18: abre o detalhe de Próximas com atividades e espaço reservado para RF19 sem botões ativos', async () => {
     storeSession();
     const visitWithActivities: ParticipantVisit = {
       ...scheduledVisit,
@@ -568,7 +568,7 @@ describe('visitas do participante', () => {
     expect(await screen.findByText('Visita de retorno')).toBeTruthy();
   });
 
-  it('exibe detalhe do Histórico para visita cancelada sem atividades e para visita realizada', async () => {
+  it('RF18: exibe detalhe do Histórico para visita cancelada sem atividades e para visita realizada', async () => {
     storeSession();
     api.getMyVisits.mockResolvedValue({
       upcoming: [],
@@ -618,7 +618,7 @@ describe('visitas do participante', () => {
     expect(screen.queryByText(VISIT_MESSAGES.rf19ReservedTitle)).toBeNull();
   });
 
-  it('resolve o detalhe diretamente pela rota /visits/15 sem depender da lista', async () => {
+  it('RF18: resolve o detalhe diretamente pela rota /visits/15 sem depender da lista', async () => {
     storeSession();
     api.getMyVisits.mockResolvedValue({
       upcoming: [scheduledVisit],
@@ -639,7 +639,7 @@ describe('visitas do participante', () => {
     );
   });
 
-  it('recusa identificador de texto no detalhe sem chamar API e volta às visitas', async () => {
+  it('RF18: recusa identificador de texto no detalhe sem chamar API e volta às visitas', async () => {
     storeSession();
     api.getMyVisits.mockResolvedValue({
       upcoming: [scheduledVisit],
@@ -657,7 +657,7 @@ describe('visitas do participante', () => {
     expect(await screen.findByText('Visita de retorno')).toBeTruthy();
   });
 
-  it('recusa identificador zero no detalhe sem chamar API', async () => {
+  it('RF18: recusa identificador zero no detalhe sem chamar API', async () => {
     storeSession();
 
     await renderAuthenticatedAt('/visits/0');
@@ -666,7 +666,7 @@ describe('visitas do participante', () => {
     expect(api.getMyVisits).not.toHaveBeenCalled();
   });
 
-  it('exibe indisponibilidade para visita ausente no detalhe e permite voltar às visitas', async () => {
+  it('RF18: exibe indisponibilidade para visita ausente no detalhe e permite voltar às visitas', async () => {
     storeSession();
     api.getMyVisits.mockResolvedValue({
       upcoming: [scheduledVisit],
@@ -683,7 +683,7 @@ describe('visitas do participante', () => {
     expect(await screen.findByText('Visita de retorno')).toBeTruthy();
   });
 
-  it('mantém dados anteriores no detalhe ao falhar no retorno ao foco e reflete migração ao tentar novamente', async () => {
+  it('RF18: mantém dados anteriores no detalhe ao falhar no retorno ao foco e reflete migração ao tentar novamente', async () => {
     storeSession();
     const completedVisit: ParticipantVisit = {
       ...scheduledVisit,
@@ -728,7 +728,7 @@ describe('visitas do participante', () => {
     expect(api.getMyVisits).toHaveBeenCalledTimes(3);
   });
 
-  it('leva ao login sem erro adicional quando a API retorna 401 no detalhe', async () => {
+  it('RF02/RF18: leva ao login sem erro adicional quando a API retorna 401 no detalhe', async () => {
     storeSession();
     api.getMyVisits
       .mockResolvedValueOnce({ upcoming: [scheduledVisit], history: [] })
@@ -752,7 +752,7 @@ describe('visitas do participante', () => {
     expect(screen.queryByText(VISIT_MESSAGES.detailFailed)).toBeNull();
   });
 
-  it('restringe a sessão ao receber 403 PASSWORD_CHANGE_REQUIRED no detalhe', async () => {
+  it('RF03/RF18: restringe a sessão ao receber 403 PASSWORD_CHANGE_REQUIRED no detalhe', async () => {
     storeSession();
     api.getMyVisits
       .mockResolvedValueOnce({ upcoming: [scheduledVisit], history: [] })
@@ -780,7 +780,7 @@ describe('visitas do participante', () => {
     expect(screen.queryByText(VISIT_MESSAGES.detailFailed)).toBeNull();
   });
 
-  it('bloqueia acesso direto a /visits/15 quando mustChangePassword está ativo', async () => {
+  it('RF03/RF18: bloqueia acesso direto a /visits/15 quando mustChangePassword está ativo', async () => {
     storeSession({ mustChangePassword: true });
 
     await renderApp('/');
