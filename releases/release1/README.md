@@ -2,7 +2,7 @@
 
 Entrega das Sprints **1 (13–26/10/2026)** e **2 (27/10–09/11/2026)**, publicada na tag **`release1`**, em `main` **8e88d15**. O projeto usa dados fictícios e consentimento estritamente simulado.
 
-[Instalação e execução](../../README.md#5-instalação-e-execução) · [Diagramas](../../docs/diagrams/README.md) · [OpenAPI](../../backend/openapi.yaml) · [Capturas](images/README.md) · [Testes e cobertura](tests/README.md) · [Instalação limpa — T16.13](tests/t16-13/README.md) · [Processo das sprints](processo/README.md) · [GitHub Release](https://github.com/livdenner/ClinicalStudyPB-project/releases/tag/release1) · [Azure DevOps TEAM5](https://dev.azure.com/engsw2/TEAM5)
+[Instalação e execução](../../README.md#5-instalação-e-execução) · [Diagramas (tag release1)](https://github.com/livdenner/ClinicalStudyPB-project/tree/release1/docs/diagrams) · [OpenAPI](../../backend/openapi.yaml) · [Capturas](images/README.md) · [Testes e cobertura](tests/README.md) · [Instalação limpa — T16.13](tests/t16-13/README.md) · [Processo das sprints](processo/README.md) · [GitHub Release](https://github.com/livdenner/ClinicalStudyPB-project/releases/tag/release1) · [Azure DevOps TEAM5](https://dev.azure.com/engsw2/TEAM5)
 
 ## Versão publicada
 
@@ -39,7 +39,7 @@ Situação avaliada na versão publicada (tag `release1`, `8e88d15`). **Concluí
 | Mobile | Estrutura inicial — **concluída no escopo da Release 1** | React Native/Expo Router, telas Início e Estudos provisórias e cliente HTTP genérico. | [Guia mobile](../../mobile/README.md), [Android e testes da T16.13](tests/t16-13/README.md). | Abertura e navegação validadas; login e integração de negócio mobile pertencem à Sprint 3. |
 | DevOps/Qualidade | Ambiente, seeds e CI — **concluídos** | Compose, Flyway V1–V10, três cargas repetíveis e quatro jobs de CI; no Swagger UI, as rotas protegidas de estudos, usuários, visitas previstas e logout passaram a enviar o token após "Authorize" (PR #64). | [Instalação limpa](tests/t16-13/README.md), [relatórios da tag](tests/README.md), [convenções e E2E](../../CONTRIBUTING.md). | Meta de 80% de linhas backend atendida; E2E do fluxo completo integrado (PR #65); tag e GitHub Release publicadas. |
 
-As rotas abreviadas acima pertencem ao estudo/candidato informado no [contrato OpenAPI](../../backend/openapi.yaml). O [resumo da API](../../backend/docs/release1-api.md) descreve permissões, estados, concorrência e respostas HTTP. A [sequência de inclusão](../../docs/diagrams/sequencia-inclusao.png) representa o fluxo efetivo do backend.
+As rotas abreviadas acima pertencem ao estudo/candidato informado no [contrato OpenAPI](../../backend/openapi.yaml). O [resumo da API](../../backend/docs/release1-api.md) descreve permissões, estados, concorrência e respostas HTTP. A [sequência de inclusão](https://github.com/livdenner/ClinicalStudyPB-project/blob/release1/docs/diagrams/sequencia-inclusao.png) representa o fluxo efetivo do backend.
 
 ## Resumo técnico por frente
 
@@ -136,4 +136,4 @@ Os gráficos usam PRs restantes por data real de merge, com fonte em CSV e defin
 
 Concluídos depois da consolidação anterior e retirados desta lista: o E2E do fluxo completo (PR #65), os testes de componentes de elegibilidade, consentimento e inclusão (PRs #68 e #69) e a publicação da tag e da GitHub Release `release1` (T16.15, PR #70).
 
-Para a equipe que continuar o projeto, o [README de instalação](../../README.md), os [diagramas editáveis e exportados](../../docs/diagrams/README.md), o [contrato da API](../../backend/openapi.yaml) e os [relatórios versionados](tests/README.md) formam a referência desta entrega.
+Para a equipe que continuar o projeto, o [README de instalação](../../README.md), os [diagramas editáveis e exportados](https://github.com/livdenner/ClinicalStudyPB-project/tree/release1/docs/diagrams), o [contrato da API](../../backend/openapi.yaml) e os [relatórios versionados](tests/README.md) formam a referência desta entrega.

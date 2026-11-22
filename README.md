@@ -17,16 +17,16 @@ Consulte as [entregas, evidências e pendências da Release 1](releases/release1
 
 ## 2. Arquitetura e diagramas
 
-O backend é um **monólito modular em camadas**, executado como uma aplicação Spring Boot. Os módulos `auth`, `users`, `studies`, `criteria`, `visits`, `candidates`, `consent` e `participants` separam `api`, `application`, `domain` e `infrastructure`. `shared` reúne autenticação HTTP, configurações e tratamento de erros comuns. Integrações entre módulos usam os serviços públicos; cada módulo mantém sua persistência interna.
+O backend é um **monólito modular em camadas**, executado como uma aplicação Spring Boot. Os módulos `auth`, `users`, `studies`, `criteria`, `visits`, `candidates`, `consent`, `participants`, `scheduling` e `results` separam `api`, `application`, `domain` e `infrastructure`; `history` e `me` são módulos de consulta, só com `api` e `application`. `shared` reúne autenticação HTTP, configurações e tratamento de erros comuns. Integrações entre módulos usam os serviços públicos; cada módulo mantém sua persistência interna.
 
-A web chama a API REST com JWT; somente o backend acessa o PostgreSQL. O Flyway versiona o esquema e o Hibernate valida seu mapeamento. O mobile da Release 1 navega entre duas telas iniciais; a integração de login pertence à Sprint 3.
+A web e o aplicativo mobile chamam a API REST com JWT; somente o backend acessa o PostgreSQL. O Flyway versiona o esquema (V1–V15) e o Hibernate valida seu mapeamento. O mobile cobre login, ativação da conta, convites com a decisão do consentimento e a área do participante, pelas rotas `/api/auth` e `/api/me`.
 
-| Diagrama        | Visualização no GitHub                                                                                            | Fonte editável                               | PDF                                                  |
-| --------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------- |
-| Casos de uso    | [RF01–RF11](docs/diagrams/casos-de-uso.png)                                                                       | [Draw.io](docs/diagrams/casos-de-uso.drawio) | [PDF](docs/diagrams/casos-de-uso.drawio.pdf)         |
-| Classes/domínio | [Estudos e protocolo](docs/diagrams/classes.png), [recrutamento](docs/diagrams/classes-recrutamento.png)          | [Draw.io](docs/diagrams/classes.drawio)      | [PDF, 2 páginas](docs/diagrams/classes.drawio.pdf)   |
-| Sequência       | [Protocolo e estados](docs/diagrams/sequencia.png), [galeria dos seis fluxos](docs/diagrams/README.md#sequências) | [Draw.io](docs/diagrams/sequencia.drawio)    | [PDF, 6 páginas](docs/diagrams/sequencia.drawio.pdf) |
-| Arquitetura     | [Aplicações, módulos e banco](docs/diagrams/arquitetura.png)                                                      | [Draw.io](docs/diagrams/arquitetura.drawio)  | [PDF](docs/diagrams/arquitetura.drawio.pdf)          |
+| Diagrama        | Visualização no GitHub                                                                                                                                               | Fonte editável                               | PDF                                                  |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------- |
+| Casos de uso    | [RF01–RF18](docs/diagrams/casos-de-uso.png)                                                                                                                          | [Draw.io](docs/diagrams/casos-de-uso.drawio) | [PDF](docs/diagrams/casos-de-uso.drawio.pdf)         |
+| Classes/domínio | [Estudos e protocolo](docs/diagrams/classes.png), [recrutamento](docs/diagrams/classes-recrutamento.png), [acompanhamento](docs/diagrams/classes-acompanhamento.png) | [Draw.io](docs/diagrams/classes.drawio)      | [PDF, 3 páginas](docs/diagrams/classes.drawio.pdf)   |
+| Sequência       | [Protocolo e estados](docs/diagrams/sequencia.png), [galeria dos sete fluxos](docs/diagrams/README.md#sequências)                                                    | [Draw.io](docs/diagrams/sequencia.drawio)    | [PDF, 7 páginas](docs/diagrams/sequencia.drawio.pdf) |
+| Arquitetura     | [Aplicações, módulos e banco](docs/diagrams/arquitetura.png)                                                                                                         | [Draw.io](docs/diagrams/arquitetura.drawio)  | [PDF](docs/diagrams/arquitetura.drawio.pdf)          |
 
 ![Arquitetura do ClinicalStudyPB](docs/diagrams/arquitetura.png)
 

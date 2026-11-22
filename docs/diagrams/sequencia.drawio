@@ -920,166 +920,184 @@
       </root>
     </mxGraphModel>
   </diagram>
-  <diagram name="Consentimento simulado (RF10)" id="seq-consentimento">
-    <mxGraphModel dx="1740" dy="1176" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1740" pageHeight="1176" math="0" shadow="0" background="#ffffff">
+  <diagram name="Consentimento pelo candidato (RF10)" id="seq-consentimento">
+    <mxGraphModel dx="1960" dy="1285" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1960" pageHeight="1285" math="0" shadow="0" background="#ffffff">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
-        <mxCell id="frame" value="sd Consentimento simulado (RF10)" style="shape=umlFrame;whiteSpace=wrap;html=1;width=610;height=30;boundedLbl=1;verticalAlign=middle;align=left;spacingLeft=8;fontSize=17;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
-          <mxGeometry x="20" y="20" width="1700" height="1136" as="geometry" />
+        <mxCell id="frame" value="sd Consentimento decidido pelo candidato (RF10)" style="shape=umlFrame;whiteSpace=wrap;html=1;width=610;height=30;boundedLbl=1;verticalAlign=middle;align=left;spacingLeft=8;fontSize=17;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="20" y="20" width="1920" height="1245" as="geometry" />
         </mxCell>
-        <mxCell id="head-0" value="Coordenador" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=15;labelWidth=200;" vertex="1" parent="1">
+        <mxCell id="head-0" value="Candidato no app" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=15;labelWidth=200;" vertex="1" parent="1">
           <mxGeometry x="105" y="95" width="40" height="65" as="geometry" />
         </mxCell>
-        <mxCell id="direct-1" value="" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeColor=#000000;" edge="1" parent="1">
+        <mxCell id="lifeline-0" value="" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeColor=#000000;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="125" y="205" as="sourcePoint" />
-            <mxPoint x="125" y="1026" as="targetPoint" />
+            <mxPoint x="125" y="1115" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="head-1" value="SimulatedConsentController" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontSize=15;" vertex="1" parent="1">
+        <mxCell id="head-1" value="StudyInvitationController" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontSize=15;" vertex="1" parent="1">
           <mxGeometry x="278" y="90" width="224" height="90" as="geometry" />
         </mxCell>
-        <mxCell id="direct-2" value="" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeColor=#000000;" edge="1" parent="1">
+        <mxCell id="lifeline-1" value="" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeColor=#000000;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="390" y="205" as="sourcePoint" />
-            <mxPoint x="390" y="1026" as="targetPoint" />
+            <mxPoint x="390" y="1115" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="head-2" value="SimulatedConsentService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontSize=15;" vertex="1" parent="1">
+        <mxCell id="head-2" value="StudyInvitationService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontSize=15;" vertex="1" parent="1">
           <mxGeometry x="543" y="90" width="224" height="90" as="geometry" />
         </mxCell>
-        <mxCell id="direct-3" value="" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeColor=#000000;" edge="1" parent="1">
+        <mxCell id="lifeline-2" value="" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeColor=#000000;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="655" y="205" as="sourcePoint" />
-            <mxPoint x="655" y="1026" as="targetPoint" />
+            <mxPoint x="655" y="1115" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="head-3" value="StudyService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontSize=15;" vertex="1" parent="1">
+        <mxCell id="head-3" value="SimulatedConsentService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontSize=15;" vertex="1" parent="1">
           <mxGeometry x="808" y="90" width="224" height="90" as="geometry" />
         </mxCell>
-        <mxCell id="direct-4" value="" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeColor=#000000;" edge="1" parent="1">
+        <mxCell id="lifeline-3" value="" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeColor=#000000;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="920" y="205" as="sourcePoint" />
-            <mxPoint x="920" y="1026" as="targetPoint" />
+            <mxPoint x="920" y="1115" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="head-4" value="CandidateService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontSize=15;" vertex="1" parent="1">
           <mxGeometry x="1073" y="90" width="224" height="90" as="geometry" />
         </mxCell>
-        <mxCell id="direct-5" value="" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeColor=#000000;" edge="1" parent="1">
+        <mxCell id="lifeline-4" value="" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeColor=#000000;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="1185" y="205" as="sourcePoint" />
-            <mxPoint x="1185" y="1026" as="targetPoint" />
+            <mxPoint x="1185" y="1115" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="head-5" value="SimulatedConsentRepository" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontSize=15;" vertex="1" parent="1">
+        <mxCell id="head-5" value="StudyService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontSize=15;" vertex="1" parent="1">
           <mxGeometry x="1338" y="90" width="224" height="90" as="geometry" />
         </mxCell>
-        <mxCell id="direct-6" value="" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeColor=#000000;" edge="1" parent="1">
+        <mxCell id="lifeline-5" value="" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeColor=#000000;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="1450" y="205" as="sourcePoint" />
-            <mxPoint x="1450" y="1026" as="targetPoint" />
+            <mxPoint x="1450" y="1115" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="activation-0" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+        <mxCell id="head-6" value="SimulatedConsentRepository" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="1603" y="90" width="224" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="lifeline-6" value="" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1715" y="205" as="sourcePoint" />
+            <mxPoint x="1715" y="1115" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="activation-1" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
           <mxGeometry x="385" y="243" width="10" height="34" as="geometry" />
         </mxCell>
-        <mxCell id="direct-7" value="GET /api/studies/{studyId}/candidates/{candidateId}/consent" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
+        <mxCell id="direct-2" value="GET /api/me/invitations/{candidateId}" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="125" y="245" as="sourcePoint" />
             <mxPoint x="390" y="245" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="activation-1" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+        <mxCell id="activation-3" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
           <mxGeometry x="650" y="306" width="10" height="34" as="geometry" />
         </mxCell>
-        <mxCell id="direct-8" value="get(studyId, candidateId)" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
+        <mxCell id="direct-4" value="get(candidateId)" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="390" y="308" as="sourcePoint" />
             <mxPoint x="655" y="308" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="activation-2" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+        <mxCell id="activation-5" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
           <mxGeometry x="1180" y="369" width="10" height="34" as="geometry" />
         </mxCell>
-        <mxCell id="direct-9" value="get(studyId, candidateId): conferir vínculo" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
+        <mxCell id="direct-6" value="getByIdAndUser(candidateId, userId): só a própria candidatura" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="655" y="371" as="sourcePoint" />
             <mxPoint x="1185" y="371" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="activation-3" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
-          <mxGeometry x="1445" y="432" width="10" height="34" as="geometry" />
-        </mxCell>
-        <mxCell id="direct-10" value="findById(candidateId)" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
+        <mxCell id="direct-7" value="200: estudo, visitas previstas e termo simulado" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;dashed=1;endArrow=open;endFill=0;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="655" y="434" as="sourcePoint" />
-            <mxPoint x="1450" y="434" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="direct-11" value="200: PENDING sem recordedAt antes da primeira decisão" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;dashed=1;endArrow=open;endFill=0;" edge="1" parent="1">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="390" y="497" as="sourcePoint" />
-            <mxPoint x="125" y="497" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="activation-5" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
-          <mxGeometry x="385" y="558" width="10" height="34" as="geometry" />
-        </mxCell>
-        <mxCell id="direct-12" value="PUT /consent {status: GRANTED ou DECLINED}" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="125" y="560" as="sourcePoint" />
-            <mxPoint x="390" y="560" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="activation-6" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
-          <mxGeometry x="650" y="621" width="10" height="34" as="geometry" />
-        </mxCell>
-        <mxCell id="direct-13" value="record(studyId, candidateId, decision)" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="390" y="623" as="sourcePoint" />
-            <mxPoint x="655" y="623" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="activation-7" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
-          <mxGeometry x="915" y="684" width="10" height="34" as="geometry" />
-        </mxCell>
-        <mxCell id="direct-14" value="lockForCandidateRegistration(studyId)" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
-          <mxGeometry relative="1" as="geometry">
-            <mxPoint x="655" y="686" as="sourcePoint" />
-            <mxPoint x="920" y="686" as="targetPoint" />
+            <mxPoint x="390" y="434" as="sourcePoint" />
+            <mxPoint x="125" y="434" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="activation-8" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
-          <mxGeometry x="1180" y="747" width="10" height="34" as="geometry" />
+          <mxGeometry x="385" y="509" width="10" height="34" as="geometry" />
         </mxCell>
-        <mxCell id="direct-15" value="lockForConsentUpdate(studyId, candidateId)" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
+        <mxCell id="direct-9" value="POST /api/me/invitations/{candidateId}/decision&lt;br/&gt;{status: GRANTED ou DECLINED}" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="655" y="749" as="sourcePoint" />
-            <mxPoint x="1185" y="749" as="targetPoint" />
+            <mxPoint x="125" y="511" as="sourcePoint" />
+            <mxPoint x="390" y="511" as="targetPoint" />
           </mxGeometry>
-        </mxCell>
-        <mxCell id="guard-9" value="RECRUITMENT; decisão alterável antes da inclusão" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;fontSize=13;align=center;fillColor=#FFFFFF;" vertex="1" parent="1">
-          <mxGeometry x="545" y="792" width="220" height="45" as="geometry" />
         </mxCell>
         <mxCell id="activation-10" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
-          <mxGeometry x="1445" y="873" width="10" height="34" as="geometry" />
+          <mxGeometry x="650" y="572" width="10" height="34" as="geometry" />
         </mxCell>
-        <mxCell id="direct-16" value="saveAndFlush: decisão + recordedAt" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
+        <mxCell id="direct-11" value="decide(candidateId, decision)" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="655" y="875" as="sourcePoint" />
-            <mxPoint x="1450" y="875" as="targetPoint" />
+            <mxPoint x="390" y="574" as="sourcePoint" />
+            <mxPoint x="655" y="574" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="direct-17" value="200 SimulatedConsentResponse" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;dashed=1;endArrow=open;endFill=0;" edge="1" parent="1">
+        <mxCell id="activation-12" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="915" y="635" width="10" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="direct-13" value="decide(candidateId, decision)" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry">
-            <mxPoint x="390" y="938" as="sourcePoint" />
-            <mxPoint x="125" y="938" as="targetPoint" />
+            <mxPoint x="655" y="637" as="sourcePoint" />
+            <mxPoint x="920" y="637" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="rules" value="PENDING é situação de consulta, não decisão aceita pelo PUT. O registro é fictício, sem assinatura ou validade clínica.&lt;br/&gt;Após inclusão, lockedAfterInclusion impede mudança. Estado incompatível ou consentimento bloqueado: 409; transação sem gravação parcial." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="60" y="1046" width="1620" height="90" as="geometry" />
+        <mxCell id="activation-14" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="698" width="10" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="direct-15" value="getByIdAndUser(candidateId, userId)" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="920" y="700" as="sourcePoint" />
+            <mxPoint x="1185" y="700" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="activation-16" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="1445" y="761" width="10" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="direct-17" value="lockForCandidateRegistration(studyId)" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="920" y="763" as="sourcePoint" />
+            <mxPoint x="1450" y="763" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="activation-18" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="824" width="10" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="direct-19" value="lockForConsentUpdate(studyId, candidateId)" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="920" y="826" as="sourcePoint" />
+            <mxPoint x="1185" y="826" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="guard-20" value="Não cancelada, não incluída e sem decisão anterior; ELIGIBLE, conta ativa e RECRUITMENT" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;fontSize=13;align=center;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="760" y="869" width="320" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="activation-21" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="1710" y="957" width="10" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="direct-22" value="saveAndFlush: decisão + recordedAt + recordedByUserId" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="920" y="959" as="sourcePoint" />
+            <mxPoint x="1715" y="959" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="direct-23" value="200 StudyInvitationResponse: GRANTED ou DECLINED" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;dashed=1;endArrow=open;endFill=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="390" y="1022" as="sourcePoint" />
+            <mxPoint x="125" y="1022" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rules" value="A decisão é única e imutável e pertence à conta PARTICIPANT dona da candidatura; candidatura de outra conta: 404. O registro é fictício, sem assinatura ou validade clínica.&lt;br/&gt;Cancelada, já incluída, já decidida, não elegível, conta pendente ou estudo fora de RECRUITMENT: 409 (CANDIDATE_CANCELLED, CONSENT_ALREADY_DECIDED, CONSENT_NOT_AVAILABLE ou STUDY_NOT_RECRUITING).&lt;br/&gt;O coordenador só consulta a decisão (GET /api/studies/{studyId}/candidates/{candidateId}/consent); o PUT antigo responde 403 CONSENT_DECIDED_BY_CANDIDATE. Após a inclusão, lockedAfterInclusion bloqueia a decisão." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="60" y="1135" width="1840" height="90" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
@@ -1224,7 +1242,7 @@
         <mxCell id="activation-9" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
           <mxGeometry x="1710" y="810" width="10" height="34" as="geometry" />
         </mxCell>
-        <mxCell id="direct-15" value="saveAndFlush(Participant): includedBy + includedAt" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
+        <mxCell id="direct-15" value="saveAndFlush(Participant): ACTIVE + includedBy + includedAt" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="655" y="812" as="sourcePoint" />
             <mxPoint x="1715" y="812" as="targetPoint" />
@@ -1263,14 +1281,235 @@
             <mxPoint x="1715" y="1064" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="direct-20" value="200: lista com id, candidateId, candidateName e includedAt" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;dashed=1;endArrow=open;endFill=0;" edge="1" parent="1">
+        <mxCell id="direct-20" value="200: lista com id, candidateId, candidateName, includedAt e status" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;dashed=1;endArrow=open;endFill=0;" edge="1" parent="1">
           <mxGeometry relative="1" as="geometry">
             <mxPoint x="390" y="1127" as="sourcePoint" />
             <mxPoint x="125" y="1127" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="rules" value="O mesmo bloqueio do estudo serializa inclusões pela última vaga, avaliações, consentimento e mudança de estado.&lt;br/&gt;Participante e bloqueio do consentimento confirmam juntos; qualquer falha causa rollback. Duplicidade, inelegibilidade, consentimento ou vagas: 409.&lt;br/&gt;GET de participantes admite RESEARCHER e COORDINATOR. Incluído não pode ser reavaliado; início de EXECUTION fecha novas inclusões." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+        <mxCell id="rules" value="O mesmo bloqueio do estudo serializa inclusões pela última vaga, avaliações, consentimento e mudança de estado.&lt;br/&gt;Participante e bloqueio do consentimento confirmam juntos; qualquer falha causa rollback. Duplicidade, inelegibilidade, consentimento ou vagas: 409.&lt;br/&gt;GET de participantes admite RESEARCHER e COORDINATOR. Incluído não pode ser reavaliado; início de EXECUTION fecha novas inclusões. Retirados continuam ocupando a vaga." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
           <mxGeometry x="60" y="1235" width="1885" height="90" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram name="Agendamento e desfecho (RF12-RF13)" id="seq-agendamento">
+    <mxGraphModel dx="1960" dy="1775" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1960" pageHeight="1775" math="0" shadow="0" background="#ffffff">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="frame" value="sd Agendamento e desfecho de visitas (RF12-RF13)" style="shape=umlFrame;whiteSpace=wrap;html=1;width=610;height=30;boundedLbl=1;verticalAlign=middle;align=left;spacingLeft=8;fontSize=17;fillColor=none;strokeColor=#000000;" vertex="1" parent="1">
+          <mxGeometry x="20" y="20" width="1920" height="1735" as="geometry" />
+        </mxCell>
+        <mxCell id="head-0" value="Coordenador" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=15;labelWidth=200;" vertex="1" parent="1">
+          <mxGeometry x="105" y="95" width="40" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="lifeline-0" value="" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="125" y="205" as="sourcePoint" />
+            <mxPoint x="125" y="1605" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="head-1" value="ScheduledVisitController" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="278" y="90" width="224" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="lifeline-1" value="" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="390" y="205" as="sourcePoint" />
+            <mxPoint x="390" y="1605" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="head-2" value="ScheduledVisitService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="543" y="90" width="224" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="lifeline-2" value="" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="655" y="205" as="sourcePoint" />
+            <mxPoint x="655" y="1605" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="head-3" value="StudyService" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="808" y="90" width="224" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="lifeline-3" value="" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="920" y="205" as="sourcePoint" />
+            <mxPoint x="920" y="1605" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="head-4" value="ParticipantSchedulingLookup" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="1073" y="90" width="224" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="lifeline-4" value="" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1185" y="205" as="sourcePoint" />
+            <mxPoint x="1185" y="1605" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="head-5" value="PlannedVisitLookup" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="1338" y="90" width="224" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="lifeline-5" value="" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1450" y="205" as="sourcePoint" />
+            <mxPoint x="1450" y="1605" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="head-6" value="ScheduledVisitRepository" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="1603" y="90" width="224" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="lifeline-6" value="" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeColor=#000000;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1715" y="205" as="sourcePoint" />
+            <mxPoint x="1715" y="1605" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="section-1" value="Agendamento (RF12)" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;fontStyle=1;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="40" y="220" width="260" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="activation-2" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="385" y="312" width="10" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="direct-3" value="POST /api/studies/{studyId}/participants/{participantId}/visits&lt;br/&gt;{plannedVisitId, scheduledAt}" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="125" y="314" as="sourcePoint" />
+            <mxPoint x="390" y="314" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="activation-4" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="650" y="375" width="10" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="direct-5" value="schedule(studyId, participantId, plannedVisitId, scheduledAt)" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="390" y="377" as="sourcePoint" />
+            <mxPoint x="655" y="377" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="activation-6" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="915" y="438" width="10" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="direct-7" value="lockForScheduling(studyId)" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="655" y="440" as="sourcePoint" />
+            <mxPoint x="920" y="440" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="activation-8" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="501" width="10" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="direct-9" value="lockForScheduling(studyId, participantId)" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="655" y="503" as="sourcePoint" />
+            <mxPoint x="1185" y="503" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="guard-10" value="RECRUITMENT ou EXECUTION; participante não retirado" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;fontSize=13;align=center;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="495" y="546" width="320" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="activation-11" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="1445" y="629" width="10" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="direct-12" value="findNameByStudyAndId(studyId, plannedVisitId)" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="655" y="631" as="sourcePoint" />
+            <mxPoint x="1450" y="631" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="guard-13" value="Data futura no período do estudo; sem outra SCHEDULED ou DONE da mesma visita prevista" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;fontSize=13;align=center;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="495" y="674" width="320" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="activation-14" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="1710" y="762" width="10" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="direct-15" value="saveAndFlush(ScheduledVisit): SCHEDULED + createdBy + createdAt" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="655" y="764" as="sourcePoint" />
+            <mxPoint x="1715" y="764" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="direct-16" value="201 + Location + ETag com a versão" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;dashed=1;endArrow=open;endFill=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="390" y="827" as="sourcePoint" />
+            <mxPoint x="125" y="827" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="separator-17" value="" style="endArrow=none;html=1;strokeColor=#000000;dashed=1;dashPattern=2 4;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="40" y="900" as="sourcePoint" />
+            <mxPoint x="1920" y="900" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="section-18" value="Desfecho (RF13)" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;fontStyle=1;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="40" y="905" width="260" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="activation-19" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="385" y="997" width="10" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="direct-20" value="POST .../visits/{visitId}/outcome + If-Match: &quot;version&quot;&lt;br/&gt;{outcome: DONE, ABSENT ou CANCELLED, note}" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="125" y="999" as="sourcePoint" />
+            <mxPoint x="390" y="999" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="activation-21" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="650" y="1060" width="10" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="direct-22" value="recordOutcome(studyId, participantId, visitId, version, outcome, note)" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="390" y="1062" as="sourcePoint" />
+            <mxPoint x="655" y="1062" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="guard-23" value="CANCELLED exige justificativa; note com até 500 caracteres" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;fontSize=13;align=center;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="495" y="1105" width="320" height="45" as="geometry" />
+        </mxCell>
+        <mxCell id="activation-24" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="915" y="1188" width="10" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="direct-25" value="lockForScheduling(studyId)" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="655" y="1190" as="sourcePoint" />
+            <mxPoint x="920" y="1190" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="activation-26" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="1251" width="10" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="direct-27" value="lockForScheduling(studyId, participantId)" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="655" y="1253" as="sourcePoint" />
+            <mxPoint x="1185" y="1253" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="activation-28" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="1710" y="1314" width="10" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="direct-29" value="findByIdAndStudyIdAndParticipantIdForUpdate(visitId, ...)" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="655" y="1316" as="sourcePoint" />
+            <mxPoint x="1715" y="1316" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="guard-30" value="Estudo não CLOSED nem CANCELLED; versão igual à do If-Match; visita ainda SCHEDULED" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;fontSize=13;align=center;fillColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="495" y="1359" width="320" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="activation-31" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="1710" y="1447" width="10" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="direct-32" value="registerOutcome + saveAndFlush: status, outcomeBy, outcomeAt e note" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="655" y="1449" as="sourcePoint" />
+            <mxPoint x="1715" y="1449" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="direct-33" value="200 ScheduledVisitResponse + nova ETag" style="html=1;endArrow=block;endFill=1;strokeColor=#000000;fontColor=#000000;fontSize=14;verticalAlign=bottom;labelBackgroundColor=#FFFFFF;spacingBottom=6;dashed=1;endArrow=open;endFill=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="390" y="1512" as="sourcePoint" />
+            <mxPoint x="125" y="1512" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="rules" value="Agendamento e desfecho pertencem ao COORDINATOR; RESEARCHER e COORDINATOR consultam a agenda do estudo e do participante. O período do estudo é avaliado em America/Fortaleza.&lt;br/&gt;Os bloqueios do estudo e do participante serializam operações concorrentes; a retirada (RF16) cancela as visitas futuras e impede novos agendamentos.&lt;br/&gt;Dados inválidos, data passada ou fora do período, desfecho inválido ou CANCELLED sem justificativa: 400. Estado do estudo, participante retirado, duplicidade, versão divergente ou desfecho final: 409." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="60" y="1625" width="1840" height="90" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
