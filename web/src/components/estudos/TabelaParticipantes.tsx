@@ -1,15 +1,14 @@
-import { Chip, Table } from "@heroui/react";
 import type { ReactNode } from "react";
+import { Chip, Table } from "@heroui/react";
 import type { ParticipanteApi } from "../../types/participante";
 import { SELOS_PARTICIPANTE, formatarDataInclusao } from "../../utils/participantes";
 
-export function TabelaParticipantes({
-    participantes,
-    acoes,
-}: {
+type Props = {
     participantes: ParticipanteApi[];
     acoes?: (participante: ParticipanteApi) => ReactNode;
-}) {
+};
+
+export function TabelaParticipantes({ participantes, acoes }: Props) {
     return (
         <Table
             variant="secondary"
@@ -24,7 +23,7 @@ export function TabelaParticipantes({
                         <Table.Column
                             id="nome"
                             isRowHeader
-                            className="w-1/3 rounded-none border-b border-[var(--color-border)] bg-[var(--color-neutral-soft)] px-5 py-3 font-semibold text-[var(--color-neutral)] after:hidden"
+                            className="w-2/5 rounded-none border-b border-[var(--color-border)] bg-[var(--color-neutral-soft)] px-5 py-3 font-semibold text-[var(--color-neutral)] after:hidden"
                         >
                             Nome
                         </Table.Column>
@@ -43,7 +42,7 @@ export function TabelaParticipantes({
                         {acoes && (
                             <Table.Column
                                 id="acoes"
-                                className="bg-[var(--color-neutral-soft)] px-5 py-3 font-semibold text-[var(--color-neutral)]"
+                                className="rounded-none border-b border-[var(--color-border)] bg-[var(--color-neutral-soft)] px-5 py-3 font-semibold text-[var(--color-neutral)] after:hidden"
                             >
                                 Ações
                             </Table.Column>
@@ -72,7 +71,7 @@ export function TabelaParticipantes({
                                         </Chip>
                                     </Table.Cell>
                                     {acoes && (
-                                        <Table.Cell className="px-5 py-4">
+                                        <Table.Cell className="border-[var(--color-border)] px-5 py-4 group-hover:bg-[var(--color-row-hover)]">
                                             {acoes(participante)}
                                         </Table.Cell>
                                     )}

@@ -52,6 +52,11 @@
     "testMatch": [
       "**/__tests__/**/*.test.[jt]s?(x)"
     ],
-    "clearMocks": true
+    "clearMocks": true,
+    "coverageThreshold": {
+      "global": {
+        "lines": 80
+      }
+    }
   }
 }

@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import {
   act,
   fireEvent,
@@ -17,7 +18,10 @@ import InvitationsScreen from '../app/invitations/index';
 import LoginScreen from '../app/login';
 import StudiesScreen from '../app/studies/index';
 import StudyDetailScreen from '../app/studies/[participantId]';
+import VisitDetailScreen from '../app/visits/[visitId]';
+import VisitsScreen from '../app/visits/index';
 import { ApiError } from '../services/api/apiClient';
+import { AUTH_MESSAGES } from '../services/auth/authErrors';
 import * as invitationApi from '../services/invitations/invitationApi';
 import {
   INVITATION_DECISION_MESSAGES,
@@ -109,7 +113,11 @@ beforeEach(() => {
   });
 });
 
-function storeSession(): void {
+function storeSession(
+  options: { mustChangePassword?: boolean } = {},
+): void {
+  const { mustChangePassword = false } = options;
+
   storedValue = JSON.stringify({
     version: 1,
     accessToken: 'header.payload.signature',
@@ -120,7 +128,7 @@ function storeSession(): void {
       email: 'raffael@exemplo.test',
       role: 'PARTICIPANT',
       active: true,
-      mustChangePassword: false,
+      mustChangePassword,
     },
   });
 }
@@ -134,6 +142,8 @@ async function renderApp(initialUrl: string) {
       index: HomeScreen,
       'studies/index': StudiesScreen,
       'studies/[participantId]': StudyDetailScreen,
+      'visits/index': VisitsScreen,
+      'visits/[visitId]': VisitDetailScreen,
       'change-password': ChangePasswordScreen,
       'invitations/index': InvitationsScreen,
       'invitations/[candidateId]': InvitationDetailScreen,
@@ -154,8 +164,8 @@ async function renderAuthenticatedAt(pathname: string) {
   return result;
 }
 
-describe('convites do participante', () => {
-  it('abre a lista de convites pelo acesso da home', async () => {
+describe('RF10 — convites e decisão do candidato', () => {
+  it('RF10: abre a lista de convites pelo acesso da home', async () => {
     storeSession();
     api.listInvitations.mockResolvedValue([]);
 
@@ -170,7 +180,7 @@ describe('convites do participante', () => {
     ).toBeTruthy();
   });
 
-  it('mostra carregamento e separa pendentes de decisões registradas', async () => {
+  it('RF10: mostra carregamento e separa pendentes de decisões registradas', async () => {
     storeSession();
     let resolveList:
       | ((value: StudyInvitationSummary[]) => void)
@@ -204,7 +214,7 @@ describe('convites do participante', () => {
     );
   });
 
-  it('abre o detalhe pelo candidateId e exibe protocolo e termo', async () => {
+  it('RF10: abre o detalhe pelo candidateId e exibe protocolo e termo', async () => {
     storeSession();
     api.listInvitations.mockResolvedValue([pendingSummary]);
     api.getInvitation.mockResolvedValue(pendingDetail);
@@ -254,7 +264,7 @@ describe('convites do participante', () => {
     expect(api.decideInvitation).not.toHaveBeenCalled();
   });
 
-  it('exibe aceite já registrado em modo somente leitura, mesmo sem decidedAt', async () => {
+  it('RF10: exibe aceite já registrado em modo somente leitura, mesmo sem decidedAt', async () => {
     storeSession();
     api.getInvitation.mockResolvedValue({
       ...pendingDetail,
@@ -274,7 +284,7 @@ describe('convites do participante', () => {
     expect(screen.queryByText('Recusar convite')).toBeNull();
   });
 
-  it('exibe recusa registrada com tratamento neutro', async () => {
+  it('RF10: exibe recusa registrada com tratamento neutro', async () => {
     storeSession();
     api.getInvitation.mockResolvedValue({
       ...pendingDetail,
@@ -293,7 +303,7 @@ describe('convites do participante', () => {
     expect(screen.queryByText('Recusar convite')).toBeNull();
   });
 
-  it('confirma o aceite e exibe o resultado devolvido pela API', async () => {
+  it('RF10: confirma o aceite e exibe o resultado devolvido pela API', async () => {
     storeSession();
     api.getInvitation.mockResolvedValue(pendingDetail);
     api.decideInvitation.mockResolvedValue({
@@ -332,7 +342,7 @@ describe('convites do participante', () => {
     expect(screen.queryByText('Confirmar aceite?')).toBeNull();
   });
 
-  it('confirma a recusa e exibe o resultado neutro', async () => {
+  it('RF10: confirma a recusa e exibe o resultado neutro', async () => {
     storeSession();
     api.getInvitation.mockResolvedValue(pendingDetail);
     api.decideInvitation.mockResolvedValue({
@@ -369,7 +379,7 @@ describe('convites do participante', () => {
     expect(screen.queryByText('Recusar convite')).toBeNull();
   });
 
-  it('cancelar a confirmação não envia a decisão', async () => {
+  it('RF10: cancelar a confirmação não envia a decisão', async () => {
     storeSession();
     api.getInvitation.mockResolvedValue(pendingDetail);
 
@@ -387,7 +397,7 @@ describe('convites do participante', () => {
     expect(screen.getByText('Recusar convite')).toBeTruthy();
   });
 
-  it('mantém um único envio enquanto a decisão está em andamento', async () => {
+  it('RF10: mantém um único envio enquanto a decisão está em andamento', async () => {
     storeSession();
     api.getInvitation.mockResolvedValue(pendingDetail);
     let resolveDecision:
@@ -426,7 +436,7 @@ describe('convites do participante', () => {
     expect(api.decideInvitation).toHaveBeenCalledTimes(1);
   });
 
-  it('não anuncia sucesso após resposta perdida e relê o resultado persistido', async () => {
+  it('RF10: não anuncia sucesso após resposta perdida e relê o resultado persistido', async () => {
     storeSession();
     api.getInvitation
       .mockResolvedValueOnce(pendingDetail)
@@ -454,7 +464,7 @@ describe('convites do participante', () => {
     expect(api.decideInvitation).toHaveBeenCalledTimes(1);
   });
 
-  it('mantém a decisão bloqueada quando a recuperação não confirma o resultado', async () => {
+  it('RF10: mantém a decisão bloqueada quando a recuperação não confirma o resultado', async () => {
     storeSession();
     api.getInvitation
       .mockResolvedValueOnce(pendingDetail)
@@ -478,7 +488,7 @@ describe('convites do participante', () => {
     expect(api.decideInvitation).toHaveBeenCalledTimes(1);
   });
 
-  it('consulta a decisão persistida após conflito de decisão única', async () => {
+  it('RF10: consulta a decisão persistida após conflito de decisão única', async () => {
     storeSession();
     api.getInvitation
       .mockResolvedValueOnce(pendingDetail)
@@ -507,7 +517,7 @@ describe('convites do participante', () => {
     );
   });
 
-  it('bloqueia novas decisões em estudo que não está recrutando', async () => {
+  it('RF10: bloqueia novas decisões em estudo que não está recrutando', async () => {
     storeSession();
     api.getInvitation.mockResolvedValue(pendingDetail);
     api.decideInvitation.mockRejectedValue(
@@ -530,7 +540,7 @@ describe('convites do participante', () => {
     expect(api.decideInvitation).toHaveBeenCalledTimes(1);
   });
 
-  it('descarta a resposta de decisão de outro convite aberto depois', async () => {
+  it('RF10: descarta a resposta de decisão de outro convite aberto depois', async () => {
     storeSession();
     const secondDetail: StudyInvitation = {
       ...pendingDetail,
@@ -572,7 +582,7 @@ describe('convites do participante', () => {
     expect(screen.getByText('Recusar convite')).toBeTruthy();
   });
 
-  it('atualiza a lista ao voltar depois de registrar a decisão', async () => {
+  it('RF10: atualiza a lista ao voltar depois de registrar a decisão', async () => {
     storeSession();
     api.listInvitations
       .mockResolvedValueOnce([pendingSummary])
@@ -625,7 +635,7 @@ describe('convites do participante', () => {
     ).toBeNull();
   });
 
-  it('trata lista vazia sem exibir conteúdo falso', async () => {
+  it('RF10: trata lista vazia sem exibir conteúdo falso', async () => {
     storeSession();
     api.listInvitations.mockResolvedValue([]);
 
@@ -637,7 +647,7 @@ describe('convites do participante', () => {
     expect(screen.queryByText('Pendentes')).toBeNull();
   });
 
-  it('mostra o erro da lista e recupera ao tentar novamente', async () => {
+  it('RF10: mostra o erro da lista e recupera ao tentar novamente', async () => {
     storeSession();
     api.listInvitations
       .mockRejectedValueOnce(new ApiError('falha', 500))
@@ -657,7 +667,7 @@ describe('convites do participante', () => {
     expect(api.listInvitations).toHaveBeenCalledTimes(2);
   });
 
-  it('trata situação desconhecida como não pendente', async () => {
+  it('RF10: trata situação desconhecida como não pendente', async () => {
     storeSession();
     api.listInvitations.mockResolvedValue([
       { ...pendingSummary, status: 'ACTIVE' },
@@ -670,7 +680,7 @@ describe('convites do participante', () => {
     expect(screen.getByText('Nenhum convite aguardando decisão.')).toBeTruthy();
   });
 
-  it('mostra mensagem genérica quando o detalhe não está disponível', async () => {
+  it('RF10: mostra mensagem genérica quando o detalhe não está disponível', async () => {
     storeSession();
     api.getInvitation.mockRejectedValue(
       new ApiError('não encontrado', 404, 'NOT_FOUND'),
@@ -685,7 +695,7 @@ describe('convites do participante', () => {
     expect(screen.getByText('Tentar novamente')).toBeTruthy();
   });
 
-  it('limpa dados antigos e evita banners duplicados após CANDIDATE_CANCELLED seguido de 404', async () => {
+  it('RF10: limpa dados antigos e evita banners duplicados após CANDIDATE_CANCELLED seguido de 404', async () => {
     storeSession();
     api.getInvitation
       .mockResolvedValueOnce(pendingDetail)
@@ -716,7 +726,7 @@ describe('convites do participante', () => {
     await waitFor(() => expect(screen).toHavePathname('/invitations'));
   });
 
-  it('libera nova tentativa ao clicar em Atualizar convite após STUDY_NOT_RECRUITING', async () => {
+  it('RF10: libera nova tentativa ao clicar em Atualizar convite após STUDY_NOT_RECRUITING', async () => {
     storeSession();
     api.getInvitation
       .mockResolvedValueOnce(pendingDetail)
@@ -763,7 +773,7 @@ describe('convites do participante', () => {
     expect(api.decideInvitation).toHaveBeenCalledTimes(2);
   });
 
-  it('evita banner duplicado quando Atualizar convite falha de forma transitória', async () => {
+  it('RF10: evita banner duplicado quando Atualizar convite falha de forma transitória', async () => {
     storeSession();
     api.getInvitation
       .mockResolvedValueOnce(pendingDetail)
@@ -803,7 +813,7 @@ describe('convites do participante', () => {
     expect(await screen.findByText('Aceitar convite')).toBeTruthy();
   });
 
-  it('não exibe aviso de dados anteriores quando falha atualização após lista vazia', async () => {
+  it('RF10: não exibe aviso de dados anteriores quando falha atualização após lista vazia', async () => {
     storeSession();
     api.listInvitations
       .mockResolvedValueOnce([])
@@ -829,7 +839,7 @@ describe('convites do participante', () => {
     expect(screen.getByText('Tentar novamente')).toBeTruthy();
   });
 
-  it('exibe aviso de dados anteriores quando falha atualização com convites já listados', async () => {
+  it('RF10: exibe aviso de dados anteriores quando falha atualização com convites já listados', async () => {
     storeSession();
     api.listInvitations
       .mockResolvedValueOnce([pendingSummary])
@@ -852,7 +862,7 @@ describe('convites do participante', () => {
     expect(screen.getByText('Tentar novamente')).toBeTruthy();
   });
 
-  it('não consulta a API quando o identificador da rota é inválido', async () => {
+  it('RF10: não consulta a API quando o identificador da rota é inválido', async () => {
     storeSession();
 
     await renderAuthenticatedAt('/invitations/abc');
@@ -863,11 +873,67 @@ describe('convites do participante', () => {
     expect(api.getInvitation).not.toHaveBeenCalled();
   });
 
-  it('bloqueia convites sem sessão e mantém o login', async () => {
+  it('RF03/RF10: bloqueia convites sem sessão e mantém o login', async () => {
     await renderApp('/invitations');
 
     expect(await screen.findByText('Login')).toBeTruthy();
     await waitFor(() => expect(screen).toHavePathname('/login'));
     expect(api.listInvitations).not.toHaveBeenCalled();
+  });
+
+  it('RF02/RF10: leva ao login sem erro adicional quando /me/invitations retorna 401', async () => {
+    storeSession();
+    api.listInvitations.mockRejectedValue(new ApiError('não autorizado', 401));
+
+    await renderApp('/');
+    await screen.findByText(/Olá, Raffael!/);
+
+    await fireEvent.press(screen.getByText('Ver convites'));
+
+    expect(await screen.findByText(AUTH_MESSAGES.sessionExpired)).toBeTruthy();
+    await waitFor(() => expect(screen).toHavePathname('/login'));
+    await waitFor(() => expect(storedValue).toBeNull());
+    expect(screen.queryByText(INVITATION_MESSAGES.listFailed)).toBeNull();
+  });
+
+  it('RF03/RF10: restringe a sessão ao receber 403 PASSWORD_CHANGE_REQUIRED em convites', async () => {
+    storeSession();
+    api.listInvitations.mockRejectedValue(
+      new ApiError('troca pendente', 403, 'PASSWORD_CHANGE_REQUIRED'),
+    );
+
+    await renderApp('/');
+    await screen.findByText(/Olá, Raffael!/);
+
+    await fireEvent.press(screen.getByText('Ver convites'));
+
+    expect(await screen.findByText('Defina sua nova senha')).toBeTruthy();
+    await waitFor(() =>
+      expect(screen).toHavePathname('/change-password'),
+    );
+    expect(screen.queryByText(INVITATION_MESSAGES.listFailed)).toBeNull();
+  });
+
+  it('RF03/RF10: bloqueia acesso a /invitations e /invitations/31 quando mustChangePassword está ativo', async () => {
+    storeSession({ mustChangePassword: true });
+
+    await renderApp('/');
+    await screen.findByText('Defina sua nova senha');
+
+    await act(async () => {
+      router.push('/invitations');
+    });
+    await waitFor(() =>
+      expect(screen).toHavePathname('/change-password'),
+    );
+
+    await act(async () => {
+      router.push('/invitations/31');
+    });
+    await waitFor(() =>
+      expect(screen).toHavePathname('/change-password'),
+    );
+    expect(api.listInvitations).not.toHaveBeenCalled();
+    expect(api.getInvitation).not.toHaveBeenCalled();
   });
 });

@@ -68,7 +68,8 @@ public class ParticipantSelfController {
     @GetMapping("/visits")
     @Operation(summary = "Lista as visitas do participante autenticado (RF18, T23.1)",
             description = "Somente PARTICIPANT. Próximas visitas (SCHEDULED) e histórico de desfechos "
-                    + "(DONE, ABSENT, CANCELLED) de todos os estudos da própria conta.",
+                    + "(DONE, ABSENT, CANCELLED) de todos os estudos da própria conta, "
+                    + "com as atividades previstas do protocolo.",
             responses = {
                 @ApiResponse(responseCode = "200", description = "Visitas do participante",
                         content = @Content(schema = @Schema(implementation = ParticipantVisitsResponse.class))),

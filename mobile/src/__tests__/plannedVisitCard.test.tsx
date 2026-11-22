@@ -25,8 +25,8 @@ const baseVisit: PlannedVisit = {
   ],
 };
 
-describe('PlannedVisitCard', () => {
-  it('exibe nome, data civil sem deslocamento e atividades com e sem descrição', async () => {
+describe('RF10/RF17 — PlannedVisitCard', () => {
+  it('RF10/RF17: exibe nome, data civil sem deslocamento e atividades com e sem descrição', async () => {
     await render(<PlannedVisitCard visit={baseVisit} />);
 
     expect(screen.getByText('Visita de acompanhamento')).toBeTruthy();
@@ -37,7 +37,7 @@ describe('PlannedVisitCard', () => {
     expect(screen.getByText('• Aferição rápida')).toBeTruthy();
   });
 
-  it('exibe prefixo explícito para diferenciar data prevista de agendamento', async () => {
+  it('RF10/RF17: exibe prefixo explícito para diferenciar data prevista de agendamento', async () => {
     await render(
       <PlannedVisitCard datePrefix="Data prevista" visit={baseVisit} />,
     );
@@ -45,7 +45,7 @@ describe('PlannedVisitCard', () => {
     expect(screen.getByText('Data prevista: 01/02/2027')).toBeTruthy();
   });
 
-  it('trata visita sem atividades e data civil ausente ou inválida', async () => {
+  it('RF10/RF17: trata visita sem atividades e data civil ausente ou inválida', async () => {
     const { rerender } = await render(
       <PlannedVisitCard
         datePrefix="Data prevista"
