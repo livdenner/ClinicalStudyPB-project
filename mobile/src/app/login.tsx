@@ -114,6 +114,7 @@ export default function LoginScreen() {
           onChangeText={changeEmail}
           placeholder="seu.email@instituicao.edu.br"
           returnKeyType="next"
+          testID="login-email"
           textContentType="emailAddress"
           value={email}
         />
@@ -131,6 +132,7 @@ export default function LoginScreen() {
           placeholder="Digite sua senha"
           returnKeyType="go"
           secureTextEntry
+          testID="login-password"
           textContentType="password"
           value={password}
         />

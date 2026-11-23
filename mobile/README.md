@@ -224,6 +224,61 @@ A auditoria registrada em 24/10/2026, quando o projeto usava `expo@58.0.19`, rep
 
 Os avisos são [GHSA-86w9-cpqp-85rv](https://github.com/advisories/GHSA-86w9-cpqp-85rv) para node-forge e [GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5) para Zod. Na data da verificação, o advisory de node-forge não indicava versão corrigida; o fix de Zod requer versão 4.6.6 ou superior. `npm audit fix --force` propõe trocar Expo SDK 58 por Expo 54.0.38, uma atualização incompatível com a stack atual, então não foi aplicado. Encaminhamento: acompanhar uma atualização compatível do Expo CLI/dependências no SDK usado pelo projeto e reexecutar `npm audit`; não forçar downgrade nem override de major sem validar compatibilidade. A auditoria não foi refeita após a atualização de dependências desta tarefa.
 
+## Testes E2E (Maestro)
+
+O fluxo [`e2e/maestro/login-proximas-visitas.yaml`](e2e/maestro/login-proximas-visitas.yaml) (E2E-MOB-01) abre o app sem sessão, entra com a conta fictícia `participante@clinicalstudypb.test`, abre **Ver visitas** e confere a visita agendada em **Próximas** e a realizada em **Histórico**. Roda no emulador Android contra o backend e o PostgreSQL reais de [`compose.e2e.yaml`](../compose.e2e.yaml), com a seed padrão. Rastreabilidade e resultados: [`docs/tests/rastreabilidade-e2e-mobile.md`](../docs/tests/rastreabilidade-e2e-mobile.md).
+
+### Decisão de ferramenta: Maestro
+
+Avaliamos o Maestro e o Detox com o projeto atual (Expo SDK 58, React Native 0.88, Expo Router, pasta `android/` gerada por `expo prebuild` e fora do Git). Escolhemos o **Maestro**:
+
+| Critério | Maestro | Detox |
+| --- | --- | --- |
+| Mudanças no app | Nenhuma no código nativo. Testa o APK instalado, como caixa-preta. Só ganhamos `testID` nos campos do login. | Exige o config plugin `@config-plugins/detox`, que altera o `build.gradle`, adiciona o runner de instrumentação, regras de ProGuard e um APK de teste próprio, com versões casadas com o SDK do Expo. |
+| Escrita dos testes | Fluxos em YAML, por texto visível, rótulo de acessibilidade ou `testID`, com espera automática. | Testes em JavaScript com Jest e sincronização gray-box. Mais controle, mas mais configuração. |
+| Rodar no Windows | CLI nativo no Windows (zip + Java 17), sem WSL. | Foco em macOS e Linux; no Windows há relatos de problemas e pouco suporte oficial. |
+| CI | Um `curl` instala o CLI; o fluxo roda num emulador comum do GitHub Actions e gera JUnit (`--format=JUNIT`). | Também roda em CI, mas com o build de teste e a configuração do Detox mantidos junto com cada atualização do SDK. |
+
+O Detox ganha quando o time precisa de sincronização fina com o React Native ou de testes em JavaScript, o que não é o caso de um fluxo de login e listagem. Com o Maestro, a manutenção fica no YAML e não no build nativo, e o mesmo comando roda na máquina de quem testa e na CI.
+
+### Rodar localmente
+
+Pré-requisitos: Android Studio com um emulador (API 34, x86_64), JDK 17, Docker e o [Maestro CLI](https://docs.maestro.dev/maestro-cli/how-to-install-maestro-cli). No Windows, baixe o `maestro.zip` da [última versão](https://github.com/mobile-dev-inc/maestro/releases/latest), extraia e adicione a pasta `bin` ao `PATH`; no macOS e no Linux, use `curl -fsSL "https://get.maestro.mobile.dev" | bash`. Confira com `maestro --version`.
+
+1. Na raiz do repositório, suba a stack de teste com a seed padrão:
+
+   ```powershell
+   docker compose -f compose.e2e.yaml up -d --build --wait db backend
+   docker compose -f compose.e2e.yaml run --rm seed
+   ```
+
+2. Com o emulador aberto, gere e instale o APK de release apontando para a stack (porta `18080`, vista do emulador como `10.0.2.2`). Na pasta `mobile/`:
+
+   ```powershell
+   $env:EXPO_PUBLIC_API_BASE_URL = "http://10.0.2.2:18080/api"
+   $env:CLINICALSTUDYPB_E2E = "1"
+   npx.cmd expo prebuild --platform android --no-install
+   npx.cmd expo run:android --variant release
+   ```
+
+   `CLINICALSTUDYPB_E2E=1` ativa o plugin [`plugins/withE2eCleartextTraffic.js`](plugins/withE2eCleartextTraffic.js), que libera HTTP sem TLS só nesse build; um release comum bloqueia esse tráfego. O `prebuild` reescreve os scripts `android` e `ios` do `package.json`: desfaça essa mudança antes de commitar (`git checkout package.json`).
+
+3. Rode o fluxo:
+
+   ```powershell
+   npm.cmd run test:e2e
+   ```
+
+   Para gerar o JUnit e as capturas, como na CI: `maestro test --format=JUNIT --output=test-reports/maestro.xml --test-output-dir=e2e/artefatos e2e/maestro`. `e2e/artefatos/` e `test-reports/` são ignorados pelo Git.
+
+4. No fim, derrube a stack: `docker compose -f compose.e2e.yaml down`.
+
+A seed é repetível e o fluxo não grava nada, então pode ser rodado de novo sem recriar o banco.
+
+### Na CI
+
+O workflow [`mobile-e2e.yml`](../.github/workflows/mobile-e2e.yml) repete os mesmos passos num emulador Android (API 34, x86_64) do GitHub Actions: sobe a stack, roda a seed, compila o APK de release só para x86_64, instala o Maestro e executa o fluxo. Publica o JUnit e as capturas no artefato `maestro-report`. Fica separado do `ci.yml` porque leva bem mais tempo; roda em PRs e pushes para a `development` e a `main` que mexem em `mobile/`, `backend/` ou `compose.e2e.yaml`.
+
 ## Cliente HTTP
 
 `apiRequest<T>(path, options)` recebe um caminho relativo à URL base, adiciona `Accept: application/json`, serializa `body` como JSON, lê respostas JSON ou texto e retorna `undefined` para HTTP 204. Para respostas fora de 2xx, lança `ApiError` com `status`, `code` e `fieldErrors` quando esses campos estiverem presentes. Um erro com corpo vazio, texto ou JSON inválido também vira `ApiError`; o status HTTP é o dado usado pelo tratamento central de 401.
