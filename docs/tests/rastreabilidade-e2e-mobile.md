@@ -23,6 +23,12 @@ Os passos para rodar na máquina local estão no [README mobile](../../mobile/RE
 
 ## Resultado
 
-| Execução | Ambiente | Resultado |
-| --- | --- | --- |
-| A registrar | CI (GitHub Actions), emulador Android API 34 | Aguarda a primeira execução do workflow `mobile-e2e.yml` no PR da T23.5. |
+| Execução | Commit | Ambiente | Resultado |
+| --- | --- | --- | --- |
+| [45101299867](https://github.com/livdenner/ClinicalStudyPB-project/actions/runs/45101299867) | `2cd5fbe` | CI, emulador Android API 34 (x86_64, `google_apis`, perfil `pixel_6`) | **Não passou.** O APK compilou e instalou, e o app abriu no login. O launcher do Android travou e o diálogo "Pixel Launcher isn't responding" cobriu a tela, então a primeira asserção expirou em 30 s. Corrigido em `c2e2c22`: o workflow desliga os diálogos de erro do sistema (`hide_error_dialogs`) e o fluxo toca em **Wait** se o diálogo aparecer. |
+| [45102859416](https://github.com/livdenner/ClinicalStudyPB-project/actions/runs/45102859416) | `c2e2c22` | CI | Cancelada antes do fim. O commit automático do relatório de testes chegou ao PR e reiniciou o workflow. Corrigido em `d867a1e`, com `cancel-in-progress: false`. |
+| [45103422414](https://github.com/livdenner/ClinicalStudyPB-project/actions/runs/45103422414) | `d20ac74` (código de `c2e2c22`) | CI, emulador Android API 34 | **Passou.** `1/1 Flow Passed in 1m 4s`. JUnit: `Login do participante e próximas visitas`, `status="SUCCESS"`, 64,0 s. Capturas `proximas-visitas.png` e `historico-visitas.png` no artefato `maestro-report`. Job completo: 19 min, incluindo a stack, o build nativo e o emulador. |
+
+Nas capturas, a visita agendada aparece como "05/01/2027 14:00" e a realizada como "05/10/2026 14:00". O emulador da CI usa UTC, e a seed grava 11:00 no horário de Brasília (UTC−3). O fluxo não confere horários, só nomes, abas e estudo.
+
+O Maestro ainda não entra no relatório automático de execução (`scripts/relatorio-testes`, histórico em `docs/test-ci`); o resultado fica neste documento e no artefato `maestro-report` de cada execução.

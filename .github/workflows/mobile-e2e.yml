@@ -2,7 +2,7 @@ name: E2E Mobile
 
 # T23.5: login do participante e próximas visitas no emulador Android, com Maestro,
 # contra o backend e o PostgreSQL reais de compose.e2e.yaml e a seed padrão.
-# Fica fora do ci.yml porque compila o app nativo e sobe um emulador (cerca de 25 min);
+# Fica fora do ci.yml porque compila o app nativo e sobe um emulador (cerca de 20 min);
 # roda quando o app, o backend, as seeds ou a stack de teste mudam, ou sob demanda.
 on:
   pull_request:
