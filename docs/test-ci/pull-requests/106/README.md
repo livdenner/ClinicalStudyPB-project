@@ -7,8 +7,9 @@ com **uma linha por teste** e o resultado de cada um. O nome segue `AAAA-MM-DD_H
 com data e hora em America/Fortaleza. Os arquivos são gerados por `scripts/relatorio-testes/gerar.mjs`;
 veja o [guia de contribuição](../../../../CONTRIBUTING.md#relatório-de-execução-dos-testes).
 
-**Última execução:** [2026-11-19_23-22_677e43f](2026-11-19_23-22_677e43f.md)
+**Última execução:** [2026-11-22_22-20_847fab4](2026-11-22_22-20_847fab4.md)
 
 | Data/hora | Commit | Integração | Ambiente | Testes | ✅ | ❌ | ⏭️ | ⚠️ | Situação |
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| [22/11/2026 22:20](2026-11-22_22-20_847fab4.md) | `847fab4` | [PR #106](https://github.com/livdenner/ClinicalStudyPB-project/pull/106): Adapta o E2E completo de recrutamento à decisão do candidato (T17.11) — em revisão, ainda não integrado | CI (GitHub Actions) | 1561 | 1561 | 0 | 0 | 0 | ✅ ok |
 | [19/11/2026 23:22](2026-11-19_23-22_677e43f.md) | `677e43f` | [PR #106](https://github.com/livdenner/ClinicalStudyPB-project/pull/106): Adapta o E2E completo de recrutamento à decisão do candidato (T17.11) — em revisão, ainda não integrado | CI (GitHub Actions) | 1271 | 1271 | 0 | 0 | 0 | ⚠️ sem Web E2E · Playwright |
