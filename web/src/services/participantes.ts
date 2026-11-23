@@ -30,3 +30,19 @@ export function incluirParticipanteNoEstudo(studyId: number, candidateId: number
         }
     );
 }
+
+export function registrarRetiradaParticipante(
+    studyId: number,
+    participantId: number,
+    reason: string,
+    token: string
+) {
+    return apiRequest<ParticipanteApi>(
+        `/api/studies/${studyId}/participants/${participantId}/withdrawal`,
+        {
+            method: "POST",
+            body: { reason },
+            token,
+        }
+    );
+}

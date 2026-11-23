@@ -18,6 +18,8 @@ import InvitationsScreen from '../app/invitations/index';
 import LoginScreen from '../app/login';
 import StudiesScreen from '../app/studies/index';
 import StudyDetailScreen from '../app/studies/[participantId]';
+import VisitDetailScreen from '../app/visits/[visitId]';
+import VisitsScreen from '../app/visits/index';
 import { ApiError } from '../services/api/apiClient';
 import * as authApi from '../services/auth/authApi';
 import { AUTH_MESSAGES } from '../services/auth/authErrors';
@@ -162,6 +164,8 @@ async function renderApp(initialUrl: string) {
       index: HomeScreen,
       'studies/index': StudiesScreen,
       'studies/[participantId]': StudyDetailScreen,
+      'visits/index': VisitsScreen,
+      'visits/[visitId]': VisitDetailScreen,
       'change-password': ChangePasswordScreen,
       'invitations/index': InvitationsScreen,
       'invitations/[candidateId]': InvitationDetailScreen,
@@ -177,8 +181,8 @@ async function renderAuthenticatedAt(pathname: string) {
   return result;
 }
 
-describe('estudos do participante', () => {
-  it('exibe carregamento e lista dois estudos na ordem da API com estados distintos', async () => {
+describe('RF17 — estudos do participante', () => {
+  it('RF17: exibe carregamento e lista dois estudos na ordem da API com estados distintos', async () => {
     storeSession();
     let resolveList: ((value: ParticipantStudy[]) => void) | undefined;
     api.listMyStudies.mockImplementation(
@@ -227,7 +231,7 @@ describe('estudos do participante', () => {
     );
   });
 
-  it('navega da lista para o detalhe com objetivo e visitas previstas e volta à lista', async () => {
+  it('RF17: navega da lista para o detalhe com objetivo e visitas previstas e volta à lista', async () => {
     storeSession();
     api.listMyStudies.mockResolvedValue([withdrawnStudy, activeStudy]);
 
@@ -264,7 +268,7 @@ describe('estudos do participante', () => {
     ).toBeTruthy();
   });
 
-  it('exibe protocolo vazio e orientação para participação retirada no detalhe', async () => {
+  it('RF17: exibe protocolo vazio e orientação para participação retirada no detalhe', async () => {
     storeSession();
     api.listMyStudies.mockResolvedValue([withdrawnStudy, activeStudy]);
 
@@ -287,7 +291,7 @@ describe('estudos do participante', () => {
     expect(screen.getByText(/12\/11\/2026 09:30/)).toBeTruthy();
   });
 
-  it('resolve o detalhe ao abrir diretamente a rota sem depender de parâmetros da lista', async () => {
+  it('RF17: resolve o detalhe ao abrir diretamente a rota sem depender de parâmetros da lista', async () => {
     storeSession();
     api.listMyStudies.mockResolvedValue([withdrawnStudy, activeStudy]);
 
@@ -305,7 +309,7 @@ describe('estudos do participante', () => {
     );
   });
 
-  it('recusa identificador inválido no detalhe sem consultar a API e volta à lista', async () => {
+  it('RF17: recusa identificador inválido no detalhe sem consultar a API e volta à lista', async () => {
     storeSession();
     api.listMyStudies.mockResolvedValue([activeStudy]);
 
@@ -325,7 +329,7 @@ describe('estudos do participante', () => {
     expect(api.listMyStudies).toHaveBeenCalledTimes(1);
   });
 
-  it('exibe indisponibilidade quando a participação não pertence à conta autenticada', async () => {
+  it('RF17: exibe indisponibilidade quando a participação não pertence à conta autenticada', async () => {
     storeSession();
     api.listMyStudies.mockResolvedValue([activeStudy]);
 
@@ -341,7 +345,7 @@ describe('estudos do participante', () => {
     await waitFor(() => expect(screen).toHavePathname('/studies'));
   });
 
-  it('trata erro no detalhe com retry sem confundir falha com protocolo vazio', async () => {
+  it('RF17: trata erro no detalhe com retry sem confundir falha com protocolo vazio', async () => {
     storeSession();
     api.listMyStudies
       .mockRejectedValueOnce(new TypeError('Network request failed'))
@@ -361,7 +365,7 @@ describe('estudos do participante', () => {
     expect(api.listMyStudies).toHaveBeenCalledTimes(2);
   });
 
-  it('aborta a consulta anterior e descarta resposta tardia ao trocar o detalhe', async () => {
+  it('RF17: aborta a consulta anterior e descarta resposta tardia ao trocar o detalhe', async () => {
     storeSession();
     let firstSignal: AbortSignal | undefined;
     let resolveFirst: ((value: ParticipantStudy[]) => void) | undefined;
@@ -395,7 +399,7 @@ describe('estudos do participante', () => {
     expect(screen.queryByText('Título desatualizado')).toBeNull();
   });
 
-  it('trata estado desconhecido no detalhe com rótulo neutro', async () => {
+  it('RF17: trata estado desconhecido no detalhe com rótulo neutro', async () => {
     storeSession();
     api.listMyStudies.mockResolvedValue([
       {
@@ -411,7 +415,7 @@ describe('estudos do participante', () => {
     ).toBeTruthy();
   });
 
-  it('exibe orientação na lista vazia e permite abrir convites', async () => {
+  it('RF17: exibe orientação na lista vazia e permite abrir convites', async () => {
     storeSession();
     api.listMyStudies.mockResolvedValue([]);
     invitations.listInvitations.mockResolvedValue([]);
@@ -426,7 +430,7 @@ describe('estudos do participante', () => {
     await waitFor(() => expect(screen).toHavePathname('/invitations'));
   });
 
-  it('mostra erro na falha inicial e recupera ao tentar novamente', async () => {
+  it('RF17: mostra erro na falha inicial e recupera ao tentar novamente', async () => {
     storeSession();
     api.listMyStudies
       .mockRejectedValueOnce(new TypeError('Network request failed'))
@@ -449,7 +453,7 @@ describe('estudos do participante', () => {
     expect(api.listMyStudies).toHaveBeenCalledTimes(2);
   });
 
-  it('não mascara resposta inválida ou acesso negado como lista vazia', async () => {
+  it('RF17: não mascara resposta inválida ou acesso negado como lista vazia', async () => {
     storeSession();
     api.listMyStudies
       .mockRejectedValueOnce(new InvalidStudiesResponseError())
@@ -471,7 +475,7 @@ describe('estudos do participante', () => {
     expect(screen.queryByText(STUDY_MESSAGES.empty)).toBeNull();
   });
 
-  it('reconsulta ao voltar ao foco e indica dados anteriores em caso de erro', async () => {
+  it('RF17: reconsulta ao voltar ao foco e indica dados anteriores em caso de erro', async () => {
     storeSession();
     api.listMyStudies
       .mockResolvedValueOnce([activeStudy])
@@ -509,7 +513,7 @@ describe('estudos do participante', () => {
     expect(api.listMyStudies).toHaveBeenCalledTimes(3);
   });
 
-  it('leva ao login quando a sessão expira com 401 sem erro genérico adicional', async () => {
+  it('RF02/RF17: leva ao login quando a sessão expira com 401 sem erro genérico adicional', async () => {
     storeSession();
     api.listMyStudies.mockRejectedValue(
       new ApiError('não autorizado', 401),
@@ -526,7 +530,7 @@ describe('estudos do participante', () => {
     expect(screen.queryByText(STUDY_MESSAGES.listFailed)).toBeNull();
   });
 
-  it('cancela e descarta resposta tardia ao sair da tela', async () => {
+  it('RF17: cancela e descarta resposta tardia ao sair da tela', async () => {
     storeSession();
     let capturedSignal: AbortSignal | undefined;
     let resolveList: ((value: ParticipantStudy[]) => void) | undefined;
@@ -552,7 +556,7 @@ describe('estudos do participante', () => {
     expect(screen.queryByText('Acompanhamento de hipertensão')).toBeNull();
   });
 
-  it('bloqueia acesso direto à lista sem sessão autenticada', async () => {
+  it('RF03/RF17: bloqueia acesso direto à lista sem sessão autenticada', async () => {
     await renderApp('/studies');
 
     expect(await screen.findByText('Login')).toBeTruthy();
@@ -560,7 +564,7 @@ describe('estudos do participante', () => {
     expect(api.listMyStudies).not.toHaveBeenCalled();
   });
 
-  it('bloqueia acesso direto ao detalhe sem sessão autenticada', async () => {
+  it('RF03/RF17: bloqueia acesso direto ao detalhe sem sessão autenticada', async () => {
     await renderApp('/studies/11');
 
     expect(await screen.findByText('Login')).toBeTruthy();
@@ -568,7 +572,7 @@ describe('estudos do participante', () => {
     expect(api.listMyStudies).not.toHaveBeenCalled();
   });
 
-  it('não conserva estudos da conta anterior após logout e entrada em outra conta', async () => {
+  it('RF03/RF17: não conserva estudos da conta anterior após logout e entrada em outra conta', async () => {
     storeSession();
     api.listMyStudies
       .mockResolvedValueOnce([withdrawnStudy, activeStudy])
@@ -621,7 +625,7 @@ describe('estudos do participante', () => {
     );
   });
 
-  it('restringe a sessão ao receber 403 PASSWORD_CHANGE_REQUIRED na lista', async () => {
+  it('RF03/RF17: restringe a sessão ao receber 403 PASSWORD_CHANGE_REQUIRED na lista', async () => {
     storeSession();
     api.listMyStudies.mockRejectedValue(
       new ApiError('troca pendente', 403, 'PASSWORD_CHANGE_REQUIRED'),
@@ -640,7 +644,7 @@ describe('estudos do participante', () => {
     expect(screen.queryByText(STUDY_MESSAGES.listFailed)).toBeNull();
   });
 
-  it('restringe a sessão ao receber 403 PASSWORD_CHANGE_REQUIRED no detalhe', async () => {
+  it('RF03/RF17: restringe a sessão ao receber 403 PASSWORD_CHANGE_REQUIRED no detalhe', async () => {
     storeSession();
     api.listMyStudies
       .mockResolvedValueOnce([activeStudy])
@@ -668,7 +672,7 @@ describe('estudos do participante', () => {
     expect(screen.queryByText(STUDY_MESSAGES.detailFailed)).toBeNull();
   });
 
-  it('bloqueia acesso à lista e ao detalhe quando mustChangePassword está ativo', async () => {
+  it('RF03/RF17: bloqueia acesso à lista e ao detalhe quando mustChangePassword está ativo', async () => {
     storeSession({ mustChangePassword: true });
 
     await renderApp('/');
@@ -690,7 +694,7 @@ describe('estudos do participante', () => {
     expect(api.listMyStudies).not.toHaveBeenCalled();
   });
 
-  it('leva ao login quando a sessão expira com 401 no detalhe sem erro adicional', async () => {
+  it('RF02/RF17: leva ao login quando a sessão expira com 401 no detalhe sem erro adicional', async () => {
     storeSession();
     api.listMyStudies
       .mockResolvedValueOnce([activeStudy])
@@ -714,7 +718,7 @@ describe('estudos do participante', () => {
     expect(screen.queryByText(STUDY_MESSAGES.detailFailed)).toBeNull();
   });
 
-  it('reconsulta o detalhe ao voltar ao foco e indica dados anteriores em caso de erro', async () => {
+  it('RF17: reconsulta o detalhe ao voltar ao foco e indica dados anteriores em caso de erro', async () => {
     storeSession();
     api.listMyStudies
       .mockResolvedValueOnce([activeStudy])
@@ -752,7 +756,7 @@ describe('estudos do participante', () => {
     expect(api.listMyStudies).toHaveBeenCalledTimes(3);
   });
 
-  it('descarta resposta tardia quando a sessão é encerrada durante a consulta', async () => {
+  it('RF02/RF17: descarta resposta tardia quando a sessão é encerrada durante a consulta', async () => {
     storeSession();
     let resolveList: ((value: ParticipantStudy[]) => void) | undefined;
     api.listMyStudies.mockImplementation(

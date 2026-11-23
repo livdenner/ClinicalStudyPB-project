@@ -41,3 +41,11 @@ export const radii = {
   md: 12,
   lg: 16,
 } as const;
+
+/** Aparência compartilhada dos selos semânticos de estado no aplicativo. */
+export interface BadgeVisual {
+  backgroundColor: string;
+  textColor: string;
+  borderColor?: string;
+  symbol: string;
+}

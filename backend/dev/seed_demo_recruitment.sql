@@ -1,7 +1,7 @@
 -- Dados fictícios de recrutamento para os estudos de demonstração (T16.3): critérios, candidatos,
 -- respostas de elegibilidade, consentimento simulado e participantes.
 --
--- Pré-requisitos: migrações até a V11, backend/dev/seed_demo_users.sql e
+-- Pré-requisitos: migrações até a V14, backend/dev/seed_demo_users.sql e
 -- backend/dev/seed_demo_studies.sql, nessa ordem.
 --
 -- Repetível: um estudo só recebe dados se ainda não tiver critérios nem candidatos, então rodar o
@@ -12,6 +12,13 @@
 -- candidato é calculada como na API: faltando resposta, fica PENDING; é ELIGIBLE se atende a todo
 -- critério de inclusão e a nenhum de exclusão; caso contrário, INELIGIBLE. O script falha sem
 -- gravar nada se um participante não puder ser incluído ou se o limite de vagas for ultrapassado.
+--
+-- Fluxo do candidato (PBI-17, T26.6): quem tem `consent` já ativou a conta no aplicativo e
+-- decidiu o termo; a decisão fica com o próprio candidato como autor. Os demais continuam com
+-- convite vencido (situação INVITED), e o coordenador pode emitir um novo código pela web.
+-- As contas desses candidatos usam e-mail .invalid e uma senha que ninguém conhece: servem para
+-- a situação aparecer como na API, não para entrar no aplicativo. Para entrar, use as contas de
+-- seed_demo_followup.sql.
 
 DO $$
 DECLARE
@@ -124,6 +131,7 @@ DECLARE
     criterion_ids BIGINT[];
     computed_status TEXT;
     position_index INTEGER;
+    decided BOOLEAN;
     filled INTEGER := 0;
 BEGIN
     SELECT id INTO coordinator
@@ -170,14 +178,16 @@ BEGIN
                 ELSE 'ELIGIBLE'
             END;
 
-            -- Cada identidade fictícia pode receber um novo código de ativação pela API.
+            -- Quem ainda não decidiu pode receber um novo código de ativação pela API; quem decidiu
+            -- já ativou a conta (o convite fica consumido antes da decisão).
+            decided := candidate ? 'consent';
             candidate_email := 'demo-candidate-'
                 || md5((study ->> 'title') || ':' || (candidate ->> 'name'))
                 || '@clinicalstudypb.invalid';
             INSERT INTO users (name, email, password_hash, role, active, activation_pending)
             VALUES (candidate ->> 'name', candidate_email,
                     '{bcrypt}$2a$10$XvTRsPld615GPVfvH3j3fuIKUt4rxnR2D5IRbtCKk/WoUOM6m7ooy',
-                    'PARTICIPANT', FALSE, TRUE)
+                    'PARTICIPANT', decided, NOT decided)
             RETURNING id INTO new_user_id;
 
             -- name_key é preservado para os dados anteriores à mudança de identidade.
@@ -185,9 +195,17 @@ BEGIN
             VALUES (target_study_id, candidate ->> 'name', lower(candidate ->> 'name'),
                     (candidate ->> 'age')::INTEGER, candidate_email, '00000000', new_user_id, computed_status)
             RETURNING id INTO new_candidate_id;
-            INSERT INTO candidate_activation_invites (user_id, code_hash, created_at, expires_at)
-            VALUES (new_user_id, md5(gen_random_uuid()::text) || md5(gen_random_uuid()::text),
-                    CURRENT_TIMESTAMP - INTERVAL '73 hours', CURRENT_TIMESTAMP - INTERVAL '1 hour');
+            IF decided THEN
+                INSERT INTO candidate_activation_invites (user_id, code_hash, created_at, expires_at, used_at)
+                VALUES (new_user_id, md5(gen_random_uuid()::text) || md5(gen_random_uuid()::text),
+                        (study ->> 'consentAt')::TIMESTAMPTZ - INTERVAL '2 days',
+                        (study ->> 'consentAt')::TIMESTAMPTZ + INTERVAL '1 day',
+                        (study ->> 'consentAt')::TIMESTAMPTZ - INTERVAL '1 day');
+            ELSE
+                INSERT INTO candidate_activation_invites (user_id, code_hash, created_at, expires_at)
+                VALUES (new_user_id, md5(gen_random_uuid()::text) || md5(gen_random_uuid()::text),
+                        CURRENT_TIMESTAMP - INTERVAL '73 hours', CURRENT_TIMESTAMP - INTERVAL '1 hour');
+            END IF;
 
             IF jsonb_array_length(answer_list) > 0 THEN
                 FOR position_index IN 1 .. jsonb_array_length(answer_list) LOOP
@@ -199,13 +217,13 @@ BEGIN
                 VALUES (new_candidate_id, coordinator, (study ->> 'evaluatedAt')::TIMESTAMPTZ);
             END IF;
 
-            IF candidate ? 'consent' THEN
-                -- Decisões anteriores à Sprint 3 ficam sem autoria; a T26.6 atualizará as seeds.
+            IF decided THEN
+                -- A decisão é do próprio candidato, como em POST /api/me/invitations/{id}/decision.
                 INSERT INTO simulated_consents (
                     candidate_id, status, recorded_at, locked_after_inclusion, recorded_by_user_id
                 )
                 VALUES (new_candidate_id, candidate ->> 'consent', (study ->> 'consentAt')::TIMESTAMPTZ,
-                        COALESCE((candidate ->> 'included')::BOOLEAN, FALSE), NULL);
+                        COALESCE((candidate ->> 'included')::BOOLEAN, FALSE), new_user_id);
             END IF;
 
             IF COALESCE((candidate ->> 'included')::BOOLEAN, FALSE) THEN
@@ -228,5 +246,48 @@ BEGIN
 
     RAISE NOTICE 'Estudos que receberam dados de recrutamento: % (já tinham dados: %).',
         filled, jsonb_array_length(demo) - filled;
+END
+$$;
+
+-- Bancos carregados antes da T26.6 têm decisões sem autoria e contas ainda pendentes, então a
+-- API mostrava esses candidatos como INVITED. O ajuste vale só para as contas de demonstração
+-- (e-mail demo-candidate-…@clinicalstudypb.invalid) e não muda nada na segunda execução.
+DO $$
+DECLARE
+    adjusted INTEGER;
+BEGIN
+    WITH decided AS (
+        SELECT c.user_id, sc.candidate_id, sc.recorded_at
+          FROM simulated_consents sc
+          JOIN candidates c ON c.id = sc.candidate_id
+         WHERE sc.recorded_by_user_id IS NULL
+           AND c.email LIKE 'demo-candidate-%@clinicalstudypb.invalid'
+    ), accounts AS (
+        UPDATE users u
+           SET active = TRUE, activation_pending = FALSE
+          FROM decided d
+         WHERE u.id = d.user_id AND u.activation_pending
+        RETURNING u.id
+    ), invites AS (
+        UPDATE candidate_activation_invites i
+           SET created_at = d.recorded_at - INTERVAL '2 days',
+               expires_at = d.recorded_at + INTERVAL '1 day',
+               used_at = d.recorded_at - INTERVAL '1 day'
+          FROM decided d
+         WHERE i.user_id = d.user_id AND i.used_at IS NULL
+        RETURNING i.user_id
+    ), consents AS (
+        UPDATE simulated_consents sc
+           SET recorded_by_user_id = c.user_id
+          FROM decided d
+          JOIN candidates c ON c.id = d.candidate_id
+         WHERE sc.candidate_id = d.candidate_id
+        RETURNING sc.candidate_id
+    )
+    SELECT COUNT(*) INTO adjusted FROM consents;
+
+    IF adjusted > 0 THEN
+        RAISE NOTICE 'Decisões de demonstração atribuídas ao próprio candidato: %.', adjusted;
+    END IF;
 END
 $$;

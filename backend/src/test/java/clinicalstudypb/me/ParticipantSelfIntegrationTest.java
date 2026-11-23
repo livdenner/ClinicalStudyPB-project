@@ -182,7 +182,8 @@ class ParticipantSelfIntegrationTest extends IntegrationTestSupport {
                 .andExpect(jsonPath("$.upcoming[1].plannedVisitName").value("Extra"))
                 .andExpect(jsonPath("$.upcoming[1].scheduledAt").value("2027-03-01T12:00:00Z"))
                 .andExpect(jsonPath("$.upcoming[1].outcomeAt").doesNotExist())
-                .andExpect(jsonPath("$.upcoming[1].cancellationReason").doesNotExist());
+                .andExpect(jsonPath("$.upcoming[1].cancellationReason").doesNotExist())
+                .andExpect(jsonPath("$.upcoming[1].activities", empty()));
     }
 
     @Test
@@ -198,10 +199,17 @@ class ParticipantSelfIntegrationTest extends IntegrationTestSupport {
                 .andExpect(jsonPath("$.history[0].plannedVisitName").value("Inicial B"))
                 .andExpect(jsonPath("$.history[0].cancellationReason").value("Cancelamento do estudo"))
                 .andExpect(jsonPath("$.history[0].outcomeAt").value("2027-01-20T12:00:00Z"))
+                .andExpect(jsonPath("$.history[0].activities", empty()))
                 .andExpect(jsonPath("$.history[1].cancellationReason").value("Pediu para remarcar"))
+                .andExpect(jsonPath("$.history[1].activities[*].name")
+                        .value(contains("Triagem", "Questionário")))
+                .andExpect(jsonPath("$.history[1].activities[0].description").value("Aferição inicial"))
                 .andExpect(jsonPath("$.history[2].cancellationReason").doesNotExist())
+                .andExpect(jsonPath("$.history[2].activities", empty()))
                 .andExpect(jsonPath("$.history[3].cancellationReason").doesNotExist())
                 .andExpect(jsonPath("$.history[3].outcomeAt").value("2027-01-20T12:00:00Z"))
+                .andExpect(jsonPath("$.history[3].activities[*].name")
+                        .value(contains("Triagem", "Questionário")))
                 .andExpect(jsonPath("$.history[2].outcomeNote").doesNotExist())
                 .andExpect(jsonPath("$.history[3].outcomeNote").doesNotExist());
     }
@@ -216,7 +224,10 @@ class ParticipantSelfIntegrationTest extends IntegrationTestSupport {
         perform(VISITS, brunoToken)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.upcoming[*].id").value(contains(brunoScheduled.intValue())))
-                .andExpect(jsonPath("$.history[*].id").value(contains(brunoDone.intValue())));
+                .andExpect(jsonPath("$.upcoming[0].activities[*].name")
+                        .value(contains("Triagem", "Questionário")))
+                .andExpect(jsonPath("$.history[*].id").value(contains(brunoDone.intValue())))
+                .andExpect(jsonPath("$.history[0].activities", empty()));
 
         perform(STUDIES, anaToken)
                 .andExpect(jsonPath("$[*].participantId").value(everyItem(oneOf(
