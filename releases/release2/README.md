@@ -38,7 +38,7 @@ A arquitetura continua sendo um monólito modular em camadas, com um único back
 | --- | --- |
 | [Casos de uso](../../docs/diagrams/casos-de-uso.png) | Vai de RF01 a RF18. O candidato decide o consentimento no aplicativo; entram agenda, desfecho, retirada, resultados, histórico e a área do participante. |
 | [Classes](../../docs/diagrams/README.md#classes-e-domínio) | Página 2 com convite de ativação, conta e cancelamento do candidato, retirada do participante e autor da decisão. Página 3, nova, com visita agendada e resultado da atividade. |
-| [Sequência](../../docs/diagrams/README.md#sequências) | Página 5 redesenhada para a decisão pelo candidato. Página 7, nova, com agendamento e desfecho. |
+| [Sequência](../../docs/diagrams/README.md#sequências) | Página 4 com o cadastro por e-mail e telefone, a criação ou o vínculo da conta, o convite e a duplicidade verificada pela conta. Página 5 redesenhada para a decisão pelo candidato. Página 7, nova, com agendamento e desfecho. |
 | [Arquitetura](../../docs/diagrams/arquitetura.png) | Doze módulos e o aplicativo ligado à API. |
 
 ## Roteiro de demonstração
