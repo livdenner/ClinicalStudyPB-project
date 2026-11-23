@@ -15,6 +15,7 @@ type Props = {
     onTentarNovamente: () => void;
     acoes?: (participante: ParticipanteApi) => ReactNode;
     onVerVisitas?: (participante: ParticipanteApi) => void;
+    onVerHistorico?: (participante: ParticipanteApi) => void;
     onAgendarVisita?: (participante: ParticipanteApi) => void;
 };
 
@@ -28,6 +29,7 @@ export function PainelParticipantesVagas({
     onTentarNovamente,
     acoes,
     onVerVisitas,
+    onVerHistorico,
     onAgendarVisita,
 }: Props) {
     const vagasOcupadas = participantes.length;
@@ -144,11 +146,22 @@ export function PainelParticipantesVagas({
                         const acaoRetirada = acoes?.(participante);
                         const permiteAgendar =
                             Boolean(onAgendarVisita) && participante.status === "ACTIVE";
-                        if (!onVerVisitas && !permiteAgendar && !acaoRetirada) return null;
+                        if (!onVerVisitas && !onVerHistorico && !permiteAgendar && !acaoRetirada)
+                            return null;
                         return (
                             <div
                                 className={`acoes-agenda-participante${acoes ? " acoes-agenda-participante--com-retirada" : ""}`}
                             >
+                                {onVerHistorico && (
+                                    <Button
+                                        type="button"
+                                        variant="secondary"
+                                        aria-label={`Ver histórico: ${participante.candidateName}`}
+                                        onClick={() => onVerHistorico(participante)}
+                                    >
+                                        Ver histórico
+                                    </Button>
+                                )}
                                 {onVerVisitas && (
                                     <Button
                                         type="button"

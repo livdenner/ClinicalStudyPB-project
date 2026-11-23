@@ -10,6 +10,7 @@ import { ModalCancelarCandidatura } from "../../components/candidatos/ModalCance
 import { ModalNovoCandidato } from "../../components/candidatos/ModalNovoCandidato";
 import { PainelParticipantesVagas } from "../../components/candidatos/PainelParticipantesVagas";
 import { VisitasParticipante } from "../../components/visitas/VisitasParticipante";
+import { HistoricoParticipante } from "../../components/estudos/HistoricoParticipante";
 import { ListaCandidatos } from "../../components/candidatos/ListaCandidatos";
 import { Button } from "../../components/ui/Button";
 import { ErrorMessage } from "../../components/ui/ErrorMessage";
@@ -108,6 +109,7 @@ function GestaoCandidatos({
     const [incluirCancelados, setIncluirCancelados] = useState(false);
 
     const [participantes, setParticipantes] = useState<ParticipanteApi[]>([]);
+    const [historicoSelecionado, setHistoricoSelecionado] = useState<ParticipanteApi | null>(null);
     const [carregandoParticipantes, setCarregandoParticipantes] = useState(false);
     const [erroParticipantes, setErroParticipantes] = useState("");
     const [tentativaParticipantes, setTentativaParticipantes] = useState(0);
@@ -429,6 +431,22 @@ function GestaoCandidatos({
         );
     }
 
+    if (
+        historicoSelecionado &&
+        estudoSelecionado &&
+        historicoSelecionado.studyId === estudoSelecionado.id
+    ) {
+        return (
+            <HistoricoParticipante
+                key={`${estudoSelecionado.id}:${historicoSelecionado.id}`}
+                estudoId={estudoSelecionado.id}
+                participanteId={historicoSelecionado.id}
+                token={token}
+                onVoltar={() => setHistoricoSelecionado(null)}
+            />
+        );
+    }
+
     const participanteAgenda = agendaSelecionada
         ? participantes.find((participante) => participante.id === agendaSelecionada.participantId)
         : null;
@@ -549,6 +567,7 @@ function GestaoCandidatos({
                                 setCandidatoAvaliandoId(null);
                                 setCandidatoIncluindo(null);
                                 setAgendaSelecionada(null);
+                                setHistoricoSelecionado(null);
                                 setCandidatoCancelando(null);
                                 setEstudoSelecionadoId(novoId);
                                 if (novoId !== null) {
@@ -756,6 +775,7 @@ function GestaoCandidatos({
                     carregando={carregandoParticipantes}
                     erro={erroParticipantes}
                     onVerVisitas={(participante) => abrirAgenda(participante, false)}
+                    onVerHistorico={setHistoricoSelecionado}
                     onAgendarVisita={
                         podeCadastrar &&
                         (statusEstudo === "RECRUITMENT" || statusEstudo === "EXECUTION")

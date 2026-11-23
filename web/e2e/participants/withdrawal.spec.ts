@@ -140,13 +140,13 @@ for (const contexto of [
             expect(await tabela.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true);
         }
         expect(retiradas).toBe(1);
-        const listaParticipantes = page.getByRole("list", {
-            name:
-                contexto.caminho === "/recrutamento"
-                    ? "Lista de participantes incluídos"
-                    : "Participantes do estudo",
-            exact: true,
-        });
+        await expect(page.getByRole("button", { name: /^Registrar retirada:/ })).toHaveCount(0);
+        await expect(page.getByRole("button", { name: /^Ver histórico:/ })).toHaveCount(2);
+        for (const nome of ["Ana Silva", "Bruno Costa"]) {
+            await expect(
+                page.getByRole("button", { name: `Ver histórico: ${nome}` })
+            ).toBeVisible();
+        }
         if (contexto.caminho === "/recrutamento") {
             await expect(page.getByRole("button", { name: /^Agendar visita:/ })).toHaveCount(0);
             await expect(
@@ -155,8 +155,6 @@ for (const contexto of [
             await expect(
                 page.getByRole("button", { name: "Ver visitas: Bruno Costa" })
             ).toBeVisible();
-        } else {
-            await expect(listaParticipantes.locator(".card-padrao__acoes")).toHaveCount(0);
         }
         expect(consultasParticipantes).toBe(consultasAntes);
         if (contexto.caminho === "/recrutamento") {

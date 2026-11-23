@@ -103,8 +103,9 @@ describe("Participantes e vagas (RF11)", () => {
 
 /** Acesso à agenda de participantes incluídos conforme RF12. @author Lívia */
 describe("RF12 — ações da agenda no painel (T18.5)", () => {
-    it("T22.3: reúne as três ações no card e preserva somente o histórico para retirados", () => {
+    it("T21.2/T22.3: reúne quatro ações e preserva as duas consultas para retirados", () => {
         const onVerVisitas = vi.fn();
+        const onVerHistorico = vi.fn();
         const onAgendarVisita = vi.fn();
         const ativo = participante(1, "Pessoa fictícia ativa");
         const retirado = {
@@ -114,6 +115,7 @@ describe("RF12 — ações da agenda no painel (T18.5)", () => {
         renderPainel({
             participantes: [ativo, retirado],
             onVerVisitas,
+            onVerHistorico,
             onAgendarVisita,
             acoes: criarAcaoRetirada({
                 perfil: "COORDINATOR",
@@ -124,7 +126,11 @@ describe("RF12 — ações da agenda no painel (T18.5)", () => {
             }),
         });
         const cardAtivo = screen.getByText(ativo.candidateName).closest("li")!;
-        expect(within(cardAtivo).getAllByRole("button")).toHaveLength(3);
+        expect(within(cardAtivo).getAllByRole("button")).toHaveLength(4);
+        fireEvent.click(
+            within(cardAtivo).getByRole("button", { name: `Ver histórico: ${ativo.candidateName}` })
+        );
+        expect(onVerHistorico).toHaveBeenCalledExactlyOnceWith(ativo);
         expect(
             within(cardAtivo).getByRole("button", {
                 name: `Registrar retirada: ${ativo.candidateName}`,
@@ -137,7 +143,18 @@ describe("RF12 — ações da agenda no painel (T18.5)", () => {
         );
         expect(onAgendarVisita).toHaveBeenCalledExactlyOnceWith(ativo);
         const cardRetirado = screen.getByText(retirado.candidateName).closest("li")!;
-        expect(within(cardRetirado).getAllByRole("button")).toHaveLength(1);
+        expect(within(cardRetirado).getAllByRole("button")).toHaveLength(2);
+        expect(
+            within(cardRetirado).queryByRole("button", {
+                name: /Registrar retirada:|Agendar visita:/,
+            })
+        ).not.toBeInTheDocument();
+        fireEvent.click(
+            within(cardRetirado).getByRole("button", {
+                name: `Ver histórico: ${retirado.candidateName}`,
+            })
+        );
+        expect(onVerHistorico).toHaveBeenLastCalledWith(retirado);
         fireEvent.click(
             within(cardRetirado).getByRole("button", {
                 name: `Ver visitas: ${retirado.candidateName}`,

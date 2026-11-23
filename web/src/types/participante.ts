@@ -1,3 +1,10 @@
+export interface RetiradaParticipanteApi {
+    reason: string;
+    withdrawnAt: string;
+    withdrawnByUserId: number;
+    cancelledVisitCount: number;
+}
+
 export interface ParticipanteApi {
     id: number;
     studyId: number;
@@ -5,10 +12,5 @@ export interface ParticipanteApi {
     candidateName: string;
     includedAt: string;
     status: "ACTIVE" | "WITHDRAWN";
-    withdrawal?: {
-        reason: string;
-        withdrawnAt: string;
-        withdrawnByUserId: number;
-        cancelledVisitCount: number;
-    };
+    withdrawal?: RetiradaParticipanteApi;
 }

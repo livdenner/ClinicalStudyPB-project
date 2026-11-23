@@ -14,6 +14,30 @@ const contextoConsulta = {
     perfil: "RESEARCHER",
 } as const;
 
+it("abre o histórico pela lista e retorna sem recarregar os participantes", async () => {
+    const participante = {
+        id: 1,
+        studyId: 3,
+        candidateId: 10,
+        candidateName: "Ana Silva",
+        includedAt: "2026-11-12T12:00:00Z",
+        status: "ACTIVE",
+    };
+    const fetchMock = vi
+        .spyOn(globalThis, "fetch")
+        .mockResolvedValueOnce(resposta([participante]))
+        .mockResolvedValueOnce(resposta({ participant: participante, visits: [] }));
+    render(<ParticipantesEstudo {...contextoConsulta} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Ver histórico: Ana Silva" }));
+    expect(await screen.findByText("Nenhuma visita no histórico")).toBeInTheDocument();
+    expect(fetchMock.mock.calls[1][0]).toBe("/api/studies/3/participants/1/history");
+    fireEvent.click(screen.getByRole("button", { name: "Voltar para participantes" }));
+    expect(
+        await screen.findByRole("button", { name: "Ver histórico: Ana Silva" })
+    ).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+});
+
 it("consulta apenas o estudo solicitado e diferencia participantes ativos e retirados", async () => {
     const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
         resposta([
@@ -103,8 +127,14 @@ it("registra a retirada no estudo, atualiza o selo e remove a ação sem consult
     };
     const fetchMock = vi
         .spyOn(globalThis, "fetch")
-        .mockImplementation(async (_input, init) =>
-            resposta(init?.method === "POST" ? retirado : [participante])
+        .mockImplementation(async (input, init) =>
+            resposta(
+                String(input).endsWith("/history")
+                    ? { participant: retirado, visits: [] }
+                    : init?.method === "POST"
+                      ? retirado
+                      : [participante]
+            )
         );
     render(
         <ParticipantesEstudo
@@ -114,7 +144,10 @@ it("registra a retirada no estudo, atualiza o selo e remove a ação sem consult
             perfil="COORDINATOR"
         />
     );
-    fireEvent.click(await screen.findByRole("button", { name: "Registrar retirada: Ana Silva" }));
+    expect(
+        await screen.findByRole("button", { name: "Ver histórico: Ana Silva" })
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Registrar retirada: Ana Silva" }));
     fireEvent.change(screen.getByRole("textbox", { name: "Motivo da retirada" }), {
         target: { value: "Mudou de cidade" },
     });
@@ -127,6 +160,11 @@ it("registra a retirada no estudo, atualiza o selo e remove a ação sem consult
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls[1][0]).toBe("/api/studies/3/participants/7/withdrawal");
     expect(screen.getByRole("status")).toHaveTextContent("Retirada registrada com sucesso.");
+    fireEvent.click(screen.getByRole("button", { name: "Ver histórico: Ana Silva" }));
+    expect(
+        await screen.findByRole("heading", { name: "Retirada do participante" })
+    ).toBeInTheDocument();
+    expect(fetchMock.mock.calls[2][0]).toBe("/api/studies/3/participants/7/history");
 });
 
 it.each(["CLOSED", "CANCELLED"] as const)("não oferece retirada em estudo %s", async (estado) => {

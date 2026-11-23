@@ -1,5 +1,18 @@
 import { apiRequest } from "./api/apiClient";
 import type { ParticipanteApi } from "../types/participante";
+import type { HistoricoParticipanteApi } from "../types/historico-participante";
+
+export function obterHistoricoParticipante(
+    studyId: number,
+    participantId: number,
+    token: string,
+    signal?: AbortSignal
+) {
+    return apiRequest<HistoricoParticipanteApi>(
+        `/api/studies/${studyId}/participants/${participantId}/history`,
+        { token, signal }
+    );
+}
 
 export function listarParticipantesPorEstudo(studyId: number, token: string, signal?: AbortSignal) {
     return apiRequest<ParticipanteApi[]>(`/api/studies/${studyId}/participants`, {

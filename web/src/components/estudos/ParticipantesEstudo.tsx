@@ -11,6 +11,7 @@ import { listarParticipantesPorEstudo } from "../../services/participantes";
 import type { ParticipanteApi } from "../../types/participante";
 import { obterMensagemErroApi } from "../../utils/erros-api";
 import { ErrorMessage } from "../ui/ErrorMessage";
+import { HistoricoParticipante } from "./HistoricoParticipante";
 
 type Props = {
     estudo: Pick<EstudoApi, "id" | "title" | "status">;
@@ -24,6 +25,7 @@ export function ParticipantesEstudo({ estudo, token, perfil }: Props) {
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState("");
     const [tentativa, setTentativa] = useState(0);
+    const [historicoId, setHistoricoId] = useState<number | null>(null);
     const [mensagem, setMensagem] = useState("");
 
     useEffect(() => {
@@ -51,6 +53,18 @@ export function ParticipantesEstudo({ estudo, token, perfil }: Props) {
         setTentativa((atual) => atual + 1);
     }
 
+    if (historicoId !== null) {
+        return (
+            <HistoricoParticipante
+                key={`${estudo.id}:${historicoId}:${token}`}
+                estudoId={estudo.id}
+                participanteId={historicoId}
+                token={token}
+                onVoltar={() => setHistoricoId(null)}
+            />
+        );
+    }
+
     function atualizarParticipante(atualizado: ParticipanteApi) {
         setParticipantes((atuais) =>
             atuais.map((item) => (item.id === atualizado.id ? atualizado : item))
@@ -58,13 +72,26 @@ export function ParticipantesEstudo({ estudo, token, perfil }: Props) {
         setMensagem("Retirada registrada com sucesso.");
     }
 
-    const acoes = criarAcaoRetirada({
+    const acaoRetirada = criarAcaoRetirada({
         perfil,
         estadoEstudo: estudo.status,
         estudoTitulo: estudo.title,
         token,
         onRetiradaRegistrada: atualizarParticipante,
     });
+
+    const acoes = (participante: ParticipanteApi) => (
+        <div className="flex flex-col gap-2">
+            <Button
+                variant="secondary"
+                aria-label={`Ver histórico: ${participante.candidateName}`}
+                onPress={() => setHistoricoId(participante.id)}
+            >
+                Ver histórico
+            </Button>
+            {acaoRetirada?.(participante)}
+        </div>
+    );
 
     return (
         <section aria-labelledby="participantes-estudo-heading" className="flex flex-col gap-4">
