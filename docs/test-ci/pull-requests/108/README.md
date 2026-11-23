@@ -7,8 +7,9 @@ com **uma linha por teste** e o resultado de cada um. O nome segue `AAAA-MM-DD_H
 com data e hora em America/Fortaleza. Os arquivos são gerados por `scripts/relatorio-testes/gerar.mjs`;
 veja o [guia de contribuição](../../../../CONTRIBUTING.md#relatório-de-execução-dos-testes).
 
-**Última execução:** [2026-11-23_00-50_ea5c423](2026-11-23_00-50_ea5c423.md)
+**Última execução:** [2026-11-23_01-18_6b4ed84](2026-11-23_01-18_6b4ed84.md)
 
 | Data/hora | Commit | Integração | Ambiente | Testes | ✅ | ❌ | ⏭️ | ⚠️ | Situação |
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| [23/11/2026 01:18](2026-11-23_01-18_6b4ed84.md) | `6b4ed84` | [PR #108](https://github.com/livdenner/ClinicalStudyPB-project/pull/108): E2E do fluxo de referência: incluir, agendar e registrar desfecho (T19.5) — em revisão, ainda não integrado | CI (GitHub Actions) | 1698 | 1698 | 0 | 0 | 0 | ✅ ok |
 | [23/11/2026 00:50](2026-11-23_00-50_ea5c423.md) | `ea5c423` | [PR #108](https://github.com/livdenner/ClinicalStudyPB-project/pull/108): E2E do fluxo de referência: incluir, agendar e registrar desfecho (T19.5) — em revisão, ainda não integrado | CI (GitHub Actions) | 1569 | 1568 | 0 | 1 | 0 | ✅ sem falhas (1 ignorado) |
