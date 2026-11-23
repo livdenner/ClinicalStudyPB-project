@@ -7,8 +7,9 @@ com **uma linha por teste** e o resultado de cada um. O nome segue `AAAA-MM-DD_H
 com data e hora em America/Fortaleza. Os arquivos são gerados por `scripts/relatorio-testes/gerar.mjs`;
 veja o [guia de contribuição](../../../../CONTRIBUTING.md#relatório-de-execução-dos-testes).
 
-**Última execução:** [2026-11-23_00-39_754e030](2026-11-23_00-39_754e030.md)
+**Última execução:** [2026-11-23_19-55_66c9d90](2026-11-23_19-55_66c9d90.md)
 
 | Data/hora | Commit | Integração | Ambiente | Testes | ✅ | ❌ | ⏭️ | ⚠️ | Situação |
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| [23/11/2026 19:55](2026-11-23_19-55_66c9d90.md) | `66c9d90` | [PR #122](https://github.com/livdenner/ClinicalStudyPB-project/pull/122): Atualiza diagramas, arquitetura e roteiro de demonstração da Release 2 - Task 4038 (T26.3) — em revisão, ainda não integrado | CI (GitHub Actions) | 1703 | 1703 | 0 | 0 | 0 | ✅ ok |
 | [23/11/2026 00:39](2026-11-23_00-39_754e030.md) | `754e030` | [PR #122](https://github.com/livdenner/ClinicalStudyPB-project/pull/122): Atualiza diagramas, arquitetura e roteiro de demonstração da Release 2 - Task 4038 (T26.3) — em revisão, ainda não integrado | CI (GitHub Actions) | 1567 | 1566 | 0 | 1 | 0 | ✅ sem falhas (1 ignorado) |
