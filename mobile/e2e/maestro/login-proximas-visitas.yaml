@@ -12,6 +12,13 @@ env:
 # Sem sessão salva: o app sempre começa pelo login.
 - launchApp:
     clearState: true
+# No emulador da CI, o launcher do Android às vezes trava e abre um diálogo
+# "isn't responding" por cima do app. Se aparecer, espera e segue.
+- runFlow:
+    when:
+      visible: ".*isn't responding.*"
+    commands:
+      - tapOn: "Wait"
 - extendedWaitUntil:
     visible: "Entre com suas credenciais institucionais para acessar o sistema."
     timeout: 30000

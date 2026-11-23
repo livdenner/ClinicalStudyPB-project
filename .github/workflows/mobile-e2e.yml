@@ -93,6 +93,8 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           script: |
+            # Sem diálogos de "app não responde" do sistema (ex.: launcher lento no emulador da CI).
+            adb shell settings put global hide_error_dialogs 1
             adb install -r "$APK"
             mkdir -p mobile/test-reports mobile/e2e/artefatos
             maestro test --format=JUNIT --output=mobile/test-reports/maestro.xml --test-output-dir=mobile/e2e/artefatos --debug-output=mobile/e2e/artefatos/debug mobile/e2e/maestro
