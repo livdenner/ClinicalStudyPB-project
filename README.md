@@ -17,16 +17,16 @@ Consulte as [entregas, evidências e pendências da Release 1](releases/release1
 
 ## 2. Arquitetura e diagramas
 
-O backend é um **monólito modular em camadas**, executado como uma aplicação Spring Boot. Os módulos `auth`, `users`, `studies`, `criteria`, `visits`, `candidates`, `consent`, `participants`, `scheduling` e `results` separam `api`, `application`, `domain` e `infrastructure`; `history` e `me` são módulos de consulta, só com `api` e `application`. `shared` reúne autenticação HTTP, configurações e tratamento de erros comuns. Integrações entre módulos usam os serviços públicos; cada módulo mantém sua persistência interna.
+O backend é um **monólito modular em camadas**, executado como uma aplicação Spring Boot. Os módulos `auth`, `users`, `studies`, `criteria`, `visits`, `candidates`, `consent` e `participants` separam `api`, `application`, `domain` e `infrastructure`. `shared` reúne autenticação HTTP, configurações e tratamento de erros comuns. Integrações entre módulos usam os serviços públicos; cada módulo mantém sua persistência interna.
 
-A web e o aplicativo mobile chamam a API REST com JWT; somente o backend acessa o PostgreSQL. O Flyway versiona o esquema (V1–V15) e o Hibernate valida seu mapeamento. O mobile cobre login, ativação da conta, convites com a decisão do consentimento e a área do participante, pelas rotas `/api/auth` e `/api/me`.
+A web chama a API REST com JWT; somente o backend acessa o PostgreSQL. O Flyway versiona o esquema e o Hibernate valida seu mapeamento. O mobile da Release 1 navega entre duas telas iniciais; a integração de login pertence à Sprint 3.
 
-| Diagrama        | Visualização no GitHub                                                                                                                                               | Fonte editável                               | PDF                                                  |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------- |
-| Casos de uso    | [RF01–RF18](docs/diagrams/casos-de-uso.png)                                                                                                                          | [Draw.io](docs/diagrams/casos-de-uso.drawio) | [PDF](docs/diagrams/casos-de-uso.drawio.pdf)         |
-| Classes/domínio | [Estudos e protocolo](docs/diagrams/classes.png), [recrutamento](docs/diagrams/classes-recrutamento.png), [acompanhamento](docs/diagrams/classes-acompanhamento.png) | [Draw.io](docs/diagrams/classes.drawio)      | [PDF, 3 páginas](docs/diagrams/classes.drawio.pdf)   |
-| Sequência       | [Protocolo e estados](docs/diagrams/sequencia.png), [galeria dos sete fluxos](docs/diagrams/README.md#sequências)                                                    | [Draw.io](docs/diagrams/sequencia.drawio)    | [PDF, 7 páginas](docs/diagrams/sequencia.drawio.pdf) |
-| Arquitetura     | [Aplicações, módulos e banco](docs/diagrams/arquitetura.png)                                                                                                         | [Draw.io](docs/diagrams/arquitetura.drawio)  | [PDF](docs/diagrams/arquitetura.drawio.pdf)          |
+| Diagrama        | Visualização no GitHub                                                                                            | Fonte editável                               | PDF                                                  |
+| --------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------- |
+| Casos de uso    | [RF01–RF11](docs/diagrams/casos-de-uso.png)                                                                       | [Draw.io](docs/diagrams/casos-de-uso.drawio) | [PDF](docs/diagrams/casos-de-uso.drawio.pdf)         |
+| Classes/domínio | [Estudos e protocolo](docs/diagrams/classes.png), [recrutamento](docs/diagrams/classes-recrutamento.png)          | [Draw.io](docs/diagrams/classes.drawio)      | [PDF, 2 páginas](docs/diagrams/classes.drawio.pdf)   |
+| Sequência       | [Protocolo e estados](docs/diagrams/sequencia.png), [galeria dos seis fluxos](docs/diagrams/README.md#sequências) | [Draw.io](docs/diagrams/sequencia.drawio)    | [PDF, 6 páginas](docs/diagrams/sequencia.drawio.pdf) |
+| Arquitetura     | [Aplicações, módulos e banco](docs/diagrams/arquitetura.png)                                                      | [Draw.io](docs/diagrams/arquitetura.drawio)  | [PDF](docs/diagrams/arquitetura.drawio.pdf)          |
 
 ![Arquitetura do ClinicalStudyPB](docs/diagrams/arquitetura.png)
 
@@ -46,7 +46,7 @@ Os arquivos mantêm a notação UML, as cores e o modelo Draw.io preexistentes. 
 
 O [quadro RF01–RF11 da Release 1](releases/release1/README.md#rastreabilidade-dos-requisitos) identifica implementação, testes e integração de cada tela. Painel e relatórios ainda usam protótipos; essa navegação não constitui evidência de persistência dessas funcionalidades. A tela de visitas consulta a API real, conforme o fluxo da T19.3 abaixo.
 
-O [roteiro da Release 2](releases/release2/README.md#roteiro-de-demonstração) demonstra, com a carga fictícia, o primeiro acesso e a decisão do convite no aplicativo, as áreas de estudos e visitas do participante, a agenda, os desfechos, os resultados, a retirada e o histórico. O [roteiro da Release 1](releases/release1/README.md#roteiro-de-demonstração) continua válido para o cadastro de usuários, estudos, critérios e a inclusão; o consentimento, que ele registra na web, passou ao candidato no aplicativo.
+O [roteiro da Release 1](releases/release1/README.md#roteiro-de-demonstração) detalha a demonstração por perfil, do cadastro de usuários à inclusão. Para o mobile, confira **ClinicalStudyPB → Ver estudos → Voltar ao início**.
 
 ![Critérios e recrutamento pela API real](releases/release1/images/05-criterios-sucesso.jpg)
 
@@ -188,7 +188,17 @@ backend/dev/
 | Cancelada | Diabetes: acompanhamento de 3 meses de João, cancelado pelo coordenador com justificativa. | RF13 |
 | Retirada | Diabetes: Lúcia Mendes Araújo, retirada em 10/11/2026. A visita futura foi cancelada com a nota "Retirada do participante". | RF15 e RF16 |
 
-O [roteiro de demonstração da Release 2](releases/release2/README.md#roteiro-de-demonstração) percorre esses cenários em seis passos, na web e no aplicativo, com os endpoints equivalentes para o Swagger UI. As ações do roteiro não são desfeitas ao executar os scripts de novo; para repetir a demonstração, recrie o banco com `docker compose down -v`.
+O roteiro abaixo usa apenas a carga, sem preparar dados à mão. Onde a tela ainda não foi integrada, o passo é feito pelo [Swagger UI](http://localhost:8080/swagger-ui/index.html), com o token da conta indicada em "Authorize".
+
+| Passo | Conta | Onde | O que fazer e conferir |
+| --- | --- | --- | --- |
+| 1 | Coordenador | Web, **Recrutamento** | Na vacina, confira as situações Convidado, Aceitou, Recusou, Aguardando decisão e Incluído. Em **Higiene do sono**, inclua Vera ou Wilson na última vaga. A segunda inclusão é recusada por falta de vaga. |
+| 2 | `convite@…` | Aplicativo (primeiro acesso) e Swagger | No app, faça o primeiro acesso com o código `CONVITE-DEMO-2026` e defina a senha. No Swagger, use `GET /api/me/invitations` e `POST /api/me/invitations/{candidateId}/decision`. Na web, use **Atualizar lista** e veja a nova situação. |
+| 3 | `participante@…` | Swagger (telas do app em andamento) | `GET /api/me/studies` mostra o estudo de diabetes (RF17). `GET /api/me/visits` mostra uma visita próxima e uma realizada (RF18). `POST /api/me/invitations/{candidateId}/decision` decide o convite da vacina. |
+| 4 | Coordenador | Web, **Visitas** | No estudo de diabetes, filtre por **Situação** e confira os quatro desfechos. Registre o desfecho da visita remarcada de João. A visita de Lúcia aparece cancelada pela retirada. Pela API, o mesmo filtro é `GET /api/studies/{studyId}/visits?status=…`, e o registro é `POST …/visits/{visitId}/outcome` com `If-Match`. |
+| 5 | Pesquisador | Web, **Visitas** | Em **Ver resultados**, confira os resultados da avaliação inicial de Irene. Em **Registrar resultados**, registre os da visita realizada no passo 4. Pela API, são `GET …/visits/{visitId}/results` e `PUT …/results/{activityId}`. |
+
+O histórico do participante (RF15) já está na API desde a T21.1 (PR #103). No Swagger, `GET …/participants/{participantId}/history` mostra, para Lúcia, a inclusão, as visitas com resultados e a retirada. A tela da web para esse histórico ainda está em revisão no PR #119.
 
 `DemoSeedIntegrationTest` executa os quatro scripts em PostgreSQL real e confere três pontos: a repetição sem duplicar dados, as regras da API (resultado só em visita realizada, retirada cancelando as visitas futuras e decisão com autoria do candidato) e a leitura pelos endpoints do coordenador e do aplicativo.
 
@@ -197,9 +207,9 @@ O [roteiro de demonstração da Release 2](releases/release2/README.md#roteiro-d
 | Arquivo modelo                             | Variável                   | Uso                                                                                                                                                                                      |
 | ------------------------------------------ | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [web/.env.example](web/.env.example)       | `VITE_API_BASE_URL`        | Deixe vazia em desenvolvimento para usar `/api` pelo proxy Vite; para outra API, informe a origem sem `/api` (ex.: `http://localhost:8080`), pois os serviços já acrescentam `/api/...`. |
-| [mobile/.env.example](mobile/.env.example) | `EXPO_PUBLIC_API_BASE_URL` | Base da API usada pelo aplicativo, terminada em `/api`; exemplo Android emulador: `http://10.0.2.2:8080/api`. No telefone, use o IP da máquina na rede.                                 |
+| [mobile/.env.example](mobile/.env.example) | `EXPO_PUBLIC_API_BASE_URL` | Base da API para a futura integração; exemplo Android emulador: `http://10.0.2.2:8080/api`. No telefone, use o IP da máquina na rede.                                                    |
 
-São configurações públicas do aplicativo cliente: nunca coloque chaves privadas ou senhas nessas variáveis. Os modelos ficam versionados; arquivos `.env` e a chave JWT ficam fora do Git. O aplicativo precisa da API para o login e para todas as telas do participante.
+São configurações públicas do aplicativo cliente: nunca coloque chaves privadas ou senhas nessas variáveis. Os modelos ficam versionados; arquivos `.env` e a chave JWT ficam fora do Git. O mobile inicial não precisa de conexão com a API para navegar.
 
 ### Aplicação web
 
@@ -215,9 +225,9 @@ Mantenha o terminal aberto e acesse o endereço exibido pelo Vite, normalmente `
 
 No PowerShell, use `npm.cmd` se a política de execução impedir o uso de `npm.ps1`. Os comandos de validação estão na [seção de testes](#6-testes-cobertura-e-qualidade).
 
-### Aplicativo mobile
+### Aplicativo mobile inicial
 
-Copie `mobile/.env.example` para `mobile/.env` e ajuste `EXPO_PUBLIC_API_BASE_URL` para o backend acessível a partir do dispositivo. Depois, abra outro terminal na raiz do repositório:
+Abra outro terminal na raiz do repositório:
 
 ```bash
 cd mobile
@@ -227,7 +237,7 @@ npm start
 
 Para telefone Android, conecte-o à mesma rede Wi-Fi do computador, abra o Expo Go e leia o QR code exibido pelo Expo. O Expo Go deve ser compatível com o Expo SDK 58 usado pelo projeto. Para emulador, inicie o dispositivo no Android Studio e execute `npm run android` na pasta `mobile/`, ou pressione `a` no terminal do Expo.
 
-O aplicativo abre na tela de login e aceita apenas contas de participante. Use `participante@clinicalstudypb.test` ou faça o primeiro acesso com `convite@clinicalstudypb.test` em **Primeiro acesso? → Ativar conta**, como no [roteiro da Release 2](releases/release2/README.md#roteiro-de-demonstração). A tela inicial leva a **Ver convites**, **Ver estudos** e **Ver visitas**.
+Confira a tela **ClinicalStudyPB**, toque em **Ver estudos** e depois em **Voltar ao início**. Essa é a navegação provisória da Release 1: não há login, sessão ou integração de negócio mobile; o login integrado está previsto para a Sprint 3. Não é necessário configurar a URL da API para abrir essas telas.
 
 Para configuração de API, alternativas de conexão e passagem de contexto, consulte [mobile/README.md](mobile/README.md). Execute também os [testes e a verificação de compatibilidade](#6-testes-cobertura-e-qualidade).
 
