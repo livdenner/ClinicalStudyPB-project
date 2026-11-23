@@ -19,7 +19,7 @@ Consulte as [entregas, evidências e pendências da Release 1](releases/release1
 
 O backend é um **monólito modular em camadas**, executado como uma aplicação Spring Boot. Os módulos `auth`, `users`, `studies`, `criteria`, `visits`, `candidates`, `consent` e `participants` separam `api`, `application`, `domain` e `infrastructure`. `shared` reúne autenticação HTTP, configurações e tratamento de erros comuns. Integrações entre módulos usam os serviços públicos; cada módulo mantém sua persistência interna.
 
-A web chama a API REST com JWT; somente o backend acessa o PostgreSQL. O Flyway versiona o esquema e o Hibernate valida seu mapeamento. O mobile da Release 1 navega entre duas telas iniciais; a integração de login pertence à Sprint 3.
+A web e o aplicativo mobile chamam a API REST com JWT; somente o backend acessa o PostgreSQL. O Flyway versiona o esquema (V1–V15) e o Hibernate valida seu mapeamento. O mobile integra login, ativação por código, troca obrigatória de senha, convites com decisão de consentimento, estudos e visitas do participante pelas rotas `/api/auth` e `/api/me`.
 
 | Diagrama        | Visualização no GitHub                                                                                            | Fonte editável                               | PDF                                                  |
 | --------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------- |
@@ -64,8 +64,8 @@ A [galeria de capturas](releases/release1/images/README.md) contém sucesso e er
 | Springdoc / OpenAPI | 2.8.17 / contrato em `backend/openapi.yaml`                       |
 | Web                 | React 19.3.1, TypeScript 6.0.3, Vite 8.3.5                        |
 | Interface web       | HeroUI 3.2.6, Tailwind CSS 4.3.3, Lucide React 1.61.0             |
-| Mobile              | Expo 58.0.19, React Native 0.88.0, React 19.3.0, TypeScript 6.0.3 |
-| Testes              | JaCoCo 0.8.13, Vitest 5.0.5, Playwright 1.64.1, Jest 30.5.2       |
+| Mobile              | Expo 58.0.26, React Native 0.88.1, React 19.3.0, TypeScript 6.0.3 |
+| Testes              | JaCoCo 0.8.13, Vitest 5.0.5, Playwright 1.64.1, Jest 30.5.2, Maestro |
 | Node.js / npm       | Node 22 no CI; validação com 22.23.4 / npm 10.9.9                 |
 | Docker / Compose    | Validação com 29.9.2 / 5.6.1                                      |
 
@@ -193,8 +193,8 @@ O roteiro abaixo usa apenas a carga, sem preparar dados à mão. Onde a tela ain
 | Passo | Conta | Onde | O que fazer e conferir |
 | --- | --- | --- | --- |
 | 1 | Coordenador | Web, **Recrutamento** | Na vacina, confira as situações Convidado, Aceitou, Recusou, Aguardando decisão e Incluído. Em **Higiene do sono**, inclua Vera ou Wilson na última vaga. A segunda inclusão é recusada por falta de vaga. |
-| 2 | `convite@…` | Aplicativo (primeiro acesso) e Swagger | No app, faça o primeiro acesso com o código `CONVITE-DEMO-2026` e defina a senha. No Swagger, use `GET /api/me/invitations` e `POST /api/me/invitations/{candidateId}/decision`. Na web, use **Atualizar lista** e veja a nova situação. |
-| 3 | `participante@…` | Swagger (telas do app em andamento) | `GET /api/me/studies` mostra o estudo de diabetes (RF17). `GET /api/me/visits` mostra uma visita próxima e uma realizada (RF18). `POST /api/me/invitations/{candidateId}/decision` decide o convite da vacina. |
+| 2 | `convite@…` | Aplicativo (ou Swagger) | No app, faça o primeiro acesso com o código `CONVITE-DEMO-2026`, defina a senha e decida o convite em **Ver convites** (pela API, `GET /api/me/invitations` e `POST /api/me/invitations/{candidateId}/decision`). Na web, use **Atualizar lista** e veja a nova situação. |
+| 3 | `participante@…` | Aplicativo (ou Swagger) | No app, abra **Ver estudos** (estudo de diabetes, RF17), **Ver visitas** (uma visita em **Próximas** e uma em **Histórico**, RF18) e **Ver convites** (convite da vacina, RF10); passo a passo em [mobile/README.md](mobile/README.md#roteiro-de-demonstração). Pela API, os endpoints equivalentes são `GET /api/me/studies`, `GET /api/me/visits` e `POST /api/me/invitations/{candidateId}/decision`. |
 | 4 | Coordenador | Web, **Visitas** | No estudo de diabetes, filtre por **Situação** e confira os quatro desfechos. Registre o desfecho da visita remarcada de João. A visita de Lúcia aparece cancelada pela retirada. Pela API, o mesmo filtro é `GET /api/studies/{studyId}/visits?status=…`, e o registro é `POST …/visits/{visitId}/outcome` com `If-Match`. |
 | 5 | Pesquisador | Web, **Visitas** | Em **Ver resultados**, confira os resultados da avaliação inicial de Irene. Em **Registrar resultados**, registre os da visita realizada no passo 4. Pela API, são `GET …/visits/{visitId}/results` e `PUT …/results/{activityId}`. |
 
@@ -207,9 +207,9 @@ O histórico do participante (RF15) já está na API desde a T21.1 (PR #103). No
 | Arquivo modelo                             | Variável                   | Uso                                                                                                                                                                                      |
 | ------------------------------------------ | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [web/.env.example](web/.env.example)       | `VITE_API_BASE_URL`        | Deixe vazia em desenvolvimento para usar `/api` pelo proxy Vite; para outra API, informe a origem sem `/api` (ex.: `http://localhost:8080`), pois os serviços já acrescentam `/api/...`. |
-| [mobile/.env.example](mobile/.env.example) | `EXPO_PUBLIC_API_BASE_URL` | Base da API para a futura integração; exemplo Android emulador: `http://10.0.2.2:8080/api`. No telefone, use o IP da máquina na rede.                                                    |
+| [mobile/.env.example](mobile/.env.example) | `EXPO_PUBLIC_API_BASE_URL` | Base da API usada pelo aplicativo, terminada em `/api`; exemplo no emulador Android: `http://10.0.2.2:8080/api`. No telefone físico, use o IPv4 da máquina na rede. |
 
-São configurações públicas do aplicativo cliente: nunca coloque chaves privadas ou senhas nessas variáveis. Os modelos ficam versionados; arquivos `.env` e a chave JWT ficam fora do Git. O mobile inicial não precisa de conexão com a API para navegar.
+São configurações públicas do aplicativo cliente: nunca coloque chaves privadas ou senhas nessas variáveis. Os modelos ficam versionados; arquivos `.env` e a chave JWT ficam fora do Git. O aplicativo exige a API em execução para autenticação, ativação por código e telas do participante.
 
 ### Aplicação web
 
@@ -225,21 +225,19 @@ Mantenha o terminal aberto e acesse o endereço exibido pelo Vite, normalmente `
 
 No PowerShell, use `npm.cmd` se a política de execução impedir o uso de `npm.ps1`. Os comandos de validação estão na [seção de testes](#6-testes-cobertura-e-qualidade).
 
-### Aplicativo mobile inicial
+### Aplicativo mobile
 
-Abra outro terminal na raiz do repositório:
+Copie `mobile/.env.example` para `mobile/.env` e confirme `EXPO_PUBLIC_API_BASE_URL` (o padrão `http://10.0.2.2:8080/api` já atende o emulador Android; no telefone físico, use o IPv4 da máquina). Com o backend e as 4 seeds em execução, abra outro terminal na raiz do repositório:
 
 ```bash
 cd mobile
 npm ci
-npm start
+npm run android
 ```
 
-Para telefone Android, conecte-o à mesma rede Wi-Fi do computador, abra o Expo Go e leia o QR code exibido pelo Expo. O Expo Go deve ser compatível com o Expo SDK 58 usado pelo projeto. Para emulador, inicie o dispositivo no Android Studio e execute `npm run android` na pasta `mobile/`, ou pressione `a` no terminal do Expo.
+No Windows (PowerShell), use `npm.cmd run android`. Para usar em telefone Android com o **Expo Go** (compatível com **Expo SDK 58**), conecte o celular à mesma rede Wi-Fi, ajuste o IPv4 em `mobile/.env` e rode `npm start` (ou `npm.cmd start`).
 
-Confira a tela **ClinicalStudyPB**, toque em **Ver estudos** e depois em **Voltar ao início**. Essa é a navegação provisória da Release 1: não há login, sessão ou integração de negócio mobile; o login integrado está previsto para a Sprint 3. Não é necessário configurar a URL da API para abrir essas telas.
-
-Para configuração de API, alternativas de conexão e passagem de contexto, consulte [mobile/README.md](mobile/README.md). Execute também os [testes e a verificação de compatibilidade](#6-testes-cobertura-e-qualidade).
+O app aceita apenas contas de participante: entre em **Primeiro acesso? → Ativar conta** com `convite@clinicalstudypb.test` e o código `CONVITE-DEMO-2026` (seguido de troca obrigatória de senha e decisão de convite), ou entre direto com `participante@clinicalstudypb.test` e `Demo@Clinical2026` para consultar estudos e visitas. Siga o guia completo no [README mobile](mobile/README.md), o [roteiro passo a passo no aplicativo](mobile/README.md#roteiro-de-demonstração), as [mudanças de configuração do Expo](mobile/README.md#configuração-do-expo-e-mudanças-registradas) e os [testes E2E com Maestro](mobile/README.md#testes-e2e-maestro). Execute também os [testes e a verificação de compatibilidade](#6-testes-cobertura-e-qualidade).
 
 ### Backend fora do contêiner (alternativa)
 
@@ -384,14 +382,14 @@ Na pasta `mobile/`:
 
 ```bash
 npm ci
-npm test -- --ci --runInBand --coverage
+npm run test:report -- --runInBand --coverage
 npx tsc --noEmit
 npx expo install --check
 ```
 
-A cobertura fica em `mobile/coverage/`. Confira também a abertura real no Android. Recomendações do Expo devem ser registradas antes de alterar o lockfile; veja o [relatório da T16.13](releases/release1/tests/t16-13/README.md).
+Os testes Jest simulam HTTP sem chamadas reais de rede e exigem cobertura global mínima de **80% de linhas** (`coverageThreshold` em `mobile/package.json`). O relatório JSON e a cobertura ficam em `mobile/test-reports/` e `mobile/coverage/`. Os testes E2E mobile no emulador Android usam **Maestro** contra `compose.e2e.yaml` e estão documentados em [`mobile/README.md`](mobile/README.md#testes-e2e-maestro) e [`docs/tests/rastreabilidade-e2e-mobile.md`](docs/tests/rastreabilidade-e2e-mobile.md). Confira também a abertura real no emulador ou dispositivo; alterações de dependências do Expo devem ser registradas em [`mobile/README.md`](mobile/README.md#configuração-do-expo-e-mudanças-registradas) (histórico inicial no [relatório da T16.13](releases/release1/tests/t16-13/README.md)).
 
-A [CI](.github/workflows/ci.yml) executa backend, web, E2E e mobile em PRs e pushes para `development` e `main`, publicando artefatos JaCoCo, JUnit, Vitest, Jest e Playwright. O JaCoCo exige **80% de linhas no backend**, com as exclusões técnicas declaradas no POM; não se aplica esse mesmo limite à cobertura web/mobile. Os [resultados versionados da Release 1](releases/release1/tests/README.md) identificam comandos, versão, contagens e evidências.
+A [CI](.github/workflows/ci.yml) executa backend, web, E2E web e mobile Jest em PRs e pushes para `development` e `main`, publicando artefatos JaCoCo, JUnit, Vitest, Jest e Playwright; o workflow [E2E Mobile](.github/workflows/mobile-e2e.yml) executa o fluxo Maestro no emulador Android e publica `maestro-report`. O JaCoCo exige **80% de linhas no backend** (com as exclusões técnicas declaradas no POM) e o Jest exige **80% de linhas no mobile**; na web, o Vitest verifica a cobertura mínima configurada por componente. Os [resultados versionados da Release 1](releases/release1/tests/README.md) identificam comandos, versão, contagens e evidências da entrega anterior.
 
 ## 7. Swagger UI e contrato da API
 
