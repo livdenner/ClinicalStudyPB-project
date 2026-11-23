@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <mxfile host="Electron" agent="ClinicalStudyPB" version="32.6.10">
-  <diagram name="Arquitetura da Release 1" id="arquitetura-release1">
-    <mxGraphModel dx="1960" dy="1190" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1960" pageHeight="1190" math="0" shadow="0" background="#ffffff">
+  <diagram name="Arquitetura da Release 2" id="arquitetura-release1">
+    <mxGraphModel dx="1960" dy="1440" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1960" pageHeight="1440" math="0" shadow="0" background="#ffffff">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -21,31 +21,43 @@
           <mxGeometry x="275" y="330" width="245" height="160" as="geometry" />
         </mxCell>
         <mxCell id="api" value="&lt;b&gt;API REST - monólito modular&lt;/b&gt;&lt;br/&gt;Java 21 / Spring Boot / Spring Security JWT" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;verticalAlign=top;spacingTop=12;" vertex="1" parent="1">
-          <mxGeometry x="610" y="50" width="1280" height="760" as="geometry" />
+          <mxGeometry x="610" y="50" width="1280" height="1030" as="geometry" />
         </mxCell>
         <mxCell id="auth" value="&lt;b&gt;auth&lt;/b&gt;&lt;hr/&gt;api → application&lt;br/&gt;domain / infrastructure" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
-          <mxGeometry x="660" y="190" width="250" height="125" as="geometry" />
+          <mxGeometry x="660" y="150" width="250" height="125" as="geometry" />
         </mxCell>
         <mxCell id="users-module" value="&lt;b&gt;users&lt;/b&gt;&lt;hr/&gt;api → application&lt;br/&gt;domain / infrastructure" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
-          <mxGeometry x="960" y="190" width="250" height="125" as="geometry" />
+          <mxGeometry x="960" y="150" width="250" height="125" as="geometry" />
         </mxCell>
         <mxCell id="studies" value="&lt;b&gt;studies&lt;/b&gt;&lt;hr/&gt;api → application&lt;br/&gt;domain / infrastructure" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
-          <mxGeometry x="1260" y="190" width="250" height="125" as="geometry" />
+          <mxGeometry x="1260" y="150" width="250" height="125" as="geometry" />
         </mxCell>
         <mxCell id="visits" value="&lt;b&gt;visits&lt;/b&gt;&lt;hr/&gt;api → application&lt;br/&gt;domain / infrastructure" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
-          <mxGeometry x="1560" y="190" width="250" height="125" as="geometry" />
+          <mxGeometry x="1560" y="150" width="250" height="125" as="geometry" />
         </mxCell>
         <mxCell id="candidates" value="&lt;b&gt;candidates&lt;/b&gt;&lt;hr/&gt;api → application&lt;br/&gt;domain / infrastructure" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
-          <mxGeometry x="660" y="460" width="250" height="125" as="geometry" />
+          <mxGeometry x="660" y="390" width="250" height="125" as="geometry" />
         </mxCell>
         <mxCell id="criteria" value="&lt;b&gt;criteria&lt;/b&gt;&lt;hr/&gt;api → application&lt;br/&gt;domain / infrastructure" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
-          <mxGeometry x="960" y="460" width="250" height="125" as="geometry" />
+          <mxGeometry x="960" y="390" width="250" height="125" as="geometry" />
         </mxCell>
         <mxCell id="consent" value="&lt;b&gt;consent&lt;/b&gt;&lt;hr/&gt;api → application&lt;br/&gt;domain / infrastructure" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
-          <mxGeometry x="1260" y="460" width="250" height="125" as="geometry" />
+          <mxGeometry x="1260" y="390" width="250" height="125" as="geometry" />
         </mxCell>
         <mxCell id="participants" value="&lt;b&gt;participants&lt;/b&gt;&lt;hr/&gt;api → application&lt;br/&gt;domain / infrastructure" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
-          <mxGeometry x="1560" y="460" width="250" height="125" as="geometry" />
+          <mxGeometry x="1560" y="390" width="250" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="scheduling" value="&lt;b&gt;scheduling&lt;/b&gt;&lt;hr/&gt;api → application&lt;br/&gt;domain / infrastructure" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="660" y="630" width="250" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="results" value="&lt;b&gt;results&lt;/b&gt;&lt;hr/&gt;api → application&lt;br/&gt;domain / infrastructure" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="960" y="630" width="250" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="history" value="&lt;b&gt;history&lt;/b&gt;&lt;hr/&gt;api → application&lt;br/&gt;(consulta, sem tabela própria)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="1260" y="630" width="250" height="125" as="geometry" />
+        </mxCell>
+        <mxCell id="me" value="&lt;b&gt;me&lt;/b&gt;&lt;hr/&gt;api → application&lt;br/&gt;(consulta, sem tabela própria)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="1560" y="630" width="250" height="125" as="geometry" />
         </mxCell>
         <mxCell id="edge-1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;endArrow=open;" edge="1" parent="1" source="auth" target="users-module">
           <mxGeometry relative="1" as="geometry" />
@@ -57,18 +69,24 @@
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="dependency-note" value="auth → users: consulta da conta · studies → users: responsável · visits → studies: bloqueio do protocolo" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="660" y="345" width="1150" height="60" as="geometry" />
+          <mxGeometry x="660" y="295" width="1150" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="interfaces" value="&lt;b&gt;Integração entre módulos por serviços e interfaces públicas&lt;/b&gt;&lt;br/&gt;StudyReadiness (critérios e participantes) · ParticipantLookup · EligibilityResponseLookup&lt;br/&gt;CandidateService e SimulatedConsentService coordenam o recrutamento e a inclusão." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="660" y="640" width="1150" height="85" as="geometry" />
+        <mxCell id="dependency-note-recruitment" value="candidates → criteria e users: respostas e conta do candidato · consent → candidates: decisão do próprio candidato · participants → candidates e consent: inclusão" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="660" y="530" width="1150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="dependency-note-followup" value="scheduling → participants, visits e studies: agenda e desfecho · results → scheduling e visits: visita realizada · history → participants, scheduling e results · me → participants, scheduling e visits: consultas" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="660" y="770" width="1150" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="interfaces" value="&lt;b&gt;Integração entre módulos por serviços e interfaces públicas&lt;/b&gt;&lt;br/&gt;StudyReadiness · StudySchedulingLifecycle · ParticipantLookup · ParticipantSchedulingLookup · ParticipantWithdrawalVisits&lt;br/&gt;PlannedVisitLookup · EligibilityResponseLookup · ActivityResultLookup&lt;br/&gt;CandidateService e SimulatedConsentService coordenam recrutamento e inclusão; ScheduledVisitService concentra agenda e desfecho." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="660" y="840" width="1150" height="105" as="geometry" />
         </mxCell>
         <mxCell id="shared" value="&lt;b&gt;shared&lt;/b&gt;: CurrentActor, erros HTTP e componentes técnicos compartilhados" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
-          <mxGeometry x="660" y="740" width="1150" height="45" as="geometry" />
+          <mxGeometry x="660" y="1005" width="1150" height="45" as="geometry" />
         </mxCell>
-        <mxCell id="db" value="&lt;b&gt;PostgreSQL 18&lt;/b&gt;&lt;br/&gt;Persistência + migrações Flyway" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=18;" vertex="1" parent="1">
-          <mxGeometry x="1050" y="940" width="420" height="120" as="geometry" />
+        <mxCell id="db" value="&lt;b&gt;PostgreSQL 18&lt;/b&gt;&lt;br/&gt;Persistência + migrações Flyway (V1–V15)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=18;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="1180" width="420" height="120" as="geometry" />
         </mxCell>
-        <mxCell id="edge-4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;endArrow=open;" edge="1" parent="1" source="web" target="api">
+        <mxCell id="edge-4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;endArrow=open;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.398;entryDx=0;entryDy=0;" edge="1" parent="1" source="web" target="api">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
         <mxCell id="http-note" value="HTTP/JSON REST&lt;br/&gt;Authorization: Bearer JWT" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;align=center;" vertex="1" parent="1">
@@ -86,20 +104,23 @@
         <mxCell id="edge-8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;endArrow=open;" edge="1" parent="1" source="coordinator" target="web">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="participant" value="Participante" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=16;" vertex="1" parent="1">
-          <mxGeometry x="105" y="930" width="40" height="65" as="geometry" />
+        <mxCell id="participant" value="Participante&lt;br/&gt;(candidato)" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="105" y="890" width="40" height="65" as="geometry" />
         </mxCell>
-        <mxCell id="mobile" value="&lt;b&gt;Aplicativo Mobile&lt;/b&gt;&lt;br/&gt;React Native / Expo Router&lt;br/&gt;Início ↔ Estudos (provisório)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;dashed=1;" vertex="1" parent="1">
-          <mxGeometry x="275" y="900" width="245" height="145" as="geometry" />
+        <mxCell id="mobile" value="&lt;b&gt;Aplicativo Mobile&lt;/b&gt;&lt;br/&gt;React Native / Expo Router&lt;br/&gt;Login, ativação, convites e área do participante" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#000000;fontColor=#000000;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry x="275" y="850" width="245" height="145" as="geometry" />
         </mxCell>
         <mxCell id="edge-9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;endArrow=open;" edge="1" parent="1" source="participant" target="mobile">
           <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="mobile-api-note" value="Cliente HTTP genérico preparado.&lt;br/&gt;Integração de negócio e login mobile: Sprint 3.&lt;br/&gt;Nenhum cliente acessa o banco diretamente." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="560" y="920" width="400" height="110" as="geometry" />
+        <mxCell id="edge-10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;endArrow=none;strokeColor=#000000;fontColor=#000000;fontSize=15;labelBackgroundColor=#FFFFFF;endArrow=open;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.893;entryDx=0;entryDy=0;" edge="1" parent="1" source="mobile" target="api">
+          <mxGeometry relative="1" as="geometry" />
         </mxCell>
-        <mxCell id="deploy" value="Docker Compose executa banco e backend. Web e mobile possuem seus próprios processos de desenvolvimento.&lt;br/&gt;O backend é uma única aplicação implantável; os módulos não são microsserviços." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
-          <mxGeometry x="610" y="1090" width="1280" height="65" as="geometry" />
+        <mxCell id="mobile-api-note" value="HTTP/JSON REST + JWT&lt;br/&gt;/api/auth e /api/me" style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;align=center;" vertex="1" parent="1">
+          <mxGeometry x="275" y="1010" width="245" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="deploy" value="Docker Compose executa banco e backend. Web e mobile possuem seus próprios processos de desenvolvimento; nenhum cliente acessa o banco diretamente.&lt;br/&gt;O backend é uma única aplicação implantável; os módulos não são microsserviços." style="text;html=1;whiteSpace=wrap;align=left;verticalAlign=middle;fontColor=#000000;fontSize=15;" vertex="1" parent="1">
+          <mxGeometry x="610" y="1330" width="1280" height="65" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>
