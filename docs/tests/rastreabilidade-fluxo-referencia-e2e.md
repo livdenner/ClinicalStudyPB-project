@@ -15,7 +15,7 @@ A suíte [`reference-flow.spec.ts`](../../web/e2e/flows/reference-flow.spec.ts) 
 
 | Identificador | Cenário | Etapas pela web (cada uma é um `test.step`) | Requisitos |
 | --- | --- | --- | --- |
-| E2E-REF-01 | `coordenador inclui o participante, agenda a visita e registra que foi realizada` | Em **Recrutamento**, a linha do candidato mostra "Aceitou". O coordenador inclui o participante e ele aparece no painel. Pelo botão **Agendar visita** do painel, agenda a "Avaliação inicial" para 20/02/2027 09:00 (Fortaleza), e a agenda mostra "Agendada". Em **Visitas**, registra **Realizada** com confirmação, e o selo passa a "Realizada". Depois de recarregar a página, a situação continua "Realizada" e a ação de desfecho não aparece mais. | RF11, RF12 e RF13 |
+| E2E-REF-01 | `coordenador inclui o participante, agenda a visita e registra que foi realizada` | Em **Recrutamento**, o card do candidato mostra "Aceitou". O coordenador inclui o participante e o card dele aparece no painel de participantes. Pelo botão **Agendar visita** do painel, agenda a "Avaliação inicial" para 20/02/2027 09:00 (Fortaleza), e a agenda mostra "Agendada". Em **Visitas**, registra **Realizada** com confirmação, e o selo passa a "Realizada". Depois de recarregar a página, a situação continua "Realizada" e a ação de desfecho não aparece mais. | RF11, RF12 e RF13 |
 | E2E-REF-02 | `agendar a mesma visita duas vezes mostra o erro da API` | O participante foi incluído e a visita foi agendada pela API. Pela web, a mesma visita prevista é agendada de novo. O modal mostra a mensagem da API ("Já existe um agendamento ativo ou concluído desta visita para o participante.", `409 VISIT_ALREADY_SCHEDULED`), continua aberto com os dados e a API segue com um único agendamento. | RF12 |
 
 O fluxo **cadastrar estudo → incluir → agendar** fica demonstrável assim:
@@ -44,6 +44,18 @@ Na CI, o job **E2E Web (Playwright)** roda em todos os PRs e pushes para a `deve
 - **Relatório HTML:** com as capturas anexadas, fica no artefato `playwright-report` (`web/playwright-report` e `web/test-results`).
 - **JSON:** artefato `resultados-e2e`. Alimenta o registro por teste em [docs/test-ci](../test-ci/README.md).
 
-## Resultado local
+## Seletores e layout atual
 
-A [suíte E2E completa](../test-runs/2026-11-20_02-48_T19-5_e2e-completa.md) aprovou 11 testes em 46 s com `--workers=1`, sem novas tentativas. Os dois cenários desta suíte levaram 8,4 s e 7,0 s. O teste ignorado é o do PBI-17, que continua em `test.fixme` nesta base até o PR #106 entrar.
+Desde o PR #101 (T24.3), candidatos e participantes aparecem em cards. O spec localiza:
+
+- **Candidato:** o card em `getByRole("list", { name: "Lista de candidatos" }).getByRole("listitem").filter({ hasText: nome })`.
+- **Participante incluído:** o título do card em `getByRole("list", { name: "Lista de participantes incluídos" })`.
+- **Visitas:** a agenda do participante e a lista de **Visitas** continuam em tabela, então seguem localizadas por `row`.
+
+## Resultado
+
+| Execução | Base | Resultado |
+| --- | --- | --- |
+| [Local, 23/11/2026 01:11](../test-runs/2026-11-23_01-11_T19-5_e2e-fluxo-referencia.md) | `development` (`008dabb`) + `ea5c423` | Os dois cenários passaram (65,6 s e 13,0 s). As capturas da release foram geradas de novo nesta execução. |
+| [CI, E2E Web (Playwright)](../test-ci/pull-requests/108/2026-11-23_00-50_ea5c423.md) | mesmo commit `ea5c423` | Os dois cenários passaram (3,4 s e 2,6 s); 21 de 22 testes E2E passaram. O ignorado é o do PBI-17 (`full-recruitment.spec.ts`), em `test.fixme` até o PR #106 entrar. |
+| [Local, 20/11/2026](../test-runs/2026-11-20_02-48_T19-5_e2e-completa.md) | `feat/visit-outcomes-t19-3` (PR #100), antes dos cards | 11 testes passaram em 46 s com `--workers=1`. Os dois cenários desta suíte levaram 8,4 s e 7,0 s. Substituída pelas execuções acima. |
