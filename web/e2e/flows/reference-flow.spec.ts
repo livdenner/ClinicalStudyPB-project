@@ -45,8 +45,12 @@ async function openRecruitment(page: Page, studyId: number) {
     await expect(page.getByRole("button", { name: "Novo candidato" })).toBeEnabled();
 }
 
-function candidateRow(page: Page, name: string) {
-    return page.getByRole("row").filter({ hasText: name });
+/** Card do candidato na lista em cards da tela de recrutamento (T24.3). */
+function candidateCard(page: Page, name: string) {
+    return page
+        .getByRole("list", { name: "Lista de candidatos" })
+        .getByRole("listitem")
+        .filter({ hasText: name });
 }
 
 /** A partir do painel de participantes do recrutamento, abre a agenda já com o agendamento. */
@@ -78,7 +82,7 @@ test.describe("fluxo de referência: incluir, agendar e registrar desfecho", () 
 
         await test.step("coordenador inclui o participante", async () => {
             await openRecruitment(page, ready.studyId);
-            await expect(candidateRow(page, ready.candidateName)).toContainText("Aceitou");
+            await expect(candidateCard(page, ready.candidateName)).toContainText("Aceitou");
             await capture(page, testInfo, "01-candidato-aceitou");
 
             await page
@@ -90,10 +94,12 @@ test.describe("fluxo de referência: incluir, agendar e registrar desfecho", () 
             await expect(
                 page.getByText("Participante incluído no estudo com sucesso.")
             ).toBeVisible();
-            const participants = page.getByRole("grid", {
+            const participants = page.getByRole("list", {
                 name: "Lista de participantes incluídos",
             });
-            await expect(participants.getByText(ready.candidateName)).toBeVisible();
+            await expect(
+                participants.getByRole("heading", { name: ready.candidateName })
+            ).toBeVisible();
             await capture(page, testInfo, "02-participante-incluido");
         });
 
