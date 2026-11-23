@@ -252,7 +252,7 @@ function DetalhesEstudo({
             >
                 <Tabs.List
                     aria-label="Seções do estudo"
-                    className="mb-5 w-full min-w-0 gap-5 overflow-x-auto border-b border-[var(--color-border)] p-0"
+                    className="mb-5 w-full min-w-0 gap-5 overflow-x-auto max-[760px]:grid max-[760px]:grid-cols-2 max-[760px]:overflow-visible border-b border-[var(--color-border)] p-0"
                 >
                     <Tabs.Tab
                         id="visao-geral"
@@ -341,8 +341,9 @@ function DetalhesEstudo({
                 >
                     <ParticipantesEstudo
                         key={`${estudo.id}:${token}`}
-                        estudoId={estudo.id}
+                        estudo={estudo}
                         token={token}
+                        perfil={pesquisador.role}
                     />
                 </Tabs.Panel>
             </Tabs>

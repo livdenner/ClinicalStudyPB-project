@@ -1,20 +1,34 @@
+import { criarAcaoRetirada } from "../participantes/AcaoRegistrarRetirada";
+import type { UserRole } from "../../types/auth";
+import type { EstudoApi } from "../../types/estudo";
+import { CardsParticipantes } from "./CardsParticipantes";
+import { TabelaParticipantes } from "./TabelaParticipantes";
+import { useTelaEstreita } from "../../hooks/useTelaEstreita";
 import { useEffect, useState } from "react";
-import { Button, Chip, Spinner } from "@heroui/react";
+import { Button, Spinner } from "@heroui/react";
 import { BotaoAtualizar } from "../ui/BotaoAtualizar";
 import { listarParticipantesPorEstudo } from "../../services/participantes";
 import type { ParticipanteApi } from "../../types/participante";
 import { obterMensagemErroApi } from "../../utils/erros-api";
 import { ErrorMessage } from "../ui/ErrorMessage";
 
-export function ParticipantesEstudo({ estudoId, token }: { estudoId: number; token: string }) {
+type Props = {
+    estudo: Pick<EstudoApi, "id" | "title" | "status">;
+    token: string;
+    perfil: UserRole;
+};
+
+export function ParticipantesEstudo({ estudo, token, perfil }: Props) {
+    const telaEstreita = useTelaEstreita();
     const [participantes, setParticipantes] = useState<ParticipanteApi[]>([]);
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState("");
     const [tentativa, setTentativa] = useState(0);
+    const [mensagem, setMensagem] = useState("");
 
     useEffect(() => {
         const controller = new AbortController();
-        listarParticipantesPorEstudo(estudoId, token, controller.signal)
+        listarParticipantesPorEstudo(estudo.id, token, controller.signal)
             .then((dados) => {
                 if (!controller.signal.aborted) setParticipantes(dados);
             })
@@ -29,7 +43,7 @@ export function ParticipantesEstudo({ estudoId, token }: { estudoId: number; tok
                 if (!controller.signal.aborted) setCarregando(false);
             });
         return () => controller.abort();
-    }, [estudoId, token, tentativa]);
+    }, [estudo.id, token, tentativa]);
 
     function atualizar() {
         setCarregando(true);
@@ -37,13 +51,28 @@ export function ParticipantesEstudo({ estudoId, token }: { estudoId: number; tok
         setTentativa((atual) => atual + 1);
     }
 
+    function atualizarParticipante(atualizado: ParticipanteApi) {
+        setParticipantes((atuais) =>
+            atuais.map((item) => (item.id === atualizado.id ? atualizado : item))
+        );
+        setMensagem("Retirada registrada com sucesso.");
+    }
+
+    const acoes = criarAcaoRetirada({
+        perfil,
+        estadoEstudo: estudo.status,
+        estudoTitulo: estudo.title,
+        token,
+        onRetiradaRegistrada: atualizarParticipante,
+    });
+
     return (
         <section aria-labelledby="participantes-estudo-heading" className="flex flex-col gap-4">
             <header className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <h2
                         id="participantes-estudo-heading"
-                        className="text-lg font-semibold text-[var(--color-title)]"
+                        className="text-lg font-semibold text-[var(--color-title)] [overflow-wrap:anywhere]"
                     >
                         Participantes do estudo
                     </h2>
@@ -57,6 +86,14 @@ export function ParticipantesEstudo({ estudoId, token }: { estudoId: number; tok
                     onAtualizar={atualizar}
                 />
             </header>
+            {mensagem && (
+                <p
+                    role="status"
+                    className="rounded-lg bg-[var(--color-success-soft)] p-3 text-sm text-[var(--color-success)]"
+                >
+                    {mensagem}
+                </p>
+            )}
             {carregando ? (
                 <div role="status" className="flex items-center justify-center gap-3 p-8">
                     <Spinner size="sm" aria-hidden="true" /> Carregando participantes...
@@ -70,80 +107,21 @@ export function ParticipantesEstudo({ estudoId, token }: { estudoId: number; tok
                 </div>
             ) : participantes.length === 0 ? (
                 <div className="rounded-xl border border-[var(--color-border)] bg-white p-8 text-center">
-                    <p className="font-semibold text-[var(--color-title)]">
+                    <p className="font-semibold text-[var(--color-title)] [overflow-wrap:anywhere]">
                         Nenhum participante incluído
                     </p>
                     <p className="mt-2 text-sm text-[var(--color-muted)]">
                         Os candidatos aparecerão aqui após a inclusão pelo recrutamento.
                     </p>
                 </div>
+            ) : telaEstreita ? (
+                <CardsParticipantes
+                    participantes={participantes}
+                    contexto="situacao"
+                    acoes={acoes}
+                />
             ) : (
-                <div className="overflow-x-auto rounded-xl border border-[var(--color-border)] bg-white">
-                    <table
-                        aria-label="Participantes do estudo"
-                        className="w-full min-w-[520px] text-left text-sm"
-                    >
-                        <thead className="bg-[var(--color-neutral-soft)] text-[var(--color-neutral)]">
-                            <tr>
-                                {["Nome", "Data de inclusão", "Situação"].map((coluna) => (
-                                    <th
-                                        key={coluna}
-                                        scope="col"
-                                        className="px-5 py-3 font-semibold"
-                                    >
-                                        {coluna}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {participantes.map((participante) => {
-                                const data = new Date(participante.includedAt);
-                                const ativo = participante.status === "ACTIVE";
-                                return (
-                                    <tr
-                                        key={participante.id}
-                                        className="border-t border-[var(--color-border)] hover:bg-[var(--color-row-hover)]"
-                                    >
-                                        <th
-                                            scope="row"
-                                            className="px-5 py-4 font-semibold text-[var(--color-title)]"
-                                        >
-                                            {participante.candidateName}
-                                        </th>
-                                        <td className="px-5 py-4 text-[var(--color-text)]">
-                                            {Number.isNaN(data.getTime())
-                                                ? "—"
-                                                : data.toLocaleString("pt-BR", {
-                                                      dateStyle: "short",
-                                                      timeStyle: "short",
-                                                  })}
-                                        </td>
-                                        <td className="px-5 py-4">
-                                            <Chip
-                                                size="sm"
-                                                variant="soft"
-                                                className={
-                                                    ativo
-                                                        ? "bg-[var(--color-info-soft)] text-[var(--color-info)]"
-                                                        : "bg-[var(--color-neutral-soft)] text-[var(--color-neutral)]"
-                                                }
-                                            >
-                                                <Chip.Label>
-                                                    {ativo
-                                                        ? "Ativo"
-                                                        : participante.status === "WITHDRAWN"
-                                                          ? "Retirado"
-                                                          : "Situação indisponível"}
-                                                </Chip.Label>
-                                            </Chip>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
+                <TabelaParticipantes participantes={participantes} acoes={acoes} />
             )}
         </section>
     );

@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { Button, Modal } from "@heroui/react";
+import { useTelaEstreita } from "../../hooks/useTelaEstreita";
 import {
     CalendarDays,
     ChartNoAxesCombined,
@@ -5,6 +8,8 @@ import {
     LayoutDashboard,
     LogIn,
     LogOut,
+    Menu,
+    X,
     UserRoundCheck,
     UsersRound,
     type LucideIcon,
@@ -25,17 +30,20 @@ const navigationIcons: Record<NavigationIcon, LucideIcon> = {
 };
 
 export function Sidebar() {
+    const telaEstreita = useTelaEstreita();
+    const [menuAberto, setMenuAberto] = useState(false);
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const visibleNavigationItems = getNavigationItemsForRole(user?.role);
 
     async function handleLogout() {
+        setMenuAberto(false);
         await logout();
         navigate("/login", { replace: true });
     }
 
-    return (
-        <aside className="fixed inset-y-0 left-0 z-30 flex w-[252px] flex-col border-r border-[var(--color-sidebar-border)] bg-[var(--color-sidebar)] text-[var(--color-sidebar-text)] px-4 pt-[21px] pb-4">
+    const conteudo = (
+        <>
             <div className="flex min-h-9 items-center px-1.5">
                 <img
                     src={logo}
@@ -53,6 +61,7 @@ export function Sidebar() {
                             key={item.path}
                             to={item.path}
                             end={item.path === "/dashboard"}
+                            onClick={() => setMenuAberto(false)}
                             className={({ isActive }) =>
                                 `flex min-h-[43px] items-center gap-[13px] rounded-[10px] px-[13px] text-[13px] no-underline transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--color-sidebar-text)] ${
                                     isActive
@@ -61,20 +70,12 @@ export function Sidebar() {
                                 }`
                             }
                         >
-                            {({ isActive }) => (
-                                <>
-                                    <Icon
-                                        aria-hidden="true"
-                                        className={`h-5 w-5 shrink-0 ${
-                                            isActive
-                                                ? "text-[var(--color-sidebar-selected-text)]"
-                                                : "text-[var(--color-sidebar-muted)]"
-                                        }`}
-                                        strokeWidth={1.7}
-                                    />
-                                    <span>{item.label}</span>
-                                </>
-                            )}
+                            <Icon
+                                aria-hidden="true"
+                                className="h-5 w-5 shrink-0"
+                                strokeWidth={1.7}
+                            />
+                            <span>{item.label}</span>
                         </NavLink>
                     );
                 })}
@@ -119,6 +120,60 @@ export function Sidebar() {
                     </NavLink>
                 )}
             </div>
+        </>
+    );
+    if (telaEstreita) {
+        return (
+            <>
+                <header className="navegacao-celular">
+                    <Button
+                        isIconOnly
+                        variant="ghost"
+                        aria-label="Abrir menu de navegação"
+                        aria-expanded={menuAberto}
+                        onPress={() => setMenuAberto(true)}
+                        className="size-11 text-[var(--color-sidebar-text)]"
+                    >
+                        <Menu size={24} aria-hidden="true" />
+                    </Button>
+                    <img
+                        src={logo}
+                        alt="ClinicalStudyPB"
+                        className="h-9 w-[172px] object-contain"
+                    />
+                </header>
+                <Modal>
+                    <Modal.Backdrop isOpen={menuAberto} onOpenChange={setMenuAberto}>
+                        <Modal.Container
+                            placement="center"
+                            className="items-stretch justify-start p-0"
+                        >
+                            <Modal.Dialog className="menu-celular">
+                                <div className="flex items-center justify-end">
+                                    <Modal.Heading className="sr-only">
+                                        Menu de navegação
+                                    </Modal.Heading>
+                                    <Button
+                                        isIconOnly
+                                        variant="ghost"
+                                        aria-label="Fechar menu de navegação"
+                                        onPress={() => setMenuAberto(false)}
+                                        className="size-11 text-[var(--color-sidebar-text)]"
+                                    >
+                                        <X size={24} aria-hidden="true" />
+                                    </Button>
+                                </div>
+                                <div className="menu-celular__conteudo">{conteudo}</div>
+                            </Modal.Dialog>
+                        </Modal.Container>
+                    </Modal.Backdrop>
+                </Modal>
+            </>
+        );
+    }
+    return (
+        <aside className="fixed inset-y-0 left-0 z-30 flex w-[252px] flex-col border-r border-[var(--color-sidebar-border)] bg-[var(--color-sidebar)] text-[var(--color-sidebar-text)] px-4 pt-[21px] pb-4">
+            {conteudo}
         </aside>
     );
 }
