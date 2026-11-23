@@ -992,3 +992,121 @@ describe("RF08 — andamento e cancelamento (T17.8)", () => {
         expect(http.mock.calls.some(([url]) => String(url).includes("/consent"))).toBe(false);
     });
 });
+
+const candidatoIncluidoRetirada: CandidatoApi = {
+    ...candidatoAceitou,
+    status: "INCLUDED",
+};
+it("T22.3: registra retirada, oculta Agendar e mantém histórico e vaga ocupada", async () => {
+    const participante = {
+        id: 501,
+        studyId: 10,
+        candidateId: candidatoIncluidoRetirada.id,
+        candidateName: candidatoIncluidoRetirada.name,
+        includedAt: "2026-11-09T12:00:00Z",
+        status: "ACTIVE",
+    };
+    const retirado = {
+        ...participante,
+        status: "WITHDRAWN",
+        withdrawal: {
+            reason: "Desistência",
+            withdrawnAt: "2026-11-19T12:00:00Z",
+            withdrawnByUserId: 9,
+            cancelledVisitCount: 1,
+        },
+    };
+    const fetchMock = mockApiPorRota({
+        ...rotasDoEstudo([candidatoIncluidoRetirada]),
+        "GET /api/studies/10/participants": resposta([participante]),
+        "POST /api/studies/10/participants/501/withdrawal": resposta(retirado),
+    });
+    renderPage();
+    expect(
+        await screen.findByRole("button", {
+            name: `Agendar visita: ${candidatoIncluidoRetirada.name}`,
+        })
+    ).toBeInTheDocument();
+    expect(
+        screen.getByRole("button", { name: `Ver visitas: ${candidatoIncluidoRetirada.name}` })
+    ).toBeInTheDocument();
+    fireEvent.click(
+        await screen.findByRole("button", {
+            name: `Registrar retirada: ${candidatoIncluidoRetirada.name}`,
+        })
+    );
+    fireEvent.change(screen.getByRole("textbox", { name: "Motivo da retirada" }), {
+        target: { value: "  Desistência  " },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Confirmar retirada" }));
+    expect(await screen.findByText("Retirado")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Registrar retirada:/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Agendar visita:/ })).not.toBeInTheDocument();
+    expect(
+        screen.getByRole("button", { name: `Ver visitas: ${candidatoIncluidoRetirada.name}` })
+    ).toBeInTheDocument();
+    expect(
+        screen.queryByRole("button", { name: /^Incluir participante:/ })
+    ).not.toBeInTheDocument();
+    const indicador = screen.getByRole("status", { name: "Indicador de vagas do estudo" });
+    expect(indicador).toHaveTextContent("1 de 50");
+    expect(indicador).toHaveTextContent("49 vagas");
+    const lista = screen.getByRole("list", { name: "Lista de participantes incluídos" });
+    expect(within(lista).getByText(candidatoIncluidoRetirada.name)).toBeInTheDocument();
+    expect(
+        fetchMock.mock.calls.filter(
+            ([input, options]) =>
+                String(input) === "/api/studies/10/participants" && !options?.method
+        )
+    ).toHaveLength(1);
+    const envio = fetchMock.mock.calls.find(([_input, options]) => options?.method === "POST");
+    expect(envio?.[0]).toBe("/api/studies/10/participants/501/withdrawal");
+    expect(JSON.parse(String(envio?.[1]?.body))).toEqual({ reason: "Desistência" });
+});
+
+it("T22.3: mantém o participante ativo e mostra o erro da API no modal", async () => {
+    const participante = {
+        id: 501,
+        studyId: 10,
+        candidateId: candidatoIncluidoRetirada.id,
+        candidateName: candidatoIncluidoRetirada.name,
+        includedAt: "2026-11-09T12:00:00Z",
+        status: "ACTIVE",
+    };
+    mockApiPorRota({
+        ...rotasDoEstudo([candidatoIncluidoRetirada]),
+        "GET /api/studies/10/participants": resposta([participante]),
+        "POST /api/studies/10/participants/501/withdrawal": resposta(
+            {
+                detail: "O estudo está encerrado ou cancelado e não aceita retiradas.",
+                code: "STUDY_READ_ONLY",
+            },
+            409
+        ),
+    });
+    renderPage();
+    fireEvent.click(
+        await screen.findByRole("button", {
+            name: `Registrar retirada: ${candidatoIncluidoRetirada.name}`,
+        })
+    );
+    fireEvent.change(screen.getByRole("textbox", { name: "Motivo da retirada" }), {
+        target: { value: "Desistência" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Confirmar retirada" }));
+    const modal = screen.getByRole("dialog", { name: "Registrar retirada" });
+    expect(await within(modal).findByRole("alert")).toHaveTextContent(
+        "O estudo está encerrado ou cancelado e não aceita retiradas."
+    );
+    fireEvent.click(within(modal).getByRole("button", { name: "Voltar" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(
+        screen.getByRole("button", {
+            name: `Registrar retirada: ${candidatoIncluidoRetirada.name}`,
+        })
+    ).toBeInTheDocument();
+    expect(screen.getByText("Ativo")).toBeInTheDocument();
+    expect(
+        screen.getByRole("button", { name: `Agendar visita: ${candidatoIncluidoRetirada.name}` })
+    ).toBeInTheDocument();
+});

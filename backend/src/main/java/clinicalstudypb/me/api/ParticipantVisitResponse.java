@@ -3,9 +3,11 @@ package clinicalstudypb.me.api;
 import clinicalstudypb.me.application.ParticipantVisitView;
 import clinicalstudypb.scheduling.domain.ScheduledVisit;
 import clinicalstudypb.scheduling.domain.ScheduledVisitStatus;
+import clinicalstudypb.visits.api.PlannedActivityResponse;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
+import java.util.List;
 
 /**
  * Visita agendada da conta autenticada, como o app exibe (RF18).
@@ -20,13 +22,15 @@ import java.time.Instant;
  * @param status situação da visita
  * @param outcomeAt instante do desfecho; omitido enquanto a visita está agendada
  * @param cancellationReason justificativa do cancelamento; presente só em visitas canceladas
+ * @param activities atividades previstas da visita na ordem do protocolo
  * @author Allan Guilherme
  * @since 2026-11-17
  * @version 0.0.1
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(name = "ParticipantVisit", requiredProperties = {
-    "id", "studyId", "studyTitle", "participantId", "plannedVisitId", "plannedVisitName", "scheduledAt", "status"
+    "id", "studyId", "studyTitle", "participantId", "plannedVisitId", "plannedVisitName",
+    "scheduledAt", "status", "activities"
 })
 public record ParticipantVisitResponse(
         Long id,
@@ -38,7 +42,15 @@ public record ParticipantVisitResponse(
         Instant scheduledAt,
         ScheduledVisitStatus status,
         Instant outcomeAt,
-        String cancellationReason) {
+        String cancellationReason,
+        List<PlannedActivityResponse> activities) {
+
+    /**
+     * Garante array não nulo de atividades previstas no contrato da API.
+     */
+    public ParticipantVisitResponse {
+        activities = activities == null ? List.of() : List.copyOf(activities);
+    }
 
     /**
      * Converte a visita no payload do contrato. Observações de visitas realizadas ou de ausência
@@ -62,6 +74,7 @@ public record ParticipantVisitResponse(
                 visit.getScheduledAt(),
                 visit.getStatus(),
                 visit.getOutcomeAt(),
-                cancellationReason);
+                cancellationReason,
+                view.activities());
     }
 }
