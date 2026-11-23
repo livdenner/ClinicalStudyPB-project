@@ -19,7 +19,7 @@ Consulte as [entregas, evidências e pendências da Release 1](releases/release1
 
 O backend é um **monólito modular em camadas**, executado como uma aplicação Spring Boot. Os módulos `auth`, `users`, `studies`, `criteria`, `visits`, `candidates`, `consent` e `participants` separam `api`, `application`, `domain` e `infrastructure`. `shared` reúne autenticação HTTP, configurações e tratamento de erros comuns. Integrações entre módulos usam os serviços públicos; cada módulo mantém sua persistência interna.
 
-A web chama a API REST com JWT; somente o backend acessa o PostgreSQL. O Flyway versiona o esquema e o Hibernate valida seu mapeamento. O mobile da Release 1 navega entre duas telas iniciais; a integração de login pertence à Sprint 3.
+A web e o aplicativo mobile chamam a API REST com JWT; somente o backend acessa o PostgreSQL. O Flyway versiona o esquema (V1–V15) e o Hibernate valida seu mapeamento. O mobile integra login, ativação por código, troca obrigatória de senha, convites com decisão de consentimento, estudos e visitas do participante pelas rotas `/api/auth` e `/api/me`.
 
 | Diagrama        | Visualização no GitHub                                                                                            | Fonte editável                               | PDF                                                  |
 | --------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------- |
@@ -193,8 +193,8 @@ O roteiro abaixo usa apenas a carga, sem preparar dados à mão. Onde a tela ain
 | Passo | Conta | Onde | O que fazer e conferir |
 | --- | --- | --- | --- |
 | 1 | Coordenador | Web, **Recrutamento** | Na vacina, confira as situações Convidado, Aceitou, Recusou, Aguardando decisão e Incluído. Em **Higiene do sono**, inclua Vera ou Wilson na última vaga. A segunda inclusão é recusada por falta de vaga. |
-| 2 | `convite@…` | Aplicativo (primeiro acesso) e Swagger | No app, faça o primeiro acesso com o código `CONVITE-DEMO-2026` e defina a senha. No Swagger, use `GET /api/me/invitations` e `POST /api/me/invitations/{candidateId}/decision`. Na web, use **Atualizar lista** e veja a nova situação. |
-| 3 | `participante@…` | Swagger (telas do app em andamento) | `GET /api/me/studies` mostra o estudo de diabetes (RF17). `GET /api/me/visits` mostra uma visita próxima e uma realizada (RF18). `POST /api/me/invitations/{candidateId}/decision` decide o convite da vacina. |
+| 2 | `convite@…` | Aplicativo (ou Swagger) | No app, faça o primeiro acesso com o código `CONVITE-DEMO-2026`, defina a senha e decida o convite em **Ver convites** (pela API, `GET /api/me/invitations` e `POST /api/me/invitations/{candidateId}/decision`). Na web, use **Atualizar lista** e veja a nova situação. |
+| 3 | `participante@…` | Aplicativo (ou Swagger) | No app, abra **Ver estudos** (estudo de diabetes, RF17), **Ver visitas** (uma visita em **Próximas** e uma em **Histórico**, RF18) e **Ver convites** (convite da vacina, RF10); passo a passo em [mobile/README.md](mobile/README.md#roteiro-de-demonstração). Pela API, os endpoints equivalentes são `GET /api/me/studies`, `GET /api/me/visits` e `POST /api/me/invitations/{candidateId}/decision`. |
 | 4 | Coordenador | Web, **Visitas** | No estudo de diabetes, filtre por **Situação** e confira os quatro desfechos. Registre o desfecho da visita remarcada de João. A visita de Lúcia aparece cancelada pela retirada. Pela API, o mesmo filtro é `GET /api/studies/{studyId}/visits?status=…`, e o registro é `POST …/visits/{visitId}/outcome` com `If-Match`. |
 | 5 | Pesquisador | Web, **Visitas** | Em **Ver resultados**, confira os resultados da avaliação inicial de Irene. Em **Registrar resultados**, registre os da visita realizada no passo 4. Pela API, são `GET …/visits/{visitId}/results` e `PUT …/results/{activityId}`. |
 
