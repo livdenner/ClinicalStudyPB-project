@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from 'react-native';
 
 import { colors, radii, spacing } from '../theme/colors';
 
-export type BannerTone = 'error' | 'warning' | 'info' | 'success';
+export type BannerTone = 'error' | 'warning' | 'info' | 'success' | 'neutral';
 
 interface MessageBannerProps {
   tone: BannerTone;
@@ -14,6 +14,7 @@ const symbols: Record<BannerTone, string> = {
   warning: '!',
   info: 'i',
   success: '✓',
+  neutral: '•',
 };
 
 const backgrounds: Record<BannerTone, string> = {
@@ -21,6 +22,7 @@ const backgrounds: Record<BannerTone, string> = {
   warning: colors.warningSoft,
   info: colors.infoSoft,
   success: colors.successSoft,
+  neutral: colors.neutralSoft,
 };
 
 const textColors: Record<BannerTone, string> = {
@@ -28,6 +30,7 @@ const textColors: Record<BannerTone, string> = {
   warning: colors.warning,
   info: colors.info,
   success: colors.success,
+  neutral: colors.textMuted,
 };
 
 /**

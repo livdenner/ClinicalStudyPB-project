@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, within } from "@testing-library/rea
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ParticipanteApi } from "../../types/participante";
 import { PainelParticipantesVagas } from "./PainelParticipantesVagas";
+import { criarAcaoRetirada } from "../participantes/AcaoRegistrarRetirada";
 
 function participante(id: number, nome: string): ParticipanteApi {
     return {
@@ -97,5 +98,114 @@ describe("Participantes e vagas (RF11)", () => {
         fireEvent.click(screen.getByRole("button", { name: "Tentar novamente" }));
 
         expect(onTentarNovamente).toHaveBeenCalledTimes(1);
+    });
+});
+
+/** Acesso à agenda de participantes incluídos conforme RF12. @author Lívia */
+describe("RF12 — ações da agenda no painel (T18.5)", () => {
+    it("T21.2/T22.3: reúne quatro ações e preserva as duas consultas para retirados", () => {
+        const onVerVisitas = vi.fn();
+        const onVerHistorico = vi.fn();
+        const onAgendarVisita = vi.fn();
+        const ativo = participante(1, "Pessoa fictícia ativa");
+        const retirado = {
+            ...participante(2, "Pessoa fictícia retirada"),
+            status: "WITHDRAWN" as const,
+        };
+        renderPainel({
+            participantes: [ativo, retirado],
+            onVerVisitas,
+            onVerHistorico,
+            onAgendarVisita,
+            acoes: criarAcaoRetirada({
+                perfil: "COORDINATOR",
+                estadoEstudo: "RECRUITMENT",
+                estudoTitulo: "Estudo fictício",
+                token: "token-teste",
+                onRetiradaRegistrada: vi.fn(),
+            }),
+        });
+        const cardAtivo = screen.getByText(ativo.candidateName).closest("li")!;
+        expect(within(cardAtivo).getAllByRole("button")).toHaveLength(4);
+        fireEvent.click(
+            within(cardAtivo).getByRole("button", { name: `Ver histórico: ${ativo.candidateName}` })
+        );
+        expect(onVerHistorico).toHaveBeenCalledExactlyOnceWith(ativo);
+        expect(
+            within(cardAtivo).getByRole("button", {
+                name: `Registrar retirada: ${ativo.candidateName}`,
+            })
+        ).toBeInTheDocument();
+        fireEvent.click(
+            within(cardAtivo).getByRole("button", {
+                name: `Agendar visita: ${ativo.candidateName}`,
+            })
+        );
+        expect(onAgendarVisita).toHaveBeenCalledExactlyOnceWith(ativo);
+        const cardRetirado = screen.getByText(retirado.candidateName).closest("li")!;
+        expect(within(cardRetirado).getAllByRole("button")).toHaveLength(2);
+        expect(
+            within(cardRetirado).queryByRole("button", {
+                name: /Registrar retirada:|Agendar visita:/,
+            })
+        ).not.toBeInTheDocument();
+        fireEvent.click(
+            within(cardRetirado).getByRole("button", {
+                name: `Ver histórico: ${retirado.candidateName}`,
+            })
+        );
+        expect(onVerHistorico).toHaveBeenLastCalledWith(retirado);
+        fireEvent.click(
+            within(cardRetirado).getByRole("button", {
+                name: `Ver visitas: ${retirado.candidateName}`,
+            })
+        );
+        expect(onVerVisitas).toHaveBeenCalledExactlyOnceWith(retirado);
+    });
+
+    it("RF12-PV01: participante ativo oferece agendamento para o participante selecionado", () => {
+        const onAgendarVisita = vi.fn();
+        renderPainel({
+            participantes: [participante(1, "Pessoa fictícia ativa")],
+            onAgendarVisita,
+        });
+        fireEvent.click(
+            screen.getByRole("button", { name: "Agendar visita: Pessoa fictícia ativa" })
+        );
+        expect(onAgendarVisita).toHaveBeenCalledExactlyOnceWith(
+            expect.objectContaining({ id: 1, studyId: 10, status: "ACTIVE" })
+        );
+    });
+
+    it("RF12-PV02: participante retirado não recebe ação de agendar e mantém consulta do histórico", () => {
+        const onAgendarVisita = vi.fn();
+        const onVerVisitas = vi.fn();
+        renderPainel({
+            participantes: [
+                { ...participante(1, "Pessoa fictícia retirada"), status: "WITHDRAWN" },
+            ],
+            onAgendarVisita,
+            onVerVisitas,
+        });
+        expect(screen.getByText("Retirado")).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /Agendar visita:/ })).not.toBeInTheDocument();
+        fireEvent.click(
+            screen.getByRole("button", { name: "Ver visitas: Pessoa fictícia retirada" })
+        );
+        expect(onVerVisitas).toHaveBeenCalledExactlyOnceWith(
+            expect.objectContaining({ id: 1, status: "WITHDRAWN" })
+        );
+        expect(onAgendarVisita).not.toHaveBeenCalled();
+    });
+
+    it("RF12-PV03: ausência de autorização para agendar mantém somente a consulta", () => {
+        renderPainel({
+            participantes: [participante(1, "Pessoa fictícia em consulta")],
+            onVerVisitas: vi.fn(),
+        });
+        expect(
+            screen.getByRole("button", { name: "Ver visitas: Pessoa fictícia em consulta" })
+        ).toBeInTheDocument();
+        expect(screen.queryByRole("button", { name: /Agendar visita:/ })).not.toBeInTheDocument();
     });
 });

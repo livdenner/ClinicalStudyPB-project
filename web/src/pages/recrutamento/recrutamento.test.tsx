@@ -6,6 +6,7 @@ import { AUTH_STORAGE_KEY } from "../../services/auth";
 import type { UserRole } from "../../types/auth";
 import type { CandidatoApi, EstudoComStatusApi } from "../../types/candidato";
 import { RecrutamentoPage } from "./recrutamento";
+import { cadastroConvidado } from "../../test/fixtures/fluxos-web";
 
 const estudoRecrutamento: EstudoComStatusApi = {
     id: 10,
@@ -766,11 +767,237 @@ it("T24.3: preserva o cancelamento e a consulta de cancelados na lista de cards"
     expect(fetchMock.mock.calls.some(([url]) => String(url).includes("/consent"))).toBe(false);
 });
 
+/** Regressões do convite, cancelamento e filtro acrescentados na Sprint 3. @author Lívia */
+describe("RF08 — andamento e cancelamento (T17.8)", () => {
+    it("RF08-P05: cancelamento mantém filtro ativo e mostra o histórico retornado pela API", async () => {
+        const cancelado: CandidatoApi = {
+            ...candidatoPendente,
+            status: "CANCELLED",
+            cancellation: {
+                reason: "E-mail incorreto",
+                cancelledAt: "2026-11-21T12:00:00Z",
+                cancelledByUserId: 9,
+            },
+        };
+        const http = mockApiPorRota({
+            ...rotasDoEstudo([candidatoPendente]),
+            "GET /api/studies/10/candidates?includeCancelled=true": [
+                resposta([candidatoPendente]),
+                resposta([cancelado]),
+            ],
+            "POST /api/studies/10/candidates/101/cancellation": resposta(cancelado),
+        });
+        renderPage();
+        await screen.findByRole("list", { name: "Lista de candidatos" });
+        fireEvent.click(screen.getByRole("checkbox", { name: "Exibir candidaturas canceladas" }));
+        const lista = await screen.findByRole("list", { name: "Lista de candidatos" });
+        fireEvent.click(
+            await within(lista).findByRole("button", {
+                name: "Cancelar candidatura: Candidato 014",
+            })
+        );
+        const dialog = await screen.findByRole("dialog");
+        fireEvent.change(within(dialog).getByLabelText(/Motivo do cancelamento/), {
+            target: { value: "E-mail incorreto" },
+        });
+        fireEvent.click(within(dialog).getByRole("button", { name: "Confirmar cancelamento" }));
+        const atualizada = await screen.findByRole("list", { name: "Lista de candidatos" });
+        expect(await within(atualizada).findByText("Cancelado")).toBeInTheDocument();
+        expect(within(atualizada).getByText("Motivo: E-mail incorreto")).toBeInTheDocument();
+        expect(
+            screen.getByRole("checkbox", { name: "Exibir candidaturas canceladas" })
+        ).toBeChecked();
+        expect(
+            http.mock.calls.filter(
+                ([url]) => url === "/api/studies/10/candidates?includeCancelled=true"
+            )
+        ).toHaveLength(2);
+    });
+
+    it("RF08-P01: concluir convite remove o código da tela e não o grava em nenhum storage", async () => {
+        mockApiPorRota({
+            ...rotasDoEstudo([]),
+            "POST /api/studies/10/candidates": resposta(cadastroConvidado, 201),
+        });
+        renderPage();
+        await screen.findByText("Nenhum candidato encontrado");
+        fireEvent.click(screen.getByRole("button", { name: "Novo candidato" }));
+        const modal = await screen.findByRole("dialog", { name: "Novo candidato" });
+        for (const [label, value] of [
+            [/Nome do candidato/, "Pessoa fictícia"],
+            [/E-mail/, "pessoa@example.test"],
+            [/Telefone/, "83999990000"],
+            [/Idade/, "42"],
+        ] as const) {
+            fireEvent.change(within(modal).getByLabelText(label), { target: { value } });
+        }
+        fireEvent.click(within(modal).getByRole("button", { name: "Cadastrar candidato" }));
+        expect(await screen.findByLabelText("Código de ativação")).toHaveTextContent("DEMO-1234");
+        fireEvent.click(screen.getByRole("button", { name: "Concluir cadastro" }));
+        const lista = await screen.findByRole("list", { name: "Lista de candidatos" });
+        expect(await within(lista).findByText("Convidado")).toBeInTheDocument();
+        expect(screen.queryByText("DEMO-1234")).not.toBeInTheDocument();
+        for (const storage of [localStorage, sessionStorage]) {
+            for (let i = 0; i < storage.length; i++)
+                expect(storage.getItem(storage.key(i)!)).not.toContain("DEMO-1234");
+        }
+    });
+
+    it("RF08-P02: filtro de cancelados persiste ao atualizar e pode voltar à lista padrão", async () => {
+        const cancelado: CandidatoApi = {
+            ...candidatoPendente,
+            status: "CANCELLED",
+            cancellation: {
+                reason: "Cadastro corrigido",
+                cancelledAt: "2026-11-20T12:00:00Z",
+                cancelledByUserId: 9,
+            },
+        };
+        const http = mockApiPorRota({
+            ...rotasDoEstudo([]),
+            "GET /api/studies/10/candidates?includeCancelled=true": resposta([cancelado]),
+        });
+        renderPage();
+        expect(await screen.findByText("Nenhum candidato encontrado")).toBeInTheDocument();
+        const filtro = screen.getByRole("checkbox", { name: "Exibir candidaturas canceladas" });
+        expect(filtro).not.toBeChecked();
+        fireEvent.click(filtro);
+        expect(
+            await within(
+                await screen.findByRole("list", { name: "Lista de candidatos" })
+            ).findByText("Cancelado")
+        ).toBeInTheDocument();
+        fireEvent.click(screen.getByRole("button", { name: "Atualizar lista" }));
+        expect(
+            await within(
+                await screen.findByRole("list", { name: "Lista de candidatos" })
+            ).findByText("Motivo: Cadastro corrigido")
+        ).toBeInTheDocument();
+        expect(filtro).toBeChecked();
+        expect(
+            http.mock.calls.filter(
+                ([url]) => url === "/api/studies/10/candidates?includeCancelled=true"
+            )
+        ).toHaveLength(2);
+        fireEvent.click(filtro);
+        expect(await screen.findByText("Nenhum candidato encontrado")).toBeInTheDocument();
+        expect(filtro).not.toBeChecked();
+    });
+
+    it.each([
+        [
+            "CANDIDATE_ALREADY_INCLUDED",
+            "INCLUDED",
+            "RECRUITMENT",
+            "Candidato incluído por outra pessoa.",
+        ],
+        [
+            "CANDIDATE_ALREADY_CANCELLED",
+            "CANCELLED",
+            "RECRUITMENT",
+            "Candidatura já cancelada por outra pessoa.",
+        ],
+        ["STUDY_NOT_RECRUITING", "ACTIVE", "EXECUTION", "O recrutamento foi encerrado."],
+    ] as const)(
+        "RF08-P03: conflito %s consulta candidato e estudo e bloqueia novo cancelamento",
+        async (code, status, studyStatus, message) => {
+            const atual = { ...candidatoPendente, status };
+            const http = mockApiPorRota({
+                ...rotasDoEstudo([candidatoPendente]),
+                "GET /api/studies/10/candidates": [
+                    resposta([candidatoPendente]),
+                    resposta(status === "CANCELLED" ? [] : [atual]),
+                ],
+                "POST /api/studies/10/candidates/101/cancellation": resposta(
+                    { code, message },
+                    409
+                ),
+                "GET /api/studies/10/candidates/101": resposta(atual),
+                "GET /api/studies/10": resposta({ ...estudoRecrutamento, status: studyStatus }),
+            });
+            renderPage();
+            fireEvent.click(
+                await screen.findByRole("button", { name: "Cancelar candidatura: Candidato 014" })
+            );
+            const dialog = await screen.findByRole("dialog", { name: "Cancelar candidatura" });
+            fireEvent.change(within(dialog).getByLabelText(/Motivo do cancelamento/), {
+                target: { value: "E-mail incorreto" },
+            });
+            fireEvent.click(within(dialog).getByRole("button", { name: "Confirmar cancelamento" }));
+            expect(await within(dialog).findByRole("alert")).toHaveTextContent(message);
+            await waitFor(() =>
+                expect(
+                    within(dialog).getByRole("button", { name: "Confirmar cancelamento" })
+                ).toBeDisabled()
+            );
+            expect(
+                await within(dialog).findByText(/Dados atualizados. Situação da candidatura:/)
+            ).toBeInTheDocument();
+            expect(
+                http.mock.calls.filter(([url]) => url === "/api/studies/10/candidates/101")
+            ).toHaveLength(1);
+            expect(http.mock.calls.filter(([url]) => url === "/api/studies/10")).toHaveLength(1);
+            expect(http.mock.calls.filter(([, init]) => init?.method === "POST")).toHaveLength(1);
+        }
+    );
+
+    it("RF09-P04: avaliação elegível recarrega a candidatura e não antecipa o aceite", async () => {
+        const criterios = [
+            { id: 1, studyId: 10, type: "INCLUSION", description: "Inclusão fictícia" },
+        ];
+        const avaliacao = { studyId: 10, candidateId: 101, status: "PENDING", answers: [] };
+        const http = mockApiPorRota({
+            ...rotasDoEstudo([candidatoPendente]),
+            "GET /api/studies/10/candidates": [
+                resposta([candidatoPendente]),
+                resposta([
+                    {
+                        ...candidatoPendente,
+                        status: "CONSENT_PENDING",
+                        eligibilityStatus: "ELIGIBLE",
+                    },
+                ]),
+            ],
+            "GET /api/studies/10/criteria": resposta(criterios),
+            "GET /api/studies/10/candidates/101/eligibility": resposta(avaliacao),
+            "PUT /api/studies/10/candidates/101/eligibility": resposta({
+                ...avaliacao,
+                status: "ELIGIBLE",
+                answers: [{ criterionId: 1, matches: true }],
+            }),
+        });
+        renderPage();
+        fireEvent.click(
+            await screen.findByRole("button", { name: "Avaliar elegibilidade: Candidato 014" })
+        );
+        fireEvent.change(await screen.findByLabelText("Inclusão fictícia"), {
+            target: { value: "true" },
+        });
+        fireEvent.click(screen.getByRole("button", { name: "Salvar avaliação" }));
+        expect(
+            await screen.findByText("Avaliação de elegibilidade registrada com sucesso.")
+        ).toBeInTheDocument();
+        await waitFor(() =>
+            expect(
+                http.mock.calls.filter(([url]) => url === "/api/studies/10/candidates")
+            ).toHaveLength(2)
+        );
+        fireEvent.click(screen.getByRole("button", { name: "Voltar para candidatos" }));
+        const lista = await screen.findByRole("list", { name: "Lista de candidatos" });
+        expect(within(lista).getByText("Aguardando decisão")).toBeInTheDocument();
+        expect(within(lista).getByText("Elegível")).toBeInTheDocument();
+        expect(
+            within(lista).queryByRole("button", { name: /^Incluir participante:/ })
+        ).not.toBeInTheDocument();
+        expect(http.mock.calls.some(([url]) => String(url).includes("/consent"))).toBe(false);
+    });
+});
+
 const candidatoIncluidoRetirada: CandidatoApi = {
     ...candidatoAceitou,
     status: "INCLUDED",
 };
-it("T22.3: registra retirada sem devolver vaga nem permitir reinclusão", async () => {
+it("T22.3: registra retirada, oculta Agendar e mantém histórico e vaga ocupada", async () => {
     const participante = {
         id: 501,
         studyId: 10,
@@ -795,6 +1022,14 @@ it("T22.3: registra retirada sem devolver vaga nem permitir reinclusão", async 
         "POST /api/studies/10/participants/501/withdrawal": resposta(retirado),
     });
     renderPage();
+    expect(
+        await screen.findByRole("button", {
+            name: `Agendar visita: ${candidatoIncluidoRetirada.name}`,
+        })
+    ).toBeInTheDocument();
+    expect(
+        screen.getByRole("button", { name: `Ver visitas: ${candidatoIncluidoRetirada.name}` })
+    ).toBeInTheDocument();
     fireEvent.click(
         await screen.findByRole("button", {
             name: `Registrar retirada: ${candidatoIncluidoRetirada.name}`,
@@ -806,6 +1041,10 @@ it("T22.3: registra retirada sem devolver vaga nem permitir reinclusão", async 
     fireEvent.click(screen.getByRole("button", { name: "Confirmar retirada" }));
     expect(await screen.findByText("Retirado")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^Registrar retirada:/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Agendar visita:/ })).not.toBeInTheDocument();
+    expect(
+        screen.getByRole("button", { name: `Ver visitas: ${candidatoIncluidoRetirada.name}` })
+    ).toBeInTheDocument();
     expect(
         screen.queryByRole("button", { name: /^Incluir participante:/ })
     ).not.toBeInTheDocument();
@@ -867,4 +1106,7 @@ it("T22.3: mantém o participante ativo e mostra o erro da API no modal", async 
         })
     ).toBeInTheDocument();
     expect(screen.getByText("Ativo")).toBeInTheDocument();
+    expect(
+        screen.getByRole("button", { name: `Agendar visita: ${candidatoIncluidoRetirada.name}` })
+    ).toBeInTheDocument();
 });

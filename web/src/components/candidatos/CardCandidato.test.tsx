@@ -37,22 +37,25 @@ it.each([
         vagas: undefined,
         motivo: "Consulte as vagas disponíveis antes de incluir o participante.",
     },
-])("bloqueia a inclusão e explica $cenario", ({ estudoEmRecrutamento, vagas, motivo }) => {
-    const incluir = vi.fn();
-    render(
-        <CardCandidato
-            candidato={candidato}
-            estudoEmRecrutamento={estudoEmRecrutamento}
-            vagasDisponiveis={vagas}
-            onIncluirParticipante={incluir}
-        />
-    );
-    const botao = screen.getByRole("button", { name: "Incluir participante: Ana Silva" });
-    expect(botao).toBeDisabled();
-    expect(botao).toHaveAttribute("title", motivo);
-    fireEvent.click(botao);
-    expect(incluir).not.toHaveBeenCalled();
-});
+])(
+    "RF11-CARD01: bloqueia a inclusão e explica $cenario",
+    ({ estudoEmRecrutamento, vagas, motivo }) => {
+        const incluir = vi.fn();
+        render(
+            <CardCandidato
+                candidato={candidato}
+                estudoEmRecrutamento={estudoEmRecrutamento}
+                vagasDisponiveis={vagas}
+                onIncluirParticipante={incluir}
+            />
+        );
+        const botao = screen.getByRole("button", { name: "Incluir participante: Ana Silva" });
+        expect(botao).toBeDisabled();
+        expect(botao).toHaveAttribute("title", motivo);
+        fireEvent.click(botao);
+        expect(incluir).not.toHaveBeenCalled();
+    }
+);
 
 it.each([
     { status: "INVITED", rotulo: "Convidado", avaliar: true, incluir: false, cancelar: true },
@@ -69,7 +72,7 @@ it.each([
     { status: "INCLUDED", rotulo: "Incluído", avaliar: false, incluir: false, cancelar: false },
     { status: "CANCELLED", rotulo: "Cancelado", avaliar: false, incluir: false, cancelar: false },
 ] as const)(
-    "respeita a situação $status retornada pela API",
+    "RF08-CARD02: respeita a situação $status retornada pela API",
     ({ status, rotulo, avaliar, incluir, cancelar }) => {
         render(
             <CardCandidato
@@ -100,21 +103,24 @@ it.each([
     { eligibilityStatus: "INELIGIBLE", consentStatus: "GRANTED" },
     { eligibilityStatus: "ELIGIBLE", consentStatus: "PENDING" },
     { eligibilityStatus: "ELIGIBLE", consentStatus: "DECLINED" },
-] as const)("não oferece inclusão sem as pré-condições do candidato (%s)", (condicoes) => {
-    render(
-        <CardCandidato
-            candidato={{ ...candidato, ...condicoes }}
-            estudoEmRecrutamento
-            vagasDisponiveis={2}
-            onIncluirParticipante={vi.fn()}
-        />
-    );
-    expect(
-        screen.queryByRole("button", { name: "Incluir participante: Ana Silva" })
-    ).not.toBeInTheDocument();
-});
+] as const)(
+    "RF11-CARD03: não oferece inclusão sem as pré-condições do candidato (%s)",
+    (condicoes) => {
+        render(
+            <CardCandidato
+                candidato={{ ...candidato, ...condicoes }}
+                estudoEmRecrutamento
+                vagasDisponiveis={2}
+                onIncluirParticipante={vi.fn()}
+            />
+        );
+        expect(
+            screen.queryByRole("button", { name: "Incluir participante: Ana Silva" })
+        ).not.toBeInTheDocument();
+    }
+);
 
-it("encaminha o candidato original nas ações atuais, sem acrescentar dados de apresentação", () => {
+it("RF08-CARD04: encaminha o candidato original nas ações sem acrescentar dados de apresentação", () => {
     const avaliar = vi.fn(),
         incluir = vi.fn(),
         cancelar = vi.fn();
@@ -134,14 +140,14 @@ it("encaminha o candidato original nas ações atuais, sem acrescentar dados de 
         expect(callback.mock.calls[0][0]).toBe(candidato);
 });
 
-it("mantém a situação e a elegibilidade visíveis em modo de consulta", () => {
+it("RF08-CARD05: mantém situação e elegibilidade visíveis em modo de consulta", () => {
     render(<CardCandidato candidato={candidato} />);
     expect(screen.getByText("Aceitou")).toBeInTheDocument();
     expect(screen.getByText("Elegível")).toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
 });
 
-it("preserva a decisão final do candidato e o motivo do cancelamento", () => {
+it("RF10-CARD06: preserva a decisão final do candidato e o motivo do cancelamento", () => {
     const { rerender } = render(
         <CardCandidato
             candidato={{ ...candidato, status: "DECLINED", consentStatus: "DECLINED" }}
@@ -165,7 +171,7 @@ it("preserva a decisão final do candidato e o motivo do cancelamento", () => {
     expect(screen.getByText("Motivo: E-mail incorreto")).toBeInTheDocument();
 });
 
-it("não presume recrutamento quando o contexto do estudo não foi informado", () => {
+it("RF11-CARD07: não presume recrutamento quando o contexto do estudo não foi informado", () => {
     render(
         <CardCandidato
             candidato={candidato}
@@ -179,3 +185,20 @@ it("não presume recrutamento quando o contexto do estudo não foi informado", (
         screen.queryByRole("button", { name: "Cancelar candidatura: Ana Silva" })
     ).not.toBeInTheDocument();
 });
+
+it.each(["INVITED", "ACTIVE", "CONSENT_PENDING", "DECLINED", "INCLUDED", "CANCELLED"] as const)(
+    "RF11-CARD08: consentimento e elegibilidade não sobrescrevem situação %s da API",
+    (status) => {
+        render(
+            <CardCandidato
+                candidato={{ ...candidato, status }}
+                estudoEmRecrutamento
+                vagasDisponiveis={2}
+                onIncluirParticipante={vi.fn()}
+            />
+        );
+        expect(
+            screen.queryByRole("button", { name: /^Incluir participante:/ })
+        ).not.toBeInTheDocument();
+    }
+);
