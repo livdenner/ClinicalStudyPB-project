@@ -21,9 +21,12 @@ on:
       - ".github/workflows/mobile-e2e.yml"
   workflow_dispatch:
 
+# Não cancela a execução em andamento: o commit automático do relatório de testes (ci.yml)
+# chega ao PR antes deste job terminar e, com cancelamento, o E2E mobile nunca concluiria.
+# A execução nova espera na fila.
 concurrency:
   group: mobile-e2e-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: read
