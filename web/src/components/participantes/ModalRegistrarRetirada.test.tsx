@@ -27,24 +27,26 @@ function abrir(onConfirmar = vi.fn<(_: string) => Promise<void>>().mockResolvedV
     return { onConfirmar, onFechar };
 }
 
-it.each(["", "   ", "a".repeat(501)])(
-    "bloqueia motivo inválido e destaca o campo (%s)",
-    async (motivo) => {
-        const { onConfirmar } = abrir();
-        fireEvent.change(screen.getByRole("textbox", { name: "Motivo da retirada" }), {
-            target: { value: motivo },
-        });
-        fireEvent.click(screen.getByRole("button", { name: "Confirmar retirada" }));
-        expect(
-            await screen.findByText("Informe o motivo da retirada com 1 a 500 caracteres.")
-        ).toBeInTheDocument();
-        expect(screen.getByRole("textbox", { name: "Motivo da retirada" })).toHaveAttribute(
-            "aria-invalid",
-            "true"
-        );
-        expect(onConfirmar).not.toHaveBeenCalled();
-    }
-);
+it.each([
+    ["vazio", ""],
+    ["apenas espaços", "   "],
+    ["mais de 500 caracteres", "a".repeat(501)],
+])("bloqueia motivo inválido e destaca o campo: %s", async (_cenario, motivo) => {
+    const { onConfirmar } = abrir();
+    fireEvent.change(screen.getByRole("textbox", { name: "Motivo da retirada" }), {
+        target: { value: motivo },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Confirmar retirada" }));
+    expect(
+        await screen.findByText("Informe o motivo da retirada com 1 a 500 caracteres.")
+    ).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Motivo da retirada" })).toHaveAttribute(
+        "aria-invalid",
+        "true"
+    );
+    expect(screen.getByRole("textbox", { name: "Motivo da retirada" })).toHaveFocus();
+    expect(onConfirmar).not.toHaveBeenCalled();
+});
 
 it("confirma com o motivo sem espaços nas extremidades e informa o efeito nas vagas", async () => {
     const { onConfirmar } = abrir();
@@ -54,6 +56,16 @@ it("confirma com o motivo sem espaços nas extremidades e informa o efeito nas v
     });
     fireEvent.click(screen.getByRole("button", { name: "Confirmar retirada" }));
     await waitFor(() => expect(onConfirmar).toHaveBeenCalledWith("Mudança de cidade"));
+});
+
+it("aceita o limite de 500 caracteres do motivo", async () => {
+    const { onConfirmar } = abrir();
+    const motivo = "a".repeat(500);
+    fireEvent.change(screen.getByRole("textbox", { name: "Motivo da retirada" }), {
+        target: { value: motivo },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Confirmar retirada" }));
+    await waitFor(() => expect(onConfirmar).toHaveBeenCalledWith(motivo));
 });
 
 it("mantém o modal aberto e mostra a mensagem exata da API", async () => {
@@ -94,9 +106,56 @@ it("impede envio duplicado e fechamento enquanto aguarda a API", async () => {
     expect(enviando).toBeDisabled();
     fireEvent.click(enviando);
     fireEvent.click(screen.getByRole("button", { name: "Voltar" }));
+    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape", code: "Escape" });
     expect(onConfirmar).toHaveBeenCalledTimes(1);
     expect(onFechar).not.toHaveBeenCalled();
     await act(async () => concluir());
+});
+
+it("exibe o erro de campo da API e devolve o foco ao motivo", async () => {
+    abrir(
+        vi.fn().mockRejectedValue(
+            new ApiClientError("Dados inválidos.", {
+                status: 400,
+                fieldErrors: [{ field: "reason", message: "Informe um motivo válido." }],
+            })
+        )
+    );
+    const campo = screen.getByRole("textbox", { name: "Motivo da retirada" });
+    fireEvent.change(campo, { target: { value: "Desistência" } });
+    fireEvent.click(screen.getByRole("button", { name: "Confirmar retirada" }));
+
+    expect(await screen.findByText("Informe um motivo válido.")).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("Dados inválidos.");
+    expect(campo).toHaveAttribute("aria-invalid", "true");
+    await waitFor(() => expect(campo).toHaveFocus());
+});
+
+it("permite tentar novamente após uma falha inesperada", async () => {
+    const { onConfirmar, onFechar } = abrir(
+        vi.fn().mockRejectedValueOnce(new Error("Falha de conexão")).mockResolvedValue(undefined)
+    );
+    fireEvent.change(screen.getByRole("textbox", { name: "Motivo da retirada" }), {
+        target: { value: "Desistência" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Confirmar retirada" }));
+
+    const alerta = await screen.findByRole("alert");
+    expect(alerta).toHaveTextContent("Não foi possível registrar a retirada. Tente novamente.");
+    await waitFor(() => expect(alerta).toHaveFocus());
+    expect(onFechar).not.toHaveBeenCalled();
+    expect(screen.getByRole("textbox", { name: "Motivo da retirada" })).toHaveValue("Desistência");
+
+    fireEvent.click(screen.getByRole("button", { name: "Confirmar retirada" }));
+    await waitFor(() => expect(onConfirmar).toHaveBeenCalledTimes(2));
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+});
+
+it("permite fechar com Escape sem confirmar a retirada", async () => {
+    const { onConfirmar, onFechar } = abrir();
+    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape", code: "Escape" });
+    await waitFor(() => expect(onFechar).toHaveBeenCalledOnce());
+    expect(onConfirmar).not.toHaveBeenCalled();
 });
 
 it("permite voltar sem registrar a retirada", () => {

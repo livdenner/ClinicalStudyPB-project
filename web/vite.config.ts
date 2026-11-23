@@ -24,6 +24,14 @@ export default defineConfig({
             exclude: [...coverageConfigDefaults.exclude, "src/test/**"],
             reporter: [...coverageConfigDefaults.reporter, "json-summary"],
             thresholds: {
+                // A T22.4 exige mais de 80% em cada componente novo da retirada.
+                "src/components/participantes/*Retirada.tsx": {
+                    perFile: true,
+                    lines: 81,
+                    statements: 81,
+                    functions: 81,
+                    branches: 81,
+                },
                 "src/components/candidatos/ModalNovoCandidato.tsx": { lines: 81, perFile: true },
                 "src/components/candidatos/ResultadoCadastroCandidato.tsx": {
                     lines: 81,

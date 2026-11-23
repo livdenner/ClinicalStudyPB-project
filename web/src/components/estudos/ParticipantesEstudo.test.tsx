@@ -14,6 +14,56 @@ const contextoConsulta = {
     perfil: "RESEARCHER",
 } as const;
 
+it("não envia retirada sem motivo para a API", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+        resposta([
+            {
+                id: 7,
+                studyId: 3,
+                candidateId: 11,
+                candidateName: "Ana Silva",
+                includedAt: "2026-11-09T12:00:00Z",
+                status: "ACTIVE",
+            },
+        ])
+    );
+    render(<ParticipantesEstudo {...contextoConsulta} perfil="COORDINATOR" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Registrar retirada: Ana Silva" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirmar retirada" }));
+
+    expect(
+        await screen.findByText("Informe o motivo da retirada com 1 a 500 caracteres.")
+    ).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(fetchMock.mock.calls[0][0]).toBe("/api/studies/3/participants");
+    expect(screen.getByText("Ativo")).toBeInTheDocument();
+});
+
+it("fecha a confirmação sem alterar o participante ao voltar", async () => {
+    const fetchMock = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+        resposta([
+            {
+                id: 7,
+                studyId: 3,
+                candidateId: 11,
+                candidateName: "Ana Silva",
+                includedAt: "2026-11-09T12:00:00Z",
+                status: "ACTIVE",
+            },
+        ])
+    );
+    render(<ParticipantesEstudo {...contextoConsulta} perfil="COORDINATOR" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Registrar retirada: Ana Silva" }));
+    fireEvent.click(screen.getByRole("button", { name: "Voltar" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(screen.getByText("Ativo")).toBeInTheDocument();
+    expect(
+        screen.getByRole("button", { name: "Registrar retirada: Ana Silva" })
+    ).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledOnce();
+});
+
 it("abre o histórico pela lista e retorna sem recarregar os participantes", async () => {
     const participante = {
         id: 1,
