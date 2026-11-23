@@ -126,11 +126,11 @@ docker compose logs -f backend
 
 O backend só inicia depois que o banco estiver saudável, e o Flyway aplica as migrações na primeira inicialização. Espere o log informar a inicialização da aplicação e confirme o Swagger UI antes de carregar o seed. Use `Ctrl+C` para sair do acompanhamento dos logs; os contêineres continuam ativos.
 
-**4. (Opcional) Carregue os dados de demonstração** (contas, estudos e recrutamento), depois que o backend tiver iniciado e aplicado as migrações. Os comandos funcionam no bash e no PowerShell:
+**4. (Opcional) Carregue os dados de demonstração** (contas, estudos, recrutamento e acompanhamento), depois que o backend tiver iniciado e aplicado as migrações. Os comandos funcionam no bash e no PowerShell:
 
 ```bash
 docker compose cp backend/dev/. db:/tmp/seed
-docker compose exec db psql -U clinicalstudypb -d clinicalstudypb -v ON_ERROR_STOP=1 -f /tmp/seed/seed_demo_users.sql -f /tmp/seed/seed_demo_studies.sql -f /tmp/seed/seed_demo_recruitment.sql
+docker compose exec db psql -U clinicalstudypb -d clinicalstudypb -v ON_ERROR_STOP=1 -f /tmp/seed/seed_demo_users.sql -f /tmp/seed/seed_demo_studies.sql -f /tmp/seed/seed_demo_recruitment.sql -f /tmp/seed/seed_demo_followup.sql
 ```
 
 Se você alterou `DB_USER`, use o seu valor no lugar de `clinicalstudypb` após `-U`.
@@ -147,7 +147,7 @@ Para iniciar novamente sem reconstruir a imagem, use `docker compose up -d`. Dep
 
 ### Banco e usuários de demonstração
 
-As contas abaixo são criadas por `backend/dev/seed_demo_users.sql`, após as migrações. Execute os três scripts na ordem do comando anterior. O Flyway aplica V1–V10 e o Hibernate valida o esquema; o [guia do backend](backend/docs/eligibility-integration.md#migrações) descreve a persistência.
+As contas abaixo são criadas por `backend/dev/seed_demo_users.sql`, após as migrações. Execute os quatro scripts na ordem do comando anterior. O Flyway aplica V1–V15 e o Hibernate valida o esquema; o [guia do backend](backend/docs/eligibility-integration.md#migrações) descreve a persistência.
 
 | Perfil        | E-mail                               | Senha de demonstração |
 | ------------- | ------------------------------------ | --------------------- |
@@ -155,8 +155,13 @@ As contas abaixo são criadas por `backend/dev/seed_demo_users.sql`, após as mi
 | Coordenador   | `coordenador@clinicalstudypb.test`   | `Demo@Clinical2026`   |
 | Administrador | `administrador@clinicalstudypb.test` | `Demo@Clinical2026`   |
 | Participante  | `participante@clinicalstudypb.test`  | `Demo@Clinical2026`   |
+| Candidato com convite pendente | `convite@clinicalstudypb.test` | Sem senha: primeiro acesso no aplicativo com o código `CONVITE-DEMO-2026` |
 
 Essas credenciais são apenas para demonstração e podem ser usadas para obter um token de acesso pelo endpoint de login.
+
+- **Participante:** criada por `seed_demo_users.sql`. `seed_demo_followup.sql` a vincula a uma participação ativa e a um convite aguardando decisão. Com ela é possível demonstrar o aplicativo sem passar pela ativação.
+- **Candidato com convite pendente:** conta criada por `seed_demo_followup.sql`, ainda não ativada. O código vale 72 horas a partir da execução do script. Rodar o script de novo renova o prazo enquanto o código não tiver sido usado.
+- **Demais candidatos da carga:** usam e-mails `demo-candidate-…@clinicalstudypb.invalid` e não entram no aplicativo.
 
 A carga completa cria **seis estudos**, com visitas, critérios e cenários de recrutamento, incluindo **Higiene do sono em trabalhadores noturnos** e a disputa pela última vaga. Consulte a [tabela de estudos, candidatos e participantes/vagas](releases/release1/README.md#dados-e-seeds). Os scripts são repetíveis e também são verificados por `DemoSeedIntegrationTest` e pela stack E2E.
 
@@ -164,8 +169,38 @@ A carga completa cria **seis estudos**, com visitas, critérios e cenários de r
 backend/dev/
 ├── seed_demo_users.sql
 ├── seed_demo_studies.sql
-└── seed_demo_recruitment.sql
+├── seed_demo_recruitment.sql
+└── seed_demo_followup.sql
 ```
+
+#### Cenários do acompanhamento e do fluxo do candidato
+
+`seed_demo_followup.sql` usa os estudos e participantes das cargas anteriores. Ele cobre o fluxo do candidato no aplicativo (PBI-17) e RF12 a RF18. Na carga de recrutamento, quem tem decisão de consentimento já ativou a conta, e a decisão fica registrada com o próprio candidato como autor.
+
+| Cenário | Onde | Requisito |
+| --- | --- | --- |
+| Convite pendente com código conhecido | **Vacina contra influenza em idosos**: Rosa Helena Prates (`convite@…`, código `CONVITE-DEMO-2026`), elegível e com convite `INVITED`. | Primeiro acesso, troca de senha e decisão (RF10) |
+| Participante ativo com senha definida | `participante@…`. Incluída em **Controle glicêmico no diabetes tipo 2**, com convite aguardando decisão (`CONSENT_PENDING`) na vacina. | RF10, RF17 e RF18 no aplicativo |
+| Aceite e recusa do candidato | Vacina: Conceição Alves Prado (`GRANTED`) e Elza Martins Teixeira (`DECLINED`). Higiene do sono: Vera Lúcia Fonseca e Wilson Barbosa Leite aceitaram e disputam a última vaga. | RF10 e RF11 |
+| Visita agendada | Diabetes: Irene e Participante Demo (acompanhamento de 3 meses) e João (avaliação inicial remarcada após a ausência). | RF12 |
+| Realizada com resultados | Diabetes: avaliação inicial de Irene, Lúcia e Participante Demo, com hemoglobina glicada e orientação nutricional registradas. | RF13 e RF14 |
+| Ausente | Diabetes: avaliação inicial de João Batista Freitas. | RF13 |
+| Cancelada | Diabetes: acompanhamento de 3 meses de João, cancelado pelo coordenador com justificativa. | RF13 |
+| Retirada | Diabetes: Lúcia Mendes Araújo, retirada em 10/11/2026. A visita futura foi cancelada com a nota "Retirada do participante". | RF15 e RF16 |
+
+O roteiro abaixo usa apenas a carga, sem preparar dados à mão. Onde a tela ainda não foi integrada, o passo é feito pelo [Swagger UI](http://localhost:8080/swagger-ui/index.html), com o token da conta indicada em "Authorize".
+
+| Passo | Conta | Onde | O que fazer e conferir |
+| --- | --- | --- | --- |
+| 1 | Coordenador | Web, **Recrutamento** | Na vacina, confira as situações Convidado, Aceitou, Recusou, Aguardando decisão e Incluído. Em **Higiene do sono**, inclua Vera ou Wilson na última vaga. A segunda inclusão é recusada por falta de vaga. |
+| 2 | `convite@…` | Aplicativo (primeiro acesso) e Swagger | No app, faça o primeiro acesso com o código `CONVITE-DEMO-2026` e defina a senha. No Swagger, use `GET /api/me/invitations` e `POST /api/me/invitations/{candidateId}/decision`. Na web, use **Atualizar lista** e veja a nova situação. |
+| 3 | `participante@…` | Swagger (telas do app em andamento) | `GET /api/me/studies` mostra o estudo de diabetes (RF17). `GET /api/me/visits` mostra uma visita próxima e uma realizada (RF18). `POST /api/me/invitations/{candidateId}/decision` decide o convite da vacina. |
+| 4 | Coordenador | Web, **Visitas** | No estudo de diabetes, filtre por **Situação** e confira os quatro desfechos. Registre o desfecho da visita remarcada de João. A visita de Lúcia aparece cancelada pela retirada. Pela API, o mesmo filtro é `GET /api/studies/{studyId}/visits?status=…`, e o registro é `POST …/visits/{visitId}/outcome` com `If-Match`. |
+| 5 | Pesquisador | Web, **Visitas** | Em **Ver resultados**, confira os resultados da avaliação inicial de Irene. Em **Registrar resultados**, registre os da visita realizada no passo 4. Pela API, são `GET …/visits/{visitId}/results` e `PUT …/results/{activityId}`. |
+
+O histórico do participante (RF15) já está na API desde a T21.1 (PR #103). No Swagger, `GET …/participants/{participantId}/history` mostra, para Lúcia, a inclusão, as visitas com resultados e a retirada. A tela da web para esse histórico ainda está em revisão no PR #119.
+
+`DemoSeedIntegrationTest` executa os quatro scripts em PostgreSQL real e confere três pontos: a repetição sem duplicar dados, as regras da API (resultado só em visita realizada, retirada cancelando as visitas futuras e decisão com autoria do candidato) e a leitura pelos endpoints do coordenador e do aplicativo.
 
 ### Variáveis das aplicações cliente
 
@@ -364,3 +399,11 @@ No PowerShell, ambos devem responder `200`:
 Em bash, use `curl -f http://localhost:8080/v3/api-docs`. Se a conexão falhar, consulte `docker compose ps` e `docker compose logs backend`.
 
 Autentique com as credenciais fictícias em `POST /api/auth/login` e use **Authorize** com o JWT retornado. As rotas usam `/api`. Consulte operações, permissões, controle de versão e regras de negócio no [resumo da API](backend/docs/release1-api.md), incluindo `GET/POST /api/studies/{studyId}/criteria` e a inclusão de participantes.
+
+## Retirada de participantes na web (T22.3)
+
+O coordenador pode registrar a retirada no painel de participantes do recrutamento ou na aba Participantes do estudo. A ação aparece apenas para participantes ativos de estudos que não estejam encerrados ou cancelados. O modal pede um motivo de 1 a 500 caracteres e a confirmação. Em caso de falha, o erro da API fica no próprio modal.
+
+Ao confirmar, a resposta da API atualiza o participante na tela, o selo passa para Retirado (neutro) e a ação desaparece. A retirada é definitiva: a vaga continua ocupada, o candidato não pode ser reincluído e o backend cancela as visitas futuras agendadas.
+
+No painel de recrutamento, as ações **Ver visitas**, **Agendar** e **Registrar retirada** compartilham a mesma área do card. **Agendar** aparece apenas para participantes ativos, para o coordenador e em estudos em recrutamento ou execução. Após a retirada, **Agendar** e **Registrar retirada** desaparecem imediatamente, enquanto **Ver visitas** continua disponível para consultar o histórico. A regra é aplicada também na agenda do participante, que impede iniciar novos agendamentos para quem está retirado. Se a retirada ocorrer em outra sessão enquanto o formulário estiver aberto, o erro `PARTICIPANT_WITHDRAWN` da API é exibido sem cadastrar uma nova visita.
