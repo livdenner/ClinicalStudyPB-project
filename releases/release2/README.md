@@ -22,6 +22,53 @@ Sem envio de e-mail nesta sprint: o código de ativação é exibido ao coordena
 
 O contrato está definido no [`openapi.yaml`](../../backend/openapi.yaml) (T17.1); a implementação no backend, na web e no aplicativo é feita nas tarefas T17.2 a T17.10.
 
+## Alteração de arquitetura (T26.3)
+
+A arquitetura continua sendo um monólito modular em camadas, com um único backend Spring Boot e um único PostgreSQL. A Sprint 3 acrescentou módulos ao backend e ligou o aplicativo à API. Os [diagramas da Release 2](../../docs/diagrams/README.md) mostram o estado atual, e os da Release 1 continuam na [tag `release1`](https://github.com/livdenner/ClinicalStudyPB-project/tree/release1/docs/diagrams).
+
+| Aspecto | Release 1 | Release 2 |
+| --- | --- | --- |
+| Módulos do backend | Oito: `auth`, `users`, `studies`, `criteria`, `visits`, `candidates`, `consent` e `participants`. | Doze. Entram `scheduling` (agenda e desfecho, RF12–RF13), `results` (resultados das atividades, RF14), `history` (histórico do participante, RF15) e `me` (convites, estudos e visitas do participante, RF10, RF17 e RF18). `history` e `me` só consultam dados de outros módulos e não têm tabela própria. |
+| Módulos existentes | — | `candidates` passa a criar ou vincular a conta do candidato e o convite de ativação; `consent` registra quem decidiu; `participants` ganha situação e retirada (RF16). |
+| Aplicativo mobile | Navegação provisória, sem chamadas à API. | Cliente da API com JWT, só para o perfil `PARTICIPANT`: login, ativação e troca de senha em `/api/auth`, convites, estudos e visitas em `/api/me`. |
+| Integração entre módulos | Serviços públicos. | Sem mudança de regra. As novas dependências usam interfaces públicas, como `StudySchedulingLifecycle`, `ParticipantSchedulingLookup`, `ParticipantWithdrawalVisits`, `PlannedVisitLookup` e `ActivityResultLookup`. |
+| Banco | Flyway V1–V10. | Flyway V1–V15: `V11__candidate_accounts_and_invitations`, `V12__create_scheduled_visits`, `V13__add_participant_withdrawal`, `V14__add_consent_actor` e `V15__create_activity_results`. Os clientes continuam sem acesso direto ao banco. |
+
+| Diagrama | O que mudou |
+| --- | --- |
+| [Casos de uso](../../docs/diagrams/casos-de-uso.png) | Vai de RF01 a RF18. O candidato decide o consentimento no aplicativo; entram agenda, desfecho, retirada, resultados, histórico e a área do participante. |
+| [Classes](../../docs/diagrams/README.md#classes-e-domínio) | Página 2 com convite de ativação, conta e cancelamento do candidato, retirada do participante e autor da decisão. Página 3, nova, com visita agendada e resultado da atividade. |
+| [Sequência](../../docs/diagrams/README.md#sequências) | Página 5 redesenhada para a decisão pelo candidato. Página 7, nova, com agendamento e desfecho. |
+| [Arquitetura](../../docs/diagrams/arquitetura.png) | Doze módulos e o aplicativo ligado à API. |
+
+## Roteiro de demonstração
+
+O roteiro usa apenas a carga de demonstração, sem preparar dados à mão. Antes de começar, siga a [instalação](../../README.md#5-instalação-e-execução): suba a stack, carregue os quatro scripts de `backend/dev/`, abra a [web](../../README.md#aplicação-web) e o [aplicativo](../../mobile/README.md#configurar-a-url-da-api) apontando para a API. As contas e os cenários da carga estão em [Banco e usuários de demonstração](../../README.md#banco-e-usuários-de-demonstração). A senha das contas da equipe é `Demo@Clinical2026`.
+
+| Passo | Conta | Onde | O que fazer e conferir |
+| --- | --- | --- | --- |
+| 1 | `coordenador@…` | Web, **Recrutamento** | No estudo **Vacina contra influenza em idosos**, confira as situações Convidado, Aceitou, Recusou, Aguardando decisão e Incluído. Em **Higiene do sono em trabalhadores noturnos**, inclua Vera Lúcia Fonseca na última vaga. A inclusão de Wilson Barbosa Leite é recusada: "O estudo atingiu o limite de participantes" (RF11). |
+| 2 | `convite@…` | Aplicativo | Em **Primeiro acesso? → Ativar conta**, informe o e-mail e o código `CONVITE-DEMO-2026` e defina a senha. Em **Ver convites**, abra o convite da vacina e use **Aceitar convite** (RF10). Na web, o coordenador usa **Atualizar lista** e vê Rosa Helena Prates como Aceitou. |
+| 3 | `participante@…` | Aplicativo | **Ver estudos** mostra **Controle glicêmico no diabetes tipo 2** (RF17). **Ver visitas** mostra o acompanhamento de 3 meses em **Próximas** e a avaliação inicial em **Histórico** (RF18). Em **Ver convites**, recuse o convite da vacina; a decisão fica somente leitura. |
+| 4 | `coordenador@…` | Web, **Visitas** | No estudo de diabetes, filtre por **Situação** e confira os quatro desfechos: agendada, realizada, ausente e cancelada. Registre como realizada a avaliação inicial remarcada de João Batista Freitas (RF13). A visita de Lúcia Mendes Araújo aparece cancelada com a nota "Retirada do participante". |
+| 5 | `pesquisador@…` | Web, **Visitas** | Em **Ver resultados**, confira hemoglobina glicada e orientação nutricional na avaliação inicial de Irene Gomes Vieira. Em **Registrar resultados**, registre os da visita de João realizada no passo 4 (RF14). |
+| 6 | `coordenador@…` | Web, **Estudos clínicos** → estudo de diabetes → aba **Participantes** | Use **Registrar retirada** para Irene, com um motivo, e confirme. O selo passa a Retirado, a visita futura dela é cancelada e a vaga continua ocupada (RF16). Em **Ver histórico**, confira a linha do tempo de Irene e a de Lúcia: visita realizada com os resultados, visita cancelada e retirada (RF15). |
+
+Cada passo também pode ser feito pelo [Swagger UI](http://localhost:8080/swagger-ui/index.html), com o token da conta indicada:
+
+| Passo | Endpoints |
+| --- | --- |
+| 1 | `GET /api/studies/{studyId}/candidates` e `POST …/candidates/{candidateId}/inclusion` |
+| 2 | `POST /api/auth/activation`, `PUT /api/auth/password`, `GET /api/me/invitations` e `POST /api/me/invitations/{candidateId}/decision` |
+| 3 | `GET /api/me/studies`, `GET /api/me/visits` e `POST /api/me/invitations/{candidateId}/decision` |
+| 4 | `GET /api/studies/{studyId}/visits?status=…` e `POST …/visits/{visitId}/outcome` com `If-Match` |
+| 5 | `GET …/visits/{visitId}/results` e `PUT …/results/{activityId}` |
+| 6 | `POST …/participants/{participantId}/withdrawal` e `GET …/participants/{participantId}/history` |
+
+As ações do roteiro são definitivas: inclusão, decisões, código de ativação usado, desfecho, resultados e retirada. Executar os scripts de novo não as desfaz. Para repetir a demonstração do início, recrie o banco com `docker compose down -v`, suba a stack e carregue a carga outra vez.
+
+Em 22/11/2026, os seis passos foram executados pela API sobre a `development` em `008dabb`, numa stack descartável com a carga completa: todas as respostas e situações descritas acima foram confirmadas. As telas correspondentes são cobertas pelos testes da web e do aplicativo.
+
 ## Linha de base da Sprint 3 (T26.2)
 
 Verificação feita em 12/11/2026 para garantir que a Sprint 3 parte da versão publicada da Release 1, sem PRs pendentes nem migrações inconsistentes.
