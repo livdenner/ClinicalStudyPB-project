@@ -1,6 +1,6 @@
 # T24.5 — Regressão web de ações, cores e sessões
 
-Task 4033. Branch `test/4033-ux-session-regression-web`, criada da `development` em `574125d`. Os resultados locais foram obtidos em 21/11/2026, após integrar a `development` em `21e5c2f` (PRs #99 e #100). A CI precisa ser confirmada na PR.
+Task 4033. Branch `test/4033-ux-session-regression-web`, criada da `development` em `574125d`. As tabelas de resultados locais abaixo preservam a execução histórica de 21/11/2026, após integrar a `development` em `21e5c2f` (PRs #99 e #100). A execução de CI dessa base já passou e está registrada na PR #115. Em 23/11/2026, a branch foi atualizada com a `development` em `92b2f4f`, preservando as verificações de cores e os testes de inclusão integrados pela PR #116.
 
 ## Observações verificadas
 
@@ -26,7 +26,7 @@ Os testes de cor verificam os tokens e o rótulo exibido; não são uma mediçã
 | RF10 | Consulta da decisão do candidato | [Recrutamento](../../../../web/src/pages/recrutamento/recrutamento.test.tsx) e [situação do candidato](../../../../web/src/components/candidatos/CardCandidato.test.tsx). Consentimento é decidido pelo participante no aplicativo; o coordenador só consulta. | Passou |
 | RF11 | Inclusão, confirmação e vagas | [Modal de inclusão](../../../../web/src/components/candidatos/ModalConfirmarInclusao.test.tsx), [painel de vagas](../../../../web/src/components/candidatos/PainelParticipantesVagas.test.tsx) e [recrutamento](../../../../web/src/pages/recrutamento/recrutamento.test.tsx). | Passou |
 
-## Validação local
+## Validação local histórica — 21/11/2026
 
 | Verificação | Resultado |
 | --- | --- |
@@ -37,11 +37,24 @@ Os testes de cor verificam os tokens e o rótulo exibido; não são uma mediçã
 
 O Vitest foi executado com `npm run test:coverage -- --pool=forks --maxWorkers=1`: 35 arquivos passaram e o worker de `visualizar.test.tsx` não iniciou por timeout. Os 51 testes desse arquivo passaram ao repetir `npm run test -- src/pages/estudos/visualizar.test.tsx --pool=forks --maxWorkers=1`. A cobertura dessa tentativa ficou parcial, por isso não é apresentada como cobertura da suíte completa. O Playwright foi executado com `npm run test:e2e -- --workers=1`, usando a stack descartável `compose.e2e.yaml`.
 
+## Revalidação após integração — 23/11/2026
+
+Base integrada: `development` em `92b2f4f`. A resolução preserva os testes RF11 de inclusão da PR #116, o parâmetro `tom` e as verificações de cores da T24.5, além da documentação mobile e desta matriz.
+
+| Verificação | Resultado |
+| --- | --- |
+| `npm run test:coverage -- --maxWorkers=2 --pool=threads` | 502 testes passaram, sem falhas ou pendências. Cobertura de linhas: 89,55%; instruções: 87,04%; branches: 81,96%; funções: 85,83%. |
+| `npm run lint` e `npm run build` (inclui TypeScript) | Passaram. |
+| Prettier em `CardCandidato.test.tsx` | Passou. |
+| `npm run test:e2e -- e2e/auth/tab-session.spec.ts --workers=1` | Os três cenários de sessão passaram no Chromium, com API e PostgreSQL reais da stack isolada `compose.e2e.yaml`. |
+
+Os E2E revalidaram login/logout em abas do mesmo contexto, expiração de uma aba sem encerrar a outra e acesso aos estudos em um segundo contexto após logout do administrador. Esta execução foi restrita à sessão; não representa uma nova execução local da suíte E2E completa. Relatórios brutos: `web/test-reports/vitest.json`, `web/coverage/coverage-summary.json` e `web/test-reports/playwright.json`.
+
 ## Relatório automático da CI
 
-O bot registra os resultados de cada teste nos [relatórios automáticos da CI](../../../../docs/test-ci/README.md). Após a execução da PR, o relatório específico desta task ficará em `docs/test-ci/pull-requests/<número>/`, com o índice correspondente. A confirmação dos jobs Web e E2E na CI ainda está pendente.
+O bot registra os resultados de cada teste nos [relatórios automáticos da CI](../../../../docs/test-ci/README.md). O [índice da PR #115](../../../../docs/test-ci/pull-requests/115/README.md) contém a execução aprovada de 21/11/2026: 349 testes Web passaram; no Playwright, 16 passaram e 1 foi ignorado naquela base. Esses números são históricos; a combinação resultante da atualização de 23/11 precisa de uma nova execução da CI após o push.
 
-## Limite da validação E2E
+## Fluxo completo e limite da evidência histórica
 
-O [fluxo completo da Release 1](../../../../web/e2e/flows/full-recruitment.spec.ts) já estava marcado como fixme, aguardando a T17.11 adaptar o cadastro e a decisão de consentimento ao contrato atual. Ele permanece ignorado e não foi contado como aprovado. A regressão de RF05–RF11 desta task é comprovada pelos componentes e telas com HTTP simulado; não há comprovação nova do fluxo completo contra a API real.
+Na execução histórica de 21/11/2026, o [fluxo completo de recrutamento](../../../../web/e2e/flows/full-recruitment.spec.ts) estava marcado como `fixme` e não foi contado como aprovado. Essa pendência foi resolvida pela T17.11, integrada na PR #106: o teste da base atual usa o contrato de ativação e decisão do candidato e não está mais ignorado. A validação de sessão desta task continua em `tab-session.spec.ts`; executar somente esse arquivo não representa uma nova execução local do fluxo completo de recrutamento.
 

@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ApiClientError } from "../../services/api/apiClient";
 import type { CandidatoApi } from "../../types/candidato";
@@ -41,6 +41,33 @@ afterEach(() => {
 });
 
 describe("Confirmação de inclusão (RF11)", () => {
+    it.each([
+        { consentStatus: "PENDING", eligibilityStatus: "ELIGIBLE", vagas: 0, limite: 3 },
+        { consentStatus: "DECLINED", eligibilityStatus: "ELIGIBLE", vagas: 0, limite: 3 },
+        { consentStatus: "GRANTED", eligibilityStatus: "PENDING", vagas: 0, limite: 3 },
+        { consentStatus: "GRANTED", eligibilityStatus: "INELIGIBLE", vagas: 0, limite: 3 },
+        { consentStatus: "GRANTED", eligibilityStatus: "ELIGIBLE", vagas: 3, limite: 3 },
+    ] as const)(
+        "RF11-IN01: confirmação bloqueada sem aceite, elegibilidade ou vaga (%s)",
+        ({ consentStatus, eligibilityStatus, vagas, limite }) => {
+            const onConfirmar = vi.fn();
+            render(
+                <ModalConfirmarInclusao
+                    estudoTitulo="Estudo fictício"
+                    candidato={{ ...candidato, consentStatus, eligibilityStatus }}
+                    vagasOcupadas={vagas}
+                    limiteVagas={limite}
+                    onFechar={vi.fn()}
+                    onConfirmar={onConfirmar}
+                />
+            );
+            const button = screen.getByRole("button", { name: "Confirmar inclusão" });
+            expect(button).toBeDisabled();
+            fireEvent.click(button);
+            expect(onConfirmar).not.toHaveBeenCalled();
+        }
+    );
+
     it("mostra o candidato, o estudo e as vagas que restam", () => {
         const { dialog } = renderModal(vi.fn().mockResolvedValue(undefined));
 
@@ -64,7 +91,8 @@ describe("Confirmação de inclusão (RF11)", () => {
         fireEvent.click(confirmar);
 
         expect(onConfirmar).toHaveBeenCalledTimes(1);
-        concluir();
+        await act(async () => concluir());
+        expect(confirmar).toBeEnabled();
     });
 
     it.each([

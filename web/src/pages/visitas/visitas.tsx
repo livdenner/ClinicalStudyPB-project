@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { RefreshCw } from "lucide-react";
 import { ListaVisitasAgendadas } from "../../components/visitas/ListaVisitasAgendadas";
 import { ModalDesfechoVisita } from "../../components/visitas/ModalDesfechoVisita";
+import { ModalResultadosVisita } from "../../components/visitas/ModalResultadosVisita";
 import { Button } from "../../components/ui/Button";
 import { STATUS_VISITA_CLASSES } from "../../config/visitas";
 import { useAuth } from "../../context/AuthContext";
@@ -25,12 +26,13 @@ import {
     type VisitaAgendada,
 } from "../../types/visita-agendada";
 import { podeRegistrarDesfecho } from "../../utils/desfecho-visita";
+import { pesquisadorPodeRegistrarResultados } from "../../utils/resultados-atividades";
 
 function mensagemErro(error: unknown, padrao: string): string {
     return error instanceof ApiClientError ? error.message : padrao;
 }
 
-/** Consulta visitas reais por estudo e permite desfechos ao coordenador. @author Lívia */
+/** Consulta visitas reais, permite desfechos ao coordenador e resultados ao pesquisador responsável. @author Lívia */
 export function VisitasPage() {
     const { session } = useAuth();
     const [params] = useSearchParams();
@@ -50,6 +52,7 @@ export function VisitasPage() {
             key={`${session.accessToken}:${params.get("studyId") ?? ""}`}
             token={session.accessToken}
             role={session.user.role}
+            userId={session.user.id}
             estudoSolicitado={params.get("studyId")}
         />
     );
@@ -58,10 +61,12 @@ export function VisitasPage() {
 function EstudosVisitas({
     token,
     role,
+    userId,
     estudoSolicitado,
 }: {
     token: string;
     role: UserRole;
+    userId: number;
     estudoSolicitado: string | null;
 }) {
     const [estudos, setEstudos] = useState<EstudoApi[]>([]);
@@ -69,6 +74,11 @@ function EstudosVisitas({
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState("");
     const [tentativa, setTentativa] = useState(0);
+    const handleEstudoAtualizado = useCallback((atual: EstudoApi) => {
+        setEstudos((anteriores) =>
+            anteriores.map((estudo) => (estudo.id === atual.id ? atual : estudo))
+        );
+    }, []);
 
     useEffect(() => {
         const controller = new AbortController();
@@ -173,12 +183,9 @@ function EstudosVisitas({
                     key={selecionado.id}
                     estudo={selecionado}
                     role={role}
+                    userId={userId}
                     token={token}
-                    onEstudoAtualizado={(atual) =>
-                        setEstudos((anteriores) =>
-                            anteriores.map((estudo) => (estudo.id === atual.id ? atual : estudo))
-                        )
-                    }
+                    onEstudoAtualizado={handleEstudoAtualizado}
                 />
             ) : (
                 <p
@@ -197,11 +204,13 @@ function EstudosVisitas({
 function AgendaEstudo({
     estudo,
     role,
+    userId,
     token,
     onEstudoAtualizado,
 }: {
     estudo: EstudoApi;
     role: UserRole;
+    userId: number;
     token: string;
     onEstudoAtualizado: (estudo: EstudoApi) => void;
 }) {
@@ -220,6 +229,7 @@ function AgendaEstudo({
         outcome: DesfechoVisita;
     } | null>(null);
     const [registrando, setRegistrando] = useState(false);
+    const [visitaResultados, setVisitaResultados] = useState<VisitaAgendada | null>(null);
     const [feedback, setFeedback] = useState<{
         texto: string;
         status: StatusVisitaAgendada;
@@ -337,7 +347,18 @@ function AgendaEstudo({
     }
 
     const estudoEditavel = estudo.status !== "CLOSED" && estudo.status !== "CANCELLED";
-    const filtrosBloqueados = registrando || Boolean(selecao);
+    const filtrosBloqueados = registrando || Boolean(selecao) || Boolean(visitaResultados);
+
+    function abrirResultados(visita: VisitaAgendada) {
+        if (
+            visita.status !== "DONE" ||
+            visita.studyId !== estudo.id ||
+            (role !== "RESEARCHER" && role !== "COORDINATOR")
+        )
+            return;
+        setFeedback(null);
+        setVisitaResultados(visita);
+    }
 
     return (
         <section className="flex flex-col gap-4" aria-label="Agenda do estudo">
@@ -469,6 +490,11 @@ function AgendaEstudo({
                             onDesfecho={
                                 role === "COORDINATOR" && estudoEditavel ? abrirDesfecho : undefined
                             }
+                            onResultados={abrirResultados}
+                            resultadosEditaveis={pesquisadorPodeRegistrarResultados(
+                                { id: userId, role },
+                                estudo
+                            )}
                         />
                         <p className="border-t border-[var(--color-border)] px-5 py-3 text-xs text-[var(--color-muted)]">
                             {visitas.length}{" "}
@@ -478,6 +504,20 @@ function AgendaEstudo({
                     </>
                 )}
             </div>
+            {visitaResultados && (
+                <ModalResultadosVisita
+                    key={visitaResultados.id}
+                    visita={visitaResultados}
+                    usuario={{ id: userId, role }}
+                    token={token}
+                    onEstudoAtualizado={onEstudoAtualizado}
+                    onFechar={() => {
+                        setVisitaResultados(null);
+                        prepararConsulta();
+                        setTentativa((atual) => atual + 1);
+                    }}
+                />
+            )}
             {selecao && (
                 <ModalDesfechoVisita
                     key={`${selecao.visita.id}:${selecao.outcome}`}

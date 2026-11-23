@@ -44,6 +44,7 @@
     "web": "expo start --web",
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:e2e": "maestro test e2e/maestro",
     "test:report": "node -e \"require('fs').mkdirSync('test-reports',{recursive:true})\" && jest --ci --json --outputFile=test-reports/jest.json"
   },
   "private": true,
@@ -52,6 +53,11 @@
     "testMatch": [
       "**/__tests__/**/*.test.[jt]s?(x)"
     ],
-    "clearMocks": true
+    "clearMocks": true,
+    "coverageThreshold": {
+      "global": {
+        "lines": 80
+      }
+    }
   }
 }

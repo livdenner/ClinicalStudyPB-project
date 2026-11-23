@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { calcularVagasDisponiveis } from "../../utils/estudos";
 import { CardsParticipantes } from "../estudos/CardsParticipantes";
 import { CalendarDays, CalendarPlus, Users } from "lucide-react";
@@ -12,7 +13,9 @@ type Props = {
     carregando: boolean;
     erro: string;
     onTentarNovamente: () => void;
+    acoes?: (participante: ParticipanteApi) => ReactNode;
     onVerVisitas?: (participante: ParticipanteApi) => void;
+    onVerHistorico?: (participante: ParticipanteApi) => void;
     onAgendarVisita?: (participante: ParticipanteApi) => void;
 };
 
@@ -24,7 +27,9 @@ export function PainelParticipantesVagas({
     carregando,
     erro,
     onTentarNovamente,
+    acoes,
     onVerVisitas,
+    onVerHistorico,
     onAgendarVisita,
 }: Props) {
     const vagasOcupadas = participantes.length;
@@ -138,11 +143,25 @@ export function PainelParticipantesVagas({
                     contexto="inclusao"
                     exibirSituacao
                     acoes={(participante) => {
+                        const acaoRetirada = acoes?.(participante);
                         const permiteAgendar =
                             Boolean(onAgendarVisita) && participante.status === "ACTIVE";
-                        if (!onVerVisitas && !permiteAgendar) return null;
+                        if (!onVerVisitas && !onVerHistorico && !permiteAgendar && !acaoRetirada)
+                            return null;
                         return (
-                            <div className="acoes-agenda-participante">
+                            <div
+                                className={`acoes-agenda-participante${acoes ? " acoes-agenda-participante--com-retirada" : ""}`}
+                            >
+                                {onVerHistorico && (
+                                    <Button
+                                        type="button"
+                                        variant="secondary"
+                                        aria-label={`Ver histórico: ${participante.candidateName}`}
+                                        onClick={() => onVerHistorico(participante)}
+                                    >
+                                        Ver histórico
+                                    </Button>
+                                )}
                                 {onVerVisitas && (
                                     <Button
                                         type="button"
@@ -166,6 +185,7 @@ export function PainelParticipantesVagas({
                                         Agendar
                                     </Button>
                                 )}
+                                {acaoRetirada}
                             </div>
                         );
                     }}

@@ -41,3 +41,6 @@ example
 # generated native folders
 /ios
 /android
+
+# E2E (Maestro)
+e2e/artefatos/

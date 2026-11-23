@@ -1,8 +1,14 @@
+import type { ReactNode } from "react";
 import { Chip, Table } from "@heroui/react";
 import type { ParticipanteApi } from "../../types/participante";
 import { SELOS_PARTICIPANTE, formatarDataInclusao } from "../../utils/participantes";
 
-export function TabelaParticipantes({ participantes }: { participantes: ParticipanteApi[] }) {
+type Props = {
+    participantes: ParticipanteApi[];
+    acoes?: (participante: ParticipanteApi) => ReactNode;
+};
+
+export function TabelaParticipantes({ participantes, acoes }: Props) {
     return (
         <Table
             variant="secondary"
@@ -17,7 +23,7 @@ export function TabelaParticipantes({ participantes }: { participantes: Particip
                         <Table.Column
                             id="nome"
                             isRowHeader
-                            className="w-1/2 rounded-none border-b border-[var(--color-border)] bg-[var(--color-neutral-soft)] px-5 py-3 font-semibold text-[var(--color-neutral)] after:hidden"
+                            className="w-2/5 rounded-none border-b border-[var(--color-border)] bg-[var(--color-neutral-soft)] px-5 py-3 font-semibold text-[var(--color-neutral)] after:hidden"
                         >
                             Nome
                         </Table.Column>
@@ -33,6 +39,14 @@ export function TabelaParticipantes({ participantes }: { participantes: Particip
                         >
                             Situação
                         </Table.Column>
+                        {acoes && (
+                            <Table.Column
+                                id="acoes"
+                                className="rounded-none border-b border-[var(--color-border)] bg-[var(--color-neutral-soft)] px-5 py-3 font-semibold text-[var(--color-neutral)] after:hidden"
+                            >
+                                Ações
+                            </Table.Column>
+                        )}
                     </Table.Header>
                     <Table.Body items={participantes}>
                         {(participante) => {
@@ -56,6 +70,11 @@ export function TabelaParticipantes({ participantes }: { participantes: Particip
                                             <Chip.Label>{selo.rotulo}</Chip.Label>
                                         </Chip>
                                     </Table.Cell>
+                                    {acoes && (
+                                        <Table.Cell className="border-[var(--color-border)] px-5 py-4 group-hover:bg-[var(--color-row-hover)]">
+                                            {acoes(participante)}
+                                        </Table.Cell>
+                                    )}
                                 </Table.Row>
                             );
                         }}

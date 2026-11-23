@@ -1940,9 +1940,11 @@ paths:
         nunca de parâmetro, e só as participações da própria conta aparecem.
         Lista os estudos em que a conta foi incluída, com participação ativa
         (ACTIVE) ou retirada (WITHDRAWN), da inclusão mais recente para a mais
-        antiga. Estudos encerrados ou cancelados continuam na lista, com
-        studyStatus atualizado. Candidaturas ainda não incluídas ficam em
-        /api/me/invitations. Retorna [] quando a conta não tem inclusão.
+        antiga, incluindo as visitas previstas do protocolo na ordem
+        (plannedVisits, [] quando não houver). Estudos encerrados ou cancelados
+        continuam na lista, com studyStatus atualizado. Candidaturas ainda não
+        incluídas ficam em /api/me/invitations. Retorna [] quando a conta não
+        tem inclusão.
       security:
         - bearerAuth: []
       responses:
@@ -1965,6 +1967,17 @@ paths:
                   responsibleName: Paula Pesquisadora
                   participationStatus: ACTIVE
                   includedAt: '2026-11-10T14:00:00Z'
+                  plannedVisits:
+                    - id: 10
+                      studyId: 1
+                      name: Visita inicial
+                      plannedDate: '2027-02-01'
+                      position: 1
+                      activities:
+                        - id: 21
+                          name: Coleta inicial
+                          description: Registro de acompanhamento previsto
+                          position: 1
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -1978,6 +1991,8 @@ paths:
         Somente PARTICIPANT; outros perfis recebem 403. A conta vem do token,
         nunca de parâmetro, e só as visitas das participações da própria conta
         aparecem, de todos os seus estudos (inclusive de participação retirada).
+        Cada visita inclui a lista de atividades previstas na ordem do protocolo
+        (`[]` quando não houver).
         - upcoming: visitas SCHEDULED, aguardando desfecho, por scheduledAt
           crescente (a mais próxima primeiro). Inclui visita cuja data já passou
           e que ainda não teve o desfecho registrado.
@@ -2006,6 +2021,11 @@ paths:
                     plannedVisitName: Retorno
                     scheduledAt: '2027-03-10T12:00:00Z'
                     status: SCHEDULED
+                    activities:
+                      - id: 22
+                        name: Aferição clínica
+                        description: Acompanhamento dos sinais vitais
+                        position: 1
                 history:
                   - id: 12
                     studyId: 1
@@ -2017,6 +2037,7 @@ paths:
                     status: CANCELLED
                     outcomeAt: '2027-01-20T13:00:00Z'
                     cancellationReason: Participante pediu para remarcar
+                    activities: []
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -2755,7 +2776,7 @@ components:
       type: object
       description: Estudo em que a conta autenticada participa (RF17)
       required: [participantId, studyId, studyTitle, studyObjective, studyStatus, startDate,
-                 endDate, responsibleName, participationStatus, includedAt]
+                 endDate, responsibleName, participationStatus, includedAt, plannedVisits]
       properties:
         participantId:
           type: integer
@@ -2799,11 +2820,17 @@ components:
           description: |
             Instante da retirada; ausente quando participationStatus=ACTIVE. O
             motivo e a autoria da retirada não são expostos ao participante.
+        plannedVisits:
+          type: array
+          readOnly: true
+          description: Visitas previstas do protocolo, na ordem, com suas atividades; [] quando não houver
+          items:
+            $ref: '#/components/schemas/PlannedVisit'
     ParticipantVisit:
       type: object
       description: Visita agendada da conta autenticada (RF18)
       required: [id, studyId, studyTitle, participantId, plannedVisitId, plannedVisitName,
-                 scheduledAt, status]
+                 scheduledAt, status, activities]
       properties:
         id:
           type: integer
@@ -2844,6 +2871,12 @@ components:
           type: string
           readOnly: true
           description: Justificativa do cancelamento; presente só em CANCELLED
+        activities:
+          type: array
+          readOnly: true
+          description: Atividades previstas da visita na ordem do protocolo; [] quando não houver
+          items:
+            $ref: '#/components/schemas/PlannedActivity'
     ParticipantVisits:
       type: object
       description: Visitas da conta autenticada separadas em próximas e histórico (RF18)

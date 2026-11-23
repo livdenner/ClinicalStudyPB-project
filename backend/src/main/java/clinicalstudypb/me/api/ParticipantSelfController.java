@@ -47,8 +47,8 @@ public class ParticipantSelfController {
      */
     @GetMapping("/studies")
     @Operation(summary = "Lista os estudos do participante autenticado (RF17, T23.1)",
-            description = "Somente PARTICIPANT. Participações ativas ou retiradas da própria conta; "
-                    + "retorna [] sem inclusão.",
+            description = "Somente PARTICIPANT. Participações ativas ou retiradas da própria conta "
+                    + "com visitas previstas do protocolo; retorna [] sem inclusão.",
             responses = {
                 @ApiResponse(responseCode = "200", description = "Estudos do participante",
                         content = @Content(array = @ArraySchema(
@@ -68,7 +68,8 @@ public class ParticipantSelfController {
     @GetMapping("/visits")
     @Operation(summary = "Lista as visitas do participante autenticado (RF18, T23.1)",
             description = "Somente PARTICIPANT. Próximas visitas (SCHEDULED) e histórico de desfechos "
-                    + "(DONE, ABSENT, CANCELLED) de todos os estudos da própria conta.",
+                    + "(DONE, ABSENT, CANCELLED) de todos os estudos da própria conta, "
+                    + "com as atividades previstas do protocolo.",
             responses = {
                 @ApiResponse(responseCode = "200", description = "Visitas do participante",
                         content = @Content(schema = @Schema(implementation = ParticipantVisitsResponse.class))),

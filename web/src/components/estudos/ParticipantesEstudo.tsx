@@ -1,3 +1,6 @@
+import { criarAcaoRetirada } from "../participantes/AcaoRegistrarRetirada";
+import type { UserRole } from "../../types/auth";
+import type { EstudoApi } from "../../types/estudo";
 import { CardsParticipantes } from "./CardsParticipantes";
 import { TabelaParticipantes } from "./TabelaParticipantes";
 import { useTelaEstreita } from "../../hooks/useTelaEstreita";
@@ -8,17 +11,26 @@ import { listarParticipantesPorEstudo } from "../../services/participantes";
 import type { ParticipanteApi } from "../../types/participante";
 import { obterMensagemErroApi } from "../../utils/erros-api";
 import { ErrorMessage } from "../ui/ErrorMessage";
+import { HistoricoParticipante } from "./HistoricoParticipante";
 
-export function ParticipantesEstudo({ estudoId, token }: { estudoId: number; token: string }) {
+type Props = {
+    estudo: Pick<EstudoApi, "id" | "title" | "status">;
+    token: string;
+    perfil: UserRole;
+};
+
+export function ParticipantesEstudo({ estudo, token, perfil }: Props) {
     const telaEstreita = useTelaEstreita();
     const [participantes, setParticipantes] = useState<ParticipanteApi[]>([]);
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState("");
     const [tentativa, setTentativa] = useState(0);
+    const [historicoId, setHistoricoId] = useState<number | null>(null);
+    const [mensagem, setMensagem] = useState("");
 
     useEffect(() => {
         const controller = new AbortController();
-        listarParticipantesPorEstudo(estudoId, token, controller.signal)
+        listarParticipantesPorEstudo(estudo.id, token, controller.signal)
             .then((dados) => {
                 if (!controller.signal.aborted) setParticipantes(dados);
             })
@@ -33,13 +45,53 @@ export function ParticipantesEstudo({ estudoId, token }: { estudoId: number; tok
                 if (!controller.signal.aborted) setCarregando(false);
             });
         return () => controller.abort();
-    }, [estudoId, token, tentativa]);
+    }, [estudo.id, token, tentativa]);
 
     function atualizar() {
         setCarregando(true);
         setErro("");
         setTentativa((atual) => atual + 1);
     }
+
+    if (historicoId !== null) {
+        return (
+            <HistoricoParticipante
+                key={`${estudo.id}:${historicoId}:${token}`}
+                estudoId={estudo.id}
+                participanteId={historicoId}
+                token={token}
+                onVoltar={() => setHistoricoId(null)}
+            />
+        );
+    }
+
+    function atualizarParticipante(atualizado: ParticipanteApi) {
+        setParticipantes((atuais) =>
+            atuais.map((item) => (item.id === atualizado.id ? atualizado : item))
+        );
+        setMensagem("Retirada registrada com sucesso.");
+    }
+
+    const acaoRetirada = criarAcaoRetirada({
+        perfil,
+        estadoEstudo: estudo.status,
+        estudoTitulo: estudo.title,
+        token,
+        onRetiradaRegistrada: atualizarParticipante,
+    });
+
+    const acoes = (participante: ParticipanteApi) => (
+        <div className="flex flex-col gap-2">
+            <Button
+                variant="secondary"
+                aria-label={`Ver histórico: ${participante.candidateName}`}
+                onPress={() => setHistoricoId(participante.id)}
+            >
+                Ver histórico
+            </Button>
+            {acaoRetirada?.(participante)}
+        </div>
+    );
 
     return (
         <section aria-labelledby="participantes-estudo-heading" className="flex flex-col gap-4">
@@ -61,6 +113,14 @@ export function ParticipantesEstudo({ estudoId, token }: { estudoId: number; tok
                     onAtualizar={atualizar}
                 />
             </header>
+            {mensagem && (
+                <p
+                    role="status"
+                    className="rounded-lg bg-[var(--color-success-soft)] p-3 text-sm text-[var(--color-success)]"
+                >
+                    {mensagem}
+                </p>
+            )}
             {carregando ? (
                 <div role="status" className="flex items-center justify-center gap-3 p-8">
                     <Spinner size="sm" aria-hidden="true" /> Carregando participantes...
@@ -82,9 +142,13 @@ export function ParticipantesEstudo({ estudoId, token }: { estudoId: number; tok
                     </p>
                 </div>
             ) : telaEstreita ? (
-                <CardsParticipantes participantes={participantes} contexto="situacao" />
+                <CardsParticipantes
+                    participantes={participantes}
+                    contexto="situacao"
+                    acoes={acoes}
+                />
             ) : (
-                <TabelaParticipantes participantes={participantes} />
+                <TabelaParticipantes participantes={participantes} acoes={acoes} />
             )}
         </section>
     );
