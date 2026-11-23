@@ -1,0 +1,114 @@
+name: E2E Mobile
+
+# T23.5: login do participante e próximas visitas no emulador Android, com Maestro,
+# contra o backend e o PostgreSQL reais de compose.e2e.yaml e a seed padrão.
+# Fica fora do ci.yml porque compila o app nativo e sobe um emulador (cerca de 25 min);
+# roda quando o app, o backend, as seeds ou a stack de teste mudam, ou sob demanda.
+on:
+  pull_request:
+    branches: [development, main]
+    paths:
+      - "mobile/**"
+      - "backend/**"
+      - "compose.e2e.yaml"
+      - ".github/workflows/mobile-e2e.yml"
+  push:
+    branches: [development, main]
+    paths:
+      - "mobile/**"
+      - "backend/**"
+      - "compose.e2e.yaml"
+      - ".github/workflows/mobile-e2e.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: mobile-e2e-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  maestro:
+    name: E2E Mobile (Maestro, emulador Android)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      # 10.0.2.2 é o host visto de dentro do emulador; 18080 é a porta do backend de compose.e2e.yaml.
+      EXPO_PUBLIC_API_BASE_URL: http://10.0.2.2:18080/api
+      CLINICALSTUDYPB_E2E: "1"
+      APK: mobile/android/app/build/outputs/apk/release/app-release.apk
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Liberar espaço em disco (build nativo, imagens Docker e emulador)
+        run: sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost /usr/local/.ghcup
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Subir backend e banco de teste com a seed padrão (compose.e2e.yaml)
+        run: |
+          docker compose -f compose.e2e.yaml up -d --build --wait db backend
+          docker compose -f compose.e2e.yaml run --rm seed
+
+      - name: Instalar dependências do app
+        working-directory: mobile
+        run: npm ci
+      - name: Gerar o projeto Android (expo prebuild)
+        working-directory: mobile
+        run: npx expo prebuild --platform android --no-install
+      - name: Compilar o APK de release (só x86_64, a arquitetura do emulador)
+        working-directory: mobile/android
+        env:
+          NODE_ENV: production
+        run: ./gradlew assembleRelease -PreactNativeArchitectures=x86_64 --no-daemon
+
+      - name: Instalar o Maestro
+        run: |
+          curl -fsSL "https://get.maestro.mobile.dev" | bash
+          echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
+
+      - name: Habilitar KVM para o emulador
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Rodar o fluxo no emulador
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: |
+            adb install -r "$APK"
+            mkdir -p mobile/test-reports mobile/e2e/artefatos
+            maestro test --format=JUNIT --output=mobile/test-reports/maestro.xml --test-output-dir=mobile/e2e/artefatos --debug-output=mobile/e2e/artefatos/debug mobile/e2e/maestro
+
+      - name: Logs do backend
+        if: failure()
+        run: docker compose -f compose.e2e.yaml logs backend
+      - name: Relatório e capturas do Maestro
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: maestro-report
+          path: |
+            mobile/test-reports/maestro.xml
+            mobile/e2e/artefatos
+          if-no-files-found: ignore
+      - name: Derrubar a stack de teste
+        if: always()
+        run: docker compose -f compose.e2e.yaml down

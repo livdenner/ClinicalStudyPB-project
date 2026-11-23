@@ -1,0 +1,54 @@
+# E2E-MOB-01 (T23.5): login do participante e listagem das próximas visitas (RF02, RF18).
+#
+# Usa a conta fictícia participante@clinicalstudypb.test da seed padrão
+# (seed_demo_users.sql + seed_demo_followup.sql), contra a stack de compose.e2e.yaml.
+# Execução e pré-requisitos: mobile/README.md, seção "Testes E2E (Maestro)".
+appId: dev.clinicalstudypb.mobile
+name: Login do participante e próximas visitas
+env:
+  EMAIL: participante@clinicalstudypb.test
+  PASSWORD: Demo@Clinical2026
+---
+# Sem sessão salva: o app sempre começa pelo login.
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "Entre com suas credenciais institucionais para acessar o sistema."
+    timeout: 30000
+
+- tapOn:
+    id: "login-email"
+- inputText: ${EMAIL}
+- tapOn:
+    id: "login-password"
+- inputText: ${PASSWORD}
+- hideKeyboard
+- tapOn: "Entrar"
+
+# Início autenticado: saudação com o primeiro nome de "Participante Demo".
+- extendedWaitUntil:
+    visible: "Olá, Participante!"
+    timeout: 20000
+- assertVisible: ${EMAIL}
+
+- scrollUntilVisible:
+    element: "Ver visitas"
+- tapOn: "Ver visitas"
+- extendedWaitUntil:
+    visible: ".*Acompanhamento de 3 meses.*"
+    timeout: 20000
+
+# Os textos do card usam regex porque o card também os repete no rótulo de acessibilidade.
+# Aba "Próximas": só a visita agendada (SCHEDULED) de 05/01/2027 no estudo de diabetes.
+- assertVisible: "Próximas"
+- assertVisible: "Estudo: Controle glicêmico no diabetes tipo 2"
+- assertNotVisible: ".*Avaliação inicial.*"
+- takeScreenshot: proximas-visitas
+
+# A visita já realizada fica no histórico, não nas próximas.
+- tapOn: "Histórico"
+- extendedWaitUntil:
+    visible: ".*Avaliação inicial.*"
+    timeout: 10000
+- assertNotVisible: ".*Acompanhamento de 3 meses.*"
+- takeScreenshot: historico-visitas
