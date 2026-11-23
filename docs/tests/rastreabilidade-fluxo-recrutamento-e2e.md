@@ -22,10 +22,15 @@ A suíte [`full-recruitment.spec.ts`](../../web/e2e/flows/full-recruitment.spec.
 
 O fluxo **protocolo → candidato → elegibilidade → consentimento → inclusão** fica coberto pelo E2E-REC-01. O E2E-REC-02 cobre a regra negativa de que a recusa bloqueia a inclusão, na tela e na API.
 
-Os seletores da tabela de candidatos aceitam tanto a versão atual da `development` quanto a do PR #96 (T17.7):
+Desde o PR #101 (T24.3), a tela de recrutamento mostra os candidatos em cards, não mais em tabela. O spec localiza cada candidato pelo card dentro da lista acessível "Lista de candidatos":
 
-- **Aceite e recusa:** as asserções usam `/Aceit/` e `/Recus/`, que aceitam os dois rótulos ("Aceito"/"Aceitou" e "Recusado"/"Recusou").
-- **Botão de inclusão:** a ausência é conferida como "nenhum botão `Incluir participante` habilitado". A asserção passa tanto com o botão desabilitado quanto sem o botão.
+```ts
+page.getByRole("list", { name: "Lista de candidatos" })
+    .getByRole("listitem").filter({ hasText: name })
+```
+
+- **Aceite e recusa:** as asserções usam `/Aceit/` e `/Recus/`. Com o PR #96 (T17.7) já na `development`, os rótulos exibidos no card são "Aceitou" e "Recusou".
+- **Botão de inclusão:** a ausência é conferida como "nenhum botão `Incluir participante` habilitado". Hoje o card recusado não mostra o botão, e a asserção também passaria se ele aparecesse desabilitado.
 
 ## Execução e relatório
 
@@ -55,9 +60,23 @@ O spec usa `expect` com 15 s, em vez dos 5 s padrão, porque o fluxo tem várias
 
 ## Resultado local
 
+### Depois de atualizar com a `development` (lista em cards)
+
+Com a `development` atual (`50e5efd`, já com os PRs #96 e #101), o `candidateRow` antigo, que procurava `getByRole("row")`, não encontrava mais o candidato logo depois do cadastro. Os dois cenários passaram a usar o `candidateCard` descrito acima.
+
+| Execução | Resultado |
+| --- | --- |
+| [Suíte completa, 21:47](../test-runs/2026-11-22_21-47_T17-11_e2e-completa.md) | Nenhum teste executou: o build do `webServer` passou dos 180 s na máquina local. |
+| [Suíte completa, 21:59](../test-runs/2026-11-22_21-59_T17-11_e2e-completa.md) | 15 de 21 passaram. Os seis que falharam pararam no login, antes das telas. Entre eles, os dois cenários desta suíte. |
+| [Fluxo de recrutamento](../test-runs/2026-11-22_22-03_T17-11_e2e-fluxo-recrutamento.md) | Os dois cenários passaram (71,7 s e 63,8 s). |
+| [Suíte completa, 22:09](../test-runs/2026-11-22_22-09_T17-11_e2e-completa.md) | 20 de 21 passaram em 4,6 min, incluindo os dois cenários desta suíte (58,9 s e 65,5 s). Falhou só o `CA-02.1` do `login.spec.ts`, por lentidão no login. |
+| [Re-rodada do `login.spec.ts`](../test-runs/2026-11-22_22-11_T17-11_login-rerodada.md) | O `CA-02.1` continuou acima de 5 s no primeiro login. Este PR não altera esse spec. |
+
+Na CI, o registro da execução de `677e43f` ([histórico do PR #106](../test-ci/pull-requests/106/README.md)) ficou sem o E2E. O job **E2E Web (Playwright)** daquele commit parou antes dos testes, porque o build da imagem do backend não conseguiu baixar o Maven (`wget: Failed to fetch …apache-maven-3.9.9-bin.zip`), e o JSON não foi gerado. A execução com os cards entra no mesmo histórico depois do push.
+
+### Antes da lista em cards (19/11)
+
 | Execução | Resultado |
 | --- | --- |
 | [Suíte completa](../test-runs/2026-11-19_23-12_T17-11_e2e-completa.md) | 10 de 11 testes passaram em 1,9 min com `--workers=1`, sem novas tentativas. Os dois cenários desta suíte passaram (33,7 s e 22,0 s). |
 | [Re-rodada do `tab-session.spec.ts`](../test-runs/2026-11-19_23-13_T17-11_tab-session-rerodada.md) | O único teste que falhou na suíte completa passou sem alteração. A falha foi lentidão do login na máquina local. |
-
-Os dois cenários também passaram com o `web/src` do PR #96 aplicado localmente. Isso confirma os seletores compatíveis descritos acima.

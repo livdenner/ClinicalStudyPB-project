@@ -154,8 +154,12 @@ async function openRecruitment(page: Page, studyId: number) {
     await expect(page.getByRole("button", { name: "Novo candidato" })).toBeEnabled();
 }
 
-function candidateRow(page: Page, name: string) {
-    return page.getByRole("row").filter({ hasText: name });
+/** Card do candidato na lista em cards da tela de recrutamento (T24.3). */
+function candidateCard(page: Page, name: string) {
+    return page
+        .getByRole("list", { name: "Lista de candidatos" })
+        .getByRole("listitem")
+        .filter({ hasText: name });
 }
 
 async function registerCandidate(
@@ -194,7 +198,7 @@ async function registerCandidate(
     );
     await invitation.getByRole("button", { name: "Concluir cadastro" }).click();
     await expect(invitation).toBeHidden();
-    await expect(candidateRow(page, data.name)).toBeVisible();
+    await expect(candidateCard(page, data.name)).toBeVisible();
 
     return { id: body.id, name: data.name, activationCode: body.activation.activationCode };
 }
@@ -208,7 +212,7 @@ async function evaluateEligibility(page: Page, name: string) {
         page.getByText("Avaliação de elegibilidade registrada com sucesso.")
     ).toBeVisible();
     await page.getByRole("button", { name: "Voltar para candidatos" }).click();
-    await expect(candidateRow(page, name)).toContainText("Elegível");
+    await expect(candidateCard(page, name)).toContainText("Elegível");
 }
 
 async function expectParticipantAndVacancies(page: Page, candidate: string) {
@@ -249,7 +253,7 @@ test.describe("fluxo completo de recrutamento", () => {
 
         await test.step("coordenador vê o aceite e inclui o participante", async () => {
             await openRecruitment(coordinator.page, studyId);
-            await expect(candidateRow(coordinator.page, registered.name)).toContainText(/Aceit/);
+            await expect(candidateCard(coordinator.page, registered.name)).toContainText(/Aceit/);
             await coordinator.page
                 .getByRole("button", { name: `Incluir participante: ${registered.name}` })
                 .click();
@@ -304,9 +308,9 @@ test.describe("fluxo completo de recrutamento", () => {
 
         await test.step("a tela mostra a recusa e não oferece a inclusão", async () => {
             await openRecruitment(coordinator.page, studyId);
-            const row = candidateRow(coordinator.page, registered.name);
-            await expect(row).toContainText(/Recus/);
-            // Sem botão habilitado: ausente ou desabilitado, conforme a versão da tabela.
+            const card = candidateCard(coordinator.page, registered.name);
+            await expect(card).toContainText(/Recus/);
+            // Sem botão habilitado: ausente ou desabilitado.
             await expect(
                 coordinator.page.getByRole("button", {
                     name: `Incluir participante: ${registered.name}`,
