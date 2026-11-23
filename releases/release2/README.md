@@ -128,6 +128,10 @@ Em 18/11/2026, o [README da Release 1](../release1/README.md) foi corrigido para
 
 Alteração apenas documental, integrada pela `development`: o conteúdo da tag `release1` não mudou.
 
+## Regressão web de UX e sessão (T24.5)
+
+A [matriz da T24.5](tests/t24-5/README.md) relaciona as observações sobre ações, cores, cards e sessão aos testes executados, com a regressão das telas RF04–RF11, os resultados históricos de 21/11/2026 e a revalidação após integrar a development. O fluxo completo de recrutamento foi adaptado pela T17.11 e já está integrado pela PR #106.
+
 ## Rastreabilidade e testes do aplicativo mobile (T23.4)
 
 Em **21/11/2026** (commit `3b2f7b0`), a suíte Jest do aplicativo mobile atingiu **23 suítes e 260 testes aprovados (0 falhas)** usando Jest + React Native Testing Library com HTTP inteiramente simulado e **zero chamadas reais de rede**, além de validação de tipos via `npx.cmd tsc --noEmit`. A meta mínima global de **80% de linhas** está configurada em [`mobile/package.json`](../../mobile/package.json) (`coverageThreshold.global.lines`), e todos os casos executados estão registrados em [`2026-11-21_22-15_T23-4_mobile-jest.md`](../../docs/test-runs/2026-11-21_22-15_T23-4_mobile-jest.md).

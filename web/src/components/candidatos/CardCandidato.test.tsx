@@ -58,22 +58,65 @@ it.each([
 );
 
 it.each([
-    { status: "INVITED", rotulo: "Convidado", avaliar: true, incluir: false, cancelar: true },
-    { status: "ACTIVE", rotulo: "Conta ativa", avaliar: true, incluir: false, cancelar: true },
     {
-        status: "CONSENT_PENDING",
-        rotulo: "Aguardando decisão",
+        status: "INVITED",
+        rotulo: "Convidado",
+        tom: "info",
         avaliar: true,
         incluir: false,
         cancelar: true,
     },
-    { status: "GRANTED", rotulo: "Aceitou", avaliar: true, incluir: true, cancelar: true },
-    { status: "DECLINED", rotulo: "Recusou", avaliar: true, incluir: false, cancelar: true },
-    { status: "INCLUDED", rotulo: "Incluído", avaliar: false, incluir: false, cancelar: false },
-    { status: "CANCELLED", rotulo: "Cancelado", avaliar: false, incluir: false, cancelar: false },
+    {
+        status: "ACTIVE",
+        rotulo: "Conta ativa",
+        tom: "neutral",
+        avaliar: true,
+        incluir: false,
+        cancelar: true,
+    },
+    {
+        status: "CONSENT_PENDING",
+        rotulo: "Aguardando decisão",
+        tom: "warning",
+        avaliar: true,
+        incluir: false,
+        cancelar: true,
+    },
+    {
+        status: "GRANTED",
+        rotulo: "Aceitou",
+        tom: "success",
+        avaliar: true,
+        incluir: true,
+        cancelar: true,
+    },
+    {
+        status: "DECLINED",
+        rotulo: "Recusou",
+        tom: "neutral",
+        avaliar: true,
+        incluir: false,
+        cancelar: true,
+    },
+    {
+        status: "INCLUDED",
+        rotulo: "Incluído",
+        tom: "success",
+        avaliar: false,
+        incluir: false,
+        cancelar: false,
+    },
+    {
+        status: "CANCELLED",
+        rotulo: "Cancelado",
+        tom: "error",
+        avaliar: false,
+        incluir: false,
+        cancelar: false,
+    },
 ] as const)(
-    "RF08-CARD02: respeita a situação $status retornada pela API",
-    ({ status, rotulo, avaliar, incluir, cancelar }) => {
+    "RF08-CARD02 / T24.5: $status mantém a cor semântica e as ações permitidas",
+    ({ status, rotulo, tom, avaliar, incluir, cancelar }) => {
         render(
             <CardCandidato
                 candidato={{ ...candidato, status }}
@@ -85,6 +128,10 @@ it.each([
             />
         );
         expect(screen.getByText(rotulo)).toBeInTheDocument();
+        expect(screen.getByText(rotulo).closest(".chip")).toHaveClass(
+            `bg-[var(--color-${tom}-soft)]`,
+            `text-[var(--color-${tom})]`
+        );
         expect(
             Boolean(screen.queryByRole("button", { name: "Avaliar elegibilidade: Ana Silva" }))
         ).toBe(avaliar);
@@ -97,6 +144,18 @@ it.each([
         expect(screen.queryByRole("button", { name: /consentimento/i })).not.toBeInTheDocument();
     }
 );
+
+it.each([
+    ["PENDING", "Pendente", "warning"],
+    ["ELIGIBLE", "Elegível", "success"],
+    ["INELIGIBLE", "Inelegível", "neutral"],
+] as const)("T24.5 — Elegibilidade: %s usa a cor documentada", (eligibilityStatus, rotulo, tom) => {
+    render(<CardCandidato candidato={{ ...candidato, eligibilityStatus }} />);
+    expect(screen.getByText(rotulo).closest(".chip")).toHaveClass(
+        `bg-[var(--color-${tom}-soft)]`,
+        `text-[var(--color-${tom})]`
+    );
+});
 
 it.each([
     { eligibilityStatus: "PENDING", consentStatus: "GRANTED" },
