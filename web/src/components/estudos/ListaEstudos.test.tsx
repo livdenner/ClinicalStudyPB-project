@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { TabelaEstudos } from "./TabelaEstudos";
+import { ListaEstudos } from "./ListaEstudos";
 import type { EstudoApi } from "../../types/estudo";
 
 const pesquisador = { id: 7, name: "Ana Silva", role: "RESEARCHER" as const };
@@ -32,22 +32,18 @@ const estudos: EstudoApi[] = [
 
 afterEach(cleanup);
 
-describe("TabelaEstudos", () => {
+describe("ListaEstudos", () => {
     it("mostra responsáveis, limites e períodos inclusive quando atravessam o ano", () => {
         render(
             <MemoryRouter>
-                <TabelaEstudos estudos={estudos} pesquisador={pesquisador} onEditar={vi.fn()} />
+                <ListaEstudos estudos={estudos} pesquisador={pesquisador} onEditar={vi.fn()} />
             </MemoryRouter>
         );
-        const tabela = screen.getByRole("grid", {
+        const tabela = screen.getByRole("list", {
             name: "Lista de estudos clínicos",
         });
-        const primeiraLinha = within(tabela)
-            .getByRole("rowheader", { name: "Estudo do sono" })
-            .closest("tr")!;
-        const segundaLinha = within(tabela)
-            .getByRole("rowheader", { name: "Estudo cardiovascular" })
-            .closest("tr")!;
+        const primeiraLinha = within(tabela).getByRole("article", { name: "Estudo do sono" });
+        const segundaLinha = within(tabela).getByRole("article", { name: "Estudo cardiovascular" });
         expect(within(primeiraLinha).getByText("Ana Silva")).toBeInTheDocument();
         expect(within(primeiraLinha).getByText("30")).toBeInTheDocument();
         expect(within(primeiraLinha).getByText("nov–dez 2026")).toBeInTheDocument();
@@ -60,7 +56,7 @@ describe("TabelaEstudos", () => {
         const onEditar = vi.fn();
         render(
             <MemoryRouter>
-                <TabelaEstudos estudos={estudos} pesquisador={pesquisador} onEditar={onEditar} />
+                <ListaEstudos estudos={estudos} pesquisador={pesquisador} onEditar={onEditar} />
             </MemoryRouter>
         );
         fireEvent.click(
@@ -74,16 +70,14 @@ describe("TabelaEstudos", () => {
             screen.queryByRole("button", { name: "Editar estudo: Estudo cardiovascular" })
         ).not.toBeInTheDocument();
         expect(
-            screen.getByRole("button", {
-                name: "Visualizar estudo: Estudo cardiovascular",
-            })
+            screen.getByRole("link", { name: "Visualizar estudo: Estudo cardiovascular" })
         ).toBeInTheDocument();
     });
 
     it("orienta o usuário quando não existem estudos para exibir", () => {
         render(
             <MemoryRouter>
-                <TabelaEstudos estudos={[]} pesquisador={pesquisador} onEditar={vi.fn()} />
+                <ListaEstudos estudos={[]} pesquisador={pesquisador} onEditar={vi.fn()} />
             </MemoryRouter>
         );
         expect(screen.getByText("Nenhum estudo encontrado")).toBeInTheDocument();

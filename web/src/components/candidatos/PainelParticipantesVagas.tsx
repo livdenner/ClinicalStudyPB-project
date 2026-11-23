@@ -1,4 +1,6 @@
-import { Chip, Table } from "@heroui/react";
+import type { ReactNode } from "react";
+import { calcularVagasDisponiveis } from "../../utils/estudos";
+import { CardsParticipantes } from "../estudos/CardsParticipantes";
 import { CalendarDays, CalendarPlus, Users } from "lucide-react";
 import type { ParticipanteApi } from "../../types/participante";
 import { Button } from "../ui/Button";
@@ -11,26 +13,13 @@ type Props = {
     carregando: boolean;
     erro: string;
     onTentarNovamente: () => void;
+    acoes?: (participante: ParticipanteApi) => ReactNode;
     onVerVisitas?: (participante: ParticipanteApi) => void;
+    onVerHistorico?: (participante: ParticipanteApi) => void;
     onAgendarVisita?: (participante: ParticipanteApi) => void;
 };
 
-function formatarInclusao(iso: string): string {
-    const dataObj = new Date(iso);
-    if (Number.isNaN(dataObj.getTime())) return "—";
-    const data = dataObj.toLocaleDateString("pt-BR", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-    });
-    const hora = dataObj.toLocaleTimeString("pt-BR", {
-        hour: "2-digit",
-        minute: "2-digit",
-    });
-    return `${data} às ${hora}`;
-}
-
-/** Mostra vagas, situação dos participantes e acessos à agenda autorizada. @author Lívia */
+/** Preserva os cards e o painel de vagas com acesso à agenda autorizada. @author Lívia */
 export function PainelParticipantesVagas({
     estudoTitulo,
     limiteVagas,
@@ -38,26 +27,16 @@ export function PainelParticipantesVagas({
     carregando,
     erro,
     onTentarNovamente,
+    acoes,
     onVerVisitas,
+    onVerHistorico,
     onAgendarVisita,
 }: Props) {
     const vagasOcupadas = participantes.length;
-    const vagasDisponiveis = Math.max(0, limiteVagas - vagasOcupadas);
+    const vagasDisponiveis = calcularVagasDisponiveis(limiteVagas, vagasOcupadas);
     const estudoLotado = limiteVagas > 0 && vagasDisponiveis === 0;
     const percentualOcupacao =
         limiteVagas > 0 ? Math.min(100, Math.round((vagasOcupadas / limiteVagas) * 100)) : 0;
-    const exibirAcoes = Boolean(onVerVisitas || onAgendarVisita);
-    const colunas = [
-        "Participante",
-        "Vínculo",
-        "Data de inclusão",
-        "Situação",
-        ...(exibirAcoes ? ["Visitas"] : []),
-    ];
-    const itensTabela = participantes.map((participante) => ({
-        ...participante,
-        permiteAgendar: Boolean(onAgendarVisita) && participante.status === "ACTIVE",
-    }));
 
     return (
         <section
@@ -65,11 +44,11 @@ export function PainelParticipantesVagas({
             aria-labelledby="participantes-vagas-heading"
         >
             <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--color-border)] px-5 py-4">
-                <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
+                <div className="flex min-w-0 items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--color-primary-soft)] text-[var(--color-primary)]">
                         <Users size={20} aria-hidden="true" />
                     </div>
-                    <div>
+                    <div className="min-w-0 [overflow-wrap:anywhere]">
                         <h2
                             id="participantes-vagas-heading"
                             className="text-base font-bold text-[var(--color-title)]"
@@ -159,101 +138,58 @@ export function PainelParticipantesVagas({
                     </span>
                 </div>
             ) : (
-                <Table variant="secondary">
-                    <Table.ScrollContainer className="overflow-x-auto">
-                        <Table.Content
-                            aria-label="Lista de participantes incluídos"
-                            className="w-full min-w-[460px] text-left text-sm"
-                        >
-                            <Table.Header>
-                                {colunas.map((titulo) => (
-                                    <Table.Column
-                                        key={titulo}
-                                        id={titulo}
-                                        isRowHeader={titulo === "Participante"}
-                                        className="rounded-none bg-[var(--color-primary)] px-5 py-3 text-xs font-semibold text-white after:hidden"
+                <CardsParticipantes
+                    participantes={participantes}
+                    contexto="inclusao"
+                    exibirSituacao
+                    acoes={(participante) => {
+                        const acaoRetirada = acoes?.(participante);
+                        const permiteAgendar =
+                            Boolean(onAgendarVisita) && participante.status === "ACTIVE";
+                        if (!onVerVisitas && !onVerHistorico && !permiteAgendar && !acaoRetirada)
+                            return null;
+                        return (
+                            <div
+                                className={`acoes-agenda-participante${acoes ? " acoes-agenda-participante--com-retirada" : ""}`}
+                            >
+                                {onVerHistorico && (
+                                    <Button
+                                        type="button"
+                                        variant="secondary"
+                                        aria-label={`Ver histórico: ${participante.candidateName}`}
+                                        onClick={() => onVerHistorico(participante)}
                                     >
-                                        {titulo}
-                                    </Table.Column>
-                                ))}
-                            </Table.Header>
-                            <Table.Body items={itensTabela}>
-                                {(participante) => (
-                                    <Table.Row
-                                        id={participante.id}
-                                        textValue={participante.candidateName}
-                                        className="group border-b border-[var(--color-border)]"
-                                    >
-                                        <Table.Cell className="break-words border-[var(--color-border)] px-5 py-3.5 font-semibold text-[var(--color-title)] group-hover:bg-slate-50">
-                                            {participante.candidateName}
-                                        </Table.Cell>
-                                        <Table.Cell className="border-[var(--color-border)] px-5 py-3.5 text-xs text-[var(--color-muted)] group-hover:bg-slate-50">
-                                            Participante #{participante.id}
-                                        </Table.Cell>
-                                        <Table.Cell className="border-[var(--color-border)] px-5 py-3.5 text-[var(--color-text)] group-hover:bg-slate-50">
-                                            {formatarInclusao(participante.includedAt)}
-                                        </Table.Cell>
-                                        <Table.Cell className="border-[var(--color-border)] px-5 py-3.5 group-hover:bg-slate-50">
-                                            <Chip
-                                                size="sm"
-                                                variant="soft"
-                                                className={`font-semibold ${participante.status === "ACTIVE" ? "bg-[var(--color-success-soft)] text-[var(--color-success)]" : "bg-[var(--color-neutral-soft)] text-[var(--color-neutral)]"}`}
-                                            >
-                                                <Chip.Label>
-                                                    {participante.status === "ACTIVE"
-                                                        ? "Ativo"
-                                                        : participante.status === "WITHDRAWN"
-                                                          ? "Retirado"
-                                                          : "Situação indisponível"}
-                                                </Chip.Label>
-                                            </Chip>
-                                        </Table.Cell>
-                                        {exibirAcoes && (
-                                            <Table.Cell className="border-[var(--color-border)] px-5 py-3.5 group-hover:bg-slate-50">
-                                                <div className="flex flex-wrap items-center gap-2">
-                                                    {onVerVisitas && (
-                                                        <Button
-                                                            type="button"
-                                                            variant="secondary"
-                                                            className="btn btn-secondary inline-flex items-center gap-1.5 text-xs"
-                                                            aria-label={`Ver visitas: ${participante.candidateName}`}
-                                                            onClick={() =>
-                                                                onVerVisitas(participante)
-                                                            }
-                                                        >
-                                                            <CalendarDays
-                                                                size={15}
-                                                                aria-hidden="true"
-                                                            />
-                                                            Ver visitas
-                                                        </Button>
-                                                    )}
-                                                    {participante.permiteAgendar &&
-                                                        onAgendarVisita && (
-                                                            <Button
-                                                                type="button"
-                                                                className="btn button--create inline-flex items-center gap-1.5 text-xs"
-                                                                aria-label={`Agendar visita: ${participante.candidateName}`}
-                                                                onClick={() =>
-                                                                    onAgendarVisita(participante)
-                                                                }
-                                                            >
-                                                                <CalendarPlus
-                                                                    size={15}
-                                                                    aria-hidden="true"
-                                                                />
-                                                                Agendar
-                                                            </Button>
-                                                        )}
-                                                </div>
-                                            </Table.Cell>
-                                        )}
-                                    </Table.Row>
+                                        Ver histórico
+                                    </Button>
                                 )}
-                            </Table.Body>
-                        </Table.Content>
-                    </Table.ScrollContainer>
-                </Table>
+                                {onVerVisitas && (
+                                    <Button
+                                        type="button"
+                                        variant="secondary"
+                                        className="btn btn-secondary inline-flex items-center gap-1.5 text-xs"
+                                        aria-label={`Ver visitas: ${participante.candidateName}`}
+                                        onClick={() => onVerVisitas(participante)}
+                                    >
+                                        <CalendarDays size={15} aria-hidden="true" />
+                                        Ver visitas
+                                    </Button>
+                                )}
+                                {permiteAgendar && onAgendarVisita && (
+                                    <Button
+                                        type="button"
+                                        className="btn button--create inline-flex items-center gap-1.5 text-xs"
+                                        aria-label={`Agendar visita: ${participante.candidateName}`}
+                                        onClick={() => onAgendarVisita(participante)}
+                                    >
+                                        <CalendarPlus size={15} aria-hidden="true" />
+                                        Agendar
+                                    </Button>
+                                )}
+                                {acaoRetirada}
+                            </div>
+                        );
+                    }}
+                />
             )}
         </section>
     );

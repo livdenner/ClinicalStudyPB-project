@@ -1,5 +1,5 @@
 import { Chip, Table } from "@heroui/react";
-import { Check, UserX, X } from "lucide-react";
+import { Check, ClipboardList, UserX, X } from "lucide-react";
 import { STATUS_VISITA_CLASSES } from "../../config/visitas";
 import {
     STATUS_VISITA_LABELS,
@@ -12,6 +12,8 @@ type Props = {
     visitas: VisitaAgendada[];
     exibirParticipante?: boolean;
     onDesfecho?: (visita: VisitaAgendada, outcome: DesfechoVisita) => void;
+    onResultados?: (visita: VisitaAgendada) => void;
+    resultadosEditaveis?: boolean;
 };
 
 const ACOES = [
@@ -21,7 +23,13 @@ const ACOES = [
 ] as const;
 
 /** Lista as visitas com situação da API e ações de desfecho quando autorizadas. @author Lívia */
-export function ListaVisitasAgendadas({ visitas, exibirParticipante = false, onDesfecho }: Props) {
+export function ListaVisitasAgendadas({
+    visitas,
+    exibirParticipante = false,
+    onDesfecho,
+    onResultados,
+    resultadosEditaveis = false,
+}: Props) {
     if (visitas.length === 0) {
         return (
             <p className="p-8 text-center text-sm text-[var(--color-muted)]">
@@ -30,16 +38,19 @@ export function ListaVisitasAgendadas({ visitas, exibirParticipante = false, onD
         );
     }
 
+    const exibirAcoes = Boolean(onDesfecho || onResultados);
     const colunas = [
         ...(exibirParticipante ? ["Participante"] : []),
         "Visita prevista",
         "Data e hora — Fortaleza",
         "Situação",
-        ...(onDesfecho ? ["Desfecho"] : []),
+        ...(exibirAcoes ? [onResultados ? "Ações" : "Desfecho"] : []),
     ];
     const itens = visitas.map((visita) => ({
         ...visita,
         podeRegistrar: Boolean(onDesfecho) && visita.status === "SCHEDULED",
+        podeAbrirResultados: Boolean(onResultados) && visita.status === "DONE",
+        rotuloResultados: resultadosEditaveis ? "Registrar resultados" : "Ver resultados",
     }));
 
     return (
@@ -92,10 +103,18 @@ export function ListaVisitasAgendadas({ visitas, exibirParticipante = false, onD
                                                 "Situação indisponível"}
                                         </Chip.Label>
                                     </Chip>
+                                    {visita.outcomeNote && (
+                                        <p className="mt-2 max-w-xs whitespace-pre-wrap break-words text-xs text-[var(--color-muted)]">
+                                            {visita.status === "CANCELLED"
+                                                ? "Justificativa"
+                                                : "Observação"}
+                                            : {visita.outcomeNote}
+                                        </p>
+                                    )}
                                 </Table.Cell>
-                                {onDesfecho && (
+                                {exibirAcoes && (
                                     <Table.Cell className="border-b border-[var(--color-border)] px-5 py-4">
-                                        {visita.podeRegistrar && (
+                                        {onDesfecho && visita.podeRegistrar && (
                                             <div className="flex flex-wrap gap-2">
                                                 {ACOES.map(({ outcome, label, Icone }) => (
                                                     <button
@@ -110,6 +129,17 @@ export function ListaVisitasAgendadas({ visitas, exibirParticipante = false, onD
                                                     </button>
                                                 ))}
                                             </div>
+                                        )}
+                                        {onResultados && visita.podeAbrirResultados && (
+                                            <button
+                                                type="button"
+                                                onClick={() => onResultados(visita)}
+                                                aria-label={`${visita.rotuloResultados}: ${visita.plannedVisitName} — ${visita.participantName}`}
+                                                className="inline-flex cursor-pointer items-center gap-1 rounded-lg border border-[var(--color-border)] px-2.5 py-1.5 text-xs font-semibold text-[var(--color-primary)] hover:bg-[var(--color-primary-soft)]"
+                                            >
+                                                <ClipboardList size={14} aria-hidden="true" />
+                                                {visita.rotuloResultados}
+                                            </button>
                                         )}
                                     </Table.Cell>
                                 )}

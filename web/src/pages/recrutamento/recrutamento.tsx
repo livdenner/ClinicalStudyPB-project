@@ -1,3 +1,5 @@
+import { criarAcaoRetirada } from "../../components/participantes/AcaoRegistrarRetirada";
+import { calcularVagasDisponiveis } from "../../utils/estudos";
 import { SeloEstadoEstudo } from "../../components/estudos/SeloEstadoEstudo";
 import { useEffect, useState } from "react";
 import { Plus, Search } from "lucide-react";
@@ -7,8 +9,9 @@ import { ModalConfirmarInclusao } from "../../components/candidatos/ModalConfirm
 import { ModalCancelarCandidatura } from "../../components/candidatos/ModalCancelarCandidatura";
 import { ModalNovoCandidato } from "../../components/candidatos/ModalNovoCandidato";
 import { PainelParticipantesVagas } from "../../components/candidatos/PainelParticipantesVagas";
-import { TabelaCandidatos } from "../../components/candidatos/TabelaCandidatos";
 import { VisitasParticipante } from "../../components/visitas/VisitasParticipante";
+import { HistoricoParticipante } from "../../components/estudos/HistoricoParticipante";
+import { ListaCandidatos } from "../../components/candidatos/ListaCandidatos";
 import { Button } from "../../components/ui/Button";
 import { ErrorMessage } from "../../components/ui/ErrorMessage";
 import { useAuth } from "../../context/AuthContext";
@@ -106,6 +109,7 @@ function GestaoCandidatos({
     const [incluirCancelados, setIncluirCancelados] = useState(false);
 
     const [participantes, setParticipantes] = useState<ParticipanteApi[]>([]);
+    const [historicoSelecionado, setHistoricoSelecionado] = useState<ParticipanteApi | null>(null);
     const [carregandoParticipantes, setCarregandoParticipantes] = useState(false);
     const [erroParticipantes, setErroParticipantes] = useState("");
     const [tentativaParticipantes, setTentativaParticipantes] = useState(0);
@@ -264,7 +268,7 @@ function GestaoCandidatos({
 
     const limiteVagas = estudoSelecionado?.participantLimit ?? 0;
     const vagasOcupadas = participantes.length;
-    const vagasDisponiveis = Math.max(0, limiteVagas - vagasOcupadas);
+    const vagasDisponiveis = calcularVagasDisponiveis(limiteVagas, vagasOcupadas);
     const vagasConhecidas = !carregandoParticipantes && !erroParticipantes;
 
     function atualizarCandidatos() {
@@ -392,6 +396,13 @@ function GestaoCandidatos({
         atualizarListas();
     }
 
+    function handleRetiradaRegistrada(atualizado: ParticipanteApi) {
+        setParticipantes((atuais) =>
+            atuais.map((item) => (item.id === atualizado.id ? atualizado : item))
+        );
+        setMensagemSucesso("Retirada registrada com sucesso.");
+    }
+
     function handleAtualizarStatusCandidato() {
         atualizarCandidatos();
     }
@@ -416,6 +427,22 @@ function GestaoCandidatos({
                 role={role}
                 onVoltar={() => setCandidatoAvaliandoId(null)}
                 onAtualizarStatusCandidato={handleAtualizarStatusCandidato}
+            />
+        );
+    }
+
+    if (
+        historicoSelecionado &&
+        estudoSelecionado &&
+        historicoSelecionado.studyId === estudoSelecionado.id
+    ) {
+        return (
+            <HistoricoParticipante
+                key={`${estudoSelecionado.id}:${historicoSelecionado.id}`}
+                estudoId={estudoSelecionado.id}
+                participanteId={historicoSelecionado.id}
+                token={token}
+                onVoltar={() => setHistoricoSelecionado(null)}
             />
         );
     }
@@ -517,7 +544,7 @@ function GestaoCandidatos({
                         </p>
                     )}
                 <div className="flex flex-wrap items-end justify-between gap-4">
-                    <div className="flex min-w-[260px] flex-1 flex-col gap-1.5">
+                    <div className="flex min-w-0 basis-full flex-1 flex-col min-[761px]:basis-[260px] gap-1.5">
                         <label
                             htmlFor="seletor-estudo-candidatos"
                             className="text-sm font-medium text-[var(--color-title)]"
@@ -540,6 +567,7 @@ function GestaoCandidatos({
                                 setCandidatoAvaliandoId(null);
                                 setCandidatoIncluindo(null);
                                 setAgendaSelecionada(null);
+                                setHistoricoSelecionado(null);
                                 setCandidatoCancelando(null);
                                 setEstudoSelecionadoId(novoId);
                                 if (novoId !== null) {
@@ -556,7 +584,7 @@ function GestaoCandidatos({
                                     setErroParticipantes("");
                                 }
                             }}
-                            className="h-10 rounded-lg border border-[var(--color-border)] bg-white px-3 text-sm text-[var(--color-text)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] disabled:opacity-60"
+                            className="h-10 w-full min-w-0 rounded-lg border border-[var(--color-border)] bg-white px-3 text-sm text-[var(--color-text)] focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] disabled:opacity-60"
                         >
                             {estudoSelecionadoId === null && estudos.length > 0 && (
                                 <option value="" disabled>
@@ -584,7 +612,7 @@ function GestaoCandidatos({
                         </div>
                     )}
 
-                    <div className="relative min-w-[240px] flex-1">
+                    <div className="relative min-w-0 basis-full flex-1 min-[761px]:basis-[240px]">
                         <Search
                             size={16}
                             className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-[var(--color-muted)]"
@@ -711,7 +739,7 @@ function GestaoCandidatos({
                     </div>
                 ) : (
                     <>
-                        <TabelaCandidatos
+                        <ListaCandidatos
                             candidatos={candidatosFiltrados}
                             vagasDisponiveis={vagasConhecidas ? vagasDisponiveis : undefined}
                             estudoEmRecrutamento={estudoEmRecrutamento}
@@ -735,11 +763,19 @@ function GestaoCandidatos({
             {estudoSelecionado && !carregandoEstudos && !erroEstudos && (
                 <PainelParticipantesVagas
                     estudoTitulo={estudoSelecionado.title}
+                    acoes={criarAcaoRetirada({
+                        perfil: role,
+                        estadoEstudo: statusEstudo,
+                        estudoTitulo: estudoSelecionado.title,
+                        token,
+                        onRetiradaRegistrada: handleRetiradaRegistrada,
+                    })}
                     limiteVagas={limiteVagas}
                     participantes={participantes}
                     carregando={carregandoParticipantes}
                     erro={erroParticipantes}
                     onVerVisitas={(participante) => abrirAgenda(participante, false)}
+                    onVerHistorico={setHistoricoSelecionado}
                     onAgendarVisita={
                         podeCadastrar &&
                         (statusEstudo === "RECRUITMENT" || statusEstudo === "EXECUTION")

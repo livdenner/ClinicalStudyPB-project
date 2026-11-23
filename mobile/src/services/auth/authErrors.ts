@@ -128,3 +128,16 @@ export function getAuthErrorMessage(
 
   return AUTH_MESSAGES.unexpected;
 }
+
+/**
+ * Indica erros já tratados pelo provider, que não devem aparecer como falha
+ * de consulta na tela: sessão expirada, resposta obsoleta ou senha pendente.
+ */
+export function isHandledSessionError(error: unknown): boolean {
+  return (
+    error instanceof AuthFlowError &&
+    (error.code === 'SESSION_EXPIRED' ||
+      error.code === 'STALE_REQUEST' ||
+      error.code === 'PASSWORD_CHANGE_REQUIRED')
+  );
+}

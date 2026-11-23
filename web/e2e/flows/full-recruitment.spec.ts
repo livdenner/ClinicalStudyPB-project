@@ -196,7 +196,7 @@ test.describe("fluxo completo da Release 1", () => {
 });
 
 async function expectParticipantAndVacancies(page: Page, candidate: string) {
-    const participants = page.getByRole("grid", { name: "Lista de participantes incluídos" });
+    const participants = page.getByRole("list", { name: "Lista de participantes incluídos" });
     await expect(participants.getByText(candidate)).toBeVisible();
     const vacancies = page.getByRole("status", { name: "Indicador de vagas do estudo" });
     await expect(vacancies).toContainText(`1 de ${PARTICIPANT_LIMIT}`);

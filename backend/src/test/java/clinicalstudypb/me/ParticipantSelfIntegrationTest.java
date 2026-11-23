@@ -51,6 +51,8 @@ class ParticipantSelfIntegrationTest extends IntegrationTestSupport {
     private ScheduledVisitService scheduledVisitService;
 
     private User coordinator;
+    private User researcher;
+    private User bruno;
     private Long studyA;
     private Long studyB;
     private Long anaInA;
@@ -71,10 +73,10 @@ class ParticipantSelfIntegrationTest extends IntegrationTestSupport {
 
     @BeforeEach
     void prepare() throws Exception {
-        User researcher = saveUser("Paula Pesquisadora", "me.researcher@test.local", UserRole.RESEARCHER);
+        researcher = saveUser("Paula Pesquisadora", "me.researcher@test.local", UserRole.RESEARCHER);
         coordinator = saveUser("Coordenadora", "me.coordinator@test.local", UserRole.COORDINATOR);
         User ana = saveUser("Ana Souza", "me.ana@clinicalstudypb.test", UserRole.PARTICIPANT);
-        User bruno = saveUser("Bruno Lima", "me.bruno@clinicalstudypb.test", UserRole.PARTICIPANT);
+        bruno = saveUser("Bruno Lima", "me.bruno@clinicalstudypb.test", UserRole.PARTICIPANT);
         User carla = saveUser("Carla Dias", "me.carla@clinicalstudypb.test", UserRole.PARTICIPANT);
         anaToken = tokenFor(ana.getEmail());
         brunoToken = tokenFor(bruno.getEmail());
@@ -83,6 +85,8 @@ class ParticipantSelfIntegrationTest extends IntegrationTestSupport {
         studyA = study("Estudo A", "Objetivo A", researcher, "EXECUTION");
         studyB = study("Estudo B", "Objetivo B", researcher, "CANCELLED");
         Long initial = plannedVisit(studyA, 1, "Inicial");
+        plannedActivity(initial, 2, "Questionário", "Perguntas sobre hábitos");
+        plannedActivity(initial, 1, "Triagem", "Aferição inicial");
         Long returnVisit = plannedVisit(studyA, 2, "Retorno");
         Long finalVisit = plannedVisit(studyA, 3, "Final");
         Long extra = plannedVisit(studyA, 4, "Extra");
@@ -125,11 +129,44 @@ class ParticipantSelfIntegrationTest extends IntegrationTestSupport {
                 .andExpect(jsonPath("$[0].includedAt").value("2026-11-05T12:00:00Z"))
                 .andExpect(jsonPath("$[0].withdrawnAt").value("2026-11-06T12:00:00Z"))
                 .andExpect(jsonPath("$[0].withdrawalReason").doesNotExist())
+                .andExpect(jsonPath("$[0].plannedVisits", hasSize(1)))
+                .andExpect(jsonPath("$[0].plannedVisits[0].name").value("Inicial B"))
+                .andExpect(jsonPath("$[0].plannedVisits[0].activities", empty()))
                 .andExpect(jsonPath("$[1].participantId").value(anaInA))
                 .andExpect(jsonPath("$[1].studyId").value(studyA))
                 .andExpect(jsonPath("$[1].studyStatus").value("EXECUTION"))
                 .andExpect(jsonPath("$[1].participationStatus").value("ACTIVE"))
-                .andExpect(jsonPath("$[1].withdrawnAt").doesNotExist());
+                .andExpect(jsonPath("$[1].withdrawnAt").doesNotExist())
+                .andExpect(jsonPath("$[1].plannedVisits[*].name")
+                        .value(contains("Inicial", "Retorno", "Final", "Extra")))
+                .andExpect(jsonPath("$[1].plannedVisits[0].plannedDate").value("2027-06-01"))
+                .andExpect(jsonPath("$[1].plannedVisits[0].activities[*].name")
+                        .value(contains("Triagem", "Questionário")));
+    }
+
+    @Test
+    void studyWithoutPlannedVisitsReturnsEmptyArrayAndPreservesAccountIsolation() throws Exception {
+        Long studyC = study("Estudo C", "Objetivo C", researcher, "RECRUITMENT");
+        Long brunoInC = participant(studyC, candidate(studyC, bruno), "2026-11-08T12:00:00Z");
+
+        perform(STUDIES, brunoToken)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].participantId").value(brunoInC))
+                .andExpect(jsonPath("$[0].studyId").value(studyC))
+                .andExpect(jsonPath("$[0].plannedVisits", empty()))
+                .andExpect(jsonPath("$[1].participantId").value(brunoInA))
+                .andExpect(jsonPath("$[1].studyId").value(studyA))
+                .andExpect(jsonPath("$[1].plannedVisits[*].name")
+                        .value(contains("Inicial", "Retorno", "Final", "Extra")))
+                .andExpect(jsonPath("$[*].participantId").value(everyItem(oneOf(
+                        brunoInC.intValue(), brunoInA.intValue()))));
+
+        perform(STUDIES, anaToken)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[*].participantId").value(everyItem(oneOf(
+                        anaInA.intValue(), anaInB.intValue()))));
     }
 
     @Test
@@ -145,7 +182,8 @@ class ParticipantSelfIntegrationTest extends IntegrationTestSupport {
                 .andExpect(jsonPath("$.upcoming[1].plannedVisitName").value("Extra"))
                 .andExpect(jsonPath("$.upcoming[1].scheduledAt").value("2027-03-01T12:00:00Z"))
                 .andExpect(jsonPath("$.upcoming[1].outcomeAt").doesNotExist())
-                .andExpect(jsonPath("$.upcoming[1].cancellationReason").doesNotExist());
+                .andExpect(jsonPath("$.upcoming[1].cancellationReason").doesNotExist())
+                .andExpect(jsonPath("$.upcoming[1].activities", empty()));
     }
 
     @Test
@@ -161,10 +199,17 @@ class ParticipantSelfIntegrationTest extends IntegrationTestSupport {
                 .andExpect(jsonPath("$.history[0].plannedVisitName").value("Inicial B"))
                 .andExpect(jsonPath("$.history[0].cancellationReason").value("Cancelamento do estudo"))
                 .andExpect(jsonPath("$.history[0].outcomeAt").value("2027-01-20T12:00:00Z"))
+                .andExpect(jsonPath("$.history[0].activities", empty()))
                 .andExpect(jsonPath("$.history[1].cancellationReason").value("Pediu para remarcar"))
+                .andExpect(jsonPath("$.history[1].activities[*].name")
+                        .value(contains("Triagem", "Questionário")))
+                .andExpect(jsonPath("$.history[1].activities[0].description").value("Aferição inicial"))
                 .andExpect(jsonPath("$.history[2].cancellationReason").doesNotExist())
+                .andExpect(jsonPath("$.history[2].activities", empty()))
                 .andExpect(jsonPath("$.history[3].cancellationReason").doesNotExist())
                 .andExpect(jsonPath("$.history[3].outcomeAt").value("2027-01-20T12:00:00Z"))
+                .andExpect(jsonPath("$.history[3].activities[*].name")
+                        .value(contains("Triagem", "Questionário")))
                 .andExpect(jsonPath("$.history[2].outcomeNote").doesNotExist())
                 .andExpect(jsonPath("$.history[3].outcomeNote").doesNotExist());
     }
@@ -179,7 +224,10 @@ class ParticipantSelfIntegrationTest extends IntegrationTestSupport {
         perform(VISITS, brunoToken)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.upcoming[*].id").value(contains(brunoScheduled.intValue())))
-                .andExpect(jsonPath("$.history[*].id").value(contains(brunoDone.intValue())));
+                .andExpect(jsonPath("$.upcoming[0].activities[*].name")
+                        .value(contains("Triagem", "Questionário")))
+                .andExpect(jsonPath("$.history[*].id").value(contains(brunoDone.intValue())))
+                .andExpect(jsonPath("$.history[0].activities", empty()));
 
         perform(STUDIES, anaToken)
                 .andExpect(jsonPath("$[*].participantId").value(everyItem(oneOf(
@@ -241,6 +289,12 @@ class ParticipantSelfIntegrationTest extends IntegrationTestSupport {
     private Long plannedVisit(Long studyId, int position, String name) {
         return jdbc.queryForObject("INSERT INTO planned_visits (study_id, name, planned_date, position) "
                 + "VALUES (?, ?, '2027-06-01', ?) RETURNING id", Long.class, studyId, name, position);
+    }
+
+    private Long plannedActivity(Long plannedVisitId, int position, String name, String description) {
+        return jdbc.queryForObject("INSERT INTO planned_activities (planned_visit_id, name, name_key, "
+                + "description, position) VALUES (?, ?, ?, ?, ?) RETURNING id", Long.class,
+                plannedVisitId, name, name.toLowerCase(), description, position);
     }
 
     private Long candidate(Long studyId, User account) {

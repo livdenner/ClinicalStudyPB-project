@@ -147,10 +147,12 @@
                                     </limits>
                                 </rule>
                                 <rule>
-                                    <!-- Módulo de participantes (inclusão e retirada, RF11/RF16): cada pacote. -->
+                                    <!-- Participantes (RF11/RF16), histórico (RF15) e resultados (RF14): cada pacote. -->
                                     <element>PACKAGE</element>
                                     <includes>
                                         <include>*participants*</include>
+                                        <include>*history*</include>
+                                        <include>*results*</include>
                                     </includes>
                                     <limits>
                                         <limit>

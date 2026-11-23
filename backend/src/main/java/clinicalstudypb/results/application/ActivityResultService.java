@@ -19,7 +19,9 @@ import clinicalstudypb.visits.api.PlannedVisitResponse;
 import clinicalstudypb.visits.application.PlannedVisitLookup;
 import java.time.Clock;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -111,6 +113,19 @@ public class ActivityResultService implements ActivityResultLookup {
     @Transactional(readOnly = true)
     public List<ActivityResultResponse> findByVisitId(Long visitId) {
         return results.findByVisitId(visitId).stream().map(ActivityResultResponse::from).toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<Long, List<ActivityResultResponse>> findByVisitIds(Collection<Long> visitIds) {
+        if (visitIds.isEmpty()) {
+            return Map.of();
+        }
+        // A consulta já ordena por visita e posição; o LinkedHashMap e o toList preservam essa ordem.
+        return results.findByVisitIdIn(visitIds).stream()
+                .map(ActivityResultResponse::from)
+                .collect(Collectors.groupingBy(ActivityResultResponse::visitId, LinkedHashMap::new,
+                        Collectors.toList()));
     }
 
     private ScheduledVisit findVisit(Long studyId, Long participantId, Long visitId) {
