@@ -2,7 +2,18 @@
 
 Entrega das Sprints **3 (11–23/11/2026)** e **4 (24/11–07/12/2026)**. Documento em construção: nesta versão registra as alterações de escopo aprovadas pela PO e a linha de base da Sprint 3; escopo completo, rastreabilidade, testes e processo entram no registro da sprint (T26.4). O projeto usa dados fictícios e consentimento estritamente simulado.
 
-[Instalação e execução](../../README.md#5-instalação-e-execução) · [OpenAPI](../../backend/openapi.yaml) · [Release 1](../release1/README.md) · [Azure DevOps TEAM5](https://dev.azure.com/engsw2/TEAM5)
+[Instalação e execução](../../README.md#5-instalação-e-execução) · [OpenAPI](../../backend/openapi.yaml) · [Capturas](images/README.md) · [Testes e cobertura](tests/README.md) · [Release 1](../release1/README.md) · [Azure DevOps TEAM5](https://dev.azure.com/engsw2/TEAM5)
+
+## Evidências da Sprint 3 (T25.2)
+
+As evidências se referem ao commit final da sprint, `development` **e975d92** (merge do PR #113, 23/11/2026), sem PR aberto naquela data.
+
+| Evidência | Resultado | Onde |
+| --- | --- | --- |
+| CI do commit avaliado | [Execução 45287852924](https://github.com/livdenner/ClinicalStudyPB-project/actions/runs/45287852924): Backend, Web, E2E Web e Mobile aprovados; 1737 testes, nenhuma falha. | [Logs e relatório](tests/ci-e975d92/README.md) |
+| Cobertura do backend (JaCoCo) | **97,96% das linhas (1972/2013)**, acima da meta de 80%; ramos 87,15%. A CI reprova o build abaixo de 80%. | [Cobertura por módulo](tests/ci-e975d92/README.md#cobertura-do-backend-jacoco), [CSV](tests/ci-e975d92/backend-coverage.csv) |
+| Web, E2E e mobile | 513 testes Vitest (89,69% das linhas), 24 E2E Playwright, 260 testes Jest (92,66% das linhas) e E2E mobile no emulador Android aprovado. | [Testes da Release 2](tests/README.md) |
+| Capturas das telas novas | 31 capturas de sucesso, erro e consulta, nomeadas por RF, cobrindo RF02, RF03, RF08, RF10 e RF12–RF18 na web e no aplicativo, sem credenciais. | [Galeria](images/README.md) |
 
 ## Alterações de escopo aprovadas pela PO
 

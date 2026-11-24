@@ -1,0 +1,849 @@
+﻿2026-11-23T23:19:56.3540871Z Current runner version: '2.338.2'
+2026-11-23T23:19:56.3566696Z ##[group]Runner Image Provisioner
+2026-11-23T23:19:56.3567450Z Hosted Compute Agent
+2026-11-23T23:19:56.3568016Z Version: 20261111.635
+2026-11-23T23:19:56.3568541Z Commit: b8a594ea514ff44cadb5342986c68b1eac6e22ed
+2026-11-23T23:19:56.3569190Z Build Date: 2026-11-11T01:49:01Z
+2026-11-23T23:19:56.3569754Z Worker ID: {1387ef83-b5e7-4e9a-b173-8d2d6b17d32e}
+2026-11-23T23:19:56.3570364Z Region: centralus
+2026-11-23T23:19:56.3570861Z Cloud: Azure
+2026-11-23T23:19:56.3571313Z ##[endgroup]
+2026-11-23T23:19:56.3572454Z ##[group]Operating System
+2026-11-23T23:19:56.3573085Z Ubuntu
+2026-11-23T23:19:56.3573517Z 26.04.1
+2026-11-23T23:19:56.3574267Z LTS
+2026-11-23T23:19:56.3574696Z ##[endgroup]
+2026-11-23T23:19:56.3575464Z ##[group]Runner Image
+2026-11-23T23:19:56.3576032Z Image: ubuntu-26.04
+2026-11-23T23:19:56.3576500Z Version: 20261116.202.1
+2026-11-23T23:19:56.3577579Z Included Software: https://github.com/actions/runner-images/blob/ubuntu26/20261116.202/images/ubuntu/Ubuntu2604-Readme.md
+2026-11-23T23:19:56.3578797Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu26%2F20261116.202
+2026-11-23T23:19:56.3579614Z ##[endgroup]
+2026-11-23T23:19:56.3580521Z ##[group]GITHUB_TOKEN Permissions
+2026-11-23T23:19:56.3582430Z Contents: read
+2026-11-23T23:19:56.3582951Z Metadata: read
+2026-11-23T23:19:56.3583464Z ##[endgroup]
+2026-11-23T23:19:56.3585473Z Secret source: Actions
+2026-11-23T23:19:56.3586297Z Cache mode: write
+2026-11-23T23:19:56.3587160Z Prepare workflow directory
+2026-11-23T23:19:56.3905945Z Prepare all required actions
+2026-11-23T23:19:56.3946215Z Getting action download info
+2026-11-23T23:19:56.6182983Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-11-23T23:19:56.7126045Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2026-11-23T23:19:56.7972452Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-11-23T23:19:57.0012239Z Complete job name: E2E Web (Playwright)
+2026-11-23T23:19:57.0712259Z ##[group]Run actions/checkout@v4
+2026-11-23T23:19:57.0712914Z with:
+2026-11-23T23:19:57.0713315Z   repository: livdenner/ClinicalStudyPB-project
+2026-11-23T23:19:57.0716509Z   token: ***
+2026-11-23T23:19:57.0716857Z   ssh-strict: true
+2026-11-23T23:19:57.0717209Z   ssh-user: git
+2026-11-23T23:19:57.0717564Z   persist-credentials: true
+2026-11-23T23:19:57.0717951Z   clean: true
+2026-11-23T23:19:57.0718304Z   sparse-checkout-cone-mode: true
+2026-11-23T23:19:57.0718714Z   fetch-depth: 1
+2026-11-23T23:19:57.0719055Z   fetch-tags: false
+2026-11-23T23:19:57.0719396Z   show-progress: true
+2026-11-23T23:19:57.0719755Z   lfs: false
+2026-11-23T23:19:57.0720086Z   submodules: false
+2026-11-23T23:19:57.0720440Z   set-safe-directory: true
+2026-11-23T23:19:57.0720848Z   allow-unsafe-pr-checkout: false
+2026-11-23T23:19:57.0721410Z ##[endgroup]
+2026-11-23T23:19:57.3136113Z Syncing repository: livdenner/ClinicalStudyPB-project
+2026-11-23T23:19:57.3138013Z ##[group]Getting Git version info
+2026-11-23T23:19:57.3139111Z Working directory is '/home/runner/work/ClinicalStudyPB-project/ClinicalStudyPB-project'
+2026-11-23T23:19:57.3140517Z [command]/usr/bin/git version
+2026-11-23T23:19:57.3150229Z git version 2.56.1
+2026-11-23T23:19:57.3169053Z ##[endgroup]
+2026-11-23T23:19:57.3181452Z Temporarily overriding HOME='/home/runner/work/_temp/f8cd722e-a538-4cdc-95dd-ac56d774ac1d' before making global git config changes
+2026-11-23T23:19:57.3183235Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-23T23:19:57.3185911Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/ClinicalStudyPB-project/ClinicalStudyPB-project
+2026-11-23T23:19:57.3239250Z Deleting the contents of '/home/runner/work/ClinicalStudyPB-project/ClinicalStudyPB-project'
+2026-11-23T23:19:57.3241582Z ##[group]Initializing the repository
+2026-11-23T23:19:57.3246403Z [command]/usr/bin/git init /home/runner/work/ClinicalStudyPB-project/ClinicalStudyPB-project
+2026-11-23T23:19:57.3323300Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-11-23T23:19:57.3326140Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-11-23T23:19:57.3327526Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-11-23T23:19:57.3328527Z hint: call:
+2026-11-23T23:19:57.3334830Z hint:
+2026-11-23T23:19:57.3335938Z hint: 	git config --global init.defaultBranch <name>
+2026-11-23T23:19:57.3336955Z hint:
+2026-11-23T23:19:57.3337935Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-11-23T23:19:57.3339144Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-11-23T23:19:57.3340139Z hint:
+2026-11-23T23:19:57.3340710Z hint: 	git branch -m <name>
+2026-11-23T23:19:57.3341362Z hint:
+2026-11-23T23:19:57.3342187Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-11-23T23:19:57.3343774Z Initialized empty Git repository in /home/runner/work/ClinicalStudyPB-project/ClinicalStudyPB-project/.git/
+2026-11-23T23:19:57.3346256Z [command]/usr/bin/git remote add origin https://github.com/livdenner/ClinicalStudyPB-project
+2026-11-23T23:19:57.3401194Z ##[endgroup]
+2026-11-23T23:19:57.3402142Z ##[group]Disabling automatic garbage collection
+2026-11-23T23:19:57.3405652Z [command]/usr/bin/git config --local gc.auto 0
+2026-11-23T23:19:57.3437367Z ##[endgroup]
+2026-11-23T23:19:57.3438242Z ##[group]Setting up auth
+2026-11-23T23:19:57.3444037Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-23T23:19:57.3474821Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-23T23:19:57.3880560Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-23T23:19:57.3917316Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-23T23:19:57.4169020Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-23T23:19:57.4201110Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-23T23:19:57.4459310Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-23T23:19:57.4496262Z ##[endgroup]
+2026-11-23T23:19:57.4496954Z ##[group]Fetching the repository
+2026-11-23T23:19:57.4503468Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +e975d92f6866acaa97690c9c7964ead2d7db8bee:refs/remotes/origin/development
+2026-11-23T23:19:58.4788305Z From https://github.com/livdenner/ClinicalStudyPB-project
+2026-11-23T23:19:58.4790550Z  * [new ref]         e975d92f6866acaa97690c9c7964ead2d7db8bee -> origin/development
+2026-11-23T23:19:58.4794373Z ##[endgroup]
+2026-11-23T23:19:58.4795521Z ##[group]Determining the checkout info
+2026-11-23T23:19:58.4796625Z ##[endgroup]
+2026-11-23T23:19:58.4797401Z [command]/usr/bin/git sparse-checkout disable
+2026-11-23T23:19:58.4835498Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-11-23T23:19:58.4862310Z ##[group]Checking out the ref
+2026-11-23T23:19:58.4866227Z [command]/usr/bin/git checkout --progress --force -B development refs/remotes/origin/development
+2026-11-23T23:19:58.5922997Z Switched to a new branch 'development'
+2026-11-23T23:19:58.5926446Z branch 'development' set up to track 'origin/development'.
+2026-11-23T23:19:58.5978769Z ##[endgroup]
+2026-11-23T23:19:58.5981852Z [command]/usr/bin/git log -1 --format=%H
+2026-11-23T23:19:58.6003498Z e975d92f6866acaa97690c9c7964ead2d7db8bee
+2026-11-23T23:19:58.6386179Z ##[group]Run actions/setup-node@v4
+2026-11-23T23:19:58.6387414Z with:
+2026-11-23T23:19:58.6388138Z   node-version: 22
+2026-11-23T23:19:58.6388920Z   cache: npm
+2026-11-23T23:19:58.6389780Z   cache-dependency-path: web/package-lock.json
+2026-11-23T23:19:58.6390889Z   always-auth: false
+2026-11-23T23:19:58.6391718Z   check-latest: false
+2026-11-23T23:19:58.6399373Z   token: ***
+2026-11-23T23:19:58.6400135Z ##[endgroup]
+2026-11-23T23:19:58.7562005Z Found in cache @ /opt/hostedtoolcache/node/22.23.5/x64
+2026-11-23T23:19:58.7566309Z (node:2214) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-23T23:19:58.7568979Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-23T23:19:58.7570999Z ##[group]Environment details
+2026-11-23T23:20:03.8921310Z node: v22.23.5
+2026-11-23T23:20:03.8921790Z npm: 10.9.9
+2026-11-23T23:20:03.8922159Z yarn: 1.22.22
+2026-11-23T23:20:03.8923514Z ##[endgroup]
+2026-11-23T23:20:03.8939638Z [command]/opt/hostedtoolcache/node/22.23.5/x64/bin/npm config get cache
+2026-11-23T23:20:04.1509602Z /home/runner/.npm
+2026-11-23T23:20:04.3132340Z Cache hit for: node-cache-Linux-x64-npm-5837303a0ac6ae5fe1c4e451741d038517bf84a95980ec121bb34cd161e7b36f
+2026-11-23T23:20:04.3223029Z (node:2214) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-23T23:20:05.2088896Z Received 88110651 of 88110651 (100.0%), 114.8 MBs/sec
+2026-11-23T23:20:05.2089446Z Cache Size: ~84 MB (88110651 B)
+2026-11-23T23:20:05.2108341Z [command]/usr/bin/tar -xf /home/runner/work/_temp/0fbce225-d5d2-4186-9eb9-860ffc6d2bdc/cache.tzst -P -C /home/runner/work/ClinicalStudyPB-project/ClinicalStudyPB-project --use-compress-program unzstd
+2026-11-23T23:20:05.4030633Z Cache restored successfully
+2026-11-23T23:20:05.4068308Z Cache restored from key: node-cache-Linux-x64-npm-5837303a0ac6ae5fe1c4e451741d038517bf84a95980ec121bb34cd161e7b36f
+2026-11-23T23:20:05.4286464Z ##[group]Run npm ci
+2026-11-23T23:20:05.4286729Z npm ci
+2026-11-23T23:20:05.4369260Z shell: /usr/bin/bash -e {0}
+2026-11-23T23:20:05.4369507Z ##[endgroup]
+2026-11-23T23:20:49.1034259Z 
+2026-11-23T23:20:49.1041566Z added 313 packages, and audited 314 packages in 44s
+2026-11-23T23:20:49.1041895Z 
+2026-11-23T23:20:49.1042072Z 65 packages are looking for funding
+2026-11-23T23:20:49.1042348Z   run `npm fund` for details
+2026-11-23T23:20:49.2529901Z 
+2026-11-23T23:20:49.2530664Z 9 moderate severity vulnerabilities
+2026-11-23T23:20:49.2530991Z 
+2026-11-23T23:20:49.2531163Z To address all issues, run:
+2026-11-23T23:20:49.2531499Z   npm audit fix
+2026-11-23T23:20:49.2531669Z 
+2026-11-23T23:20:49.2531827Z Run `npm audit` for details.
+2026-11-23T23:20:49.3581608Z ##[group]Run npx playwright install --with-deps chromium
+2026-11-23T23:20:49.3582017Z npx playwright install --with-deps chromium
+2026-11-23T23:20:49.3619300Z shell: /usr/bin/bash -e {0}
+2026-11-23T23:20:49.3619544Z ##[endgroup]
+2026-11-23T23:20:50.0022214Z Installing dependencies...
+2026-11-23T23:20:50.0078639Z Switching to root user to install dependencies...
+2026-11-23T23:20:50.0850062Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+2026-11-23T23:20:50.1277217Z Get:6 https://packages.microsoft.com/ubuntu/26.04/prod resolute InRelease [3964 B]
+2026-11-23T23:20:50.1520056Z Get:7 https://packages.microsoft.com/ubuntu/26.04/prod resolute/main arm64 Packages [173 kB]
+2026-11-23T23:20:50.1615618Z Hit:2 http://azure.archive.ubuntu.com/ubuntu resolute InRelease
+2026-11-23T23:20:50.1638480Z Get:3 http://azure.archive.ubuntu.com/ubuntu resolute-updates InRelease [137 kB]
+2026-11-23T23:20:50.1665642Z Get:8 https://packages.microsoft.com/ubuntu/26.04/prod resolute/main amd64 Packages [186 kB]
+2026-11-23T23:20:50.1707654Z Get:4 http://azure.archive.ubuntu.com/ubuntu resolute-backports InRelease [137 kB]
+2026-11-23T23:20:50.1756252Z Get:5 http://azure.archive.ubuntu.com/ubuntu resolute-security InRelease [137 kB]
+2026-11-23T23:20:50.1977393Z Get:9 http://azure.archive.ubuntu.com/ubuntu resolute-updates/main amd64v3 Packages [914 kB]
+2026-11-23T23:20:50.2008142Z Get:10 http://azure.archive.ubuntu.com/ubuntu resolute-updates/main Translation-en [201 kB]
+2026-11-23T23:20:50.2086187Z Get:11 http://azure.archive.ubuntu.com/ubuntu resolute-updates/universe amd64v3 Packages [394 kB]
+2026-11-23T23:20:50.2087642Z Get:12 http://azure.archive.ubuntu.com/ubuntu resolute-updates/universe Translation-en [124 kB]
+2026-11-23T23:20:50.2106046Z Get:13 http://azure.archive.ubuntu.com/ubuntu resolute-updates/restricted amd64v3 Packages [640 kB]
+2026-11-23T23:20:50.2121655Z Get:14 http://azure.archive.ubuntu.com/ubuntu resolute-updates/restricted Translation-en [132 kB]
+2026-11-23T23:20:50.2199140Z Get:15 http://azure.archive.ubuntu.com/ubuntu resolute-security/main amd64v3 Packages [747 kB]
+2026-11-23T23:20:50.2311636Z Get:16 http://azure.archive.ubuntu.com/ubuntu resolute-security/main Translation-en [162 kB]
+2026-11-23T23:20:50.2325517Z Get:17 http://azure.archive.ubuntu.com/ubuntu resolute-security/universe amd64v3 Packages [224 kB]
+2026-11-23T23:20:50.2339104Z Get:18 http://azure.archive.ubuntu.com/ubuntu resolute-security/universe Translation-en [73.2 kB]
+2026-11-23T23:20:50.2802416Z Get:19 http://azure.archive.ubuntu.com/ubuntu resolute-security/restricted amd64v3 Packages [614 kB]
+2026-11-23T23:20:50.2828052Z Get:20 http://azure.archive.ubuntu.com/ubuntu resolute-security/restricted Translation-en [127 kB]
+2026-11-23T23:20:53.2518744Z Fetched 5128 kB in 0s (13.5 MB/s)
+2026-11-23T23:20:53.8343680Z Reading package lists...
+2026-11-23T23:20:53.8568719Z Reading package lists...
+2026-11-23T23:20:54.0399918Z Building dependency tree...
+2026-11-23T23:20:54.0406205Z Reading state information...
+2026-11-23T23:20:54.0710581Z libasound2t64 is already the newest version (1.2.15.3-1ubuntu1.1).
+2026-11-23T23:20:54.0711148Z libasound2t64 set to manually installed.
+2026-11-23T23:20:54.0711752Z libatk-bridge2.0-0t64 is already the newest version (2.60.4-0ubuntu0.1).
+2026-11-23T23:20:54.0712308Z libatk-bridge2.0-0t64 set to manually installed.
+2026-11-23T23:20:54.0712802Z libatk1.0-0t64 is already the newest version (2.60.4-0ubuntu0.1).
+2026-11-23T23:20:54.0713245Z libatk1.0-0t64 set to manually installed.
+2026-11-23T23:20:54.0713822Z libatspi2.0-0t64 is already the newest version (2.60.4-0ubuntu0.1).
+2026-11-23T23:20:54.0714291Z libatspi2.0-0t64 set to manually installed.
+2026-11-23T23:20:54.0714707Z libcairo2 is already the newest version (1.18.4-3).
+2026-11-23T23:20:54.0715277Z libcairo2 set to manually installed.
+2026-11-23T23:20:54.0715726Z libcups2t64 is already the newest version (2.4.16-1ubuntu1.3).
+2026-11-23T23:20:54.0716157Z libcups2t64 set to manually installed.
+2026-11-23T23:20:54.0717131Z libdbus-1-3 is already the newest version (1.16.2-2ubuntu4).
+2026-11-23T23:20:54.0717573Z libdbus-1-3 set to manually installed.
+2026-11-23T23:20:54.0717969Z libdrm2 is already the newest version (2.4.131-1).
+2026-11-23T23:20:54.0718356Z libdrm2 set to manually installed.
+2026-11-23T23:20:54.0718780Z libgbm1 is already the newest version (26.0.8-1ubuntu0.3).
+2026-11-23T23:20:54.0719195Z libgbm1 set to manually installed.
+2026-11-23T23:20:54.0719659Z libglib2.0-0t64 is already the newest version (2.88.0-1ubuntu0.1).
+2026-11-23T23:20:54.0720127Z libglib2.0-0t64 set to manually installed.
+2026-11-23T23:20:54.0720592Z libnspr4 is already the newest version (2:4.38.2-1ubuntu1).
+2026-11-23T23:20:54.0721015Z libnspr4 set to manually installed.
+2026-11-23T23:20:54.0721446Z libnss3 is already the newest version (2:3.120-1ubuntu2.2).
+2026-11-23T23:20:54.0721854Z libnss3 set to manually installed.
+2026-11-23T23:20:54.0722305Z libpango-1.0-0 is already the newest version (1.57.0-1).
+2026-11-23T23:20:54.0722738Z libpango-1.0-0 set to manually installed.
+2026-11-23T23:20:54.0723192Z libx11-6 is already the newest version (2:1.8.13-1ubuntu0.1).
+2026-11-23T23:20:54.0723615Z libx11-6 set to manually installed.
+2026-11-23T23:20:54.0724035Z libxcb1 is already the newest version (1.17.0-2ubuntu1).
+2026-11-23T23:20:54.0724611Z libxcb1 set to manually installed.
+2026-11-23T23:20:54.0725316Z libxcomposite1 is already the newest version (1:0.4.6-1build1).
+2026-11-23T23:20:54.0725783Z libxcomposite1 set to manually installed.
+2026-11-23T23:20:54.0726321Z libxdamage1 is already the newest version (1:1.1.7-1).
+2026-11-23T23:20:54.0726736Z libxdamage1 set to manually installed.
+2026-11-23T23:20:54.0727189Z libxext6 is already the newest version (2:1.3.4-1build3).
+2026-11-23T23:20:54.0727589Z libxext6 set to manually installed.
+2026-11-23T23:20:54.0728012Z libxfixes3 is already the newest version (1:6.0.0-2build2).
+2026-11-23T23:20:54.0728428Z libxfixes3 set to manually installed.
+2026-11-23T23:20:54.0728860Z libxkbcommon0 is already the newest version (1.13.1-1).
+2026-11-23T23:20:54.0729276Z libxkbcommon0 set to manually installed.
+2026-11-23T23:20:54.0729708Z libxrandr2 is already the newest version (2:1.5.4-1build1).
+2026-11-23T23:20:54.0730122Z libxrandr2 set to manually installed.
+2026-11-23T23:20:54.0730553Z xvfb is already the newest version (2:21.1.22-1ubuntu1.3).
+2026-11-23T23:20:54.0731098Z fonts-noto-color-emoji is already the newest version (2.051-1build1).
+2026-11-23T23:20:54.0731684Z libfontconfig1 is already the newest version (2.17.1-3ubuntu1).
+2026-11-23T23:20:54.0732137Z libfontconfig1 set to manually installed.
+2026-11-23T23:20:54.0732628Z libfreetype6 is already the newest version (2.14.2+dfsg-1ubuntu0.2).
+2026-11-23T23:20:54.0733091Z libfreetype6 set to manually installed.
+2026-11-23T23:20:54.0733572Z fonts-liberation is already the newest version (1:2.1.5-3build1).
+2026-11-23T23:20:54.0734032Z fonts-liberation set to manually installed.
+2026-11-23T23:20:54.1269722Z Solving dependencies...
+2026-11-23T23:20:54.2140832Z The following additional packages will be installed:
+2026-11-23T23:20:54.2141488Z   xfonts-encodings xfonts-utils
+2026-11-23T23:20:54.2145912Z Recommended packages:
+2026-11-23T23:20:54.2146307Z   fonts-ipafont-mincho fonts-tlwg-loma
+2026-11-23T23:20:54.2333759Z The following NEW packages will be installed:
+2026-11-23T23:20:54.2334428Z   fonts-freefont-ttf fonts-ipafont-gothic fonts-tlwg-loma-otf fonts-unifont
+2026-11-23T23:20:54.2342282Z   fonts-wqy-zenhei xfonts-cyrillic xfonts-encodings xfonts-scalable
+2026-11-23T23:20:54.2342766Z   xfonts-utils
+2026-11-23T23:20:54.2545468Z 0 upgraded, 9 newly installed, 0 to remove and 57 not upgraded.
+2026-11-23T23:20:54.2546042Z Need to get 21.9 MB of archives.
+2026-11-23T23:20:54.2546395Z After this operation, 80.2 MB of additional disk space will be used.
+2026-11-23T23:20:54.2546788Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+2026-11-23T23:20:54.3170571Z Get:2 http://azure.archive.ubuntu.com/ubuntu resolute/universe amd64v3 fonts-ipafont-gothic all 00303-23ubuntu1 [3703 kB]
+2026-11-23T23:20:54.4153668Z Get:3 http://azure.archive.ubuntu.com/ubuntu resolute/main amd64v3 fonts-freefont-ttf all 20211204+svn4273-4build1 [5656 kB]
+2026-11-23T23:20:54.5422962Z Get:4 http://azure.archive.ubuntu.com/ubuntu resolute/universe amd64v3 fonts-tlwg-loma-otf all 1:0.7.3-1build1 [106 kB]
+2026-11-23T23:20:54.5997574Z Get:5 http://azure.archive.ubuntu.com/ubuntu resolute/universe amd64v3 fonts-unifont all 1:16.0.04-1build1 [3169 kB]
+2026-11-23T23:20:54.6894792Z Get:6 http://azure.archive.ubuntu.com/ubuntu resolute/universe amd64v3 fonts-wqy-zenhei all 0.9.45-8build1 [7863 kB]
+2026-11-23T23:20:54.8592875Z Get:7 http://azure.archive.ubuntu.com/ubuntu resolute/main amd64v3 xfonts-encodings all 1:1.0.5-0ubuntu3 [576 kB]
+2026-11-23T23:20:54.9134600Z Get:8 http://azure.archive.ubuntu.com/ubuntu resolute/main amd64v3 xfonts-utils amd64 1:7.7+7build1 [97.3 kB]
+2026-11-23T23:20:54.9593627Z Get:9 http://azure.archive.ubuntu.com/ubuntu resolute/universe amd64v3 xfonts-cyrillic all 1:1.0.5+nmu1build1 [384 kB]
+2026-11-23T23:20:55.0105996Z Get:10 http://azure.archive.ubuntu.com/ubuntu resolute/universe amd64v3 xfonts-scalable all 1:1.0.3-1.3build1 [304 kB]
+2026-11-23T23:20:55.2768081Z Fetched 21.9 MB in 1s (28.4 MB/s)
+2026-11-23T23:20:55.2968438Z Selecting previously unselected package fonts-ipafont-gothic.
+2026-11-23T23:20:55.3163170Z (Reading database ... 
+2026-11-23T23:20:55.3163679Z (Reading database ... 5%
+2026-11-23T23:20:55.3163959Z (Reading database ... 10%
+2026-11-23T23:20:55.3164210Z (Reading database ... 15%
+2026-11-23T23:20:55.3164417Z (Reading database ... 20%
+2026-11-23T23:20:55.3164705Z (Reading database ... 25%
+2026-11-23T23:20:55.3165149Z (Reading database ... 30%
+2026-11-23T23:20:55.3165487Z (Reading database ... 35%
+2026-11-23T23:20:55.3165793Z (Reading database ... 40%
+2026-11-23T23:20:55.3165993Z (Reading database ... 45%
+2026-11-23T23:20:55.3166196Z (Reading database ... 50%
+2026-11-23T23:20:55.3462016Z (Reading database ... 55%
+2026-11-23T23:20:55.3717360Z (Reading database ... 60%
+2026-11-23T23:20:55.3889956Z (Reading database ... 65%
+2026-11-23T23:20:55.4063972Z (Reading database ... 70%
+2026-11-23T23:20:55.4354302Z (Reading database ... 75%
+2026-11-23T23:20:55.5810148Z (Reading database ... 80%
+2026-11-23T23:20:55.7681612Z (Reading database ... 85%
+2026-11-23T23:20:55.9740713Z (Reading database ... 90%
+2026-11-23T23:20:56.1385579Z (Reading database ... 95%
+2026-11-23T23:20:56.1386016Z (Reading database ... 100%
+2026-11-23T23:20:56.1386555Z (Reading database ... 214296 files and directories currently installed.)
+2026-11-23T23:20:56.1429417Z Preparing to unpack .../0-fonts-ipafont-gothic_00303-23ubuntu1_all.deb ...
+2026-11-23T23:20:56.1573547Z Unpacking fonts-ipafont-gothic (00303-23ubuntu1) ...
+2026-11-23T23:20:56.2564285Z Selecting previously unselected package fonts-freefont-ttf.
+2026-11-23T23:20:56.2687818Z Preparing to unpack .../1-fonts-freefont-ttf_20211204+svn4273-4build1_all.deb ...
+2026-11-23T23:20:56.2695864Z Unpacking fonts-freefont-ttf (20211204+svn4273-4build1) ...
+2026-11-23T23:20:56.3625623Z Selecting previously unselected package fonts-tlwg-loma-otf.
+2026-11-23T23:20:56.3749403Z Preparing to unpack .../2-fonts-tlwg-loma-otf_1%3a0.7.3-1build1_all.deb ...
+2026-11-23T23:20:56.3756547Z Unpacking fonts-tlwg-loma-otf (1:0.7.3-1build1) ...
+2026-11-23T23:20:56.3958529Z Selecting previously unselected package fonts-unifont.
+2026-11-23T23:20:56.4082114Z Preparing to unpack .../3-fonts-unifont_1%3a16.0.04-1build1_all.deb ...
+2026-11-23T23:20:56.4088852Z Unpacking fonts-unifont (1:16.0.04-1build1) ...
+2026-11-23T23:20:56.6042184Z Selecting previously unselected package fonts-wqy-zenhei.
+2026-11-23T23:20:56.6164652Z Preparing to unpack .../4-fonts-wqy-zenhei_0.9.45-8build1_all.deb ...
+2026-11-23T23:20:56.6287310Z Unpacking fonts-wqy-zenhei (0.9.45-8build1) ...
+2026-11-23T23:20:56.7791411Z Selecting previously unselected package xfonts-encodings.
+2026-11-23T23:20:56.7914417Z Preparing to unpack .../5-xfonts-encodings_1%3a1.0.5-0ubuntu3_all.deb ...
+2026-11-23T23:20:56.7928953Z Unpacking xfonts-encodings (1:1.0.5-0ubuntu3) ...
+2026-11-23T23:20:56.8189521Z Selecting previously unselected package xfonts-utils.
+2026-11-23T23:20:56.8311256Z Preparing to unpack .../6-xfonts-utils_1%3a7.7+7build1_amd64v3.deb ...
+2026-11-23T23:20:56.8321417Z Unpacking xfonts-utils (1:7.7+7build1) ...
+2026-11-23T23:20:56.8606264Z Selecting previously unselected package xfonts-cyrillic.
+2026-11-23T23:20:56.8735149Z Preparing to unpack .../7-xfonts-cyrillic_1%3a1.0.5+nmu1build1_all.deb ...
+2026-11-23T23:20:56.8742732Z Unpacking xfonts-cyrillic (1:1.0.5+nmu1build1) ...
+2026-11-23T23:20:57.9226404Z Selecting previously unselected package xfonts-scalable.
+2026-11-23T23:20:57.9350617Z Preparing to unpack .../8-xfonts-scalable_1%3a1.0.3-1.3build1_all.deb ...
+2026-11-23T23:20:57.9462599Z Unpacking xfonts-scalable (1:1.0.3-1.3build1) ...
+2026-11-23T23:20:58.1974517Z Setting up fonts-wqy-zenhei (0.9.45-8build1) ...
+2026-11-23T23:20:58.2113214Z Setting up fonts-freefont-ttf (20211204+svn4273-4build1) ...
+2026-11-23T23:20:58.2148318Z Setting up fonts-tlwg-loma-otf (1:0.7.3-1build1) ...
+2026-11-23T23:20:58.2163754Z Setting up xfonts-encodings (1:1.0.5-0ubuntu3) ...
+2026-11-23T23:20:58.2179799Z Setting up fonts-ipafont-gothic (00303-23ubuntu1) ...
+2026-11-23T23:20:58.2233892Z update-alternatives: using /usr/share/fonts/opentype/ipafont-gothic/ipag.ttf to provide /usr/share/fonts/truetype/fonts-japanese-gothic.ttf (fonts-japanese-gothic.ttf) in auto mode
+2026-11-23T23:20:58.2246230Z Setting up fonts-unifont (1:16.0.04-1build1) ...
+2026-11-23T23:20:58.2263767Z Setting up xfonts-utils (1:7.7+7build1) ...
+2026-11-23T23:20:58.2317506Z Setting up xfonts-cyrillic (1:1.0.5+nmu1build1) ...
+2026-11-23T23:20:58.3131012Z Setting up xfonts-scalable (1:1.0.3-1.3build1) ...
+2026-11-23T23:20:58.3498408Z Processing triggers for man-db (2.13.1-1build1) ...
+2026-11-23T23:20:58.3531890Z Not building database; man-db/auto-update is not 'true'.
+2026-11-23T23:20:58.3546761Z Processing triggers for fontconfig (2.17.1-3ubuntu1) ...
+2026-11-23T23:20:59.1023758Z 
+2026-11-23T23:20:59.1024419Z Running kernel seems to be up-to-date.
+2026-11-23T23:20:59.1024736Z 
+2026-11-23T23:20:59.1024838Z Restarting services...
+2026-11-23T23:20:59.1106651Z 
+2026-11-23T23:20:59.1107007Z Service restarts being deferred:
+2026-11-23T23:20:59.1109355Z  systemctl restart hosted-compute-agent.service
+2026-11-23T23:20:59.1109727Z 
+2026-11-23T23:20:59.1110441Z No containers need to be restarted.
+2026-11-23T23:20:59.1110672Z 
+2026-11-23T23:20:59.1111062Z No user sessions are running outdated binaries.
+2026-11-23T23:20:59.1111404Z 
+2026-11-23T23:20:59.1111850Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+2026-11-23T23:20:59.9045715Z Downloading Chrome for Testing 156.0.8078.4 (playwright chromium v1248) from https://cdn.playwright.dev/builds/cft/156.0.8078.4/linux64/chrome-linux64.zip
+2026-11-23T23:21:00.2818810Z |                                                                                |   0% of 191.1 MiB
+2026-11-23T23:21:00.4677383Z |■■■■■■■■                                                                        |  10% of 191.1 MiB
+2026-11-23T23:21:00.5366389Z |■■■■■■■■■■■■■■■■                                                                |  20% of 191.1 MiB
+2026-11-23T23:21:00.5821154Z |■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 191.1 MiB
+2026-11-23T23:21:00.6262815Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 191.1 MiB
+2026-11-23T23:21:00.7005626Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 191.1 MiB
+2026-11-23T23:21:00.7595927Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 191.1 MiB
+2026-11-23T23:21:00.8420677Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 191.1 MiB
+2026-11-23T23:21:00.9263089Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 191.1 MiB
+2026-11-23T23:21:01.0376848Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 191.1 MiB
+2026-11-23T23:21:01.1127101Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 191.1 MiB
+2026-11-23T23:21:03.0303292Z Chrome for Testing 156.0.8078.4 (playwright chromium v1248) downloaded to /home/runner/.cache/ms-playwright/chromium-1248
+2026-11-23T23:21:03.0306400Z Downloading FFmpeg (playwright ffmpeg v1013) from https://cdn.playwright.dev/dbazure/download/playwright/builds/ffmpeg/1013/ffmpeg-linux.zip
+2026-11-23T23:21:03.3761430Z |                                                                                |   0% of 2.2 MiB
+2026-11-23T23:21:03.4044452Z |■■■■■■■■                                                                        |  10% of 2.2 MiB
+2026-11-23T23:21:03.4179863Z |■■■■■■■■■■■■■■■■                                                                |  20% of 2.2 MiB
+2026-11-23T23:21:03.4252932Z |■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 2.2 MiB
+2026-11-23T23:21:03.4310841Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 2.2 MiB
+2026-11-23T23:21:03.4348252Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 2.2 MiB
+2026-11-23T23:21:03.4387324Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 2.2 MiB
+2026-11-23T23:21:03.4418396Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 2.2 MiB
+2026-11-23T23:21:03.4448460Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 2.2 MiB
+2026-11-23T23:21:03.4599809Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 2.2 MiB
+2026-11-23T23:21:03.5237782Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 2.2 MiB
+2026-11-23T23:21:03.5681515Z FFmpeg (playwright ffmpeg v1013) downloaded to /home/runner/.cache/ms-playwright/ffmpeg-1013
+2026-11-23T23:21:03.5683738Z Downloading Chrome Headless Shell 156.0.8078.4 (playwright chromium-headless-shell v1248) from https://cdn.playwright.dev/builds/cft/156.0.8078.4/linux64/chrome-headless-shell-linux64.zip
+2026-11-23T23:21:03.9280804Z |                                                                                |   0% of 120 MiB
+2026-11-23T23:21:04.0896780Z |■■■■■■■■                                                                        |  10% of 120 MiB
+2026-11-23T23:21:04.1315350Z |■■■■■■■■■■■■■■■■                                                                |  20% of 120 MiB
+2026-11-23T23:21:04.1716042Z |■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 120 MiB
+2026-11-23T23:21:04.2179658Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 120 MiB
+2026-11-23T23:21:04.2679033Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 120 MiB
+2026-11-23T23:21:04.3056935Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 120 MiB
+2026-11-23T23:21:04.3513455Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 120 MiB
+2026-11-23T23:21:04.4051436Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 120 MiB
+2026-11-23T23:21:04.4472854Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 120 MiB
+2026-11-23T23:21:04.4880948Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 120 MiB
+2026-11-23T23:21:05.8682992Z Chrome Headless Shell 156.0.8078.4 (playwright chromium-headless-shell v1248) downloaded to /home/runner/.cache/ms-playwright/chromium_headless_shell-1248
+2026-11-23T23:21:05.8939393Z ##[group]Run npm run e2e:stack:up
+2026-11-23T23:21:05.8939699Z npm run e2e:stack:up
+2026-11-23T23:21:05.8969188Z shell: /usr/bin/bash -e {0}
+2026-11-23T23:21:05.8969408Z ##[endgroup]
+2026-11-23T23:21:05.9810850Z 
+2026-11-23T23:21:05.9811656Z > e2e:stack:up
+2026-11-23T23:21:05.9812420Z > docker compose -f ../compose.e2e.yaml up -d --build --wait db backend && docker compose -f ../compose.e2e.yaml run --rm seed
+2026-11-23T23:21:05.9812848Z 
+2026-11-23T23:21:07.5453956Z  Image postgres:18 Pulling 
+2026-11-23T23:21:08.2094075Z  62f716619e2e Pulling fs layer 0B
+2026-11-23T23:21:08.2094523Z  37fb86c2a767 Pulling fs layer 0B
+2026-11-23T23:21:08.2094861Z  1837bb99b431 Pulling fs layer 0B
+2026-11-23T23:21:08.2095372Z  3e6fbba58ab6 Pulling fs layer 0B
+2026-11-23T23:21:08.2095731Z  8c4393616907 Pulling fs layer 0B
+2026-11-23T23:21:08.2096083Z  0fbd9729f0d0 Pulling fs layer 0B
+2026-11-23T23:21:08.2096435Z  00f4238ff416 Pulling fs layer 0B
+2026-11-23T23:21:08.2096870Z  335cde62193e Pulling fs layer 0B
+2026-11-23T23:21:08.2097185Z  dad2840f1c78 Pulling fs layer 0B
+2026-11-23T23:21:08.2097536Z  9f5cf0b65151 Pulling fs layer 0B
+2026-11-23T23:21:08.2097836Z  09b93095874b Pulling fs layer 0B
+2026-11-23T23:21:08.2098199Z  7b5527ff7489 Pulling fs layer 0B
+2026-11-23T23:21:08.3489760Z  00f4238ff416 Download complete 0B
+2026-11-23T23:21:08.3494742Z  3e6fbba58ab6 Download complete 0B
+2026-11-23T23:21:08.3496934Z  1837bb99b431 Download complete 0B
+2026-11-23T23:21:08.3497786Z  62f716619e2e Download complete 0B
+2026-11-23T23:21:08.3499976Z  0fbd9729f0d0 Download complete 0B
+2026-11-23T23:21:08.4490976Z  37fb86c2a767 Downloading 11.53MB
+2026-11-23T23:21:08.4496165Z  335cde62193e Download complete 0B
+2026-11-23T23:21:08.4497481Z  09b93095874b Downloading 3.146MB
+2026-11-23T23:21:08.4498386Z  7b5527ff7489 Downloading 7.34MB
+2026-11-23T23:21:08.4499954Z  8c4393616907 Download complete 0B
+2026-11-23T23:21:08.4500816Z  9f5cf0b65151 Download complete 0B
+2026-11-23T23:21:08.4501653Z  dad2840f1c78 Downloading 3.146MB
+2026-11-23T23:21:08.4503975Z  26d06a935726 Download complete 0B
+2026-11-23T23:21:08.5487737Z  37fb86c2a767 Downloading 29.86MB
+2026-11-23T23:21:08.5488890Z  09b93095874b Downloading 6.443MB
+2026-11-23T23:21:08.5489366Z  7b5527ff7489 Downloading 8.204MB
+2026-11-23T23:21:08.5489802Z  ed4e4f8e1aa3 Downloading 6.319MB
+2026-11-23T23:21:08.5490269Z  dad2840f1c78 Downloading 23.07MB
+2026-11-23T23:21:08.6486097Z  dad2840f1c78 Downloading 39.85MB
+2026-11-23T23:21:08.6486836Z  37fb86c2a767 Downloading 29.86MB
+2026-11-23T23:21:08.6487211Z  09b93095874b Downloading 6.443MB
+2026-11-23T23:21:08.6487562Z  7b5527ff7489 Downloading 8.204MB
+2026-11-23T23:21:08.6488093Z  ed4e4f8e1aa3 Downloading 6.319MB
+2026-11-23T23:21:08.7478580Z  37fb86c2a767 Download complete 0B
+2026-11-23T23:21:08.7486867Z  09b93095874b Download complete 0B
+2026-11-23T23:21:08.7497192Z  7b5527ff7489 Download complete 0B
+2026-11-23T23:21:08.7498047Z  ed4e4f8e1aa3 Download complete 0B
+2026-11-23T23:21:08.7498746Z  dad2840f1c78 Downloading 76.55MB
+2026-11-23T23:21:08.7657456Z  37fb86c2a767 Extracting 1B
+2026-11-23T23:21:08.8487144Z  dad2840f1c78 Downloading 110.1MB
+2026-11-23T23:21:08.8600100Z  37fb86c2a767 Extracting 1B
+2026-11-23T23:21:08.9486018Z  dad2840f1c78 Downloading 121.4MB
+2026-11-23T23:21:08.9578763Z  37fb86c2a767 Extracting 1B
+2026-11-23T23:21:09.0482207Z  dad2840f1c78 Downloading 121.4MB
+2026-11-23T23:21:09.0565860Z  37fb86c2a767 Extracting 1B
+2026-11-23T23:21:09.1483435Z  dad2840f1c78 Downloading 121.4MB
+2026-11-23T23:21:09.1576736Z  37fb86c2a767 Extracting 1B
+2026-11-23T23:21:09.2481385Z  dad2840f1c78 Downloading 121.4MB
+2026-11-23T23:21:09.2559877Z  37fb86c2a767 Extracting 1B
+2026-11-23T23:21:09.3483369Z  dad2840f1c78 Downloading 121.4MB
+2026-11-23T23:21:09.3553302Z  37fb86c2a767 Extracting 1B
+2026-11-23T23:21:09.4482269Z  dad2840f1c78 Downloading 121.4MB
+2026-11-23T23:21:09.4560746Z  37fb86c2a767 Pull complete 0B
+2026-11-23T23:21:09.5480236Z  dad2840f1c78 Download complete 0B
+2026-11-23T23:21:09.5537051Z  0fbd9729f0d0 Pull complete 0B
+2026-11-23T23:21:09.5590636Z  09b93095874b Extracting 1B
+2026-11-23T23:21:09.6545810Z  8c4393616907 Pull complete 0B
+2026-11-23T23:21:09.6562660Z  09b93095874b Pull complete 0B
+2026-11-23T23:21:09.6574662Z  7b5527ff7489 Extracting 1B
+2026-11-23T23:21:09.7549964Z  7b5527ff7489 Extracting 1B
+2026-11-23T23:21:09.8547870Z  7b5527ff7489 Pull complete 0B
+2026-11-23T23:21:09.9503300Z  3e6fbba58ab6 Pull complete 0B
+2026-11-23T23:21:09.9558093Z  335cde62193e Pull complete 0B
+2026-11-23T23:21:09.9558737Z  9f5cf0b65151 Pull complete 0B
+2026-11-23T23:21:09.9569109Z  dad2840f1c78 Extracting 1B
+2026-11-23T23:21:10.0540848Z  dad2840f1c78 Extracting 1B
+2026-11-23T23:21:10.1519423Z  dad2840f1c78 Extracting 1B
+2026-11-23T23:21:10.2521570Z  dad2840f1c78 Extracting 1B
+2026-11-23T23:21:10.3516805Z  dad2840f1c78 Extracting 1B
+2026-11-23T23:21:10.4532959Z  dad2840f1c78 Extracting 1B
+2026-11-23T23:21:10.5517646Z  dad2840f1c78 Extracting 1B
+2026-11-23T23:21:10.6529946Z  dad2840f1c78 Extracting 1B
+2026-11-23T23:21:10.7526041Z  dad2840f1c78 Extracting 1B
+2026-11-23T23:21:10.8511152Z  dad2840f1c78 Extracting 1B
+2026-11-23T23:21:10.9525644Z  dad2840f1c78 Extracting 1B
+2026-11-23T23:21:11.0516286Z  dad2840f1c78 Extracting 2B
+2026-11-23T23:21:11.1530715Z  dad2840f1c78 Extracting 2B
+2026-11-23T23:21:11.2535236Z  dad2840f1c78 Extracting 2B
+2026-11-23T23:21:11.3529245Z  dad2840f1c78 Extracting 2B
+2026-11-23T23:21:11.4520727Z  dad2840f1c78 Extracting 2B
+2026-11-23T23:21:11.5415384Z  00f4238ff416 Pull complete 0B
+2026-11-23T23:21:11.5426337Z  1837bb99b431 Pull complete 0B
+2026-11-23T23:21:11.5435483Z  62f716619e2e Pull complete 0B
+2026-11-23T23:21:11.5448614Z  dad2840f1c78 Pull complete 0B
+2026-11-23T23:21:11.5456045Z  Image postgres:18 Pulled 
+2026-11-23T23:21:14.3183722Z  Image clinicalstudypb-e2e-backend Building 
+2026-11-23T23:21:14.4991948Z #1 [internal] load local bake definitions
+2026-11-23T23:21:14.6496385Z #1 reading from stdin 626B done
+2026-11-23T23:21:14.6496739Z #1 DONE 0.0s
+2026-11-23T23:21:14.9482594Z 
+2026-11-23T23:21:14.9483328Z #2 [internal] load build definition from Dockerfile
+2026-11-23T23:21:14.9483835Z #2 transferring dockerfile: 550B 0.0s done
+2026-11-23T23:21:14.9484134Z #2 DONE 0.0s
+2026-11-23T23:21:14.9484278Z 
+2026-11-23T23:21:14.9484595Z #3 [auth] library/eclipse-temurin:pull token for registry-1.docker.io
+2026-11-23T23:21:15.0987838Z #3 DONE 0.0s
+2026-11-23T23:21:15.0988066Z 
+2026-11-23T23:21:15.0988535Z #4 [internal] load metadata for docker.io/library/eclipse-temurin:21-jdk-jammy
+2026-11-23T23:21:15.4442247Z #4 DONE 0.6s
+2026-11-23T23:21:15.4442425Z 
+2026-11-23T23:21:15.4442816Z #5 [internal] load metadata for docker.io/library/eclipse-temurin:21-jre-jammy
+2026-11-23T23:21:15.5847326Z #5 DONE 0.6s
+2026-11-23T23:21:15.5848337Z 
+2026-11-23T23:21:15.5848809Z #6 [internal] load .dockerignore
+2026-11-23T23:21:15.5849538Z #6 transferring context: 65B done
+2026-11-23T23:21:15.5850191Z #6 DONE 0.0s
+2026-11-23T23:21:15.5851739Z 
+2026-11-23T23:21:15.5852465Z #7 [internal] load build context
+2026-11-23T23:21:15.5853381Z #7 transferring context: 1.28MB 0.0s done
+2026-11-23T23:21:15.5853910Z #7 DONE 0.0s
+2026-11-23T23:21:15.5854062Z 
+2026-11-23T23:21:15.5855188Z #8 [stage-1 1/3] FROM docker.io/library/eclipse-temurin:21-jre-jammy@sha256:a8bff88f760e87e0c8844f8461f807c203fd5e8f78c951c843024647e965eaf5
+2026-11-23T23:21:15.5856718Z #8 resolve docker.io/library/eclipse-temurin:21-jre-jammy@sha256:a8bff88f760e87e0c8844f8461f807c203fd5e8f78c951c843024647e965eaf5 0.0s done
+2026-11-23T23:21:15.5858104Z #8 sha256:7d57202b6afbb22dc7bca8f2bf37c88e441f70284d4e5ac3e14d4433b17d09d1 2.46kB / 2.46kB 0.1s done
+2026-11-23T23:21:15.6852845Z #8 sha256:f7bb79e459893d4126990fabf2a4225d7f8c608c23644ec23c8e03d5455ba2ad 159B / 159B 0.1s done
+2026-11-23T23:21:15.6854293Z #8 sha256:76da8104670ad4bb06feb043459a934ca42bae39b60773ffd2090cf2e3a3148d 0B / 53.23MB 0.2s
+2026-11-23T23:21:15.6855378Z #8 sha256:e046509628737e4e4f482ba3193aa382c7c8222300f5a37f3a79bc093b6183de 1.05MB / 16.12MB 0.2s
+2026-11-23T23:21:15.8372620Z #8 sha256:76da8104670ad4bb06feb043459a934ca42bae39b60773ffd2090cf2e3a3148d 30.41MB / 53.23MB 0.3s
+2026-11-23T23:21:15.8374577Z #8 sha256:e046509628737e4e4f482ba3193aa382c7c8222300f5a37f3a79bc093b6183de 16.12MB / 16.12MB 0.3s done
+2026-11-23T23:21:15.8375988Z #8 sha256:ba082564e6605eeb2e1abc91a762985d2e8afea393433de08e798c1eee36d028 3.15MB / 30.07MB 0.2s
+2026-11-23T23:21:15.9844747Z #8 sha256:76da8104670ad4bb06feb043459a934ca42bae39b60773ffd2090cf2e3a3148d 53.23MB / 53.23MB 0.5s
+2026-11-23T23:21:15.9847207Z #8 sha256:ba082564e6605eeb2e1abc91a762985d2e8afea393433de08e798c1eee36d028 30.07MB / 30.07MB 0.3s
+2026-11-23T23:21:16.8620084Z #8 sha256:ba082564e6605eeb2e1abc91a762985d2e8afea393433de08e798c1eee36d028 30.07MB / 30.07MB 1.2s done
+2026-11-23T23:21:17.0543733Z #8 sha256:76da8104670ad4bb06feb043459a934ca42bae39b60773ffd2090cf2e3a3148d 53.23MB / 53.23MB 1.4s done
+2026-11-23T23:21:17.1768100Z #8 DONE 1.7s
+2026-11-23T23:21:17.1768325Z 
+2026-11-23T23:21:17.1768940Z #9 [build 1/8] FROM docker.io/library/eclipse-temurin:21-jdk-jammy@sha256:b2711c65970c1227197c29c46e669bfdbb137524e9da0e664703a140ec25a040
+2026-11-23T23:21:17.1769812Z #9 resolve docker.io/library/eclipse-temurin:21-jdk-jammy@sha256:b2711c65970c1227197c29c46e669bfdbb137524e9da0e664703a140ec25a040 0.0s done
+2026-11-23T23:21:17.1770556Z #9 sha256:0063936fdf843ba3a1a4b0a9bf09d45f1d9dedbaf5b049208cc1c0aeb9fe0673 2.46kB / 2.46kB 0.1s done
+2026-11-23T23:21:17.1771167Z #9 sha256:572115d6c04739ba4631076ba35563d75d016a32c1a6e0ebbb231d99fd174d80 156B / 156B 0.1s done
+2026-11-23T23:21:17.1771779Z #9 sha256:b2945bacad52aeff54058f00e6265b820b7e31c030b51721457bcb053e692775 158.45MB / 158.45MB 1.4s
+2026-11-23T23:21:17.1772383Z #9 sha256:668f8279d49ca422aa6a12e8d7bdf5e486dc14bd5afff40e24497201619903d1 20.66MB / 20.66MB 1.1s done
+2026-11-23T23:21:18.2232866Z #9 sha256:b2945bacad52aeff54058f00e6265b820b7e31c030b51721457bcb053e692775 158.45MB / 158.45MB 2.3s done
+2026-11-23T23:21:18.2233602Z #9 DONE 2.6s
+2026-11-23T23:21:18.2233820Z 
+2026-11-23T23:21:18.2234675Z #8 [stage-1 1/3] FROM docker.io/library/eclipse-temurin:21-jre-jammy@sha256:a8bff88f760e87e0c8844f8461f807c203fd5e8f78c951c843024647e965eaf5
+2026-11-23T23:21:18.2235843Z #8 extracting sha256:ba082564e6605eeb2e1abc91a762985d2e8afea393433de08e798c1eee36d028
+2026-11-23T23:21:18.7850619Z #8 extracting sha256:ba082564e6605eeb2e1abc91a762985d2e8afea393433de08e798c1eee36d028 0.8s done
+2026-11-23T23:21:18.7851114Z #8 DONE 2.5s
+2026-11-23T23:21:18.9353477Z 
+2026-11-23T23:21:18.9354459Z #8 [stage-1 1/3] FROM docker.io/library/eclipse-temurin:21-jre-jammy@sha256:a8bff88f760e87e0c8844f8461f807c203fd5e8f78c951c843024647e965eaf5
+2026-11-23T23:21:18.9355403Z #8 extracting sha256:e046509628737e4e4f482ba3193aa382c7c8222300f5a37f3a79bc093b6183de
+2026-11-23T23:21:19.3719927Z #8 extracting sha256:e046509628737e4e4f482ba3193aa382c7c8222300f5a37f3a79bc093b6183de 0.6s done
+2026-11-23T23:21:19.3720572Z #8 DONE 3.1s
+2026-11-23T23:21:19.3720745Z 
+2026-11-23T23:21:19.3721408Z #9 [build 1/8] FROM docker.io/library/eclipse-temurin:21-jdk-jammy@sha256:b2711c65970c1227197c29c46e669bfdbb137524e9da0e664703a140ec25a040
+2026-11-23T23:21:19.3722208Z #9 extracting sha256:668f8279d49ca422aa6a12e8d7bdf5e486dc14bd5afff40e24497201619903d1
+2026-11-23T23:21:19.5259197Z #9 extracting sha256:668f8279d49ca422aa6a12e8d7bdf5e486dc14bd5afff40e24497201619903d1 0.7s done
+2026-11-23T23:21:19.5259702Z #9 DONE 3.3s
+2026-11-23T23:21:19.5259817Z 
+2026-11-23T23:21:19.5260297Z #8 [stage-1 1/3] FROM docker.io/library/eclipse-temurin:21-jre-jammy@sha256:a8bff88f760e87e0c8844f8461f807c203fd5e8f78c951c843024647e965eaf5
+2026-11-23T23:21:19.5261704Z #8 extracting sha256:76da8104670ad4bb06feb043459a934ca42bae39b60773ffd2090cf2e3a3148d
+2026-11-23T23:21:20.0181903Z #8 extracting sha256:76da8104670ad4bb06feb043459a934ca42bae39b60773ffd2090cf2e3a3148d 0.6s done
+2026-11-23T23:21:20.0182797Z #8 DONE 3.7s
+2026-11-23T23:21:20.0182961Z 
+2026-11-23T23:21:20.0183745Z #9 [build 1/8] FROM docker.io/library/eclipse-temurin:21-jdk-jammy@sha256:b2711c65970c1227197c29c46e669bfdbb137524e9da0e664703a140ec25a040
+2026-11-23T23:21:20.0185658Z #9 extracting sha256:b2945bacad52aeff54058f00e6265b820b7e31c030b51721457bcb053e692775
+2026-11-23T23:21:20.1824568Z #9 ...
+2026-11-23T23:21:20.1825126Z 
+2026-11-23T23:21:20.1826579Z #8 [stage-1 1/3] FROM docker.io/library/eclipse-temurin:21-jre-jammy@sha256:a8bff88f760e87e0c8844f8461f807c203fd5e8f78c951c843024647e965eaf5
+2026-11-23T23:21:20.1827923Z #8 extracting sha256:f7bb79e459893d4126990fabf2a4225d7f8c608c23644ec23c8e03d5455ba2ad done
+2026-11-23T23:21:20.1829103Z #8 extracting sha256:7d57202b6afbb22dc7bca8f2bf37c88e441f70284d4e5ac3e14d4433b17d09d1 done
+2026-11-23T23:21:20.1829709Z #8 DONE 3.7s
+2026-11-23T23:21:20.3326530Z 
+2026-11-23T23:21:20.3327204Z #10 [stage-1 2/3] WORKDIR /app
+2026-11-23T23:21:20.9711035Z #10 ...
+2026-11-23T23:21:20.9711491Z 
+2026-11-23T23:21:20.9712758Z #9 [build 1/8] FROM docker.io/library/eclipse-temurin:21-jdk-jammy@sha256:b2711c65970c1227197c29c46e669bfdbb137524e9da0e664703a140ec25a040
+2026-11-23T23:21:20.9713984Z #9 extracting sha256:b2945bacad52aeff54058f00e6265b820b7e31c030b51721457bcb053e692775 1.4s done
+2026-11-23T23:21:20.9714595Z #9 DONE 4.8s
+2026-11-23T23:21:21.1214300Z 
+2026-11-23T23:21:21.1215442Z #9 [build 1/8] FROM docker.io/library/eclipse-temurin:21-jdk-jammy@sha256:b2711c65970c1227197c29c46e669bfdbb137524e9da0e664703a140ec25a040
+2026-11-23T23:21:21.1216258Z #9 extracting sha256:572115d6c04739ba4631076ba35563d75d016a32c1a6e0ebbb231d99fd174d80
+2026-11-23T23:21:21.4017301Z #9 extracting sha256:572115d6c04739ba4631076ba35563d75d016a32c1a6e0ebbb231d99fd174d80 0.4s done
+2026-11-23T23:21:21.4017846Z #9 DONE 5.2s
+2026-11-23T23:21:21.4017956Z 
+2026-11-23T23:21:21.4018072Z #10 [stage-1 2/3] WORKDIR /app
+2026-11-23T23:21:21.7312615Z #10 ...
+2026-11-23T23:21:21.7312810Z 
+2026-11-23T23:21:21.7313666Z #9 [build 1/8] FROM docker.io/library/eclipse-temurin:21-jdk-jammy@sha256:b2711c65970c1227197c29c46e669bfdbb137524e9da0e664703a140ec25a040
+2026-11-23T23:21:21.7314872Z #9 extracting sha256:0063936fdf843ba3a1a4b0a9bf09d45f1d9dedbaf5b049208cc1c0aeb9fe0673 0.3s done
+2026-11-23T23:21:21.9275090Z #9 DONE 5.6s
+2026-11-23T23:21:21.9275262Z 
+2026-11-23T23:21:21.9275377Z #11 [build 2/8] WORKDIR /app
+2026-11-23T23:21:28.7276189Z #11 DONE 7.0s
+2026-11-23T23:21:28.7276414Z 
+2026-11-23T23:21:28.8787331Z #10 [stage-1 2/3] WORKDIR /app
+2026-11-23T23:21:28.8787663Z #10 DONE 8.7s
+2026-11-23T23:21:28.8787795Z 
+2026-11-23T23:21:28.8788244Z #12 [build 3/8] RUN apt-get update     && apt-get install -y --no-install-recommends curl unzip     && rm -rf /var/lib/apt/lists/*
+2026-11-23T23:21:29.1167149Z #12 0.388 Get:1 http://archive.ubuntu.com/ubuntu jammy InRelease [270 kB]
+2026-11-23T23:21:29.2460651Z #12 0.518 Get:2 http://security.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
+2026-11-23T23:21:29.4522221Z #12 0.573 Get:3 http://archive.ubuntu.com/ubuntu jammy-updates InRelease [128 kB]
+2026-11-23T23:21:29.4547252Z #12 0.726 Get:4 http://archive.ubuntu.com/ubuntu jammy-backports InRelease [127 kB]
+2026-11-23T23:21:29.6435093Z #12 0.769 Get:5 http://archive.ubuntu.com/ubuntu jammy/main amd64 Packages [1,792 kB]
+2026-11-23T23:21:29.6436619Z #12 0.805 Get:6 http://archive.ubuntu.com/ubuntu jammy/multiverse amd64 Packages [266 kB]
+2026-11-23T23:21:29.6437667Z #12 0.822 Get:7 http://archive.ubuntu.com/ubuntu jammy/universe amd64 Packages [17.5 MB]
+2026-11-23T23:21:29.6438685Z #12 0.915 Get:8 http://archive.ubuntu.com/ubuntu jammy/restricted amd64 Packages [164 kB]
+2026-11-23T23:21:29.7440722Z #12 0.925 Get:9 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 Packages [4,897 kB]
+2026-11-23T23:21:29.7441733Z #12 0.951 Get:10 http://archive.ubuntu.com/ubuntu jammy-updates/restricted amd64 Packages [8,446 kB]
+2026-11-23T23:21:29.7442358Z #12 0.969 Get:11 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages [4,549 kB]
+2026-11-23T23:21:29.7442940Z #12 1.016 Get:12 http://archive.ubuntu.com/ubuntu jammy-updates/universe amd64 Packages [1,631 kB]
+2026-11-23T23:21:29.9715034Z #12 1.021 Get:13 http://archive.ubuntu.com/ubuntu jammy-updates/multiverse amd64 Packages [104 kB]
+2026-11-23T23:21:29.9716120Z #12 1.031 Get:14 http://security.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [8,116 kB]
+2026-11-23T23:21:29.9716749Z #12 1.034 Get:15 http://archive.ubuntu.com/ubuntu jammy-backports/universe amd64 Packages [35.6 kB]
+2026-11-23T23:21:29.9717352Z #12 1.048 Get:16 http://archive.ubuntu.com/ubuntu jammy-backports/main amd64 Packages [82.9 kB]
+2026-11-23T23:21:29.9717957Z #12 1.081 Get:17 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 Packages [96.7 kB]
+2026-11-23T23:21:29.9718560Z #12 1.093 Get:18 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [1,329 kB]
+2026-11-23T23:21:31.0008895Z #12 2.272 Fetched 49.6 MB in 2s (23.4 MB/s)
+2026-11-23T23:21:31.8403686Z #12 2.272 Reading package lists...
+2026-11-23T23:21:32.7329057Z #12 3.151 Reading package lists...
+2026-11-23T23:21:32.9776939Z #12 4.018 Building dependency tree...
+2026-11-23T23:21:32.9777353Z #12 4.249 Reading state information...
+2026-11-23T23:21:33.1544319Z #12 4.426 curl is already the newest version (7.81.0-1ubuntu1.30).
+2026-11-23T23:21:33.1544738Z #12 4.426 Suggested packages:
+2026-11-23T23:21:33.1545155Z #12 4.426   zip
+2026-11-23T23:21:33.3351382Z #12 4.451 The following NEW packages will be installed:
+2026-11-23T23:21:33.3351863Z #12 4.451   unzip
+2026-11-23T23:21:33.3352396Z #12 4.503 0 upgraded, 1 newly installed, 0 to remove and 2 not upgraded.
+2026-11-23T23:21:33.3352968Z #12 4.503 Need to get 175 kB of archives.
+2026-11-23T23:21:33.3353584Z #12 4.503 After this operation, 386 kB of additional disk space will be used.
+2026-11-23T23:21:33.3354507Z #12 4.503 Get:1 http://archive.ubuntu.com/ubuntu jammy-updates/main amd64 unzip amd64 6.0-26ubuntu3.2 [175 kB]
+2026-11-23T23:21:33.3355638Z #12 4.607 debconf: delaying package configuration, since apt-utils is not installed
+2026-11-23T23:21:33.4455433Z #12 4.634 Fetched 175 kB in 0s (3,011 kB/s)
+2026-11-23T23:21:33.4456015Z #12 4.646 Selecting previously unselected package unzip.
+2026-11-23T23:21:33.4456646Z #12 4.646 (Reading database ... 
+2026-11-23T23:21:33.4457169Z (Reading database ... 5%
+2026-11-23T23:21:33.4457466Z (Reading database ... 10%
+2026-11-23T23:21:33.4457832Z (Reading database ... 15%
+2026-11-23T23:21:33.4458110Z (Reading database ... 20%
+2026-11-23T23:21:33.4458383Z (Reading database ... 25%
+2026-11-23T23:21:33.4458655Z (Reading database ... 30%
+2026-11-23T23:21:33.4458934Z (Reading database ... 35%
+2026-11-23T23:21:33.4459210Z (Reading database ... 40%
+2026-11-23T23:21:33.4459492Z (Reading database ... 45%
+2026-11-23T23:21:33.4459762Z (Reading database ... 50%
+2026-11-23T23:21:33.4460054Z (Reading database ... 55%
+2026-11-23T23:21:33.4460324Z (Reading database ... 60%
+2026-11-23T23:21:33.4460600Z (Reading database ... 65%
+2026-11-23T23:21:33.4460872Z (Reading database ... 70%
+2026-11-23T23:21:33.4461173Z (Reading database ... 75%
+2026-11-23T23:21:33.4461492Z (Reading database ... 80%
+2026-11-23T23:21:33.4461810Z (Reading database ... 85%
+2026-11-23T23:21:33.4462127Z (Reading database ... 90%
+2026-11-23T23:21:33.4462435Z (Reading database ... 95%
+2026-11-23T23:21:33.4462737Z (Reading database ... 100%
+2026-11-23T23:21:33.4463298Z (Reading database ... 8182 files and directories currently installed.)
+2026-11-23T23:21:33.4463984Z #12 4.653 Preparing to unpack .../unzip_6.0-26ubuntu3.2_amd64.deb ...
+2026-11-23T23:21:33.4464494Z #12 4.654 Unpacking unzip (6.0-26ubuntu3.2) ...
+2026-11-23T23:21:33.4465085Z #12 4.671 Setting up unzip (6.0-26ubuntu3.2) ...
+2026-11-23T23:21:33.4465460Z #12 DONE 4.7s
+2026-11-23T23:21:33.6854728Z 
+2026-11-23T23:21:33.6855421Z #13 [build 4/8] COPY .mvn/ .mvn/
+2026-11-23T23:21:33.6855722Z #13 DONE 0.0s
+2026-11-23T23:21:33.6855836Z 
+2026-11-23T23:21:33.6855965Z #14 [build 5/8] COPY mvnw pom.xml ./
+2026-11-23T23:21:33.6856202Z #14 DONE 0.0s
+2026-11-23T23:21:33.6856312Z 
+2026-11-23T23:21:33.6856442Z #15 [build 6/8] COPY checkstyle.xml ./
+2026-11-23T23:21:33.6856684Z #15 DONE 0.0s
+2026-11-23T23:21:33.6856793Z 
+2026-11-23T23:21:33.6856919Z #16 [build 7/8] COPY src/ src/
+2026-11-23T23:21:33.6857127Z #16 DONE 0.0s
+2026-11-23T23:21:33.6857694Z 
+2026-11-23T23:21:33.6858060Z #17 [build 8/8] RUN sed -i 's/\r$//' mvnw     && chmod +x mvnw     && ./mvnw -B -ntp -DskipTests package
+2026-11-23T23:21:34.8739971Z #17 1.339 [INFO] Scanning for projects...
+2026-11-23T23:21:37.6836182Z #17 4.148 [INFO] 
+2026-11-23T23:21:37.6846068Z #17 4.148 [INFO] ----------------------< clinicalstudypb:backend >-----------------------
+2026-11-23T23:21:37.6847513Z #17 4.148 [INFO] Building ClinicalStudyPB Backend 0.0.1-SNAPSHOT
+2026-11-23T23:21:37.6848083Z #17 4.148 [INFO]   from pom.xml
+2026-11-23T23:21:37.6848679Z #17 4.148 [INFO] --------------------------------[ jar ]---------------------------------
+2026-11-23T23:21:47.7863473Z #17 14.25 [INFO] 
+2026-11-23T23:21:47.9366858Z #17 14.25 [INFO] --- checkstyle:3.6.0:check (checkstyle) @ backend ---
+2026-11-23T23:21:56.7320252Z #17 23.20 [INFO] Starting audit...
+2026-11-23T23:21:56.7321094Z #17 23.20 Audit done.
+2026-11-23T23:21:56.8962415Z #17 23.21 [INFO] You have 0 Checkstyle violations.
+2026-11-23T23:21:56.8962788Z #17 23.21 [INFO] 
+2026-11-23T23:21:56.8963153Z #17 23.21 [INFO] --- jacoco:0.8.13:prepare-agent (prepare-agent) @ backend ---
+2026-11-23T23:21:57.7320321Z #17 24.20 [INFO] argLine set to -javaagent:/root/.m2/repository/org/jacoco/org.jacoco.agent/0.8.13/org.jacoco.agent-0.8.13-runtime.jar=destfile=/app/target/jacoco.exec,excludes=clinicalstudypb/ClinicalStudyPBApplication.class:**/*Configuration.class:**/*Config.class
+2026-11-23T23:21:57.8822799Z #17 24.20 [INFO] 
+2026-11-23T23:21:57.8823674Z #17 24.20 [INFO] --- resources:3.3.1:resources (default-resources) @ backend ---
+2026-11-23T23:21:58.2624664Z #17 24.73 [INFO] Copying 1 resource from src/main/resources to target/classes
+2026-11-23T23:21:58.4243513Z #17 24.74 [INFO] Copying 16 resources from src/main/resources to target/classes
+2026-11-23T23:21:58.4244034Z #17 24.74 [INFO] 
+2026-11-23T23:21:58.4244398Z #17 24.74 [INFO] --- compiler:3.14.1:compile (default-compile) @ backend ---
+2026-11-23T23:21:58.8962660Z #17 25.36 [INFO] Recompiling the module because of changed source code.
+2026-11-23T23:21:59.0534191Z #17 25.37 [INFO] Compiling 175 source files with javac [debug parameters release 21] to target/classes
+2026-11-23T23:22:00.6134221Z #17 27.08 [INFO] 
+2026-11-23T23:22:00.6134726Z #17 27.08 [INFO] --- resources:3.3.1:testResources (default-testResources) @ backend ---
+2026-11-23T23:22:00.7797635Z #17 27.08 [INFO] Copying 1 resource from src/test/resources to target/test-classes
+2026-11-23T23:22:00.7798443Z #17 27.08 [INFO] 
+2026-11-23T23:22:00.7799088Z #17 27.08 [INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ backend ---
+2026-11-23T23:22:00.7799944Z #17 27.09 [INFO] Recompiling the module because of changed dependency.
+2026-11-23T23:22:00.7800917Z #17 27.09 [INFO] Compiling 51 source files with javac [debug parameters release 21] to target/test-classes
+2026-11-23T23:22:02.6839898Z #17 29.15 [INFO] 
+2026-11-23T23:22:02.6876132Z #17 29.15 [INFO] --- surefire:3.5.6:test (default-test) @ backend ---
+2026-11-23T23:22:03.4025459Z #17 29.87 [INFO] Tests are skipped.
+2026-11-23T23:22:03.4026503Z #17 29.87 [INFO] 
+2026-11-23T23:22:03.5552651Z #17 29.87 [INFO] --- jacoco:0.8.13:report (report) @ backend ---
+2026-11-23T23:22:03.5553491Z #17 29.87 [INFO] Skipping JaCoCo execution due to missing execution data file.
+2026-11-23T23:22:03.5554042Z #17 29.87 [INFO] 
+2026-11-23T23:22:03.5554523Z #17 29.87 [INFO] --- jar:3.4.2:jar (default-jar) @ backend ---
+2026-11-23T23:22:03.6842778Z #17 30.15 [INFO] Building jar: /app/target/backend-0.0.1-SNAPSHOT.jar
+2026-11-23T23:22:03.8872165Z #17 30.20 [INFO] 
+2026-11-23T23:22:03.8872630Z #17 30.20 [INFO] --- spring-boot:3.5.16:repackage (repackage) @ backend ---
+2026-11-23T23:22:05.4942877Z #17 31.81 [INFO] Replacing main artifact /app/target/backend-0.0.1-SNAPSHOT.jar with repackaged archive, adding nested dependencies in BOOT-INF/.
+2026-11-23T23:22:05.4943733Z #17 31.81 [INFO] The original artifact has been renamed to /app/target/backend-0.0.1-SNAPSHOT.jar.original
+2026-11-23T23:22:05.4944637Z #17 31.81 [INFO] ------------------------------------------------------------------------
+2026-11-23T23:22:05.4945193Z #17 31.81 [INFO] BUILD SUCCESS
+2026-11-23T23:22:05.4945572Z #17 31.81 [INFO] ------------------------------------------------------------------------
+2026-11-23T23:22:05.4945936Z #17 31.81 [INFO] Total time:  30.482 s
+2026-11-23T23:22:05.4946265Z #17 31.81 [INFO] Finished at: 2026-11-23T23:22:05Z
+2026-11-23T23:22:05.4946675Z #17 31.81 [INFO] ------------------------------------------------------------------------
+2026-11-23T23:22:06.5166092Z #17 DONE 33.0s
+2026-11-23T23:22:06.7174273Z 
+2026-11-23T23:22:06.7175324Z #18 [stage-1 3/3] COPY --from=build /app/target/backend-0.0.1-SNAPSHOT.jar app.jar
+2026-11-23T23:22:06.8838639Z #18 DONE 0.3s
+2026-11-23T23:22:07.0360473Z 
+2026-11-23T23:22:07.0361069Z #19 exporting to image
+2026-11-23T23:22:07.0361398Z #19 exporting layers
+2026-11-23T23:22:08.4395432Z #19 exporting layers 1.6s done
+2026-11-23T23:22:08.6223884Z #19 exporting manifest sha256:4546cf4dd583c3bb2c92ba8bb77e7a7f0e223026f9fa9d4b4757c8d70e6f017e done
+2026-11-23T23:22:08.6225297Z #19 exporting config sha256:c76dbfcc4a50c2ed3489d44225d758ef9a6e30c1bada955e8a80c21830ea8097 done
+2026-11-23T23:22:08.6226018Z #19 exporting attestation manifest sha256:ef0987e6e2e07f1b5667e39f00d729a9de162e2d17bf3316d21f1e9316cf1e4e done
+2026-11-23T23:22:08.6226726Z #19 exporting manifest list sha256:4ccbf8e1014730e8170225132f483a94dd761793b747fdcc4820bc2d886fb361 done
+2026-11-23T23:22:08.6227329Z #19 naming to docker.io/library/clinicalstudypb-e2e-backend:latest done
+2026-11-23T23:22:08.6227811Z #19 unpacking to docker.io/library/clinicalstudypb-e2e-backend:latest
+2026-11-23T23:22:08.6861428Z #19 unpacking to docker.io/library/clinicalstudypb-e2e-backend:latest 0.2s done
+2026-11-23T23:22:08.7396224Z #19 DONE 1.8s
+2026-11-23T23:22:08.7396443Z 
+2026-11-23T23:22:08.7396683Z #20 resolving provenance for metadata file
+2026-11-23T23:22:08.7397066Z #20 DONE 0.0s
+2026-11-23T23:22:08.7397461Z  Image clinicalstudypb-e2e-backend Built 
+2026-11-23T23:22:08.7413223Z  Network clinicalstudypb-e2e_default Creating 
+2026-11-23T23:22:08.7670413Z  Network clinicalstudypb-e2e_default Created 
+2026-11-23T23:22:08.7676788Z  Container clinicalstudypb-e2e-db-1 Creating 
+2026-11-23T23:22:09.1218972Z  Container clinicalstudypb-e2e-db-1 Created 
+2026-11-23T23:22:09.1219443Z  Container clinicalstudypb-e2e-backend-1 Creating 
+2026-11-23T23:22:09.1437723Z  Container clinicalstudypb-e2e-backend-1 Created 
+2026-11-23T23:22:09.1585742Z  Container clinicalstudypb-e2e-db-1 Starting 
+2026-11-23T23:22:09.2830593Z  Container clinicalstudypb-e2e-db-1 Started 
+2026-11-23T23:22:09.2831464Z  Container clinicalstudypb-e2e-db-1 Waiting 
+2026-11-23T23:22:11.7846021Z  Container clinicalstudypb-e2e-db-1 Healthy 
+2026-11-23T23:22:11.7846578Z  Container clinicalstudypb-e2e-backend-1 Starting 
+2026-11-23T23:22:11.9049117Z  Container clinicalstudypb-e2e-backend-1 Started 
+2026-11-23T23:22:11.9049870Z  Container clinicalstudypb-e2e-backend-1 Waiting 
+2026-11-23T23:22:11.9050569Z  Container clinicalstudypb-e2e-db-1 Waiting 
+2026-11-23T23:22:12.4071070Z  Container clinicalstudypb-e2e-db-1 Healthy 
+2026-11-23T23:22:22.4063055Z  Container clinicalstudypb-e2e-backend-1 Healthy 
+2026-11-23T23:22:22.5101169Z  Container clinicalstudypb-e2e-db-1 Running 
+2026-11-23T23:22:22.5101568Z  Container clinicalstudypb-e2e-backend-1 Running 
+2026-11-23T23:22:22.5248589Z  Container clinicalstudypb-e2e-db-1 Waiting 
+2026-11-23T23:22:23.0267351Z  Container clinicalstudypb-e2e-db-1 Healthy 
+2026-11-23T23:22:23.0747833Z  Container clinicalstudypb-e2e-backend-1 Waiting 
+2026-11-23T23:22:23.5763187Z  Container clinicalstudypb-e2e-backend-1 Healthy 
+2026-11-23T23:22:23.5763731Z  Container clinicalstudypb-e2e-seed-run-e4032d7d10b8 Creating 
+2026-11-23T23:22:23.6205516Z  Container clinicalstudypb-e2e-seed-run-e4032d7d10b8 Created 
+2026-11-23T23:22:23.7987909Z INSERT 0 4
+2026-11-23T23:22:23.8069179Z psql:/seed/seed_demo_studies.sql:200: NOTICE:  Estudos de demonstração criados: 6 (já existiam: 0).
+2026-11-23T23:22:23.8076092Z DO
+2026-11-23T23:22:23.8184259Z psql:/seed/seed_demo_recruitment.sql:250: NOTICE:  Estudos que receberam dados de recrutamento: 6 (já tinham dados: 0).
+2026-11-23T23:22:23.8186903Z DO
+2026-11-23T23:22:23.8195213Z DO
+2026-11-23T23:22:23.8267608Z psql:/seed/seed_demo_followup.sql:267: NOTICE:  Acompanhamento de demonstração: 3 candidaturas e 9 agendamentos criados.
+2026-11-23T23:22:23.8268379Z DO
+2026-11-23T23:22:23.9143329Z ##[group]Run npm run test:e2e
+2026-11-23T23:22:23.9143612Z npm run test:e2e
+2026-11-23T23:22:23.9173846Z shell: /usr/bin/bash -e {0}
+2026-11-23T23:22:23.9174071Z ##[endgroup]
+2026-11-23T23:22:23.9964050Z 
+2026-11-23T23:22:23.9964558Z > test:e2e
+2026-11-23T23:22:23.9964879Z > playwright test
+2026-11-23T23:22:23.9965218Z 
+2026-11-23T23:22:31.8606424Z [WebServer] [plugin builtin:vite-reporter] 
+2026-11-23T23:22:31.8607250Z [WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+2026-11-23T23:22:31.8607978Z [WebServer] - Using dynamic import() to code-split the application
+2026-11-23T23:22:31.8609161Z [WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+2026-11-23T23:22:31.8610097Z [WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+2026-11-23T23:22:32.6096276Z 
+2026-11-23T23:22:32.6118186Z Running 24 tests using 1 worker
+2026-11-23T23:23:10.1098966Z ························
+2026-11-23T23:23:10.1101612Z   24 passed (45.6s)
+2026-11-23T23:23:10.1124545Z ##[notice]  24 passed (45.6s)
+2026-11-23T23:23:10.2089697Z ##[group]Run actions/upload-artifact@v4
+2026-11-23T23:23:10.2089949Z with:
+2026-11-23T23:23:10.2090125Z   name: playwright-report
+2026-11-23T23:23:10.2090369Z   path: web/playwright-report
+web/test-results
+
+2026-11-23T23:23:10.2090623Z   if-no-files-found: ignore
+2026-11-23T23:23:10.2090832Z   compression-level: 6
+2026-11-23T23:23:10.2091017Z   overwrite: false
+2026-11-23T23:23:10.2091202Z   include-hidden-files: false
+2026-11-23T23:23:10.2091410Z ##[endgroup]
+2026-11-23T23:23:10.3470485Z (node:5501) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-23T23:23:10.3471640Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-23T23:23:10.3651166Z Multiple search paths detected. Calculating the least common ancestor of all paths
+2026-11-23T23:23:10.3653555Z The least common ancestor is /home/runner/work/ClinicalStudyPB-project/ClinicalStudyPB-project/web. This will be the root directory of the artifact
+2026-11-23T23:23:10.3654842Z With the provided path, there will be 14 files uploaded
+2026-11-23T23:23:10.3655943Z Artifact name is valid!
+2026-11-23T23:23:10.3656450Z Root directory input is valid!
+2026-11-23T23:23:10.6235127Z Beginning upload of artifact content to blob storage
+2026-11-23T23:23:10.7109064Z (node:5501) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-23T23:23:11.2116398Z Uploaded bytes 1928735
+2026-11-23T23:23:11.2573843Z Finished uploading artifact content to blob storage!
+2026-11-23T23:23:11.2574588Z SHA256 digest of uploaded artifact zip is fd3d289e5528d127a27d98cb70bc1f5bfe09237b1f6da8907cc010624c40c0f7
+2026-11-23T23:23:11.2575327Z Finalizing artifact upload
+2026-11-23T23:23:11.6088424Z Artifact playwright-report.zip successfully finalized. Artifact ID 14872757624
+2026-11-23T23:23:11.6090069Z Artifact playwright-report has been successfully uploaded! Final size is 1928735 bytes. Artifact ID is 14872757624
+2026-11-23T23:23:11.6095065Z Artifact download URL: https://github.com/livdenner/ClinicalStudyPB-project/actions/runs/45287852924/artifacts/14872757624
+2026-11-23T23:23:11.6251607Z ##[group]Run actions/upload-artifact@v4
+2026-11-23T23:23:11.6251859Z with:
+2026-11-23T23:23:11.6252039Z   name: resultados-e2e
+2026-11-23T23:23:11.6252250Z   path: web/test-reports/playwright.json
+2026-11-23T23:23:11.6252493Z   if-no-files-found: ignore
+2026-11-23T23:23:11.6252703Z   compression-level: 6
+2026-11-23T23:23:11.6252892Z   overwrite: false
+2026-11-23T23:23:11.6253079Z   include-hidden-files: false
+2026-11-23T23:23:11.6253294Z ##[endgroup]
+2026-11-23T23:23:11.7687561Z (node:5557) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-23T23:23:11.7688659Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-23T23:23:11.7725657Z With the provided path, there will be 1 file uploaded
+2026-11-23T23:23:11.7730172Z Artifact name is valid!
+2026-11-23T23:23:11.7730607Z Root directory input is valid!
+2026-11-23T23:23:12.0683800Z Beginning upload of artifact content to blob storage
+2026-11-23T23:23:12.1109818Z (node:5557) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-23T23:23:12.4390141Z Uploaded bytes 740641
+2026-11-23T23:23:12.4847176Z Finished uploading artifact content to blob storage!
+2026-11-23T23:23:12.4847893Z SHA256 digest of uploaded artifact zip is 56f27338cd613670720920a6d4c7f054699e19564826b1dc713ad66d69bb105c
+2026-11-23T23:23:12.4848984Z Finalizing artifact upload
+2026-11-23T23:23:12.8369306Z Artifact resultados-e2e.zip successfully finalized. Artifact ID 14871389969
+2026-11-23T23:23:12.8370328Z Artifact resultados-e2e has been successfully uploaded! Final size is 740641 bytes. Artifact ID is 14871389969
+2026-11-23T23:23:12.8375305Z Artifact download URL: https://github.com/livdenner/ClinicalStudyPB-project/actions/runs/45287852924/artifacts/14871389969
+2026-11-23T23:23:12.8517566Z ##[group]Run npm run e2e:stack:down
+2026-11-23T23:23:12.8518025Z npm run e2e:stack:down
+2026-11-23T23:23:12.8549759Z shell: /usr/bin/bash -e {0}
+2026-11-23T23:23:12.8550010Z ##[endgroup]
+2026-11-23T23:23:12.9366682Z 
+2026-11-23T23:23:12.9367251Z > e2e:stack:down
+2026-11-23T23:23:12.9367771Z > docker compose -f ../compose.e2e.yaml down
+2026-11-23T23:23:12.9368098Z 
+2026-11-23T23:23:12.9987622Z  Container clinicalstudypb-e2e-backend-1 Stopping 
+2026-11-23T23:23:13.1788936Z  Container clinicalstudypb-e2e-backend-1 Stopped 
+2026-11-23T23:23:13.1789499Z  Container clinicalstudypb-e2e-backend-1 Removing 
+2026-11-23T23:23:13.1857021Z  Container clinicalstudypb-e2e-backend-1 Removed 
+2026-11-23T23:23:13.1857764Z  Container clinicalstudypb-e2e-db-1 Stopping 
+2026-11-23T23:23:13.2831382Z  Container clinicalstudypb-e2e-db-1 Stopped 
+2026-11-23T23:23:13.2832208Z  Container clinicalstudypb-e2e-db-1 Removing 
+2026-11-23T23:23:13.2916744Z  Container clinicalstudypb-e2e-db-1 Removed 
+2026-11-23T23:23:13.2922488Z  Network clinicalstudypb-e2e_default Removing 
+2026-11-23T23:23:13.3316860Z  Network clinicalstudypb-e2e_default Removed 
+2026-11-23T23:23:13.3489965Z Post job cleanup.
+2026-11-23T23:23:13.4457061Z (node:5724) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-23T23:23:13.4458103Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-23T23:23:13.4459542Z Cache hit occurred on the primary key node-cache-Linux-x64-npm-5837303a0ac6ae5fe1c4e451741d038517bf84a95980ec121bb34cd161e7b36f, not saving cache.
+2026-11-23T23:23:13.4571997Z Post job cleanup.
+2026-11-23T23:23:13.5250311Z [command]/usr/bin/git version
+2026-11-23T23:23:13.5299897Z git version 2.56.1
+2026-11-23T23:23:13.5317148Z Temporarily overriding HOME='/home/runner/work/_temp/1ab60e7a-6d0b-40a1-a1d7-c79e915da5d2' before making global git config changes
+2026-11-23T23:23:13.5318422Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-23T23:23:13.5320838Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/ClinicalStudyPB-project/ClinicalStudyPB-project
+2026-11-23T23:23:13.5357344Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-23T23:23:13.5388772Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-23T23:23:13.5726221Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-23T23:23:13.5744473Z http.https://github.com/.extraheader
+2026-11-23T23:23:13.5761115Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-23T23:23:13.5827031Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-23T23:23:13.6113677Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-23T23:23:13.6142034Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-23T23:23:13.6500678Z Cleaning up orphan processes
+2026-11-23T23:23:13.6887193Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

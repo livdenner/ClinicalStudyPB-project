@@ -1,0 +1,1278 @@
+﻿2026-11-23T23:19:56.8984749Z Current runner version: '2.338.2'
+2026-11-23T23:19:56.9011380Z ##[group]Runner Image Provisioner
+2026-11-23T23:19:56.9012476Z Hosted Compute Agent
+2026-11-23T23:19:56.9013012Z Version: 20261111.635
+2026-11-23T23:19:56.9013678Z Commit: b8a594ea514ff44cadb5342986c68b1eac6e22ed
+2026-11-23T23:19:56.9014400Z Build Date: 2026-11-11T01:49:01Z
+2026-11-23T23:19:56.9015051Z Worker ID: {80f7f42d-08c4-492f-bcef-086a4bde14bc}
+2026-11-23T23:19:56.9015796Z Region: westus3
+2026-11-23T23:19:56.9016288Z Cloud: Azure
+2026-11-23T23:19:56.9016830Z ##[endgroup]
+2026-11-23T23:19:56.9018246Z ##[group]Operating System
+2026-11-23T23:19:56.9018850Z Ubuntu
+2026-11-23T23:19:56.9019369Z 26.04.1
+2026-11-23T23:19:56.9019843Z LTS
+2026-11-23T23:19:56.9020781Z ##[endgroup]
+2026-11-23T23:19:56.9021289Z ##[group]Runner Image
+2026-11-23T23:19:56.9022100Z Image: ubuntu-26.04
+2026-11-23T23:19:56.9022648Z Version: 20261116.202.1
+2026-11-23T23:19:56.9024090Z Included Software: https://github.com/actions/runner-images/blob/ubuntu26/20261116.202/images/ubuntu/Ubuntu2604-Readme.md
+2026-11-23T23:19:56.9025480Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu26%2F20261116.202
+2026-11-23T23:19:56.9026416Z ##[endgroup]
+2026-11-23T23:19:56.9027443Z ##[group]GITHUB_TOKEN Permissions
+2026-11-23T23:19:56.9029510Z Contents: read
+2026-11-23T23:19:56.9030067Z Metadata: read
+2026-11-23T23:19:56.9030595Z ##[endgroup]
+2026-11-23T23:19:56.9032982Z Secret source: Actions
+2026-11-23T23:19:56.9033872Z Cache mode: write
+2026-11-23T23:19:56.9034555Z Prepare workflow directory
+2026-11-23T23:19:56.9480632Z Prepare all required actions
+2026-11-23T23:19:56.9529144Z Getting action download info
+2026-11-23T23:19:57.2649976Z Download action repository 'actions/checkout@v4' (SHA:11d5960a326750d5838078e36cf38b85af677262)
+2026-11-23T23:19:57.3430880Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2026-11-23T23:19:57.3953067Z Download action repository 'actions/upload-artifact@v4' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-11-23T23:19:57.5628699Z Complete job name: Web (ESLint, Vitest, build)
+2026-11-23T23:19:57.6644641Z ##[group]Run actions/checkout@v4
+2026-11-23T23:19:57.6645569Z with:
+2026-11-23T23:19:57.6646145Z   repository: livdenner/ClinicalStudyPB-project
+2026-11-23T23:19:57.6650138Z   token: ***
+2026-11-23T23:19:57.6650623Z   ssh-strict: true
+2026-11-23T23:19:57.6651119Z   ssh-user: git
+2026-11-23T23:19:57.6651767Z   persist-credentials: true
+2026-11-23T23:19:57.6652310Z   clean: true
+2026-11-23T23:19:57.6652831Z   sparse-checkout-cone-mode: true
+2026-11-23T23:19:57.6653427Z   fetch-depth: 1
+2026-11-23T23:19:57.6653924Z   fetch-tags: false
+2026-11-23T23:19:57.6654427Z   show-progress: true
+2026-11-23T23:19:57.6654948Z   lfs: false
+2026-11-23T23:19:57.6655405Z   submodules: false
+2026-11-23T23:19:57.6655915Z   set-safe-directory: true
+2026-11-23T23:19:57.6656483Z   allow-unsafe-pr-checkout: false
+2026-11-23T23:19:57.6657334Z ##[endgroup]
+2026-11-23T23:19:57.9192655Z Syncing repository: livdenner/ClinicalStudyPB-project
+2026-11-23T23:19:57.9195549Z ##[group]Getting Git version info
+2026-11-23T23:19:57.9197166Z Working directory is '/home/runner/work/ClinicalStudyPB-project/ClinicalStudyPB-project'
+2026-11-23T23:19:57.9198752Z [command]/usr/bin/git version
+2026-11-23T23:19:57.9199602Z git version 2.56.1
+2026-11-23T23:19:57.9203672Z ##[endgroup]
+2026-11-23T23:19:57.9221895Z Temporarily overriding HOME='/home/runner/work/_temp/5c1c621e-aecd-4fb6-9a65-c3393df3fb55' before making global git config changes
+2026-11-23T23:19:57.9224094Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-23T23:19:57.9227805Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/ClinicalStudyPB-project/ClinicalStudyPB-project
+2026-11-23T23:19:57.9295506Z Deleting the contents of '/home/runner/work/ClinicalStudyPB-project/ClinicalStudyPB-project'
+2026-11-23T23:19:57.9298378Z ##[group]Initializing the repository
+2026-11-23T23:19:57.9304989Z [command]/usr/bin/git init /home/runner/work/ClinicalStudyPB-project/ClinicalStudyPB-project
+2026-11-23T23:19:57.9400551Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-11-23T23:19:57.9404603Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-11-23T23:19:57.9407040Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-11-23T23:19:57.9408830Z hint: call:
+2026-11-23T23:19:57.9409877Z hint:
+2026-11-23T23:19:57.9411166Z hint: 	git config --global init.defaultBranch <name>
+2026-11-23T23:19:57.9412963Z hint:
+2026-11-23T23:19:57.9414511Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-11-23T23:19:57.9416762Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-11-23T23:19:57.9419942Z hint:
+2026-11-23T23:19:57.9421178Z hint: 	git branch -m <name>
+2026-11-23T23:19:57.9422635Z hint:
+2026-11-23T23:19:57.9424193Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-11-23T23:19:57.9427092Z Initialized empty Git repository in /home/runner/work/ClinicalStudyPB-project/ClinicalStudyPB-project/.git/
+2026-11-23T23:19:57.9433350Z [command]/usr/bin/git remote add origin https://github.com/livdenner/ClinicalStudyPB-project
+2026-11-23T23:19:57.9491114Z ##[endgroup]
+2026-11-23T23:19:57.9493764Z ##[group]Disabling automatic garbage collection
+2026-11-23T23:19:57.9498177Z [command]/usr/bin/git config --local gc.auto 0
+2026-11-23T23:19:57.9539060Z ##[endgroup]
+2026-11-23T23:19:57.9540890Z ##[group]Setting up auth
+2026-11-23T23:19:57.9547842Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-23T23:19:57.9599267Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-23T23:19:58.0142828Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-23T23:19:58.0180397Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-23T23:19:58.0409193Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-23T23:19:58.0439277Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-23T23:19:58.0667629Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-23T23:19:58.0702412Z ##[endgroup]
+2026-11-23T23:19:58.0703360Z ##[group]Fetching the repository
+2026-11-23T23:19:58.0712205Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +e975d92f6866acaa97690c9c7964ead2d7db8bee:refs/remotes/origin/development
+2026-11-23T23:19:58.9711250Z From https://github.com/livdenner/ClinicalStudyPB-project
+2026-11-23T23:19:58.9715910Z  * [new ref]         e975d92f6866acaa97690c9c7964ead2d7db8bee -> origin/development
+2026-11-23T23:19:58.9723256Z ##[endgroup]
+2026-11-23T23:19:58.9726166Z ##[group]Determining the checkout info
+2026-11-23T23:19:58.9729225Z ##[endgroup]
+2026-11-23T23:19:58.9731208Z [command]/usr/bin/git sparse-checkout disable
+2026-11-23T23:19:58.9775086Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-11-23T23:19:58.9803312Z ##[group]Checking out the ref
+2026-11-23T23:19:58.9807436Z [command]/usr/bin/git checkout --progress --force -B development refs/remotes/origin/development
+2026-11-23T23:19:59.0893925Z Switched to a new branch 'development'
+2026-11-23T23:19:59.0897524Z branch 'development' set up to track 'origin/development'.
+2026-11-23T23:19:59.0910912Z ##[endgroup]
+2026-11-23T23:19:59.0958117Z [command]/usr/bin/git log -1 --format=%H
+2026-11-23T23:19:59.0985161Z e975d92f6866acaa97690c9c7964ead2d7db8bee
+2026-11-23T23:19:59.1375834Z ##[group]Run actions/setup-node@v4
+2026-11-23T23:19:59.1377265Z with:
+2026-11-23T23:19:59.1378129Z   node-version: 22
+2026-11-23T23:19:59.1379061Z   cache: npm
+2026-11-23T23:19:59.1380087Z   cache-dependency-path: web/package-lock.json
+2026-11-23T23:19:59.1381399Z   always-auth: false
+2026-11-23T23:19:59.1382501Z   check-latest: false
+2026-11-23T23:19:59.1391337Z   token: ***
+2026-11-23T23:19:59.1392280Z ##[endgroup]
+2026-11-23T23:19:59.2893992Z Found in cache @ /opt/hostedtoolcache/node/22.23.5/x64
+2026-11-23T23:19:59.2897792Z (node:2402) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-23T23:19:59.2900561Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-23T23:19:59.2903520Z ##[group]Environment details
+2026-11-23T23:19:59.6700772Z node: v22.23.5
+2026-11-23T23:19:59.6702582Z npm: 10.9.9
+2026-11-23T23:19:59.6703952Z yarn: 1.22.22
+2026-11-23T23:19:59.6706476Z ##[endgroup]
+2026-11-23T23:19:59.6722564Z [command]/opt/hostedtoolcache/node/22.23.5/x64/bin/npm config get cache
+2026-11-23T23:19:59.7805496Z /home/runner/.npm
+2026-11-23T23:20:00.0110695Z Cache hit for: node-cache-Linux-x64-npm-5837303a0ac6ae5fe1c4e451741d038517bf84a95980ec121bb34cd161e7b36f
+2026-11-23T23:20:00.0272693Z (node:2402) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-23T23:20:01.2575509Z Received 41943040 of 88110651 (47.6%), 40.0 MBs/sec
+2026-11-23T23:20:01.5669064Z Received 88110651 of 88110651 (100.0%), 64.1 MBs/sec
+2026-11-23T23:20:01.5669899Z Cache Size: ~84 MB (88110651 B)
+2026-11-23T23:20:01.5696209Z [command]/usr/bin/tar -xf /home/runner/work/_temp/3071b1f0-6ab8-4965-9be2-8e65472d90b0/cache.tzst -P -C /home/runner/work/ClinicalStudyPB-project/ClinicalStudyPB-project --use-compress-program unzstd
+2026-11-23T23:20:01.7410188Z Cache restored successfully
+2026-11-23T23:20:01.7440914Z Cache restored from key: node-cache-Linux-x64-npm-5837303a0ac6ae5fe1c4e451741d038517bf84a95980ec121bb34cd161e7b36f
+2026-11-23T23:20:01.7644224Z ##[group]Run npm ci
+2026-11-23T23:20:01.7644597Z npm ci
+2026-11-23T23:20:01.7678113Z shell: /usr/bin/bash -e {0}
+2026-11-23T23:20:01.7678428Z ##[endgroup]
+2026-11-23T23:20:47.1801252Z 
+2026-11-23T23:20:47.1810713Z added 313 packages, and audited 314 packages in 45s
+2026-11-23T23:20:47.1811357Z 
+2026-11-23T23:20:47.1811840Z 65 packages are looking for funding
+2026-11-23T23:20:47.1812342Z   run `npm fund` for details
+2026-11-23T23:20:47.3532726Z 
+2026-11-23T23:20:47.3533636Z 9 moderate severity vulnerabilities
+2026-11-23T23:20:47.3534079Z 
+2026-11-23T23:20:47.3534365Z To address all issues, run:
+2026-11-23T23:20:47.3534849Z   npm audit fix
+2026-11-23T23:20:47.3535089Z 
+2026-11-23T23:20:47.3535325Z Run `npm audit` for details.
+2026-11-23T23:20:47.4223525Z ##[group]Run npm run format:check
+2026-11-23T23:20:47.4223889Z npm run format:check
+2026-11-23T23:20:47.4245752Z shell: /usr/bin/bash -e {0}
+2026-11-23T23:20:47.4246066Z ##[endgroup]
+2026-11-23T23:20:47.5203933Z 
+2026-11-23T23:20:47.5205295Z > format:check
+2026-11-23T23:20:47.5206226Z > prettier --check .
+2026-11-23T23:20:47.5206923Z 
+2026-11-23T23:20:47.6069307Z Checking formatting...
+2026-11-23T23:20:50.8504039Z All matched files use Prettier code style!
+2026-11-23T23:20:50.8843574Z ##[group]Run npm run lint
+2026-11-23T23:20:50.8843899Z npm run lint
+2026-11-23T23:20:50.8864889Z shell: /usr/bin/bash -e {0}
+2026-11-23T23:20:50.8865190Z ##[endgroup]
+2026-11-23T23:20:50.9834498Z 
+2026-11-23T23:20:50.9835105Z > lint
+2026-11-23T23:20:50.9835608Z > eslint .
+2026-11-23T23:20:50.9835841Z 
+2026-11-23T23:20:59.2846097Z ##[group]Run npm run test:coverage
+2026-11-23T23:20:59.2846438Z npm run test:coverage
+2026-11-23T23:20:59.2867296Z shell: /usr/bin/bash -e {0}
+2026-11-23T23:20:59.2867639Z ##[endgroup]
+2026-11-23T23:20:59.3810790Z 
+2026-11-23T23:20:59.3811257Z > test:coverage
+2026-11-23T23:20:59.3812197Z > vitest run --coverage
+2026-11-23T23:20:59.3812362Z 
+2026-11-23T23:20:59.8658642Z 
+2026-11-23T23:20:59.8663607Z  RUN  v5.0.5 /home/runner/work/ClinicalStudyPB-project/ClinicalStudyPB-project/web
+2026-11-23T23:20:59.8664355Z       Coverage enabled with v8
+2026-11-23T23:20:59.8664587Z 
+2026-11-23T23:21:04.1427469Z stderr | src/pages/recrutamento/recrutamento.test.tsx > Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4) > valida campos obrigatórios e idade antes da chamada HTTP de cadastro
+2026-11-23T23:21:04.1430584Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:04.1431619Z 
+2026-11-23T23:21:04.5277263Z stderr | src/pages/recrutamento/recrutamento.test.tsx > Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4) > cadastra candidato válido e atualiza a listagem com o retorno da API
+2026-11-23T23:21:04.5279845Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:04.5280743Z 
+2026-11-23T23:21:04.9504860Z stderr | src/pages/recrutamento/recrutamento.test.tsx > Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4) > exibe erro claro no modal ao receber conflito de duplicidade (HTTP 409)
+2026-11-23T23:21:04.9544015Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:04.9572162Z 
+2026-11-23T23:21:05.0924542Z stderr | src/pages/usuarios/listagem.test.tsx > Gestão de usuários > só desativa ao salvar e confirmar, bloqueando a requisição pendente
+2026-11-23T23:21:05.1023987Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:05.1052113Z 
+2026-11-23T23:21:05.8844169Z stderr | src/pages/usuarios/listagem.test.tsx > Gestão de usuários > ativa somente após salvar e confirmar
+2026-11-23T23:21:05.8881717Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:05.8882697Z 
+2026-11-23T23:21:06.0414489Z stderr | src/pages/estudos/visualizar.test.tsx > visualização de estudos > confirma a transição do responsável e atualiza o estado pela resposta da API
+2026-11-23T23:21:06.0434054Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:06.0471940Z 
+2026-11-23T23:21:06.4415020Z stderr | src/pages/usuarios/listagem.test.tsx > Gestão de usuários > descarta a mudança do interruptor quando o modal é cancelado
+2026-11-23T23:21:06.4473995Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:06.4475197Z 
+2026-11-23T23:21:06.5864456Z stderr | src/pages/recrutamento/recrutamento.test.tsx > T24.3: preserva o cancelamento e a consulta de cancelados na lista de cards
+2026-11-23T23:21:06.5893973Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:06.5922051Z 
+2026-11-23T23:21:06.6575172Z stderr | src/pages/estudos/visualizar.test.tsx > visualização de estudos > mostra o motivo do conflito e permite atualizar antes de uma nova transição
+2026-11-23T23:21:06.6596469Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:06.6598154Z 
+2026-11-23T23:21:06.7466616Z stderr | src/pages/usuarios/listagem.test.tsx > Gestão de usuários > descarta a mudança do interruptor quando o modal é cancelado
+2026-11-23T23:21:06.7469368Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:06.7470607Z 
+2026-11-23T23:21:06.7714698Z stderr | src/pages/recrutamento/recrutamento.test.tsx > RF08 — andamento e cancelamento (T17.8) > RF08-P05: cancelamento mantém filtro ativo e mostra o histórico retornado pela API
+2026-11-23T23:21:06.7763949Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:06.7797704Z 
+2026-11-23T23:21:07.0152252Z stderr | src/pages/recrutamento/recrutamento.test.tsx > RF08 — andamento e cancelamento (T17.8) > RF08-P01: concluir convite remove o código da tela e não o grava em nenhum storage
+2026-11-23T23:21:07.0173835Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:07.0202029Z 
+2026-11-23T23:21:07.1264772Z stderr | src/pages/usuarios/listagem.test.tsx > Gestão de usuários > mantém a situação original e o formulário se a alteração for recusada
+2026-11-23T23:21:07.1273573Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:07.1302464Z 
+2026-11-23T23:21:07.2938053Z stderr | src/pages/estudos/visualizar.test.tsx > visualização de estudos > retorna do recrutamento ao planejamento após confirmação
+2026-11-23T23:21:07.2940722Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:07.2942019Z 
+2026-11-23T23:21:07.4705010Z stderr | src/pages/recrutamento/recrutamento.test.tsx > RF08 — andamento e cancelamento (T17.8) > RF08-P03: conflito CANDIDATE_ALREADY_INCLUDED consulta candidato e estudo e bloqueia novo cancelamento
+2026-11-23T23:21:07.4723856Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:07.4756151Z 
+2026-11-23T23:21:07.6883598Z stderr | src/pages/usuarios/listagem.test.tsx > Gestão de usuários > informa salvamento parcial e repete somente a situação ao tentar novamente
+2026-11-23T23:21:07.6886250Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:07.6887529Z 
+2026-11-23T23:21:07.7214731Z stderr | src/pages/recrutamento/recrutamento.test.tsx > RF08 — andamento e cancelamento (T17.8) > RF08-P03: conflito CANDIDATE_ALREADY_CANCELLED consulta candidato e estudo e bloqueia novo cancelamento
+2026-11-23T23:21:07.7232811Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:07.7234190Z 
+2026-11-23T23:21:07.8894681Z stderr | src/pages/estudos/visualizar.test.tsx > visualização de estudos > exige justificativa para cancelar e envia o texto sem espaços nas extremidades
+2026-11-23T23:21:07.8914194Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:07.8941863Z 
+2026-11-23T23:21:08.0541858Z stderr | src/pages/recrutamento/recrutamento.test.tsx > RF08 — andamento e cancelamento (T17.8) > RF08-P03: conflito STUDY_NOT_RECRUITING consulta candidato e estudo e bloqueia novo cancelamento
+2026-11-23T23:21:08.0548110Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:08.0559926Z 
+2026-11-23T23:21:08.4124266Z stderr | src/pages/estudos/visualizar.test.tsx > visualização de estudos > restaura cancelamento para a origem PLANNING consultada no histórico
+2026-11-23T23:21:08.4126430Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:08.4127290Z 
+2026-11-23T23:21:08.5149573Z stderr | src/pages/usuarios/listagem.test.tsx > Gestão de usuários > não altera a situação quando os dados de edição são rejeitados
+2026-11-23T23:21:08.5154864Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:08.5156077Z 
+2026-11-23T23:21:08.5504273Z stderr | src/pages/recrutamento/recrutamento.test.tsx > T22.3: registra retirada, oculta Agendar e mantém histórico e vaga ocupada
+2026-11-23T23:21:08.5533693Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:08.5561752Z 
+2026-11-23T23:21:08.8753924Z stderr | src/pages/estudos/visualizar.test.tsx > visualização de estudos > restaura cancelamento para a origem RECRUITMENT consultada no histórico
+2026-11-23T23:21:08.8783643Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:08.8792230Z 
+2026-11-23T23:21:08.8848962Z stderr | src/pages/recrutamento/recrutamento.test.tsx > T22.3: mantém o participante ativo e mostra o erro da API no modal
+2026-11-23T23:21:08.8851184Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:08.8852359Z 
+2026-11-23T23:21:09.0494817Z stderr | src/pages/usuarios/listagem.test.tsx > Gestão de usuários > rejeita e-mail sem domínio completo no cadastro e permite corrigir
+2026-11-23T23:21:09.0500151Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:09.0501346Z 
+2026-11-23T23:21:09.0743660Z  ✓ src/pages/recrutamento/recrutamento.test.tsx (33 tests) 5652ms
+2026-11-23T23:21:09.0784232Z    ✓ Tela de candidatos com filtro por estudo (RF08 - T12.3 / T12.4) (12)
+2026-11-23T23:21:09.0786170Z      ✓ exibe carregamento inicial e depois lista vazia quando não há registros 339ms
+2026-11-23T23:21:09.0787833Z      ✓ valida campos obrigatórios e idade antes da chamada HTTP de cadastro 411ms
+2026-11-23T23:21:09.0789407Z      ✓ cadastra candidato válido e atualiza a listagem com o retorno da API 438ms
+2026-11-23T23:21:09.0790904Z      ✓ exibe erro claro no modal ao receber conflito de duplicidade (HTTP 409) 320ms
+2026-11-23T23:21:09.0792273Z    ✓ RF08 — andamento e cancelamento (T17.8) (7)
+2026-11-23T23:21:09.0794245Z      ✓ RF08-P01: concluir convite remove o código da tela e não o grava em nenhum storage 390ms
+2026-11-23T23:21:09.0796310Z      ✓ RF08-P03: conflito CANDIDATE_ALREADY_CANCELLED consulta candidato e estudo e bloqueia novo cancelamento 312ms
+2026-11-23T23:21:09.0798460Z    ✓ T22.3: registra retirada, oculta Agendar e mantém histórico e vaga ocupada 336ms
+2026-11-23T23:21:09.6324434Z stderr | src/pages/usuarios/listagem.test.tsx > Gestão de usuários > rejeita e-mail sem domínio completo no edição e permite corrigir
+2026-11-23T23:21:09.6364033Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:09.6365479Z 
+2026-11-23T23:21:09.7034504Z stderr | src/pages/estudos/visualizar.test.tsx > visualização de estudos > mostra a pré-condição do HTTP 409 sem exigir atualização de estado
+2026-11-23T23:21:09.7053434Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:09.7060271Z 
+2026-11-23T23:21:10.0175928Z stderr | src/pages/estudos/visualizar.test.tsx > visualização de estudos > edita pelo modal existente, mantém o responsável e atualiza os detalhes após sucesso
+2026-11-23T23:21:10.0178243Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:10.0916119Z 
+2026-11-23T23:21:10.0918019Z stderr | src/pages/usuarios/listagem.test.tsx > Gestão de usuários > lista, cadastra e edita usuários com JWT sem enviar senha na edição
+2026-11-23T23:21:10.0920611Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:10.0921882Z 
+2026-11-23T23:21:10.5686543Z stderr | src/pages/usuarios/listagem.test.tsx > Gestão de usuários > lista, cadastra e edita usuários com JWT sem enviar senha na edição
+2026-11-23T23:21:10.5690849Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:10.5692249Z 
+2026-11-23T23:21:11.1354436Z stderr | src/pages/usuarios/listagem.test.tsx > Gestão de usuários > mantém o modal e os dados quando o backend rejeita e-mail duplicado
+2026-11-23T23:21:11.1373772Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:11.1402022Z 
+2026-11-23T23:21:11.5204831Z stderr | src/pages/usuarios/listagem.test.tsx > Gestão de usuários > mostra validação da API apenas no campo correspondente
+2026-11-23T23:21:11.5223975Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:11.5225292Z 
+2026-11-23T23:21:11.8985155Z stderr | src/pages/usuarios/listagem.test.tsx > Gestão de usuários > mantém alerta geral e foco no resumo quando a API fica indisponível ao salvar
+2026-11-23T23:21:11.8987652Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:11.8988710Z 
+2026-11-23T23:21:12.4624223Z stderr | src/pages/estudos/listagem.test.tsx > estudos conectados à API > cadastra no backend com o pesquisador logado e usa a resposta do servidor
+2026-11-23T23:21:12.4634134Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:12.4661990Z 
+2026-11-23T23:21:12.4786207Z  ✓ src/pages/usuarios/listagem.test.tsx (22 tests) 9852ms
+2026-11-23T23:21:12.4792908Z    ✓ Gestão de usuários (22)
+2026-11-23T23:21:12.4794753Z      ✓ mostra carregamento até receber a lista da API 537ms
+2026-11-23T23:21:12.4796642Z      ✓ combina busca, perfil e situação e permite limpar os filtros sem novas requisições 1560ms
+2026-11-23T23:21:12.4798411Z      ✓ só desativa ao salvar e confirmar, bloqueando a requisição pendente 845ms
+2026-11-23T23:21:12.4799800Z      ✓ ativa somente após salvar e confirmar 602ms
+2026-11-23T23:21:12.4801269Z      ✓ descarta a mudança do interruptor quando o modal é cancelado 562ms
+2026-11-23T23:21:12.4803082Z      ✓ mantém a situação original e o formulário se a alteração for recusada 730ms
+2026-11-23T23:21:12.4804879Z      ✓ informa salvamento parcial e repete somente a situação ao tentar novamente 816ms
+2026-11-23T23:21:12.4806648Z      ✓ não altera a situação quando os dados de edição são rejeitados 524ms
+2026-11-23T23:21:12.4808276Z      ✓ rejeita e-mail sem domínio completo no cadastro e permite corrigir 526ms
+2026-11-23T23:21:12.4809892Z      ✓ rejeita e-mail sem domínio completo no edição e permite corrigir 490ms
+2026-11-23T23:21:12.4811738Z      ✓ lista, cadastra e edita usuários com JWT sem enviar senha na edição 984ms
+2026-11-23T23:21:12.4813444Z      ✓ mantém o modal e os dados quando o backend rejeita e-mail duplicado 437ms
+2026-11-23T23:21:12.4815142Z      ✓ mostra validação da API apenas no campo correspondente 397ms
+2026-11-23T23:21:12.4816924Z      ✓ mantém alerta geral e foco no resumo quando a API fica indisponível ao salvar 340ms
+2026-11-23T23:21:12.8945749Z stderr | src/pages/estudos/listagem.test.tsx > estudos conectados à API > preserva o responsável na edição e bloqueia o formulário até o PUT terminar
+2026-11-23T23:21:12.8948752Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:12.8950086Z 
+2026-11-23T23:21:13.2124350Z stderr | src/pages/estudos/listagem.test.tsx > estudos conectados à API > mantém o modal e os dados digitados quando uma regra do backend rejeita a edição
+2026-11-23T23:21:13.2127282Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:13.2142334Z 
+2026-11-23T23:21:13.5284077Z stderr | src/pages/estudos/listagem.test.tsx > estudos conectados à API > descarta a edição cancelada sem alterar a tabela nem enviar requisição
+2026-11-23T23:21:13.5344075Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:13.5401933Z 
+2026-11-23T23:21:13.6933848Z stderr | src/pages/estudos/listagem.test.tsx > estudos conectados à API > descarta a edição cancelada sem alterar a tabela nem enviar requisição
+2026-11-23T23:21:13.7023770Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:13.7081918Z 
+2026-11-23T23:21:13.8537466Z stderr | src/pages/estudos/listagem.test.tsx > estudos conectados à API > valida objetivo, limite inteiro e datas antes de enviar
+2026-11-23T23:21:13.8562952Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:13.8569645Z 
+2026-11-23T23:21:14.3690751Z  ✓ src/pages/estudos/listagem.test.tsx (13 tests) 2780ms
+2026-11-23T23:21:14.3692642Z    ✓ estudos conectados à API (13)
+2026-11-23T23:21:14.3694023Z      ✓ mostra carregamento e depois o estado vazio, liberando o cadastro 446ms
+2026-11-23T23:21:14.3695708Z      ✓ lista e busca os registros reais sem inventar status ou participantes 305ms
+2026-11-23T23:21:14.3697311Z      ✓ cadastra no backend com o pesquisador logado e usa a resposta do servidor 458ms
+2026-11-23T23:21:14.3699046Z      ✓ preserva o responsável na edição e bloqueia o formulário até o PUT terminar 341ms
+2026-11-23T23:21:14.3700606Z      ✓ mantém o modal e os dados digitados quando uma regra do backend rejeita a edição 330ms
+2026-11-23T23:21:14.3702477Z      ✓ descarta a edição cancelada sem alterar a tabela nem enviar requisição 334ms
+2026-11-23T23:21:15.0165453Z  ✓ src/components/candidatos/AvaliacaoElegibilidade.test.tsx (8 tests) 1003ms
+2026-11-23T23:21:15.0169786Z    ✓ RF09 / RF10 — integração com o andamento (T17.8) (1)
+2026-11-23T23:21:15.0178303Z      ✓ RF09-E01: respostas locais completas não antecipam o parecer retornado pela API 429ms
+2026-11-23T23:21:17.3464908Z stderr | src/components/visitas/ModalResultadosVisita.test.tsx > RF14 — resultados da visita (T20.5) > RF14-M16: sessão rejeitada impede novas gravações sem repetir o PUT
+2026-11-23T23:21:17.3468101Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:17.3469500Z 
+2026-11-23T23:21:17.5859642Z stderr | src/components/visitas/ModalResultadosVisita.test.tsx > RF14 — resultados da visita (T20.5) > RF14-M01: apresenta um campo por atividade na ordem do protocolo
+2026-11-23T23:21:17.5866063Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:17.5867420Z 
+2026-11-23T23:21:17.7204656Z stderr | src/components/visitas/ModalResultadosVisita.test.tsx > RF14 — resultados da visita (T20.5) > RF14-M02: criação 201 atualiza somente a atividade confirmada pela API
+2026-11-23T23:21:17.7207680Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:17.7208817Z 
+2026-11-23T23:21:17.8452601Z stderr | src/components/visitas/ModalResultadosVisita.test.tsx > RF14 — resultados da visita (T20.5) > RF14-M03: edição 200 substitui resultado e remove observação omitida
+2026-11-23T23:21:17.8455596Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:17.8456983Z 
+2026-11-23T23:21:17.8734335Z stderr | src/pages/estudos/criterios.test.tsx > critérios de inclusão e exclusão — RF05 > cadastra inclusão em PLANNING e recarrega a lista pela API
+2026-11-23T23:21:17.8736774Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:17.8737789Z 
+2026-11-23T23:21:17.9626379Z stderr | src/components/visitas/ModalResultadosVisita.test.tsx > RF14 — resultados da visita (T20.5) > RF14-M04: reabrir consulta novamente o resultado persistido
+2026-11-23T23:21:17.9628503Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:17.9629393Z 
+2026-11-23T23:21:18.0838532Z stderr | src/components/visitas/ModalResultadosVisita.test.tsx > RF14 — resultados da visita (T20.5) > RF14-M04: reabrir consulta novamente o resultado persistido
+2026-11-23T23:21:18.0843235Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:18.0844229Z 
+2026-11-23T23:21:18.1434473Z stderr | src/components/visitas/ModalResultadosVisita.test.tsx > RF14 — resultados da visita (T20.5) > RF14-M05: situação atual SCHEDULED mantém resultados em consulta
+2026-11-23T23:21:18.1437177Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:18.1438129Z 
+2026-11-23T23:21:18.2117489Z stderr | src/components/visitas/ModalResultadosVisita.test.tsx > RF14 — resultados da visita (T20.5) > RF14-M05: situação atual ABSENT mantém resultados em consulta
+2026-11-23T23:21:18.2120070Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:18.2121010Z 
+2026-11-23T23:21:18.3146947Z stderr | src/components/visitas/ModalResultadosVisita.test.tsx > RF14 — resultados da visita (T20.5) > RF14-M05: situação atual CANCELLED mantém resultados em consulta
+2026-11-23T23:21:18.3151392Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:18.3152731Z 
+2026-11-23T23:21:18.3895715Z stderr | src/components/visitas/ModalResultadosVisita.test.tsx > RF14 — resultados da visita (T20.5) > RF14-M06: perfil COORDINATOR e usuário 9 não autorizado consultam sem gravação
+2026-11-23T23:21:18.3898764Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:18.3899900Z 
+2026-11-23T23:21:18.4656822Z stderr | src/components/visitas/ModalResultadosVisita.test.tsx > RF14 — resultados da visita (T20.5) > RF14-M06: perfil RESEARCHER e usuário 999 não autorizado consultam sem gravação
+2026-11-23T23:21:18.4661557Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:18.4662811Z 
+2026-11-23T23:21:18.4845951Z stderr | src/pages/estudos/criterios.test.tsx > critérios de inclusão e exclusão — RF05 > cadastra exclusão em RECRUITMENT e recarrega a lista pela API
+2026-11-23T23:21:18.4850099Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:18.4851322Z 
+2026-11-23T23:21:18.5519246Z stderr | src/components/visitas/ModalResultadosVisita.test.tsx > RF14 — resultados da visita (T20.5) > RF14-M07: estudo CLOSED impede edição
+2026-11-23T23:21:18.5533677Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:18.5582087Z 
+2026-11-23T23:21:18.6161274Z stderr | src/components/visitas/ModalResultadosVisita.test.tsx > RF14 — resultados da visita (T20.5) > RF14-M07: estudo CANCELLED impede edição
+2026-11-23T23:21:18.6164075Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:18.6165151Z 
+2026-11-23T23:21:18.6951705Z stderr | src/components/visitas/ModalResultadosVisita.test.tsx > RF14 — resultados da visita (T20.5) > RF14-M08: erro 400 é literal e mantém rascunho sem alterar a outra atividade
+2026-11-23T23:21:18.6956988Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:18.6958246Z 
+2026-11-23T23:21:18.8035252Z stderr | src/components/visitas/ModalResultadosVisita.test.tsx > RF14 — resultados da visita (T20.5) > RF14-M09: erro 403 atualiza contexto e não repete o PUT
+2026-11-23T23:21:18.8039214Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:18.8040458Z 
+2026-11-23T23:21:18.8931565Z stderr | src/pages/estudos/criterios.test.tsx > critérios de inclusão e exclusão — RF05 > bloqueia tipo ausente e descrição vazia ou composta de espaços
+2026-11-23T23:21:18.8934149Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:18.8935147Z 
+2026-11-23T23:21:18.8989747Z stderr | src/components/visitas/ModalResultadosVisita.test.tsx > RF14 — resultados da visita (T20.5) > RF14-M09: erro 404 atualiza contexto e não repete o PUT
+2026-11-23T23:21:18.9019858Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:18.9033842Z 
+2026-11-23T23:21:19.1047623Z stderr | src/components/visitas/ModalResultadosVisita.test.tsx > RF14 — resultados da visita (T20.5) > RF14-M09: erro 409 atualiza contexto e não repete o PUT
+2026-11-23T23:21:19.1073901Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:19.1076006Z 
+2026-11-23T23:21:19.2545044Z stderr | src/components/visitas/ModalResultadosVisita.test.tsx > RF14 — resultados da visita (T20.5) > RF14-M10: falha na recuperação após conflito bloqueia salvar até Atualizar dados
+2026-11-23T23:21:19.2550464Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:19.2551639Z 
+2026-11-23T23:21:19.2816276Z stderr | src/pages/estudos/criterios.test.tsx > critérios de inclusão e exclusão — RF05 > exibe o erro HTTP 400 no campo e preserva os dados do formulário
+2026-11-23T23:21:19.2820314Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:19.2821689Z 
+2026-11-23T23:21:19.4514337Z stderr | src/components/visitas/ModalResultadosVisita.test.tsx > RF14 — resultados da visita (T20.5) > RF14-M11: erro ao carregar é literal e Tentar novamente refaz a consulta
+2026-11-23T23:21:19.4516944Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:19.4518001Z 
+2026-11-23T23:21:19.5624566Z stderr | src/components/visitas/ModalResultadosVisita.test.tsx > RF14 — resultados da visita (T20.5) > RF14-M12: visita sem atividades mostra orientação sem formulário fictício
+2026-11-23T23:21:19.5634660Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:19.5672333Z 
+2026-11-23T23:21:19.6024535Z stderr | src/components/visitas/ModalResultadosVisita.test.tsx > RF14 — resultados da visita (T20.5) > RF14-M13: gravação pendente bloqueia outras atividades e fechamento
+2026-11-23T23:21:19.6053779Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:19.6054677Z 
+2026-11-23T23:21:19.6381124Z stderr | src/pages/estudos/criterios.test.tsx > critérios de inclusão e exclusão — RF05 > exibe o bloqueio HTTP 409 e exige atualizar antes de outra submissão
+2026-11-23T23:21:19.6383718Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:19.6384648Z 
+2026-11-23T23:21:19.7130705Z stderr | src/components/visitas/ModalResultadosVisita.test.tsx > RF14 — resultados da visita (T20.5) > RF14-M14: atividade removida na recuperação preserva mensagem de erro no modal
+2026-11-23T23:21:19.7135457Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:19.7136816Z 
+2026-11-23T23:21:19.8312018Z stderr | src/components/visitas/ModalResultadosVisita.test.tsx > RF14 — resultados da visita (T20.5) > RF14-M15: fechar consulta não grava nem modifica o estudo
+2026-11-23T23:21:19.8373717Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:19.8381908Z 
+2026-11-23T23:21:19.9469526Z  ✓ src/components/visitas/ModalResultadosVisita.test.tsx (22 tests) 2907ms
+2026-11-23T23:21:19.9471680Z    ✓ RF14 — resultados da visita (T20.5) (22)
+2026-11-23T23:21:19.9473243Z      ✓ RF14-M16: sessão rejeitada impede novas gravações sem repetir o PUT 566ms
+2026-11-23T23:21:20.2583152Z  ✓ src/pages/estudos/criterios.test.tsx (11 tests) 2749ms
+2026-11-23T23:21:20.2583928Z    ✓ critérios de inclusão e exclusão — RF05 (11)
+2026-11-23T23:21:20.2584977Z      ✓ cadastra inclusão em PLANNING e recarrega a lista pela API 975ms
+2026-11-23T23:21:20.2586035Z      ✓ cadastra exclusão em RECRUITMENT e recarrega a lista pela API 424ms
+2026-11-23T23:21:20.2587371Z      ✓ bloqueia tipo ausente e descrição vazia ou composta de espaços 399ms
+2026-11-23T23:21:20.2588783Z      ✓ exibe o erro HTTP 400 no campo e preserva os dados do formulário 363ms
+2026-11-23T23:21:20.2590374Z      ✓ exibe o bloqueio HTTP 409 e exige atualizar antes de outra submissão 393ms
+2026-11-23T23:21:22.0445263Z stderr | src/pages/estudos/visualizar.test.tsx > T24.5 — Confirmação de estado: Voltar preserva o estudo sem enviar alteração
+2026-11-23T23:21:22.0463727Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:22.0464941Z 
+2026-11-23T23:21:22.7956920Z stderr | src/pages/estudos/visitas-previstas.test.tsx > visitas previstas e atividades — RF06 > cadastra após adicionar e remover atividades e atualiza a lista pela API
+2026-11-23T23:21:22.7959707Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:22.7960816Z 
+2026-11-23T23:21:23.1155396Z stderr | src/components/visitas/VisitasParticipante.test.tsx > RF12 — agenda por participante (T18.5) > RF12-AP01: envio válido usa POST do estudo e participante corretos com JSON e token
+2026-11-23T23:21:23.1168096Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:23.1191827Z 
+2026-11-23T23:21:23.1803545Z  ✓ src/pages/estudos/visualizar.test.tsx (51 tests) 19369ms
+2026-11-23T23:21:23.1805474Z    ✓ visualização de estudos (28)
+2026-11-23T23:21:23.1833593Z      ✓ abre pelo link do card e consulta o endpoint do estudo selecionado 407ms
+2026-11-23T23:21:23.1870033Z      ✓ carrega os detalhes em modo de consulta para RESEARCHER 347ms
+2026-11-23T23:21:23.1913243Z      ✓ carrega os detalhes em modo de consulta para COORDINATOR 323ms
+2026-11-23T23:21:23.1931863Z      ✓ libera as ações do estudo após falha nas visitas e permite recuperar a aba 567ms
+2026-11-23T23:21:23.1933569Z      ✓ confirma a transição do responsável e atualiza o estado pela resposta da API 704ms
+2026-11-23T23:21:23.1953356Z      ✓ mostra o motivo do conflito e permite atualizar antes de uma nova transição 682ms
+2026-11-23T23:21:23.1955175Z      ✓ retorna do recrutamento ao planejamento após confirmação 501ms
+2026-11-23T23:21:23.1956878Z      ✓ exige justificativa para cancelar e envia o texto sem espaços nas extremidades 652ms
+2026-11-23T23:21:23.1958463Z      ✓ restaura cancelamento para a origem PLANNING consultada no histórico 329ms
+2026-11-23T23:21:23.1960001Z      ✓ restaura cancelamento para a origem RECRUITMENT consultada no histórico 443ms
+2026-11-23T23:21:23.1961727Z      ✓ mantém o estudo visível após falha do histórico e permite repetir somente essa consulta 335ms
+2026-11-23T23:21:23.1963299Z      ✓ mostra a pré-condição do HTTP 409 sem exigir atualização de estado 328ms
+2026-11-23T23:21:23.1964716Z      ✓ edita pelo modal existente, mantém o responsável e atualiza os detalhes após sucesso 483ms
+2026-11-23T23:21:23.1966525Z    ✓ T24.5 — Hierarquia das ações: no máximo uma primária nas quatro abas em PLANNING para responsável 770ms
+2026-11-23T23:21:23.1993323Z    ✓ T24.5 — Hierarquia das ações: no máximo uma primária nas quatro abas em PLANNING para outro pesquisador 583ms
+2026-11-23T23:21:23.2083510Z    ✓ T24.5 — Hierarquia das ações: no máximo uma primária nas quatro abas em PLANNING para coordenador 668ms
+2026-11-23T23:21:23.2146058Z    ✓ T24.5 — Hierarquia das ações: no máximo uma primária nas quatro abas em RECRUITMENT para responsável 820ms
+2026-11-23T23:21:23.2173162Z    ✓ T24.5 — Hierarquia das ações: no máximo uma primária nas quatro abas em RECRUITMENT para outro pesquisador 772ms
+2026-11-23T23:21:23.2200028Z    ✓ T24.5 — Hierarquia das ações: no máximo uma primária nas quatro abas em RECRUITMENT para coordenador 652ms
+2026-11-23T23:21:23.2248303Z    ✓ T24.5 — Hierarquia das ações: no máximo uma primária nas quatro abas em EXECUTION para responsável 826ms
+2026-11-23T23:21:23.2250522Z    ✓ T24.5 — Hierarquia das ações: no máximo uma primária nas quatro abas em EXECUTION para outro pesquisador 775ms
+2026-11-23T23:21:23.2253555Z    ✓ T24.5 — Hierarquia das ações: no máximo uma primária nas quatro abas em EXECUTION para coordenador 645ms
+2026-11-23T23:21:23.2255635Z    ✓ T24.5 — Hierarquia das ações: no máximo uma primária nas quatro abas em CLOSED para responsável 683ms
+2026-11-23T23:21:23.2257748Z    ✓ T24.5 — Hierarquia das ações: no máximo uma primária nas quatro abas em CLOSED para outro pesquisador 653ms
+2026-11-23T23:21:23.2260006Z    ✓ T24.5 — Hierarquia das ações: no máximo uma primária nas quatro abas em CLOSED para coordenador 780ms
+2026-11-23T23:21:23.2262145Z    ✓ T24.5 — Hierarquia das ações: no máximo uma primária nas quatro abas em CANCELLED para responsável 807ms
+2026-11-23T23:21:23.2264199Z    ✓ T24.5 — Hierarquia das ações: no máximo uma primária nas quatro abas em CANCELLED para outro pesquisador 631ms
+2026-11-23T23:21:23.2303891Z    ✓ T24.5 — Hierarquia das ações: no máximo uma primária nas quatro abas em CANCELLED para coordenador 679ms
+2026-11-23T23:21:23.2305988Z    ✓ T24.5 — Confirmação de estado: Voltar preserva o estudo sem enviar alteração 363ms
+2026-11-23T23:21:23.2307747Z    ✓ T24.1: coordenador abre o recrutamento com o estudo atual selecionado 421ms
+2026-11-23T23:21:23.4889026Z stderr | src/pages/estudos/visitas-previstas.test.tsx > visitas previstas e atividades — RF06 > lista atividades e edita durante o recrutamento preservando o ID da atividade restante
+2026-11-23T23:21:23.4923668Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:23.4934114Z 
+2026-11-23T23:21:23.6237437Z stderr | src/components/visitas/VisitasParticipante.test.tsx > RF12 — agenda por participante (T18.5) > RF12-AP02: criação aparece na lista existente em ordem cronológica sem nova consulta
+2026-11-23T23:21:23.6257226Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:23.6262148Z 
+2026-11-23T23:21:23.8644457Z stderr | src/pages/estudos/visitas-previstas.test.tsx > visitas previstas e atividades — RF06 > bloqueia visita sem data e atividade sem descrição antes de enviar
+2026-11-23T23:21:23.8673814Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:23.8691251Z 
+2026-11-23T23:21:24.0825289Z stderr | src/components/visitas/VisitasParticipante.test.tsx > RF12 — agenda por participante (T18.5) > RF12-AP04: novo agendamento fica visível mesmo se havia outro filtro selecionado
+2026-11-23T23:21:24.0843796Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:24.0872144Z 
+2026-11-23T23:21:24.1434148Z stderr | src/pages/estudos/visitas-previstas.test.tsx > visitas previstas e atividades — RF06 > bloqueia visita sem data e atividade sem descrição antes de enviar
+2026-11-23T23:21:24.1473446Z An update to ForwardRef(TextArea) inside a test was not wrapped in act(...).
+2026-11-23T23:21:24.1474429Z 
+2026-11-23T23:21:24.1475174Z When testing, code that causes React state updates should be wrapped into act(...):
+2026-11-23T23:21:24.1475979Z 
+2026-11-23T23:21:24.1476279Z act(() => {
+2026-11-23T23:21:24.1476827Z   /* fire events that update state */
+2026-11-23T23:21:24.1477413Z });
+2026-11-23T23:21:24.1477929Z /* assert on the output */
+2026-11-23T23:21:24.1478364Z 
+2026-11-23T23:21:24.1479928Z This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+2026-11-23T23:21:24.1480974Z 
+2026-11-23T23:21:24.2793397Z stderr | src/pages/estudos/visitas-previstas.test.tsx > visitas previstas e atividades — RF06 > apresenta o erro HTTP no campo e conserva os dados digitados
+2026-11-23T23:21:24.2796805Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:24.2802192Z 
+2026-11-23T23:21:24.3664887Z stderr | src/components/visitas/VisitasParticipante.test.tsx > RF12 — agenda por participante (T18.5) > RF12-AP05: VISIT_ALREADY_SCHEDULED mantém mensagem literal, formulário e campos sem inserir registro
+2026-11-23T23:21:24.3683768Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:24.3712068Z 
+2026-11-23T23:21:24.6094562Z stderr | src/components/visitas/VisitasParticipante.test.tsx > RF12 — agenda por participante (T18.5) > RF12-AP05: VISIT_DATE_NOT_FUTURE mantém mensagem literal, formulário e campos sem inserir registro
+2026-11-23T23:21:24.6183830Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:24.6206781Z 
+2026-11-23T23:21:25.1927508Z stderr | src/pages/estudos/visitas-previstas.test.tsx > visitas previstas e atividades — RF06 > exclui somente após confirmação e recarrega a lista
+2026-11-23T23:21:25.1954043Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:25.1955395Z 
+2026-11-23T23:21:25.2727769Z stderr | src/pages/estudos/visitas-previstas.test.tsx > visitas previstas e atividades — RF06 > exclui somente após confirmação e recarrega a lista
+2026-11-23T23:21:25.2730338Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:25.2731570Z 
+2026-11-23T23:21:25.4188077Z  ✓ src/components/visitas/VisitasParticipante.test.tsx (16 tests) 2622ms
+2026-11-23T23:21:25.4239329Z    ✓ RF12 — agenda por participante (T18.5) (16)
+2026-11-23T23:21:25.4245108Z      ✓ RF12-AP01: envio válido usa POST do estudo e participante corretos com JSON e token 748ms
+2026-11-23T23:21:25.4246185Z      ✓ RF12-AP02: criação aparece na lista existente em ordem cronológica sem nova consulta 385ms
+2026-11-23T23:21:25.4263502Z      ✓ RF12-AP04: novo agendamento fica visível mesmo se havia outro filtro selecionado 301ms
+2026-11-23T23:21:25.4378003Z  ✓ src/pages/estudos/visitas-previstas.test.tsx (10 tests) 2991ms
+2026-11-23T23:21:25.4403074Z    ✓ visitas previstas e atividades — RF06 (10)
+2026-11-23T23:21:25.4404483Z      ✓ cadastra após adicionar e remover atividades e atualiza a lista pela API 895ms
+2026-11-23T23:21:25.4406197Z      ✓ lista atividades e edita durante o recrutamento preservando o ID da atividade restante 494ms
+2026-11-23T23:21:25.4407821Z      ✓ bloqueia visita sem data e atividade sem descrição antes de enviar 386ms
+2026-11-23T23:21:25.4409194Z      ✓ apresenta o erro HTTP no campo e conserva os dados digitados 413ms
+2026-11-23T23:21:26.4133934Z stderr | src/components/estudos/ParticipantesEstudo.test.tsx > não envia retirada sem motivo para a API
+2026-11-23T23:21:26.4138376Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:26.4139566Z 
+2026-11-23T23:21:26.6593813Z stderr | src/components/estudos/ParticipantesEstudo.test.tsx > fecha a confirmação sem alterar o participante ao voltar
+2026-11-23T23:21:26.6613795Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:26.6661975Z 
+2026-11-23T23:21:27.3154622Z stderr | src/components/estudos/ParticipantesEstudo.test.tsx > registra a retirada no estudo, atualiza o selo e remove a ação sem consultar a lista novamente
+2026-11-23T23:21:27.3185625Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:27.3211025Z 
+2026-11-23T23:21:28.0908311Z  ✓ src/components/estudos/ParticipantesEstudo.test.tsx (16 tests) 2125ms
+2026-11-23T23:21:28.0910083Z    ✓ não envia retirada sem motivo para a API 580ms
+2026-11-23T23:21:28.0913931Z    ✓ registra a retirada no estudo, atualiza o selo e remove a ação sem consultar a lista novamente 362ms
+2026-11-23T23:21:28.6852738Z stderr | src/pages/visitas/visitas.test.tsx > RF13 — desfechos e atualização da lista (T19.4) > RF13-P07: conflito de versão exige nova confirmação e usa a versão atualizada da visita
+2026-11-23T23:21:28.6902807Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:28.6966498Z 
+2026-11-23T23:21:29.2800278Z stderr | src/pages/visitas/visitas.test.tsx > RF13 — desfechos e atualização da lista (T19.4) > RF13-P01: confirmar Realizada atualiza o selo sem recarregar a página
+2026-11-23T23:21:29.2813762Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:29.2872284Z 
+2026-11-23T23:21:29.6354314Z stderr | src/pages/visitas/visitas.test.tsx > RF13 — desfechos e atualização da lista (T19.4) > RF13-P01: confirmar Ausente atualiza o selo sem recarregar a página
+2026-11-23T23:21:29.6373568Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:29.6401792Z 
+2026-11-23T23:21:29.9326817Z stderr | src/pages/visitas/visitas.test.tsx > RF13 — desfechos e atualização da lista (T19.4) > RF13-P01: confirmar Cancelar atualiza o selo sem recarregar a página
+2026-11-23T23:21:29.9329841Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:29.9369303Z 
+2026-11-23T23:21:30.2654563Z stderr | src/pages/visitas/visitas.test.tsx > RF13 — desfechos e atualização da lista (T19.4) > RF13-P02: conflito 409 consulta a visita atual e remove as ações quando já finalizada
+2026-11-23T23:21:30.2679607Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:30.2680944Z 
+2026-11-23T23:21:30.4679844Z  ✓ src/pages/estudos/useRequisitosTransicao.test.tsx (15 tests) 2304ms
+2026-11-23T23:21:30.4682453Z    ✓ bloqueia abrir recrutamento e explica os requisitos ausentes: [ 'critério de inclusão', …(2) ] 533ms
+2026-11-23T23:21:30.4684892Z    ✓ refaz a consulta ao reabrir o menu e após atualização do protocolo 337ms
+2026-11-23T23:21:30.7744645Z stderr | src/pages/visitas/visitas.test.tsx > RF13 — desfechos e atualização da lista (T19.4) > RF13-P03: filtros de situação e participante são enviados à API e mantidos após o desfecho
+2026-11-23T23:21:30.7793818Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:30.7813630Z 
+2026-11-23T23:21:31.0154069Z stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > valida os campos obrigatórios no cadastro e direciona o foco para o nome
+2026-11-23T23:21:31.0156549Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:31.0181884Z 
+2026-11-23T23:21:31.4141745Z stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > envia os dados normalizados e preserva o responsável na edição
+2026-11-23T23:21:31.4164137Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:31.4187834Z 
+2026-11-23T23:21:31.4219216Z  ✓ src/pages/visitas/visitas.test.tsx (12 tests) 3204ms
+2026-11-23T23:21:31.4224990Z    ✓ RF13 — desfechos e atualização da lista (T19.4) (12)
+2026-11-23T23:21:31.4258125Z      ✓ RF13-P07: conflito de versão exige nova confirmação e usa a versão atualizada da visita 925ms
+2026-11-23T23:21:31.4260508Z      ✓ RF13-P01: confirmar Realizada atualiza o selo sem recarregar a página 441ms
+2026-11-23T23:21:31.4262141Z      ✓ RF13-P01: confirmar Cancelar atualiza o selo sem recarregar a página 341ms
+2026-11-23T23:21:31.4263850Z      ✓ RF13-P02: conflito 409 consulta a visita atual e remove as ações quando já finalizada 344ms
+2026-11-23T23:21:31.4265677Z      ✓ RF13-P03: filtros de situação e participante são enviados à API e mantidos após o desfecho 407ms
+2026-11-23T23:21:31.7753859Z stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > impede salvar o limite inválido 0
+2026-11-23T23:21:31.7766253Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:31.7772701Z 
+2026-11-23T23:21:32.0083342Z stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > impede salvar o limite inválido -1
+2026-11-23T23:21:32.0093912Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:32.0095236Z 
+2026-11-23T23:21:32.3178233Z stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > impede salvar o limite inválido 1.5
+2026-11-23T23:21:32.3230232Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:32.3252058Z 
+2026-11-23T23:21:32.6065672Z stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > impede salvar o limite inválido 1000001
+2026-11-23T23:21:32.6084627Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:32.6086103Z 
+2026-11-23T23:21:32.8697572Z stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > aceita o limite máximo de 1.000.000 participantes
+2026-11-23T23:21:32.8702567Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:32.8703976Z 
+2026-11-23T23:21:33.0964099Z stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > aceita limite mínimo e datas de início e término iguais
+2026-11-23T23:21:33.1003854Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:33.1062223Z 
+2026-11-23T23:21:33.1548205Z stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > aceita limite mínimo e datas de início e término iguais
+2026-11-23T23:21:33.1565980Z An update to ModalEstudo inside a test was not wrapped in act(...).
+2026-11-23T23:21:33.1566599Z 
+2026-11-23T23:21:33.1567154Z When testing, code that causes React state updates should be wrapped into act(...):
+2026-11-23T23:21:33.1567675Z 
+2026-11-23T23:21:33.1567887Z act(() => {
+2026-11-23T23:21:33.1568285Z   /* fire events that update state */
+2026-11-23T23:21:33.1568695Z });
+2026-11-23T23:21:33.1569052Z /* assert on the output */
+2026-11-23T23:21:33.1569304Z 
+2026-11-23T23:21:33.1570174Z This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+2026-11-23T23:21:33.1571052Z 
+2026-11-23T23:21:33.2354120Z stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > chama onFechar ao acionar Cancelar sem enviar dados
+2026-11-23T23:21:33.2399620Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:33.2401078Z 
+2026-11-23T23:21:33.3484013Z stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > chama onFechar ao acionar Fechar modal sem enviar dados
+2026-11-23T23:21:33.3486655Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:33.3511961Z 
+2026-11-23T23:21:33.4230290Z stderr | src/components/usuarios/ModalUsuario.test.tsx > ModalUsuario > bloqueia o cadastro quando os campos obrigatórios estão vazios
+2026-11-23T23:21:33.4253547Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:33.4272052Z 
+2026-11-23T23:21:33.5034263Z stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > bloqueia campos, calendários e fechamento enquanto salva
+2026-11-23T23:21:33.5053670Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:33.5081895Z 
+2026-11-23T23:21:33.5478225Z stderr | src/components/usuarios/ModalUsuario.test.tsx > ModalUsuario > bloqueia o cadastro quando os campos obrigatórios estão vazios
+2026-11-23T23:21:33.5502984Z An update to ForwardRef(TextField) inside a test was not wrapped in act(...).
+2026-11-23T23:21:33.5531797Z 
+2026-11-23T23:21:33.5532495Z When testing, code that causes React state updates should be wrapped into act(...):
+2026-11-23T23:21:33.5542215Z 
+2026-11-23T23:21:33.5542568Z act(() => {
+2026-11-23T23:21:33.5543145Z   /* fire events that update state */
+2026-11-23T23:21:33.5543715Z });
+2026-11-23T23:21:33.5544151Z /* assert on the output */
+2026-11-23T23:21:33.5544525Z 
+2026-11-23T23:21:33.5545501Z This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+2026-11-23T23:21:33.5546950Z An update to ForwardRef(TextField) inside a test was not wrapped in act(...).
+2026-11-23T23:21:33.5547565Z 
+2026-11-23T23:21:33.5548863Z When testing, code that causes React state updates should be wrapped into act(...):
+2026-11-23T23:21:33.5549567Z 
+2026-11-23T23:21:33.5549807Z act(() => {
+2026-11-23T23:21:33.5550304Z   /* fire events that update state */
+2026-11-23T23:21:33.5550807Z });
+2026-11-23T23:21:33.5551228Z /* assert on the output */
+2026-11-23T23:21:33.5551744Z 
+2026-11-23T23:21:33.5552983Z This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+2026-11-23T23:21:33.5554356Z An update to ForwardRef(Input) inside a test was not wrapped in act(...).
+2026-11-23T23:21:33.5554936Z 
+2026-11-23T23:21:33.5555593Z When testing, code that causes React state updates should be wrapped into act(...):
+2026-11-23T23:21:33.5556272Z 
+2026-11-23T23:21:33.5556513Z act(() => {
+2026-11-23T23:21:33.5557039Z   /* fire events that update state */
+2026-11-23T23:21:33.5557613Z });
+2026-11-23T23:21:33.5558093Z /* assert on the output */
+2026-11-23T23:21:33.5558465Z 
+2026-11-23T23:21:33.5559555Z This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+2026-11-23T23:21:33.5561057Z An update to ForwardRef(Input) inside a test was not wrapped in act(...).
+2026-11-23T23:21:33.5561752Z 
+2026-11-23T23:21:33.5562304Z When testing, code that causes React state updates should be wrapped into act(...):
+2026-11-23T23:21:33.5562907Z 
+2026-11-23T23:21:33.5563112Z act(() => {
+2026-11-23T23:21:33.5564486Z   /* fire events that update state */
+2026-11-23T23:21:33.5600726Z });
+2026-11-23T23:21:33.5601279Z /* assert on the output */
+2026-11-23T23:21:33.5601832Z 
+2026-11-23T23:21:33.5602917Z This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+2026-11-23T23:21:33.5604228Z An update to ForwardRef(TextField) inside a test was not wrapped in act(...).
+2026-11-23T23:21:33.5605018Z 
+2026-11-23T23:21:33.5605626Z When testing, code that causes React state updates should be wrapped into act(...):
+2026-11-23T23:21:33.5606205Z 
+2026-11-23T23:21:33.5606418Z act(() => {
+2026-11-23T23:21:33.5606876Z   /* fire events that update state */
+2026-11-23T23:21:33.5607375Z });
+2026-11-23T23:21:33.5607786Z /* assert on the output */
+2026-11-23T23:21:33.5608101Z 
+2026-11-23T23:21:33.5609007Z This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+2026-11-23T23:21:33.5610484Z An update to ForwardRef(TextField) inside a test was not wrapped in act(...).
+2026-11-23T23:21:33.5611136Z 
+2026-11-23T23:21:33.5611852Z When testing, code that causes React state updates should be wrapped into act(...):
+2026-11-23T23:21:33.5612522Z 
+2026-11-23T23:21:33.5612744Z act(() => {
+2026-11-23T23:21:33.5613192Z   /* fire events that update state */
+2026-11-23T23:21:33.5613674Z });
+2026-11-23T23:21:33.5614097Z /* assert on the output */
+2026-11-23T23:21:33.5614429Z 
+2026-11-23T23:21:33.5615397Z This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+2026-11-23T23:21:33.5616879Z An update to ForwardRef(TextField) inside a test was not wrapped in act(...).
+2026-11-23T23:21:33.5617519Z 
+2026-11-23T23:21:33.5618162Z When testing, code that causes React state updates should be wrapped into act(...):
+2026-11-23T23:21:33.5618850Z 
+2026-11-23T23:21:33.5619094Z act(() => {
+2026-11-23T23:21:33.5619615Z   /* fire events that update state */
+2026-11-23T23:21:33.5620180Z });
+2026-11-23T23:21:33.5620654Z /* assert on the output */
+2026-11-23T23:21:33.5621018Z 
+2026-11-23T23:21:33.5622181Z This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+2026-11-23T23:21:33.5623592Z An update to ForwardRef(TextField) inside a test was not wrapped in act(...).
+2026-11-23T23:21:33.5624168Z 
+2026-11-23T23:21:33.5624773Z When testing, code that causes React state updates should be wrapped into act(...):
+2026-11-23T23:21:33.5625759Z 
+2026-11-23T23:21:33.5626002Z act(() => {
+2026-11-23T23:21:33.5626499Z   /* fire events that update state */
+2026-11-23T23:21:33.5627027Z });
+2026-11-23T23:21:33.5627474Z /* assert on the output */
+2026-11-23T23:21:33.5627814Z 
+2026-11-23T23:21:33.5628831Z This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+2026-11-23T23:21:33.5630423Z An update to ForwardRef(Input) inside a test was not wrapped in act(...).
+2026-11-23T23:21:33.5630969Z 
+2026-11-23T23:21:33.5631727Z When testing, code that causes React state updates should be wrapped into act(...):
+2026-11-23T23:21:33.5632352Z 
+2026-11-23T23:21:33.5632571Z act(() => {
+2026-11-23T23:21:33.5633007Z   /* fire events that update state */
+2026-11-23T23:21:33.5640154Z });
+2026-11-23T23:21:33.5640641Z /* assert on the output */
+2026-11-23T23:21:33.5640988Z 
+2026-11-23T23:21:33.5642141Z This ensures that you're testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+2026-11-23T23:21:33.5643072Z 
+2026-11-23T23:21:33.6613961Z stderr | src/components/usuarios/ModalUsuario.test.tsx > ModalUsuario > rejeita nome e senha formados apenas por espaços
+2026-11-23T23:21:33.6630207Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:33.6656149Z 
+2026-11-23T23:21:33.8544496Z stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > mostra o erro de campo da API sem duplicar o resumo e preserva os valores
+2026-11-23T23:21:33.8603977Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:33.8652214Z 
+2026-11-23T23:21:34.0094183Z stderr | src/components/usuarios/ModalUsuario.test.tsx > ModalUsuario > mostra e oculta a senha sem alterar o valor digitado
+2026-11-23T23:21:34.0096310Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:34.0097209Z 
+2026-11-23T23:21:34.0873954Z stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > trata HTTP 401 e mantém o formulário disponível
+2026-11-23T23:21:34.0894163Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:34.0912445Z 
+2026-11-23T23:21:34.2714102Z stderr | src/components/usuarios/ModalUsuario.test.tsx > ModalUsuario > envia o perfil selecionado e o nome sem espaços ao cadastrar
+2026-11-23T23:21:34.2757335Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:34.2761199Z 
+2026-11-23T23:21:34.3210784Z stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > trata HTTP 403 e mantém o formulário disponível
+2026-11-23T23:21:34.3243701Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:34.3247535Z 
+2026-11-23T23:21:34.5803689Z  ✓ src/components/estudos/ModalEstudo.test.tsx (14 tests) 3922ms
+2026-11-23T23:21:34.5826662Z    ✓ ModalEstudo (14)
+2026-11-23T23:21:34.5863173Z      ✓ valida os campos obrigatórios no cadastro e direciona o foco para o nome 719ms
+2026-11-23T23:21:34.5865071Z      ✓ envia os dados normalizados e preserva o responsável na edição 367ms
+2026-11-23T23:21:34.5873497Z      ✓ impede salvar o limite inválido 1.5 314ms
+2026-11-23T23:21:34.5885314Z      ✓ bloqueia campos, calendários e fechamento enquanto salva 330ms
+2026-11-23T23:21:34.7914232Z stderr | src/components/usuarios/ModalUsuario.test.tsx > ModalUsuario > preenche a edição sem oferecer alteração de senha
+2026-11-23T23:21:34.7943441Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:34.7971727Z 
+2026-11-23T23:21:34.9096952Z stderr | src/components/usuarios/ModalUsuario.test.tsx > ModalUsuario > chama onFechar ao acionar Cancelar sem salvar
+2026-11-23T23:21:34.9113687Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:34.9114684Z 
+2026-11-23T23:21:35.0130386Z stderr | src/components/usuarios/ModalUsuario.test.tsx > ModalUsuario > chama onFechar ao acionar Fechar modal sem salvar
+2026-11-23T23:21:35.0133356Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:35.0134704Z 
+2026-11-23T23:21:35.1013292Z  ✓ src/components/estudos/HistoricoParticipante.test.tsx (8 tests) 1055ms
+2026-11-23T23:21:35.1018384Z    ✓ renderiza histórico completo com visitas, datas, desfechos e resultados sob demanda 567ms
+2026-11-23T23:21:35.1257821Z stderr | src/components/usuarios/ModalUsuario.test.tsx > ModalUsuario > bloqueia os controles e impede envios repetidos durante o cadastro
+2026-11-23T23:21:35.1331903Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:35.1352934Z 
+2026-11-23T23:21:35.4449357Z stderr | src/components/usuarios/ModalUsuario.test.tsx > ModalUsuario > informa sessão expirada e mantém os dados para nova tentativa
+2026-11-23T23:21:35.4483888Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:35.4484799Z 
+2026-11-23T23:21:35.5807936Z stderr | src/components/usuarios/ModalUsuario.test.tsx > usa Pesquisador como padrão válido e não oferece Participante
+2026-11-23T23:21:35.5812173Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:35.5813523Z 
+2026-11-23T23:21:35.8030682Z stderr | src/components/usuarios/ModalUsuario.test.tsx > bloqueia perfil e situação da própria conta e permite editar seus dados
+2026-11-23T23:21:35.8083687Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:35.8111851Z 
+2026-11-23T23:21:36.0099968Z stderr | src/components/usuarios/ModalUsuario.test.tsx > mantém os controles habilitados para outro administrador
+2026-11-23T23:21:36.0103225Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:36.0104653Z 
+2026-11-23T23:21:36.1556579Z  ✓ src/components/usuarios/ModalUsuario.test.tsx (12 tests) 3086ms
+2026-11-23T23:21:36.1582996Z    ✓ ModalUsuario (9)
+2026-11-23T23:21:36.1623478Z      ✓ bloqueia o cadastro quando os campos obrigatórios estão vazios 597ms
+2026-11-23T23:21:36.1625491Z      ✓ rejeita nome e senha formados apenas por espaços 373ms
+2026-11-23T23:21:36.1633184Z      ✓ envia o perfil selecionado e o nome sem espaços ao cadastrar 501ms
+2026-11-23T23:21:36.1634931Z      ✓ bloqueia os controles e impede envios repetidos durante o cadastro 339ms
+2026-11-23T23:21:37.5114795Z stderr | src/components/visitas/ModalAgendarVisita.test.tsx > RF12 — formulário de agendamento (T18.5) > RF12-AG01: campos obrigatórios impedem envio e recebem indicação de erro
+2026-11-23T23:21:37.5154475Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:37.5172026Z 
+2026-11-23T23:21:37.6794977Z stderr | src/components/visitas/ModalAgendarVisita.test.tsx > RF12 — formulário de agendamento (T18.5) > RF12-AG02: envio válido usa o identificador da visita e o instante de Fortaleza em ISO
+2026-11-23T23:21:37.6813742Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:37.6841900Z 
+2026-11-23T23:21:37.8914179Z stderr | src/components/visitas/ModalAgendarVisita.test.tsx > RF12 — formulário de agendamento (T18.5) > RF12-AG03: mensagem HTTP 400 é exibida literalmente
+2026-11-23T23:21:37.8923729Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:37.8924893Z 
+2026-11-23T23:21:37.9795838Z stderr | src/components/visitas/ModalDesfechoVisita.test.tsx > RF13 — confirmação do desfecho (T19.4) > RF13-D01: cancelar com justificativa vazia () é bloqueado
+2026-11-23T23:21:37.9803945Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:37.9805113Z 
+2026-11-23T23:21:38.0954903Z stderr | src/components/visitas/ModalDesfechoVisita.test.tsx > RF13 — confirmação do desfecho (T19.4) > RF13-D01: cancelar com justificativa vazia (   ) é bloqueado
+2026-11-23T23:21:38.0973640Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:38.0974814Z 
+2026-11-23T23:21:38.0976719Z stderr | src/components/visitas/ModalAgendarVisita.test.tsx > RF12 — formulário de agendamento (T18.5) > RF12-AG03: mensagem HTTP 409 é exibida literalmente
+2026-11-23T23:21:38.0978955Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:38.0979848Z 
+2026-11-23T23:21:38.1934286Z stderr | src/components/visitas/ModalDesfechoVisita.test.tsx > RF13 — confirmação do desfecho (T19.4) > RF13-D02: justificativa acima de 500 caracteres não é enviada
+2026-11-23T23:21:38.1943820Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:38.1944922Z 
+2026-11-23T23:21:38.2684971Z stderr | src/components/visitas/ModalAgendarVisita.test.tsx > RF12 — formulário de agendamento (T18.5) > RF12-AG04: conflito mantém formulário aberto e preserva visita e data preenchidas
+2026-11-23T23:21:38.2695617Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:38.2719142Z 
+2026-11-23T23:21:38.2922103Z stderr | src/components/visitas/ModalDesfechoVisita.test.tsx > RF13 — confirmação do desfecho (T19.4) > RF13-D03: cancelar envia justificativa aparada com a versão da visita
+2026-11-23T23:21:38.2944003Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:38.2982180Z 
+2026-11-23T23:21:38.4362736Z stderr | src/components/visitas/ModalDesfechoVisita.test.tsx > RF13 — confirmação do desfecho (T19.4) > RF13-D04: desfecho DONE só envia após confirmação explícita
+2026-11-23T23:21:38.4382946Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:38.4406830Z 
+2026-11-23T23:21:38.4474594Z stderr | src/components/visitas/ModalAgendarVisita.test.tsx > RF12 — formulário de agendamento (T18.5) > RF12-AG05: erros de campo da API ficam associados aos respectivos controles
+2026-11-23T23:21:38.4513917Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:38.4515071Z 
+2026-11-23T23:21:38.5424602Z stderr | src/components/visitas/ModalDesfechoVisita.test.tsx > RF13 — confirmação do desfecho (T19.4) > RF13-D04: desfecho ABSENT só envia após confirmação explícita
+2026-11-23T23:21:38.5444201Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:38.5462129Z 
+2026-11-23T23:21:38.6274602Z stderr | src/components/visitas/ModalAgendarVisita.test.tsx > RF12 — formulário de agendamento (T18.5) > RF12-AG06: nova tentativa consulta as visitas previstas após erro de carregamento
+2026-11-23T23:21:38.6293818Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:38.6302366Z 
+2026-11-23T23:21:38.6727531Z stderr | src/components/visitas/ModalDesfechoVisita.test.tsx > RF13 — confirmação do desfecho (T19.4) > RF13-D05: erro 400 e erro de campo são literais e mantêm o formulário
+2026-11-23T23:21:38.6753745Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:38.6754836Z 
+2026-11-23T23:21:38.7527523Z stderr | src/components/visitas/ModalAgendarVisita.test.tsx > RF12 — formulário de agendamento (T18.5) > RF12-AG07: estudo sem visitas previstas mantém o envio bloqueado
+2026-11-23T23:21:38.7530342Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:38.7531586Z 
+2026-11-23T23:21:38.8007999Z stderr | src/components/visitas/ModalDesfechoVisita.test.tsx > RF13 — confirmação do desfecho (T19.4) > RF13-D06: conflito 409 exibe mensagem e consulta sem repetir a gravação
+2026-11-23T23:21:38.8033606Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:38.8091913Z 
+2026-11-23T23:21:38.8437695Z stderr | src/components/visitas/ModalAgendarVisita.test.tsx > RF12 — formulário de agendamento (T18.5) > RF12-AG08: condição de agendamento indisponível bloqueia os campos e o envio
+2026-11-23T23:21:38.8440767Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:38.8442043Z 
+2026-11-23T23:21:38.9334517Z stderr | src/components/visitas/ModalDesfechoVisita.test.tsx > RF13 — confirmação do desfecho (T19.4) > RF13-D07: falha ao atualizar mantém confirmação bloqueada até recuperação
+2026-11-23T23:21:38.9355077Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:38.9356646Z 
+2026-11-23T23:21:38.9358795Z stderr | src/components/visitas/ModalAgendarVisita.test.tsx > RF12 — formulário de agendamento (T18.5) > RF12-AG09: confirmação pendente impede envio duplicado e fechamento
+2026-11-23T23:21:38.9361913Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:38.9363077Z 
+2026-11-23T23:21:39.1024714Z stderr | src/components/visitas/ModalAgendarVisita.test.tsx > RF12 — formulário de agendamento (T18.5) > RF12-AG10: cancelar fecha o formulário sem enviar agendamento
+2026-11-23T23:21:39.1027483Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:39.1028641Z 
+2026-11-23T23:21:39.1045495Z stderr | src/components/visitas/ModalDesfechoVisita.test.tsx > RF13 — confirmação do desfecho (T19.4) > RF13-D08: visita finalizada após atualização fica somente em consulta
+2026-11-23T23:21:39.1048226Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:39.1049418Z 
+2026-11-23T23:21:39.1986529Z stderr | src/components/visitas/ModalDesfechoVisita.test.tsx > RF13 — confirmação do desfecho (T19.4) > RF13-D09: envio pendente não duplica gravação nem permite fechar
+2026-11-23T23:21:39.1989514Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:39.1990666Z 
+2026-11-23T23:21:39.2156709Z stderr | src/components/visitas/ModalAgendarVisita.test.tsx > RF12 — formulário de agendamento (T18.5) > RF12-AG11: falha sem resposta HTTP exibe orientação e permite tentar novamente
+2026-11-23T23:21:39.2161666Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:39.2163270Z 
+2026-11-23T23:21:39.2709651Z stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C01: motivo vazio não envia POST
+2026-11-23T23:21:39.2743854Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:39.2753503Z 
+2026-11-23T23:21:39.2834582Z stderr | src/components/visitas/ModalDesfechoVisita.test.tsx > RF13 — confirmação do desfecho (T19.4) > RF13-D10: voltar ou fechar abandona confirmação sem registrar desfecho
+2026-11-23T23:21:39.2840421Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:39.2841608Z 
+2026-11-23T23:21:39.3738961Z stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C01: motivo espaços não envia POST
+2026-11-23T23:21:39.3742551Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:39.3766615Z 
+2026-11-23T23:21:39.4023938Z  ✓ src/components/visitas/ModalDesfechoVisita.test.tsx (12 tests) 1725ms
+2026-11-23T23:21:39.4028006Z    ✓ RF13 — confirmação do desfecho (T19.4) (12)
+2026-11-23T23:21:39.4029413Z      ✓ RF13-D01: cancelar com justificativa vazia () é bloqueado 425ms
+2026-11-23T23:21:39.4533872Z stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C01: motivo acima de 500 não envia POST
+2026-11-23T23:21:39.4536689Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:39.4570954Z 
+2026-11-23T23:21:39.4734201Z  ✓ src/components/visitas/ModalAgendarVisita.test.tsx (12 tests) 2265ms
+2026-11-23T23:21:39.4736071Z    ✓ RF12 — formulário de agendamento (T18.5) (12)
+2026-11-23T23:21:39.4737740Z      ✓ RF12-AG01: campos obrigatórios impedem envio e recebem indicação de erro 534ms
+2026-11-23T23:21:39.5514716Z stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C02: aceita limite mínimo do motivo sem espaços externos
+2026-11-23T23:21:39.5517582Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:39.5518944Z 
+2026-11-23T23:21:39.6929304Z stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C02: aceita limite máximo do motivo sem espaços externos
+2026-11-23T23:21:39.6934265Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:39.6935563Z 
+2026-11-23T23:21:39.8237114Z stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C03: conflito CANDIDATE_ALREADY_INCLUDED é literal e atualiza o contexto sem repetir POST
+2026-11-23T23:21:39.8241920Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:39.8243332Z 
+2026-11-23T23:21:39.9562427Z stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C03: conflito CANDIDATE_ALREADY_CANCELLED é literal e atualiza o contexto sem repetir POST
+2026-11-23T23:21:39.9565175Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:39.9567968Z 
+2026-11-23T23:21:40.0858592Z stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C03: conflito STUDY_NOT_RECRUITING é literal e atualiza o contexto sem repetir POST
+2026-11-23T23:21:40.0863127Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:40.0937453Z 
+2026-11-23T23:21:40.2084408Z stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C04: atualização falha bloqueia confirmação e o botão de recuperação não repete POST
+2026-11-23T23:21:40.2133639Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:40.2134968Z 
+2026-11-23T23:21:40.3864534Z stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C05: erro de campo da API é literal e mantém o motivo
+2026-11-23T23:21:40.3867164Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:40.3868176Z 
+2026-11-23T23:21:40.4534459Z stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C06: contexto não permitido (INCLUDED) impede confirmação
+2026-11-23T23:21:40.4594973Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:40.4621906Z 
+2026-11-23T23:21:40.5144590Z stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C06: contexto não permitido (CANCELLED) impede confirmação
+2026-11-23T23:21:40.5213634Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:40.5241849Z 
+2026-11-23T23:21:40.5664159Z stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C06: contexto não permitido (ACTIVE) impede confirmação
+2026-11-23T23:21:40.5680784Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:40.5721934Z 
+2026-11-23T23:21:40.6595657Z stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C07: envio pendente impede envio duplicado e fechamento
+2026-11-23T23:21:40.6614519Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:40.6632217Z 
+2026-11-23T23:21:40.7468554Z stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C08: voltar ou fechar não envia cancelamento
+2026-11-23T23:21:40.7471334Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:40.7472526Z 
+2026-11-23T23:21:40.8643724Z  ✓ src/components/candidatos/ModalCancelarCandidatura.test.tsx (15 tests) 1856ms
+2026-11-23T23:21:40.8682906Z    ✓ RF08 / OBS-CANCELAMENTO — T17.8 (15)
+2026-11-23T23:21:40.8684346Z      ✓ OBS-C01: motivo vazio não envia POST 387ms
+2026-11-23T23:21:42.5403618Z  ✓ src/components/candidatos/CardCandidato.test.tsx (27 tests) 644ms
+2026-11-23T23:21:42.8460520Z  ✓ src/components/candidatos/PainelParticipantesVagas.test.tsx (9 tests) 723ms
+2026-11-23T23:21:43.1308570Z  ✓ src/components/visitas/FormularioResultadoAtividade.test.tsx (11 tests) 655ms
+2026-11-23T23:21:45.5713886Z stderr | src/components/participantes/ModalRegistrarRetirada.test.tsx > bloqueia motivo inválido e destaca o campo: vazio
+2026-11-23T23:21:45.5774108Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:45.5781885Z 
+2026-11-23T23:21:45.6587770Z stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C01: obrigatórios destacam os quatro campos e focam o primeiro sem HTTP
+2026-11-23T23:21:45.6623472Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:45.6624707Z 
+2026-11-23T23:21:45.7064011Z stderr | src/components/participantes/ModalRegistrarRetirada.test.tsx > bloqueia motivo inválido e destaca o campo: apenas espaços
+2026-11-23T23:21:45.7103468Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:45.7104819Z 
+2026-11-23T23:21:45.8590336Z stderr | src/components/participantes/ModalRegistrarRetirada.test.tsx > bloqueia motivo inválido e destaca o campo: mais de 500 caracteres
+2026-11-23T23:21:45.8593428Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:45.8594643Z 
+2026-11-23T23:21:45.8635454Z stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C02: bloqueia e-mail malformado antes do cadastro
+2026-11-23T23:21:45.8638675Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:45.8639933Z 
+2026-11-23T23:21:45.9683988Z stderr | src/components/participantes/ModalRegistrarRetirada.test.tsx > confirma com o motivo sem espaços nas extremidades e informa o efeito nas vagas
+2026-11-23T23:21:45.9703443Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:45.9709529Z 
+2026-11-23T23:21:46.0864378Z stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C02: bloqueia telefone com letras antes do cadastro
+2026-11-23T23:21:46.0907649Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:46.0931879Z 
+2026-11-23T23:21:46.0963701Z stderr | src/components/participantes/ModalRegistrarRetirada.test.tsx > aceita o limite de 500 caracteres do motivo
+2026-11-23T23:21:46.0966201Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:46.0967356Z 
+2026-11-23T23:21:46.2026858Z stderr | src/components/participantes/ModalRegistrarRetirada.test.tsx > mantém o modal aberto e mostra a mensagem exata da API
+2026-11-23T23:21:46.2053485Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:46.2081816Z 
+2026-11-23T23:21:46.2861369Z stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C02: bloqueia telefone com poucos dígitos antes do cadastro
+2026-11-23T23:21:46.2865101Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:46.2866081Z 
+2026-11-23T23:21:46.3254743Z stderr | src/components/participantes/ModalRegistrarRetirada.test.tsx > impede envio duplicado e fechamento enquanto aguarda a API
+2026-11-23T23:21:46.3344462Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:46.3408803Z 
+2026-11-23T23:21:46.4724523Z stderr | src/components/participantes/ModalRegistrarRetirada.test.tsx > exibe o erro de campo da API e devolve o foco ao motivo
+2026-11-23T23:21:46.4728067Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:46.4729222Z 
+2026-11-23T23:21:46.5374235Z stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C02: bloqueia idade zero antes do cadastro
+2026-11-23T23:21:46.5376484Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:46.5377481Z 
+2026-11-23T23:21:46.6094182Z stderr | src/components/participantes/ModalRegistrarRetirada.test.tsx > permite tentar novamente após uma falha inesperada
+2026-11-23T23:21:46.6097311Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:46.6098642Z 
+2026-11-23T23:21:46.7055273Z stderr | src/components/participantes/ModalRegistrarRetirada.test.tsx > permite fechar com Escape sem confirmar a retirada
+2026-11-23T23:21:46.7057812Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:46.7058994Z 
+2026-11-23T23:21:46.7878396Z stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C02: bloqueia idade acima do limite antes do cadastro
+2026-11-23T23:21:46.7950014Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:46.7964302Z 
+2026-11-23T23:21:46.8013866Z stderr | src/components/participantes/ModalRegistrarRetirada.test.tsx > permite voltar sem registrar a retirada
+2026-11-23T23:21:46.8016039Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:46.8017032Z 
+2026-11-23T23:21:46.8988969Z  ✓ src/components/participantes/ModalRegistrarRetirada.test.tsx (11 tests) 1663ms
+2026-11-23T23:21:46.8991096Z    ✓ bloqueia motivo inválido e destaca o campo: vazio 450ms
+2026-11-23T23:21:46.9613558Z  ✓ src/pages/login/login.test.tsx (5 tests) 952ms
+2026-11-23T23:21:46.9623152Z    ✓ Login e gestão de sessão (T4.2) (5)
+2026-11-23T23:21:46.9626101Z      ✓ valida campos obrigatórios antes de chamar a API 426ms
+2026-11-23T23:21:46.9629905Z      ✓ autentica usuário ativo, persiste a sessão, exibe perfil na Sidebar e encerra a sessão no logout 334ms
+2026-11-23T23:21:46.9768773Z stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C02: bloqueia idade fracionária antes do cadastro
+2026-11-23T23:21:46.9790164Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:46.9791844Z 
+2026-11-23T23:21:47.2094808Z stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C02: bloqueia nome longo antes do cadastro
+2026-11-23T23:21:47.2144294Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:47.2171981Z 
+2026-11-23T23:21:47.4164050Z stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C02: bloqueia e-mail longo antes do cadastro
+2026-11-23T23:21:47.4193477Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:47.4215842Z 
+2026-11-23T23:21:47.6284571Z stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C03: aceita idade limite 1 e normaliza o payload
+2026-11-23T23:21:47.6287507Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:47.6288620Z 
+2026-11-23T23:21:47.8979242Z stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C03: aceita idade limite 130 e normaliza o payload
+2026-11-23T23:21:47.9003657Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:47.9004680Z 
+2026-11-23T23:21:48.1010363Z stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C04: e-mail de conta existente mostra vínculo sem código de ativação
+2026-11-23T23:21:48.1061904Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:48.1093656Z 
+2026-11-23T23:21:48.4234695Z stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C05: mantém campos e exibe literalmente erro geral e de campo da API
+2026-11-23T23:21:48.4293866Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:48.4324578Z 
+2026-11-23T23:21:48.7123130Z stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C06: bloqueia envios e fechamento durante o cadastro pendente
+2026-11-23T23:21:48.7127307Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:48.7128576Z 
+2026-11-23T23:21:48.8548312Z stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C07: cancelar ou fechar antes do envio não cadastra
+2026-11-23T23:21:48.8589889Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:48.8616345Z 
+2026-11-23T23:21:48.9814421Z  ✓ src/components/candidatos/ModalNovoCandidato.test.tsx (15 tests) 3670ms
+2026-11-23T23:21:48.9816283Z    ✓ RF08 — cadastro e convite (T17.8) (15)
+2026-11-23T23:21:48.9819605Z      ✓ RF08-C01: obrigatórios destacam os quatro campos e focam o primeiro sem HTTP 474ms
+2026-11-23T23:21:48.9821342Z      ✓ RF08-C05: mantém campos e exibe literalmente erro geral e de campo da API 331ms
+2026-11-23T23:21:49.7370161Z  ✓ src/components/candidatos/ModalConfirmarInclusao.test.tsx (13 tests) 909ms
+2026-11-23T23:21:50.8099334Z stderr | src/pages/prototipos.test.tsx > Visão geral e relatórios de demonstração; visitas integradas (T7.2 / RF13) > RF13: consulta visitas reais e confirma desfecho usando a versão da visita
+2026-11-23T23:21:50.8109514Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:50.8120420Z 
+2026-11-23T23:21:51.1854004Z  ✓ src/pages/prototipos.test.tsx (4 tests) 1013ms
+2026-11-23T23:21:51.1923400Z    ✓ Visão geral e relatórios de demonstração; visitas integradas (T7.2 / RF13) (3)
+2026-11-23T23:21:51.1925467Z      ✓ renderiza a página de Visão geral com indicadores, progresso dos estudos e pendências 351ms
+2026-11-23T23:21:51.1952730Z      ✓ RF13: consulta visitas reais e confirma desfecho usando a versão da visita 595ms
+2026-11-23T23:21:53.1243475Z  ✓ src/components/estudos/CabecalhoEstudo.test.tsx (12 tests) 1106ms
+2026-11-23T23:21:53.1245247Z    ✓ T24.5 — Botões do estudo: agrupa apenas as transições permitidas em PLANNING 422ms
+2026-11-23T23:21:53.9073934Z  ✓ src/components/visitas/ListaVisitasAgendadas.test.tsx (19 tests) 1087ms
+2026-11-23T23:21:55.0141272Z  ✓ src/components/auth/ProtectedRoute.test.tsx (6 tests) 804ms
+2026-11-23T23:21:55.0148823Z    ✓ Rotas protegidas e menu por perfil (T5.2) (6)
+2026-11-23T23:21:55.0150419Z      ✓ redireciona usuário não autenticado para /login ao acessar rota protegida 333ms
+2026-11-23T23:21:55.3439068Z  ✓ src/services/estudos.test.ts (7 tests) 20ms
+2026-11-23T23:21:56.6043579Z  ✓ src/components/candidatos/ConsentimentoSimulado.test.tsx (5 tests) 768ms
+2026-11-23T23:21:56.6045555Z    ✓ RF10 — ConsentimentoSimulado adaptado ao andamento da API (T17.8) (5)
+2026-11-23T23:21:56.6073382Z      ✓ RF10-CS01: decisão CONSENT_PENDING é consultada sem ação de registrar ou reverter consentimento 355ms
+2026-11-23T23:21:57.8613794Z stderr | src/components/candidatos/ResultadoCadastroCandidato.test.tsx > RF08 — confirmação do cadastro (T17.8) > RF08-R01: convite mostra código único, validade e aviso de demonstração sem persistir no navegador
+2026-11-23T23:21:57.8616682Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:57.8617601Z 
+2026-11-23T23:21:57.9954856Z stderr | src/components/candidatos/ResultadoCadastroCandidato.test.tsx > RF08 — confirmação do cadastro (T17.8) > RF08-R02: copia exatamente o código e confirma a cópia
+2026-11-23T23:21:57.9984186Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:58.0001773Z 
+2026-11-23T23:21:58.1289089Z stderr | src/components/candidatos/ResultadoCadastroCandidato.test.tsx > RF08 — confirmação do cadastro (T17.8) > RF08-R03: falha na área de transferência orienta a cópia manual e preserva o código
+2026-11-23T23:21:58.1293787Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:58.1294909Z 
+2026-11-23T23:21:58.2040709Z stderr | src/components/candidatos/ResultadoCadastroCandidato.test.tsx > RF08 — confirmação do cadastro (T17.8) > RF08-R04: conta vinculada não mostra convite nem código e permite concluir
+2026-11-23T23:21:58.2067921Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:58.2072658Z 
+2026-11-23T23:21:58.3134430Z  ✓ src/components/candidatos/ResultadoCadastroCandidato.test.tsx (4 tests) 676ms
+2026-11-23T23:21:58.3181612Z    ✓ RF08 — confirmação do cadastro (T17.8) (4)
+2026-11-23T23:21:58.3213442Z      ✓ RF08-R01: convite mostra código único, validade e aviso de demonstração sem persistir no navegador 332ms
+2026-11-23T23:21:58.3253782Z stderr | src/components/estudos/ModalEditarEstudo.test.tsx > permissões de edição do estudo > permite ao responsável salvar em recrutamento sem enviar estado
+2026-11-23T23:21:58.3283369Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:58.3284344Z 
+2026-11-23T23:21:58.6649013Z stderr | src/components/estudos/ModalEditarEstudo.test.tsx > permissões de edição do estudo > bloqueia a edição por outro pesquisador, inclusive o envio direto do formulário
+2026-11-23T23:21:58.6696630Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:58.6698648Z 
+2026-11-23T23:21:58.8920615Z stderr | src/components/estudos/ModalEditarEstudo.test.tsx > permissões de edição do estudo > mantém execução, encerrado e cancelado somente leitura para o próprio responsável
+2026-11-23T23:21:58.8933476Z A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with <Pressable> component.
+2026-11-23T23:21:58.8934556Z 
+2026-11-23T23:21:59.1583535Z  ✓ src/components/estudos/ModalEditarEstudo.test.tsx (3 tests) 1149ms
+2026-11-23T23:21:59.1623125Z    ✓ permissões de edição do estudo (3)
+2026-11-23T23:21:59.1663245Z      ✓ permite ao responsável salvar em recrutamento sem enviar estado 616ms
+2026-11-23T23:21:59.1673298Z      ✓ mantém execução, encerrado e cancelado somente leitura para o próprio responsável 320ms
+2026-11-23T23:21:59.6920500Z  ✓ src/components/estudos/ListaEstudos.test.tsx (3 tests) 381ms
+2026-11-23T23:21:59.6990582Z  ✓ src/services/auth.test.ts (8 tests) 12ms
+2026-11-23T23:22:01.0268934Z  ✓ src/services/api/apiClient.test.ts (5 tests) 32ms
+2026-11-23T23:22:02.9738729Z  ✓ src/components/usuarios/TabelaUsuarios.test.tsx (3 tests) 671ms
+2026-11-23T23:22:02.9740093Z    ✓ TabelaUsuarios (3)
+2026-11-23T23:22:02.9753491Z      ✓ exibe identificação, perfil e situação de cada usuário 550ms
+2026-11-23T23:22:03.5119286Z  ✓ src/components/usuarios/BuscaFiltroUsuarios.test.tsx (8 tests) 1952ms
+2026-11-23T23:22:03.5121174Z    ✓ BuscaFiltroUsuarios (7)
+2026-11-23T23:22:03.5122595Z      ✓ converte a seleção de Administrador para o perfil esperado 500ms
+2026-11-23T23:22:03.5124144Z      ✓ limpa os filtros com Todos os perfis e Todas as situações 322ms
+2026-11-23T23:22:03.9913815Z  ✓ src/components/estudos/CampoData.test.tsx (4 tests) 553ms
+2026-11-23T23:22:03.9932692Z    ✓ CampoData (4)
+2026-11-23T23:22:03.9933814Z      ✓ exibe a data recebida em segmentos acessíveis 330ms
+2026-11-23T23:22:05.2603546Z  ✓ src/components/ui/CardPadrao.test.tsx (2 tests) 275ms
+2026-11-23T23:22:05.3496622Z  ✓ src/services/participantes.test.ts (2 tests) 22ms
+2026-11-23T23:22:05.7641933Z  ✓ src/components/estudos/SeloEstadoEstudo.test.tsx (6 tests) 144ms
+2026-11-23T23:22:06.9253732Z  ✓ src/context/PrototiposContext.test.tsx (11 tests) 76ms
+2026-11-23T23:22:07.9714789Z  ✓ src/components/estudos/EstadosParticipantes.test.tsx (4 tests) 264ms
+2026-11-23T23:22:08.6318022Z  ✓ src/components/estudos/BuscaFiltroEstudos.test.tsx (1 test) 340ms
+2026-11-23T23:22:08.6319271Z    ✓ BuscaFiltroEstudos (1)
+2026-11-23T23:22:08.6320381Z      ✓ exibe a busca atual e informa a digitação e a limpeza pelo callback 335ms
+2026-11-23T23:22:08.6812905Z  ✓ src/components/ui/FormField.test.tsx (1 test) 210ms
+2026-11-23T23:22:09.2800215Z  ✓ src/components/ui/ErrorMessage.test.tsx (2 tests) 134ms
+2026-11-23T23:22:09.6655484Z 
+2026-11-23T23:22:09.6661584Z  Test Files  47 passed (47)
+2026-11-23T23:22:09.6664989Z       Tests  513 passed (513)
+2026-11-23T23:22:09.6665726Z    Start at  23:20:59
+2026-11-23T23:22:09.6670934Z    Duration  69.79s (tests 48%, import 23%, environment 22%, setup 4%, transform 2%, worker 1%)
+2026-11-23T23:22:09.6683873Z 
+2026-11-23T23:22:09.6685076Z     Isolate  47 workers spawned · ~1.05s startup each (spawn + environment, per file)
+2026-11-23T23:22:09.6686851Z              at least ~15.37s faster with isolate: false — reuses workers across files instead of one per file
+2026-11-23T23:22:09.6687449Z 
+2026-11-23T23:22:09.6797220Z JSON report written to /home/runner/work/ClinicalStudyPB-project/ClinicalStudyPB-project/web/test-reports/vitest.json
+2026-11-23T23:22:09.6810644Z  % Coverage report from v8
+2026-11-23T23:22:09.6874145Z -------------------|---------|----------|---------|---------|-------------------
+2026-11-23T23:22:09.6875241Z File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+2026-11-23T23:22:09.6876141Z -------------------|---------|----------|---------|---------|-------------------
+2026-11-23T23:22:09.6883909Z All files          |    87.2 |    82.17 |   86.12 |   89.69 |                   
+2026-11-23T23:22:09.6885036Z  src               |      75 |    66.66 |     100 |      75 |                   
+2026-11-23T23:22:09.6886213Z   main.tsx         |      75 |    66.66 |     100 |      75 | 27,131            
+2026-11-23T23:22:09.6887001Z   styles.css       |       0 |        0 |       0 |       0 |                   
+2026-11-23T23:22:09.6887813Z  src/assets        |       0 |        0 |       0 |       0 |                   
+2026-11-23T23:22:09.6888613Z   logo-sidebar.svg |       0 |        0 |       0 |       0 |                   
+2026-11-23T23:22:09.6889398Z   logo.svg         |       0 |        0 |       0 |       0 |                   
+2026-11-23T23:22:09.6890180Z  src/components    |       0 |        0 |       0 |       0 |                   
+2026-11-23T23:22:09.6890985Z   index.ts         |       0 |        0 |       0 |       0 |                   
+2026-11-23T23:22:09.6892007Z  ...omponents/auth |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6892870Z   ...ctedRoute.tsx |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6893722Z  ...nts/candidatos |    91.1 |    87.78 |   94.91 |   93.49 |                   
+2026-11-23T23:22:09.6894625Z   ...ibilidade.tsx |   87.61 |    80.76 |     100 |   90.38 | ...04,206,216-219 
+2026-11-23T23:22:09.6895803Z   ...Candidato.tsx |     100 |    94.44 |     100 |     100 | 119-122           
+2026-11-23T23:22:09.6896688Z   ...andidatos.tsx |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6897551Z   ...ndidatura.tsx |   93.65 |    88.13 |    87.5 |   96.49 | 97,112            
+2026-11-23T23:22:09.6898398Z   ...rInclusao.tsx |   81.81 |    80.64 |      80 |   84.37 | 37,40-41,65,80    
+2026-11-23T23:22:09.6899400Z   ...Candidato.tsx |   94.36 |    91.54 |   91.66 |   96.42 | 135,156           
+2026-11-23T23:22:09.6900256Z   ...ntesVagas.tsx |     100 |    97.29 |     100 |     100 | 39                
+2026-11-23T23:22:09.6901130Z   ...Candidato.tsx |    90.9 |    91.66 |     100 |     100 | 18                
+2026-11-23T23:22:09.6902165Z  ...onents/estudos |   89.67 |    86.15 |   91.37 |   91.48 |                   
+2026-11-23T23:22:09.6903031Z   ...roEstudos.tsx |   33.33 |    33.33 |   66.66 |      50 | 35-36             
+2026-11-23T23:22:09.6903894Z   ...lhoEstudo.tsx |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6904753Z   CampoData.tsx    |      50 |      100 |      50 |      50 | 70-74             
+2026-11-23T23:22:09.6905595Z   ...icipantes.tsx |     100 |     92.3 |     100 |     100 | 33                
+2026-11-23T23:22:09.6906453Z   ...ticipante.tsx |     100 |    89.28 |     100 |     100 | 36-48             
+2026-11-23T23:22:09.6907340Z   ListaEstudos.tsx |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6908193Z   ...tarEstudo.tsx |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6909062Z   ModalEstudo.tsx  |    92.3 |    93.18 |   83.33 |   94.44 | 76-77,129         
+2026-11-23T23:22:09.6909901Z   ...ovoEstudo.tsx |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6910742Z   ...caoEstudo.tsx |      75 |    64.44 |   83.33 |   78.04 | ...3-74,81-87,119 
+2026-11-23T23:22:09.6911712Z   ...tesEstudo.tsx |     100 |       75 |     100 |     100 | 35-45,70,144      
+2026-11-23T23:22:09.6912594Z   ResumoEstudo.tsx |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6913452Z   ...adoEstudo.tsx |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6914298Z   ...icipantes.tsx |     100 |    83.33 |     100 |     100 | 54                
+2026-11-23T23:22:09.6915166Z  ...udos/criterios |   93.61 |    80.43 |   93.75 |   97.56 |                   
+2026-11-23T23:22:09.6916026Z   ...iosEstudo.tsx |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6916904Z   ...oCriterio.tsx |   91.89 |    78.57 |      90 |   96.87 | 83                
+2026-11-23T23:22:09.6917777Z  ...itas-previstas |   87.73 |    76.69 |   94.87 |   93.54 |                   
+2026-11-23T23:22:09.6918651Z   ...desVisita.tsx |     100 |     87.5 |     100 |     100 | 17                
+2026-11-23T23:22:09.6919503Z   CartaoVisita.tsx |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6920375Z   ...Previstas.tsx |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6921244Z   ...aPrevista.tsx |   68.75 |       50 |      75 |   84.61 | 27,45             
+2026-11-23T23:22:09.6922263Z   ...aPrevista.tsx |   87.87 |    78.46 |   94.11 |   92.98 | 63,69,98,135      
+2026-11-23T23:22:09.6923128Z  ...ponents/layout |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6923968Z   Layout.tsx       |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6924810Z  .../participantes |   98.07 |    94.28 |     100 |     100 |                   
+2026-11-23T23:22:09.6925674Z   ...rRetirada.tsx |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6926530Z   ...rRetirada.tsx |   97.36 |    91.66 |     100 |     100 | 34,69             
+2026-11-23T23:22:09.6927383Z  ...ponents/shared |   78.94 |    66.66 |   57.14 |   78.94 |                   
+2026-11-23T23:22:09.6928444Z   Sidebar.tsx      |   78.94 |    66.66 |   57.14 |   78.94 | 64,126-160        
+2026-11-23T23:22:09.6929272Z  src/components/ui |   91.66 |    85.71 |   85.71 |    90.9 |                   
+2026-11-23T23:22:09.6930129Z   ...Atualizar.tsx |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6930973Z   Button.tsx       |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6932277Z   CardPadrao.tsx   |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6933203Z   ErrorMessage.tsx |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6934055Z   FormField.tsx    |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6934896Z   Input.tsx        |   66.66 |        0 |       0 |   66.66 | 6                 
+2026-11-23T23:22:09.6935746Z  ...nents/usuarios |   94.44 |    90.67 |   95.65 |   96.15 |                   
+2026-11-23T23:22:09.6936608Z   ...oUsuarios.tsx |     100 |    85.71 |     100 |     100 | 43,72             
+2026-11-23T23:22:09.6937472Z   ModalUsuario.tsx |   93.24 |     91.2 |   92.85 |   95.38 | 62-63,124         
+2026-11-23T23:22:09.6938310Z   SeloPerfil.tsx   |     100 |       80 |     100 |     100 | 17                
+2026-11-23T23:22:09.6939163Z   ...aUsuarios.tsx |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6940024Z  ...onents/visitas |   95.07 |    90.05 |    94.8 |   97.07 |                   
+2026-11-23T23:22:09.6940886Z   ...Atividade.tsx |     100 |    98.92 |     100 |     100 | 184               
+2026-11-23T23:22:09.6941869Z   ...Agendadas.tsx |     100 |    95.23 |     100 |     100 | 99-102            
+2026-11-23T23:22:09.6942721Z   ...darVisita.tsx |      92 |    86.95 |   93.75 |   96.82 | 101,135           
+2026-11-23T23:22:09.6943603Z   ...choVisita.tsx |   95.16 |    89.39 |    87.5 |   96.55 | 116,131           
+2026-11-23T23:22:09.6944457Z   ...dosVisita.tsx |   95.06 |    82.89 |   95.23 |   97.29 | 142,203           
+2026-11-23T23:22:09.6945580Z   ...ticipante.tsx |   92.15 |    84.78 |   94.44 |   93.18 | 80,86,241         
+2026-11-23T23:22:09.6946399Z  src/config        |      60 |       50 |   66.66 |   57.89 |                   
+2026-11-23T23:22:09.6947219Z   ...dos-estudo.ts |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6948068Z   navigation.tsx   |   52.94 |    41.66 |      60 |      50 | 54,74-86          
+2026-11-23T23:22:09.6948907Z   visitas.ts       |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6949739Z  src/context       |   67.61 |    56.25 |   55.81 |   70.83 |                   
+2026-11-23T23:22:09.6950600Z   AuthContext.tsx  |   88.88 |       90 |      90 |   88.23 | 43-45,91          
+2026-11-23T23:22:09.6951629Z   ...osContext.tsx |   56.52 |     40.9 |   45.45 |   61.29 | ...29,165,248-272 
+2026-11-23T23:22:09.6952395Z  src/data          |      80 |      100 |       0 |      80 |                   
+2026-11-23T23:22:09.6953238Z   ...tipos-mock.ts |      80 |      100 |       0 |      80 | 174               
+2026-11-23T23:22:09.6954033Z  src/hooks         |      50 |       50 |   66.66 |   57.14 |                   
+2026-11-23T23:22:09.6954835Z   ...laEstreita.ts |      50 |       50 |   66.66 |   57.14 | 6-8               
+2026-11-23T23:22:09.6955670Z  src/pages         |   55.55 |    77.77 |      25 |   55.55 |                   
+2026-11-23T23:22:09.6956378Z   forbidden.tsx    |    62.5 |    77.77 |   33.33 |    62.5 | 17-18,51          
+2026-11-23T23:22:09.6957225Z   not-found.tsx    |       0 |      100 |       0 |       0 | 4                 
+2026-11-23T23:22:09.6958057Z  ...ages/dashboard |   69.56 |       35 |   63.63 |   77.77 |                   
+2026-11-23T23:22:09.6958873Z   visao-geral.tsx  |   69.56 |       35 |   63.63 |   77.77 | 79,98-178         
+2026-11-23T23:22:09.6959728Z  src/pages/estudos |   91.09 |    85.06 |   92.77 |   94.96 |                   
+2026-11-23T23:22:09.6960904Z   criterios.tsx    |   95.16 |    91.11 |    90.9 |   96.49 | 94,175            
+2026-11-23T23:22:09.6961876Z   listagem.tsx     |   90.74 |    78.94 |   94.44 |   93.18 | 75,89,206         
+2026-11-23T23:22:09.6962632Z   ...lhesEstudo.ts |   87.35 |    69.38 |   88.23 |   94.52 | 102,123,144,164   
+2026-11-23T23:22:09.6963370Z   ...sTransicao.ts |   96.15 |       96 |     100 |     100 | 32                
+2026-11-23T23:22:09.6964407Z   ...previstas.tsx |   90.66 |    85.71 |   94.11 |   94.02 | 102-103,115,234   
+2026-11-23T23:22:09.6965120Z   visualizar.tsx   |    90.9 |    91.17 |    90.9 |   94.73 | 32,354            
+2026-11-23T23:22:09.6965869Z  src/pages/login   |   91.17 |    76.92 |     100 |   91.17 |                   
+2026-11-23T23:22:09.6966599Z   login.tsx        |   91.17 |    76.92 |     100 |   91.17 | 46-47,64          
+2026-11-23T23:22:09.6967345Z  ...s/recrutamento |   74.04 |    72.94 |   74.19 |    77.1 |                   
+2026-11-23T23:22:09.6968111Z   recrutamento.tsx |   74.04 |    72.94 |   74.19 |    77.1 | ...77-788,811-823 
+2026-11-23T23:22:09.6968955Z  ...ges/relatorios |   63.88 |       50 |    61.9 |   66.66 |                   
+2026-11-23T23:22:09.6969701Z   relatorios.tsx   |   63.88 |       50 |    61.9 |   66.66 | ...26-31,67,84-94 
+2026-11-23T23:22:09.6970501Z  ...pages/usuarios |    98.5 |    89.36 |     100 |     100 |                   
+2026-11-23T23:22:09.6971315Z   listagem.tsx     |    98.5 |    89.36 |     100 |     100 | 60-63,70,101,112  
+2026-11-23T23:22:09.6972332Z  src/pages/visitas |   76.29 |    61.41 |   72.54 |   78.44 |                   
+2026-11-23T23:22:09.6973160Z   visitas.tsx      |   76.29 |    61.41 |   72.54 |   78.44 | ...36-457,515-517 
+2026-11-23T23:22:09.6973954Z  src/services      |   92.56 |    77.77 |     100 |    92.3 |                   
+2026-11-23T23:22:09.6974722Z   auth.ts          |   85.18 |    64.58 |     100 |   85.18 | ...27-132,136,148 
+2026-11-23T23:22:09.6975511Z   candidatos.ts    |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6976297Z   ...ios-estudo.ts |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6977062Z   elegibilidade.ts |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6977851Z   estudos.ts       |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6978635Z   participantes.ts |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6979465Z   ...-transicao.ts |      95 |    94.44 |     100 |   94.11 | 42                
+2026-11-23T23:22:09.6980332Z   ...atividades.ts |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6981051Z   usuarios.ts      |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6982083Z   ...-agendadas.ts |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6982798Z   ...-previstas.ts |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6983628Z  src/services/api  |    92.3 |    85.71 |     100 |   91.89 |                   
+2026-11-23T23:22:09.6984423Z   apiClient.ts     |    92.3 |    85.71 |     100 |   91.89 | 61,72,116         
+2026-11-23T23:22:09.6985185Z  src/types         |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6985931Z   auth.ts          |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6986700Z   candidato.ts     |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6987466Z   ...rio-estudo.ts |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6988242Z   ...a-agendada.ts |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6989017Z  src/utils         |      86 |    80.76 |   95.45 |   93.18 |                   
+2026-11-23T23:22:09.6989799Z   agendamento.ts   |   85.71 |    83.33 |     100 |     100 | 29                
+2026-11-23T23:22:09.6990626Z   candidatos.ts    |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6991869Z   ...cho-visita.ts |     100 |    85.71 |     100 |     100 | 12                
+2026-11-23T23:22:09.6992760Z   erros-api.ts     |   81.25 |    69.23 |     100 |   91.66 | 28                
+2026-11-23T23:22:09.6993589Z   estudos.ts       |   83.33 |    81.25 |    87.5 |   88.23 | 44-45             
+2026-11-23T23:22:09.6994541Z   formularios.ts   |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6995416Z   participantes.ts |     100 |       50 |     100 |     100 | 19                
+2026-11-23T23:22:09.6996306Z   ...atividades.ts |     100 |      100 |     100 |     100 |                   
+2026-11-23T23:22:09.6997241Z -------------------|---------|----------|---------|---------|-------------------
+2026-11-23T23:22:09.8454425Z ##[group]Run npm run build
+2026-11-23T23:22:09.8454757Z npm run build
+2026-11-23T23:22:09.8474251Z shell: /usr/bin/bash -e {0}
+2026-11-23T23:22:09.8474540Z ##[endgroup]
+2026-11-23T23:22:09.9393485Z 
+2026-11-23T23:22:09.9393957Z > build
+2026-11-23T23:22:09.9394464Z > tsc --noEmit && vite build
+2026-11-23T23:22:09.9394808Z 
+2026-11-23T23:22:17.9206094Z vite v8.3.5 building client environment for production...
+2026-11-23T23:22:17.9309006Z transforming...
+2026-11-23T23:22:18.5622365Z ✓ 3775 modules transformed.
+2026-11-23T23:22:18.6849637Z rendering chunks...
+2026-11-23T23:22:18.8470595Z computing gzip size...
+2026-11-23T23:22:18.8628284Z dist/index.html                            0.43 kB │ gzip:   0.28 kB
+2026-11-23T23:22:18.8628905Z dist/assets/logo-DOXXvxjk.svg             25.04 kB │ gzip:  10.09 kB
+2026-11-23T23:22:18.8629482Z dist/assets/logo-sidebar-BeIL4hhF.svg     25.04 kB │ gzip:  10.09 kB
+2026-11-23T23:22:18.8630129Z dist/assets/index-CH5MJd7M.css           466.99 kB │ gzip:  46.93 kB
+2026-11-23T23:22:18.8630691Z dist/assets/index-CJ6PWCWE.js          1,107.93 kB │ gzip: 318.32 kB
+2026-11-23T23:22:18.8630958Z 
+2026-11-23T23:22:18.8658160Z [plugin builtin:vite-reporter] 
+2026-11-23T23:22:18.8658927Z (!) Some chunks are larger than 500 kB after minification. Consider:
+2026-11-23T23:22:18.8659786Z - Using dynamic import() to code-split the application
+2026-11-23T23:22:18.8660959Z - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+2026-11-23T23:22:18.8690236Z - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+2026-11-23T23:22:18.8713878Z ✓ built in 950ms
+2026-11-23T23:22:18.9133586Z ##[group]Run actions/upload-artifact@v4
+2026-11-23T23:22:18.9133893Z with:
+2026-11-23T23:22:18.9134119Z   name: web-coverage
+2026-11-23T23:22:18.9134351Z   path: web/coverage
+2026-11-23T23:22:18.9134595Z   if-no-files-found: ignore
+2026-11-23T23:22:18.9134861Z   compression-level: 6
+2026-11-23T23:22:18.9135115Z   overwrite: false
+2026-11-23T23:22:18.9135355Z   include-hidden-files: false
+2026-11-23T23:22:18.9135610Z ##[endgroup]
+2026-11-23T23:22:19.0807544Z (node:3842) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-23T23:22:19.0808966Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-23T23:22:19.1159509Z With the provided path, there will be 141 files uploaded
+2026-11-23T23:22:19.1174331Z Artifact name is valid!
+2026-11-23T23:22:19.1175370Z Root directory input is valid!
+2026-11-23T23:22:19.4830731Z Beginning upload of artifact content to blob storage
+2026-11-23T23:22:19.6526775Z (node:3842) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-23T23:22:20.1135251Z Uploaded bytes 601255
+2026-11-23T23:22:20.1722692Z Finished uploading artifact content to blob storage!
+2026-11-23T23:22:20.1723945Z SHA256 digest of uploaded artifact zip is 82ed1e2e16c8d49b887684c2f665f16adf180e93b7fbe61ab48ec2a016f6e2b0
+2026-11-23T23:22:20.1725366Z Finalizing artifact upload
+2026-11-23T23:22:20.5638837Z Artifact web-coverage.zip successfully finalized. Artifact ID 14871414711
+2026-11-23T23:22:20.5640126Z Artifact web-coverage has been successfully uploaded! Final size is 601255 bytes. Artifact ID is 14871414711
+2026-11-23T23:22:20.5647448Z Artifact download URL: https://github.com/livdenner/ClinicalStudyPB-project/actions/runs/45287852924/artifacts/14871414711
+2026-11-23T23:22:20.5804114Z ##[group]Run actions/upload-artifact@v4
+2026-11-23T23:22:20.5804489Z with:
+2026-11-23T23:22:20.5804737Z   name: resultados-web
+2026-11-23T23:22:20.5805048Z   path: web/test-reports/vitest.json
+2026-11-23T23:22:20.5805373Z   if-no-files-found: ignore
+2026-11-23T23:22:20.5805661Z   compression-level: 6
+2026-11-23T23:22:20.5805926Z   overwrite: false
+2026-11-23T23:22:20.5806178Z   include-hidden-files: false
+2026-11-23T23:22:20.5806464Z ##[endgroup]
+2026-11-23T23:22:20.7579456Z (node:3855) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-23T23:22:20.7580288Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-23T23:22:20.7627317Z With the provided path, there will be 1 file uploaded
+2026-11-23T23:22:20.7633695Z Artifact name is valid!
+2026-11-23T23:22:20.7634518Z Root directory input is valid!
+2026-11-23T23:22:21.1072984Z Beginning upload of artifact content to blob storage
+2026-11-23T23:22:21.1439542Z (node:3855) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-23T23:22:22.9927227Z Uploaded bytes 142884
+2026-11-23T23:22:23.5492052Z Finished uploading artifact content to blob storage!
+2026-11-23T23:22:23.5493602Z SHA256 digest of uploaded artifact zip is c35be0c81fb8463720701e561e58b1aea3a8a19c3e6c7967d5fea71848fb8bc1
+2026-11-23T23:22:23.5494989Z Finalizing artifact upload
+2026-11-23T23:22:23.9261149Z Artifact resultados-web.zip successfully finalized. Artifact ID 14872059054
+2026-11-23T23:22:23.9263169Z Artifact resultados-web has been successfully uploaded! Final size is 142884 bytes. Artifact ID is 14872059054
+2026-11-23T23:22:23.9270481Z Artifact download URL: https://github.com/livdenner/ClinicalStudyPB-project/actions/runs/45287852924/artifacts/14872059054
+2026-11-23T23:22:23.9445404Z Post job cleanup.
+2026-11-23T23:22:24.0688338Z (node:3868) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-23T23:22:24.0689148Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-23T23:22:24.0692524Z Cache hit occurred on the primary key node-cache-Linux-x64-npm-5837303a0ac6ae5fe1c4e451741d038517bf84a95980ec121bb34cd161e7b36f, not saving cache.
+2026-11-23T23:22:24.0807100Z Post job cleanup.
+2026-11-23T23:22:24.1810939Z [command]/usr/bin/git version
+2026-11-23T23:22:24.1884560Z git version 2.56.1
+2026-11-23T23:22:24.1933667Z Temporarily overriding HOME='/home/runner/work/_temp/3a9989a0-b402-4af5-9a05-ef27c815217c' before making global git config changes
+2026-11-23T23:22:24.1935484Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-23T23:22:24.1939715Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/ClinicalStudyPB-project/ClinicalStudyPB-project
+2026-11-23T23:22:24.1998083Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-23T23:22:24.2052978Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-23T23:22:24.2367271Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-23T23:22:24.2403350Z http.https://github.com/.extraheader
+2026-11-23T23:22:24.2413999Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-23T23:22:24.2445767Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-23T23:22:24.2715195Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-23T23:22:24.2750283Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-23T23:22:24.3117350Z Cleaning up orphan processes
+2026-11-23T23:22:24.3421389Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4, actions/upload-artifact@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
