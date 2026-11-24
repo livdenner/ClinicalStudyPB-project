@@ -1,0 +1,83 @@
+# Instalação limpa — T26.5 — development e975d92 — 24/11/2026 (America/Fortaleza)
+
+## Compose (docker compose up -d --build)
+ Image clinicalstudypb-project-backend Built 
+ Volume clinicalstudypb-project_clinicalstudypb_pgdata Creating 
+ Network clinicalstudypb-project_default Creating 
+ Volume clinicalstudypb-project_clinicalstudypb_pgdata Creating 
+ Network clinicalstudypb-project_default Creating 
+ Volume clinicalstudypb-project_clinicalstudypb_pgdata Created 
+ Volume clinicalstudypb-project_clinicalstudypb_pgdata Created 
+ Network clinicalstudypb-project_default Created 
+ Network clinicalstudypb-project_default Created 
+ Container clinicalstudypb-db Creating 
+ Container clinicalstudypb-db Created 
+ Container clinicalstudypb-backend Creating 
+ Container clinicalstudypb-backend Created 
+ Container clinicalstudypb-db Starting 
+ Container clinicalstudypb-db Started 
+ Container clinicalstudypb-db Waiting 
+ Container clinicalstudypb-db Healthy 
+ Container clinicalstudypb-backend Starting 
+ Container clinicalstudypb-backend Started 
+
+## Swagger UI e OpenAPI
+swagger-ui: 200
+api-docs: 200
+
+## flyway_schema_history (versão|descrição|sucesso)
+1|create users|t
+2|create studies|t
+3|add study status|t
+4|study workflow and planned visits|t
+5|create candidates|t
+6|create study criteria|t
+7|create eligibility answers|t
+8|create simulated consents|t
+9|create eligibility evaluations|t
+10|create participants|t
+11|candidate accounts and invitations|t
+12|create scheduled visits|t
+13|add participant withdrawal|t
+14|add consent actor|t
+15|create activity results|t
+
+## Contagem das tabelas antes da carga
+todas as 14 tabelas de negócio com 0 registros
+
+## Após a 1ª carga
+activity_results=6
+candidate_activation_invites=22
+candidates=24
+eligibility_answers=51
+eligibility_evaluations=22
+participants=11
+planned_activities=21
+planned_visits=12
+scheduled_visits=9
+simulated_consents=15
+studies=6
+study_criteria=14
+study_status_history=9
+users=26
+
+## Após a 2ª carga
+activity_results=6
+candidate_activation_invites=22
+candidates=24
+eligibility_answers=51
+eligibility_evaluations=22
+participants=11
+planned_activities=21
+planned_visits=12
+scheduled_visits=9
+simulated_consents=15
+studies=6
+study_criteria=14
+study_status_history=9
+users=26
+
+Resultado: contagens idênticas; a 2ª carga não duplicou registros.
+
+## Reinícios do backend
+RestartCount=0

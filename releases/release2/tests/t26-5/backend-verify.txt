@@ -1,0 +1,570 @@
+﻿[INFO] Scanning for projects...
+[INFO] 
+[INFO] ----------------------< clinicalstudypb:backend >-----------------------
+[INFO] Building ClinicalStudyPB Backend 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- checkstyle:3.6.0:check (checkstyle) @ backend ---
+[INFO] Iniciando a auditoria...
+Auditoria completa.
+[INFO] You have 0 Checkstyle violations.
+[INFO] 
+[INFO] --- jacoco:0.8.13:prepare-agent (prepare-agent) @ backend ---
+[INFO] argLine set to -javaagent:<maven-repo>/repository/org/jacoco/org.jacoco.agent/0.8.13/org.jacoco.agent-0.8.13-runtime.jar=destfile=<clone>/backend/target/jacoco.exec
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ backend ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 16 resources from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.14.1:compile (default-compile) @ backend ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 175 source files with javac [debug parameters release 21] to target\classes
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ backend ---
+[INFO] Copying 1 resource from src\test\resources to target\test-classes
+[INFO] 
+[INFO] --- compiler:3.14.1:testCompile (default-testCompile) @ backend ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 51 source files with javac [debug parameters release 21] to target\test-classes
+[INFO] 
+[INFO] --- surefire:3.5.6:test (default-test) @ backend ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running clinicalstudypb.auth.ActivationIntegrationTest
+00:37:46.219 [main] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [clinicalstudypb.auth.ActivationIntegrationTest]: ActivationIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+00:37:48.382 [main] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.auth.ActivationIntegrationTest
+00:37:50.113 [main] INFO org.testcontainers.images.PullPolicy -- Image pull policy will be performed by: DefaultPullPolicy()
+00:37:50.142 [main] INFO org.testcontainers.utility.ImageNameSubstitutor -- Image name substitution will be performed by: DefaultImageNameSubstitutor (composite of 'ConfigurationFileImageNameSubstitutor' and 'PrefixingImageNameSubstitutor')
+00:37:50.453 [main] INFO org.testcontainers.DockerClientFactory -- Testcontainers version: 1.21.4
+00:37:54.577 [main] INFO org.testcontainers.dockerclient.DockerClientProviderStrategy -- Loaded org.testcontainers.dockerclient.NpipeSocketClientProviderStrategy from ~/.testcontainers.properties, will try it first
+00:37:58.468 [main] INFO org.testcontainers.dockerclient.DockerClientProviderStrategy -- Found Docker environment with local Npipe socket (npipe:////./pipe/docker_engine)
+00:37:58.504 [main] INFO org.testcontainers.DockerClientFactory -- Docker host IP address is localhost
+00:37:59.387 [main] INFO org.testcontainers.DockerClientFactory -- Connected to docker: 
+  Server Version: 29.9.3
+  API Version: 1.56
+  Operating System: Docker Desktop
+  Total Memory: 2850 MB
+  Labels: 
+    com.docker.desktop.address=npipe://\\.\pipe\docker_cli
+00:38:01.954 [main] INFO tc.testcontainers/ryuk:0.12.0 -- Creating container for image: testcontainers/ryuk:0.12.0
+00:38:07.851 [main] INFO tc.testcontainers/ryuk:0.12.0 -- Container testcontainers/ryuk:0.12.0 is starting: 8debafd466ddbc7caf439a24593ff8063bf13a9d24bc8c9c966a409295729053
+00:38:13.399 [main] INFO tc.testcontainers/ryuk:0.12.0 -- Container testcontainers/ryuk:0.12.0 started in PT11.4455556S
+00:38:13.459 [main] INFO org.testcontainers.utility.RyukResourceReaper -- Ryuk started - will monitor and terminate Testcontainers containers on JVM exit
+00:38:13.459 [main] INFO org.testcontainers.DockerClientFactory -- Checking the system...
+00:38:13.465 [main] INFO org.testcontainers.DockerClientFactory -- ?? Docker server version should be at least 1.6.0
+00:38:13.469 [main] INFO tc.postgres:18 -- Creating container for image: postgres:18
+00:38:14.097 [main] INFO tc.postgres:18 -- Container postgres:18 is starting: 84877b1a04040e2d32a1ea672681a79a462237701c8be28adfe9d8c752497119
+00:38:22.382 [main] INFO tc.postgres:18 -- Container postgres:18 started in PT8.9129724S
+00:38:22.387 [main] INFO tc.postgres:18 -- Container is started (JDBC URL: jdbc:postgresql://localhost:65025/test?loggerLevel=OFF)
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::               (v3.5.16)
+
+2026-11-24T00:38:26.362-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.auth.ActivationIntegrationTest         : Starting ActivationIntegrationTest using Java 21.0.12 with PID 19484 (started by <usuário> in <clone>\backend)
+2026-11-24T00:38:26.377-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.auth.ActivationIntegrationTest         : No active profile set, falling back to 1 default profile: "default"
+2026-11-24T00:38:36.281-03:00  INFO 19484 --- [clinicalstudypb] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-11-24T00:38:37.205-03:00  INFO 19484 --- [clinicalstudypb] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 827 ms. Found 13 JPA repository interfaces.
+2026-11-24T00:38:43.369-03:00  INFO 19484 --- [clinicalstudypb] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-11-24T00:38:44.759-03:00  INFO 19484 --- [clinicalstudypb] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@1415d4ca
+2026-11-24T00:38:44.770-03:00  INFO 19484 --- [clinicalstudypb] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-11-24T00:38:45.014-03:00  INFO 19484 --- [clinicalstudypb] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://localhost:65025/test?loggerLevel=OFF (PostgreSQL 18.7)
+2026-11-24T00:38:45.111-03:00  WARN 19484 --- [clinicalstudypb] [           main] o.f.c.internal.database.base.Database    : Flyway upgrade recommended: PostgreSQL 18.7 is newer than this version of Flyway and support has not been tested. The latest supported version of PostgreSQL is 17.
+2026-11-24T00:38:45.458-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.c.i.s.JdbcTableSchemaHistory         : Schema history table "public"."flyway_schema_history" does not exist yet
+2026-11-24T00:38:45.497-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 15 migrations (execution time 00:00.295s)
+2026-11-24T00:38:45.614-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.c.i.s.JdbcTableSchemaHistory         : Creating Schema History table "public"."flyway_schema_history" ...
+2026-11-24T00:38:46.124-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": << Empty Schema >>
+2026-11-24T00:38:46.248-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "1 - create users"
+2026-11-24T00:38:46.423-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "2 - create studies"
+2026-11-24T00:38:46.549-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "3 - add study status"
+2026-11-24T00:38:46.722-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "4 - study workflow and planned visits"
+2026-11-24T00:38:46.930-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "5 - create candidates"
+2026-11-24T00:38:47.057-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "6 - create study criteria"
+2026-11-24T00:38:47.157-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "7 - create eligibility answers"
+2026-11-24T00:38:47.261-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "8 - create simulated consents"
+2026-11-24T00:38:47.342-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "9 - create eligibility evaluations"
+2026-11-24T00:38:47.430-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "10 - create participants"
+2026-11-24T00:38:47.550-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "11 - candidate accounts and invitations"
+2026-11-24T00:38:47.721-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "12 - create scheduled visits"
+2026-11-24T00:38:47.882-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "13 - add participant withdrawal"
+2026-11-24T00:38:47.972-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "14 - add consent actor"
+2026-11-24T00:38:48.048-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbMigrate      : Migrating schema "public" to version "15 - create activity results"
+2026-11-24T00:38:48.137-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbMigrate      : Successfully applied 15 migrations to schema "public", now at version v15 (execution time 00:00.870s)
+2026-11-24T00:38:48.905-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-11-24T00:38:49.530-03:00  INFO 19484 --- [clinicalstudypb] [           main] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.53.Final
+2026-11-24T00:38:49.848-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-11-24T00:38:52.481-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-11-24T00:38:53.329-03:00  INFO 19484 --- [clinicalstudypb] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
+	Database driver: undefined/unknown
+	Database version: 18.7
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-11-24T00:39:03.488-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-11-24T00:39:03.751-03:00  INFO 19484 --- [clinicalstudypb] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-11-24T00:39:06.067-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.d.j.r.query.QueryEnhancerFactory     : Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-11-24T00:39:23.026-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-11-24T00:39:23.027-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-11-24T00:39:23.033-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 5 ms
+2026-11-24T00:39:23.227-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.auth.ActivationIntegrationTest         : Started ActivationIntegrationTest in 60.423 seconds (process running for 110.686)
+2026-11-24T00:39:23.250-03:00  WARN 19484 --- [clinicalstudypb] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-11-24T00:39:23.251-03:00  WARN 19484 --- [clinicalstudypb] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+.\mvnw.cmd : Mockito is currently self-attaching to enable the inline-mock-maker. This will no longer work in future 
+releases of the JDK. Please add Mockito as an agent to your build as described in Mockito's documentation: 
+https://javadoc.io/doc/org.mockito/mockito-core/latest/org.mockito/org/mockito/Mockito.html#0.3
+ 
+WARNING: A Java agent has been loaded dynamically 
+(<home>\.m2\repository\net\bytebuddy\byte-buddy-agent\1.17.8\byte-buddy-agent-1.17.8.jar)
+WARNING: If a serviceability tool is in use, please run with -XX:+EnableDynamicAgentLoading to hide this warning
+WARNING: If a serviceability tool is not in use, please run with -Djdk.instrument.traceUsage for more information
+WARNING: Dynamic loading of agents will be disallowed by default in a future release
+[INFO] Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 113.4 s -- in clinicalstudypb.auth.ActivationIntegrationTest
+[INFO] Running clinicalstudypb.auth.AuthControllerValidationTest
+2026-11-24T00:39:37.791-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.auth.AuthControllerValidationTest]: AuthControllerValidationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T00:39:37.974-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.auth.AuthControllerValidationTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::               (v3.5.16)
+
+2026-11-24T00:39:38.536-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.auth.AuthControllerValidationTest      : Starting AuthControllerValidationTest using Java 21.0.12 with PID 19484 (started by <usuário> in <clone>\backend)
+2026-11-24T00:39:38.537-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.auth.AuthControllerValidationTest      : No active profile set, falling back to 1 default profile: "default"
+2026-11-24T00:39:42.567-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-11-24T00:39:42.568-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-11-24T00:39:42.570-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-11-24T00:39:42.593-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.auth.AuthControllerValidationTest      : Started AuthControllerValidationTest in 4.599 seconds (process running for 130.053)
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.074 s -- in clinicalstudypb.auth.AuthControllerValidationTest
+[INFO] Running clinicalstudypb.auth.AuthIntegrationTest
+2026-11-24T00:39:42.877-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.auth.AuthIntegrationTest]: AuthIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T00:39:42.940-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.auth.AuthIntegrationTest
+[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 15.15 s -- in clinicalstudypb.auth.AuthIntegrationTest
+[INFO] Running clinicalstudypb.auth.AuthorizationIntegrationTest
+2026-11-24T00:39:58.075-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.auth.AuthorizationIntegrationTest]: AuthorizationIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T00:39:58.181-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.auth.AuthorizationIntegrationTest
+[INFO] Tests run: 112, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 137.4 s -- in clinicalstudypb.auth.AuthorizationIntegrationTest
+[INFO] Running clinicalstudypb.auth.AuthServiceTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.781 s -- in clinicalstudypb.auth.AuthServiceTest
+[INFO] Running clinicalstudypb.auth.JwtServiceTest
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.099 s -- in clinicalstudypb.auth.JwtServiceTest
+[INFO] Running clinicalstudypb.auth.PasswordChangeServiceTest
+[INFO] Tests run: 16, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.823 s -- in clinicalstudypb.auth.PasswordChangeServiceTest
+[INFO] Running clinicalstudypb.candidates.CandidateConcurrencyIntegrationTest
+2026-11-24T00:42:22.257-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.candidates.CandidateConcurrencyIntegrationTest]: CandidateConcurrencyIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T00:42:22.607-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.candidates.CandidateConcurrencyIntegrationTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.942 s -- in clinicalstudypb.candidates.CandidateConcurrencyIntegrationTest
+[INFO] Running clinicalstudypb.candidates.CandidateFlowNegativePathsIntegrationTest
+2026-11-24T00:42:28.198-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.candidates.CandidateFlowNegativePathsIntegrationTest]: CandidateFlowNegativePathsIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T00:42:28.285-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.candidates.CandidateFlowNegativePathsIntegrationTest
+[INFO] Running V�nculo da conta e convite
+2026-11-24T00:42:28.328-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.candidates.CandidateFlowNegativePathsIntegrationTest$AccountLinkAndInvitation]: AccountLinkAndInvitation does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T00:42:28.380-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.candidates.CandidateFlowNegativePathsIntegrationTest$AccountLinkAndInvitation
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.646 s -- in V�nculo da conta e convite
+[INFO] Running Decis�o fora do estado esperado
+2026-11-24T00:42:34.975-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.candidates.CandidateFlowNegativePathsIntegrationTest$DecisionStateRules]: DecisionStateRules does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T00:42:35.025-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.candidates.CandidateFlowNegativePathsIntegrationTest$DecisionStateRules
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.999 s -- in Decis�o fora do estado esperado
+[INFO] Running S� o candidato registra o consentimento
+2026-11-24T00:42:39.980-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.candidates.CandidateFlowNegativePathsIntegrationTest$OnlyTheCandidateDecides]: OnlyTheCandidateDecides does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T00:42:40.018-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.candidates.CandidateFlowNegativePathsIntegrationTest$OnlyTheCandidateDecides
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 6.153 s -- in S� o candidato registra o consentimento
+[INFO] Running Inclus�o sem aceite (GRANTED)
+2026-11-24T00:42:46.138-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.candidates.CandidateFlowNegativePathsIntegrationTest$InclusionWithoutGrant]: InclusionWithoutGrant does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T00:42:46.172-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.candidates.CandidateFlowNegativePathsIntegrationTest$InclusionWithoutGrant
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 4.396 s -- in Inclus�o sem aceite (GRANTED)
+[INFO] Running Decis�o de consentimento duplicada
+2026-11-24T00:42:50.556-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.candidates.CandidateFlowNegativePathsIntegrationTest$DuplicateDecision]: DuplicateDecision does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T00:42:50.623-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.candidates.CandidateFlowNegativePathsIntegrationTest$DuplicateDecision
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.719 s -- in Decis�o de consentimento duplicada
+[INFO] Running Token expirado
+2026-11-24T00:42:54.286-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.candidates.CandidateFlowNegativePathsIntegrationTest$ExpiredToken]: ExpiredToken does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T00:42:54.348-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.candidates.CandidateFlowNegativePathsIntegrationTest$ExpiredToken
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.983 s -- in Token expirado
+[INFO] Tests run: 0, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 30.07 s -- in clinicalstudypb.candidates.CandidateFlowNegativePathsIntegrationTest
+[INFO] Running clinicalstudypb.candidates.CandidateFlowPermissionMatrixIntegrationTest
+2026-11-24T00:42:58.279-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.candidates.CandidateFlowPermissionMatrixIntegrationTest]: CandidateFlowPermissionMatrixIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T00:42:58.310-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.candidates.CandidateFlowPermissionMatrixIntegrationTest
+[INFO] Tests run: 77, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 137.1 s -- in clinicalstudypb.candidates.CandidateFlowPermissionMatrixIntegrationTest
+[INFO] Running clinicalstudypb.candidates.CandidateIntegrationTest
+2026-11-24T00:45:15.497-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.candidates.CandidateIntegrationTest]: CandidateIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T00:45:15.831-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.candidates.CandidateIntegrationTest
+[INFO] Tests run: 20, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 26.28 s -- in clinicalstudypb.candidates.CandidateIntegrationTest
+[INFO] Running clinicalstudypb.candidates.CandidateServiceTest
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.818 s -- in clinicalstudypb.candidates.CandidateServiceTest
+[INFO] Running clinicalstudypb.candidates.EligibilityConcurrencyIntegrationTest
+2026-11-24T00:45:44.604-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.candidates.EligibilityConcurrencyIntegrationTest]: EligibilityConcurrencyIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T00:45:44.666-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.candidates.EligibilityConcurrencyIntegrationTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.543 s -- in clinicalstudypb.candidates.EligibilityConcurrencyIntegrationTest
+[INFO] Running clinicalstudypb.candidates.EligibilityEvaluationIntegrationTest
+2026-11-24T00:45:48.161-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.candidates.EligibilityEvaluationIntegrationTest]: EligibilityEvaluationIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T00:45:48.198-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.candidates.EligibilityEvaluationIntegrationTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::               (v3.5.16)
+
+2026-11-24T00:45:48.517-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.c.EligibilityEvaluationIntegrationTest : Starting EligibilityEvaluationIntegrationTest using Java 21.0.12 with PID 19484 (started by <usuário> in <clone>\backend)
+2026-11-24T00:45:48.518-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.c.EligibilityEvaluationIntegrationTest : No active profile set, falling back to 1 default profile: "default"
+2026-11-24T00:45:53.025-03:00  INFO 19484 --- [clinicalstudypb] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-11-24T00:45:53.600-03:00  INFO 19484 --- [clinicalstudypb] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 551 ms. Found 13 JPA repository interfaces.
+2026-11-24T00:45:55.420-03:00  INFO 19484 --- [clinicalstudypb] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Starting...
+2026-11-24T00:45:56.533-03:00  INFO 19484 --- [clinicalstudypb] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-2 - Added connection org.postgresql.jdbc.PgConnection@7cf975c3
+2026-11-24T00:45:56.534-03:00  INFO 19484 --- [clinicalstudypb] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-2 - Start completed.
+2026-11-24T00:45:56.567-03:00  INFO 19484 --- [clinicalstudypb] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://localhost:65025/test?loggerLevel=OFF (PostgreSQL 18.7)
+2026-11-24T00:45:56.780-03:00  WARN 19484 --- [clinicalstudypb] [           main] o.f.c.internal.database.base.Database    : Flyway upgrade recommended: PostgreSQL 18.7 is newer than this version of Flyway and support has not been tested. The latest supported version of PostgreSQL is 17.
+2026-11-24T00:45:57.312-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 15 migrations (execution time 00:00.397s)
+2026-11-24T00:45:57.478-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": 15
+2026-11-24T00:45:57.486-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbMigrate      : Schema "public" is up to date. No migration necessary.
+2026-11-24T00:45:57.736-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-11-24T00:45:57.771-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-11-24T00:45:57.950-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-11-24T00:45:58.028-03:00  INFO 19484 --- [clinicalstudypb] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-2)']
+	Database driver: undefined/unknown
+	Database version: 18.7
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-11-24T00:46:01.813-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-11-24T00:46:02.476-03:00  INFO 19484 --- [clinicalstudypb] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-11-24T00:46:09.260-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-11-24T00:46:09.261-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-11-24T00:46:09.270-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 9 ms
+2026-11-24T00:46:09.399-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.c.EligibilityEvaluationIntegrationTest : Started EligibilityEvaluationIntegrationTest in 21.153 seconds (process running for 516.859)
+2026-11-24T00:46:09.403-03:00  WARN 19484 --- [clinicalstudypb] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-11-24T00:46:09.404-03:00  WARN 19484 --- [clinicalstudypb] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+2026-11-24T00:46:24.423-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.springdoc.api.AbstractOpenApiResource  : Init duration for springdoc-openapi is: 12317 ms
+[INFO] Tests run: 39, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 76.82 s -- in clinicalstudypb.candidates.EligibilityEvaluationIntegrationTest
+[INFO] Running clinicalstudypb.candidates.EligibilityEvaluationServiceTest
+[INFO] Tests run: 29, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.925 s -- in clinicalstudypb.candidates.EligibilityEvaluationServiceTest
+[INFO] Running clinicalstudypb.consent.SimulatedConsentIntegrationTest
+2026-11-24T00:47:07.013-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.consent.SimulatedConsentIntegrationTest]: SimulatedConsentIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T00:47:07.373-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.consent.SimulatedConsentIntegrationTest
+[INFO] Tests run: 26, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 32.41 s -- in clinicalstudypb.consent.SimulatedConsentIntegrationTest
+[INFO] Running clinicalstudypb.consent.StudyInvitationControllerTest
+2026-11-24T00:47:39.430-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.consent.StudyInvitationControllerTest]: StudyInvitationControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T00:47:39.560-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.consent.StudyInvitationControllerTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::               (v3.5.16)
+
+2026-11-24T00:47:39.852-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.consent.StudyInvitationControllerTest  : Starting StudyInvitationControllerTest using Java 21.0.12 with PID 19484 (started by <usuário> in <clone>\backend)
+2026-11-24T00:47:39.853-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.consent.StudyInvitationControllerTest  : No active profile set, falling back to 1 default profile: "default"
+2026-11-24T00:47:43.838-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-11-24T00:47:43.838-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-11-24T00:47:43.841-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-11-24T00:47:43.896-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.consent.StudyInvitationControllerTest  : Started StudyInvitationControllerTest in 4.301 seconds (process running for 611.355)
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 5.430 s -- in clinicalstudypb.consent.StudyInvitationControllerTest
+[INFO] Running clinicalstudypb.consent.StudyInvitationServiceTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.886 s -- in clinicalstudypb.consent.StudyInvitationServiceTest
+[INFO] Running clinicalstudypb.criteria.StudyCriterionIntegrationTest
+2026-11-24T00:47:45.821-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.criteria.StudyCriterionIntegrationTest]: StudyCriterionIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T00:47:46.160-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.criteria.StudyCriterionIntegrationTest
+[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 19.50 s -- in clinicalstudypb.criteria.StudyCriterionIntegrationTest
+[INFO] Running clinicalstudypb.criteria.StudyCriterionServiceTest
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.359 s -- in clinicalstudypb.criteria.StudyCriterionServiceTest
+[INFO] Running clinicalstudypb.history.ParticipantHistoryIntegrationTest
+2026-11-24T00:48:06.703-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.history.ParticipantHistoryIntegrationTest]: ParticipantHistoryIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T00:48:07.078-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.history.ParticipantHistoryIntegrationTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::               (v3.5.16)
+
+2026-11-24T00:48:07.356-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.h.ParticipantHistoryIntegrationTest    : Starting ParticipantHistoryIntegrationTest using Java 21.0.12 with PID 19484 (started by <usuário> in <clone>\backend)
+2026-11-24T00:48:07.357-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.h.ParticipantHistoryIntegrationTest    : No active profile set, falling back to 1 default profile: "default"
+2026-11-24T00:48:10.274-03:00  INFO 19484 --- [clinicalstudypb] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-11-24T00:48:10.575-03:00  INFO 19484 --- [clinicalstudypb] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 292 ms. Found 13 JPA repository interfaces.
+2026-11-24T00:48:11.217-03:00  INFO 19484 --- [clinicalstudypb] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-3 - Starting...
+2026-11-24T00:48:11.471-03:00  INFO 19484 --- [clinicalstudypb] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-3 - Added connection org.postgresql.jdbc.PgConnection@7843a202
+2026-11-24T00:48:11.472-03:00  INFO 19484 --- [clinicalstudypb] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-3 - Start completed.
+2026-11-24T00:48:11.494-03:00  INFO 19484 --- [clinicalstudypb] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://localhost:65025/test?loggerLevel=OFF (PostgreSQL 18.7)
+2026-11-24T00:48:11.563-03:00  WARN 19484 --- [clinicalstudypb] [           main] o.f.c.internal.database.base.Database    : Flyway upgrade recommended: PostgreSQL 18.7 is newer than this version of Flyway and support has not been tested. The latest supported version of PostgreSQL is 17.
+2026-11-24T00:48:11.712-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 15 migrations (execution time 00:00.127s)
+2026-11-24T00:48:11.782-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": 15
+2026-11-24T00:48:11.786-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbMigrate      : Schema "public" is up to date. No migration necessary.
+2026-11-24T00:48:11.972-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-11-24T00:48:12.004-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-11-24T00:48:12.084-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-11-24T00:48:12.144-03:00  INFO 19484 --- [clinicalstudypb] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-3)']
+	Database driver: undefined/unknown
+	Database version: 18.7
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-11-24T00:48:12.940-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-11-24T00:48:13.094-03:00  INFO 19484 --- [clinicalstudypb] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-11-24T00:48:16.092-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-11-24T00:48:16.092-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-11-24T00:48:16.097-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 4 ms
+2026-11-24T00:48:16.166-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.h.ParticipantHistoryIntegrationTest    : Started ParticipantHistoryIntegrationTest in 9.044 seconds (process running for 643.625)
+2026-11-24T00:48:16.168-03:00  WARN 19484 --- [clinicalstudypb] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-11-24T00:48:16.168-03:00  WARN 19484 --- [clinicalstudypb] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+[INFO] Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 33.28 s -- in clinicalstudypb.history.ParticipantHistoryIntegrationTest
+[INFO] Running clinicalstudypb.me.ParticipantSelfIntegrationTest
+2026-11-24T00:48:40.094-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.me.ParticipantSelfIntegrationTest]: ParticipantSelfIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T00:48:41.150-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.me.ParticipantSelfIntegrationTest
+[INFO] Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 69.79 s -- in clinicalstudypb.me.ParticipantSelfIntegrationTest
+[INFO] Running clinicalstudypb.me.ParticipantSelfServiceTest
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 14.47 s -- in clinicalstudypb.me.ParticipantSelfServiceTest
+[INFO] Running clinicalstudypb.participants.ParticipantConcurrencyIntegrationTest
+2026-11-24T00:50:05.012-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.participants.ParticipantConcurrencyIntegrationTest]: ParticipantConcurrencyIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T00:50:08.952-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.participants.ParticipantConcurrencyIntegrationTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 121.7 s -- in clinicalstudypb.participants.ParticipantConcurrencyIntegrationTest
+[INFO] Running clinicalstudypb.participants.ParticipantIntegrationTest
+2026-11-24T00:52:06.517-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.participants.ParticipantIntegrationTest]: ParticipantIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T00:52:06.742-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.participants.ParticipantIntegrationTest
+2026-11-24T00:55:49.069-03:00  WARN 19484 --- [clinicalstudypb] [           main] o.h.engine.jdbc.spi.SqlExceptionHelper   : SQL Error: 0, SQLState: 23514
+2026-11-24T00:55:49.092-03:00 ERROR 19484 --- [clinicalstudypb] [           main] o.h.engine.jdbc.spi.SqlExceptionHelper   : ERROR: new row for relation "participants" violates check constraint "test_reject_participant"
+  Detalhe: Failing row contains (90, 404, 600, 1606, 2026-11-09 09:30:00.123456-03, ACTIVE, null, null, null, null).
+2026-11-24T00:56:41.835-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.springdoc.api.AbstractOpenApiResource  : Init duration for springdoc-openapi is: 10630 ms
+[INFO] Tests run: 25, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 275.8 s -- in clinicalstudypb.participants.ParticipantIntegrationTest
+[INFO] Running clinicalstudypb.participants.ParticipantServiceTest
+[INFO] Tests run: 35, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.202 s -- in clinicalstudypb.participants.ParticipantServiceTest
+[INFO] Running clinicalstudypb.participants.ParticipantWithdrawalIntegrationTest
+2026-11-24T00:56:43.475-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.participants.ParticipantWithdrawalIntegrationTest]: ParticipantWithdrawalIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T00:56:43.662-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.participants.ParticipantWithdrawalIntegrationTest
+2026-11-24T00:57:21.908-03:00  WARN 19484 --- [clinicalstudypb] [           main] o.h.engine.jdbc.spi.SqlExceptionHelper   : SQL Error: 0, SQLState: 23514
+2026-11-24T00:57:21.913-03:00 ERROR 19484 --- [clinicalstudypb] [           main] o.h.engine.jdbc.spi.SqlExceptionHelper   : ERROR: new row for relation "participants" violates check constraint "test_reject_withdrawal"
+  Detalhe: Failing row contains (104, 417, 618, 1653, 2026-11-09 09:30:00.123456-03, WITHDRAWN, Motivo, 2026-11-09 09:30:00.123456-03, 1653, 1).
+2026-11-24T00:58:10.656-03:00  WARN 19484 --- [clinicalstudypb] [           main] o.h.engine.jdbc.spi.SqlExceptionHelper   : SQL Error: 0, SQLState: 23514
+2026-11-24T00:58:10.698-03:00 ERROR 19484 --- [clinicalstudypb] [           main] o.h.engine.jdbc.spi.SqlExceptionHelper   : ERROR: falha simulada no cancelamento das visitas
+  Onde: PL/pgSQL function test_fail_visit_cancellation() line 3 at RAISE
+[INFO] Tests run: 20, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 97.24 s -- in clinicalstudypb.participants.ParticipantWithdrawalIntegrationTest
+[INFO] Running clinicalstudypb.results.ActivityResultControllerTest
+2026-11-24T00:58:20.806-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.results.ActivityResultControllerTest]: ActivityResultControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T00:58:22.016-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.results.ActivityResultControllerTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::               (v3.5.16)
+
+2026-11-24T00:58:23.319-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.results.ActivityResultControllerTest   : Starting ActivityResultControllerTest using Java 21.0.12 with PID 19484 (started by <usuário> in <clone>\backend)
+2026-11-24T00:58:23.319-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.results.ActivityResultControllerTest   : No active profile set, falling back to 1 default profile: "default"
+2026-11-24T00:58:32.284-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-11-24T00:58:32.286-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-11-24T00:58:32.290-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 4 ms
+2026-11-24T00:58:32.447-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.results.ActivityResultControllerTest   : Started ActivityResultControllerTest in 10.16 seconds (process running for 1259.905)
+[INFO] Tests run: 12, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 13.68 s -- in clinicalstudypb.results.ActivityResultControllerTest
+[INFO] Running clinicalstudypb.results.ActivityResultIntegrationTest
+2026-11-24T00:58:34.512-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.results.ActivityResultIntegrationTest]: ActivityResultIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T00:58:34.599-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.results.ActivityResultIntegrationTest
+[INFO] Tests run: 17, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 81.62 s -- in clinicalstudypb.results.ActivityResultIntegrationTest
+[INFO] Running clinicalstudypb.results.ActivityResultServiceTest
+[INFO] Tests run: 19, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.805 s -- in clinicalstudypb.results.ActivityResultServiceTest
+[INFO] Running clinicalstudypb.results.ActivityResultTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.041 s -- in clinicalstudypb.results.ActivityResultTest
+[INFO] Running clinicalstudypb.scheduling.ScheduledVisitControllerTest
+2026-11-24T00:59:59.330-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.scheduling.ScheduledVisitControllerTest]: ScheduledVisitControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T01:00:00.349-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.scheduling.ScheduledVisitControllerTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::               (v3.5.16)
+
+2026-11-24T01:00:00.878-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.s.ScheduledVisitControllerTest         : Starting ScheduledVisitControllerTest using Java 21.0.12 with PID 19484 (started by <usuário> in <clone>\backend)
+2026-11-24T01:00:00.881-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.s.ScheduledVisitControllerTest         : No active profile set, falling back to 1 default profile: "default"
+2026-11-24T01:00:10.856-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-11-24T01:00:10.857-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-11-24T01:00:10.871-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-11-24T01:00:10.959-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.s.ScheduledVisitControllerTest         : Started ScheduledVisitControllerTest in 10.525 seconds (process running for 1358.418)
+[INFO] Tests run: 21, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 13.50 s -- in clinicalstudypb.scheduling.ScheduledVisitControllerTest
+[INFO] Running clinicalstudypb.scheduling.ScheduledVisitIntegrationTest
+2026-11-24T01:00:12.703-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.scheduling.ScheduledVisitIntegrationTest]: ScheduledVisitIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T01:00:12.926-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.scheduling.ScheduledVisitIntegrationTest
+[INFO] Tests run: 57, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 128.1 s -- in clinicalstudypb.scheduling.ScheduledVisitIntegrationTest
+[INFO] Running clinicalstudypb.scheduling.ScheduledVisitLifecycleTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.057 s -- in clinicalstudypb.scheduling.ScheduledVisitLifecycleTest
+[INFO] Running clinicalstudypb.scheduling.ScheduledVisitParticipantWithdrawalTest
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.069 s -- in clinicalstudypb.scheduling.ScheduledVisitParticipantWithdrawalTest
+[INFO] Running clinicalstudypb.scheduling.ScheduledVisitServiceTest
+[INFO] Tests run: 49, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.734 s -- in clinicalstudypb.scheduling.ScheduledVisitServiceTest
+[INFO] Running clinicalstudypb.scheduling.ScheduledVisitTest
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.050 s -- in clinicalstudypb.scheduling.ScheduledVisitTest
+[INFO] Running clinicalstudypb.studies.StudyControllerTest
+2026-11-24T01:02:21.774-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.studies.StudyControllerTest]: StudyControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T01:02:22.144-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.studies.StudyControllerTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::               (v3.5.16)
+
+2026-11-24T01:02:22.389-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.studies.StudyControllerTest            : Starting StudyControllerTest using Java 21.0.12 with PID 19484 (started by <usuário> in <clone>\backend)
+2026-11-24T01:02:22.390-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.studies.StudyControllerTest            : No active profile set, falling back to 1 default profile: "default"
+2026-11-24T01:02:24.616-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-11-24T01:02:24.616-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-11-24T01:02:24.617-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 1 ms
+2026-11-24T01:02:24.640-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.studies.StudyControllerTest            : Started StudyControllerTest in 2.446 seconds (process running for 1492.099)
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.111 s -- in clinicalstudypb.studies.StudyControllerTest
+[INFO] Running clinicalstudypb.studies.StudyIntegrationTest
+2026-11-24T01:02:24.861-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.studies.StudyIntegrationTest]: StudyIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T01:02:24.894-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.studies.StudyIntegrationTest
+[INFO] Tests run: 29, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 11.72 s -- in clinicalstudypb.studies.StudyIntegrationTest
+[INFO] Running clinicalstudypb.studies.StudyLifecycleIntegrationTest
+2026-11-24T01:02:36.575-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.studies.StudyLifecycleIntegrationTest]: StudyLifecycleIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T01:02:36.598-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.studies.StudyLifecycleIntegrationTest
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.661 s -- in clinicalstudypb.studies.StudyLifecycleIntegrationTest
+[INFO] Running clinicalstudypb.studies.StudyProtocolFlowIntegrationTest
+2026-11-24T01:02:40.240-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.studies.StudyProtocolFlowIntegrationTest]: StudyProtocolFlowIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T01:02:40.268-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.studies.StudyProtocolFlowIntegrationTest
+[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 7.945 s -- in clinicalstudypb.studies.StudyProtocolFlowIntegrationTest
+[INFO] Running clinicalstudypb.studies.StudyServiceTest
+[INFO] Tests run: 35, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.690 s -- in clinicalstudypb.studies.StudyServiceTest
+[INFO] Running clinicalstudypb.studies.StudyStatusIntegrationTest
+2026-11-24T01:02:49.885-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.studies.StudyStatusIntegrationTest]: StudyStatusIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T01:02:49.910-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.studies.StudyStatusIntegrationTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::               (v3.5.16)
+
+2026-11-24T01:02:49.996-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.studies.StudyStatusIntegrationTest     : Starting StudyStatusIntegrationTest using Java 21.0.12 with PID 19484 (started by <usuário> in <clone>\backend)
+2026-11-24T01:02:49.997-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.studies.StudyStatusIntegrationTest     : No active profile set, falling back to 1 default profile: "default"
+2026-11-24T01:02:51.336-03:00  INFO 19484 --- [clinicalstudypb] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-11-24T01:02:51.560-03:00  INFO 19484 --- [clinicalstudypb] [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 218 ms. Found 13 JPA repository interfaces.
+2026-11-24T01:02:51.893-03:00  INFO 19484 --- [clinicalstudypb] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-4 - Starting...
+2026-11-24T01:02:51.949-03:00  INFO 19484 --- [clinicalstudypb] [           main] com.zaxxer.hikari.pool.HikariPool        : HikariPool-4 - Added connection org.postgresql.jdbc.PgConnection@30506255
+2026-11-24T01:02:51.950-03:00  INFO 19484 --- [clinicalstudypb] [           main] com.zaxxer.hikari.HikariDataSource       : HikariPool-4 - Start completed.
+2026-11-24T01:02:51.965-03:00  INFO 19484 --- [clinicalstudypb] [           main] org.flywaydb.core.FlywayExecutor         : Database: jdbc:postgresql://localhost:65025/test?loggerLevel=OFF (PostgreSQL 18.7)
+2026-11-24T01:02:52.033-03:00  WARN 19484 --- [clinicalstudypb] [           main] o.f.c.internal.database.base.Database    : Flyway upgrade recommended: PostgreSQL 18.7 is newer than this version of Flyway and support has not been tested. The latest supported version of PostgreSQL is 17.
+2026-11-24T01:02:52.170-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbValidate     : Successfully validated 15 migrations (execution time 00:00.117s)
+2026-11-24T01:02:52.214-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbMigrate      : Current version of schema "public": 15
+2026-11-24T01:02:52.218-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.f.core.internal.command.DbMigrate      : Schema "public" is up to date. No migration necessary.
+2026-11-24T01:02:52.338-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-11-24T01:02:52.361-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-11-24T01:02:52.414-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-11-24T01:02:52.452-03:00  INFO 19484 --- [clinicalstudypb] [           main] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-4)']
+	Database driver: undefined/unknown
+	Database version: 18.7
+	Autocommit mode: undefined/unknown
+	Isolation level: undefined/unknown
+	Minimum pool size: undefined/unknown
+	Maximum pool size: undefined/unknown
+2026-11-24T01:02:53.061-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-11-24T01:02:53.186-03:00  INFO 19484 --- [clinicalstudypb] [           main] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-11-24T01:02:54.804-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-11-24T01:02:54.805-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-11-24T01:02:54.807-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 2 ms
+2026-11-24T01:02:54.837-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.studies.StudyStatusIntegrationTest     : Started StudyStatusIntegrationTest in 4.92 seconds (process running for 1522.296)
+2026-11-24T01:02:54.838-03:00  WARN 19484 --- [clinicalstudypb] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /v3/api-docs endpoint is enabled by default. To disable it in production, set the property 'springdoc.api-docs.enabled=false'
+2026-11-24T01:02:54.839-03:00  WARN 19484 --- [clinicalstudypb] [           main] o.s.core.events.SpringDocAppInitializer  : SpringDoc /swagger-ui.html endpoint is enabled by default. To disable it in production, set the property 'springdoc.swagger-ui.enabled=false'
+[INFO] Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 13.84 s -- in clinicalstudypb.studies.StudyStatusIntegrationTest
+[INFO] Running clinicalstudypb.support.DemoSeedIntegrationTest
+2026-11-24T01:03:03.726-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.support.DemoSeedIntegrationTest]: DemoSeedIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T01:03:03.924-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.support.DemoSeedIntegrationTest
+[INFO] Tests run: 22, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 14.91 s -- in clinicalstudypb.support.DemoSeedIntegrationTest
+[INFO] Running clinicalstudypb.users.UserControllerTest
+2026-11-24T01:03:18.650-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.users.UserControllerTest]: UserControllerTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T01:03:18.797-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.users.UserControllerTest
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::               (v3.5.16)
+
+2026-11-24T01:03:18.891-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.users.UserControllerTest               : Starting UserControllerTest using Java 21.0.12 with PID 19484 (started by <usuário> in <clone>\backend)
+2026-11-24T01:03:18.892-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.users.UserControllerTest               : No active profile set, falling back to 1 default profile: "default"
+2026-11-24T01:03:20.718-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.b.t.m.w.SpringBootMockServletContext : Initializing Spring TestDispatcherServlet ''
+2026-11-24T01:03:20.719-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Initializing Servlet ''
+2026-11-24T01:03:20.723-03:00  INFO 19484 --- [clinicalstudypb] [           main] o.s.t.web.servlet.TestDispatcherServlet  : Completed initialization in 4 ms
+2026-11-24T01:03:20.740-03:00  INFO 19484 --- [clinicalstudypb] [           main] c.users.UserControllerTest               : Started UserControllerTest in 1.934 seconds (process running for 1548.199)
+[INFO] Tests run: 9, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 2.348 s -- in clinicalstudypb.users.UserControllerTest
+[INFO] Running clinicalstudypb.users.UserIntegrationTest
+2026-11-24T01:03:21.000-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.users.UserIntegrationTest]: UserIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T01:03:21.038-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.users.UserIntegrationTest
+2026-11-24T01:03:26.609-03:00  WARN 19484 --- [clinicalstudypb] [           main] o.h.engine.jdbc.spi.SqlExceptionHelper   : SQL Error: 0, SQLState: 23503
+2026-11-24T01:03:26.609-03:00 ERROR 19484 --- [clinicalstudypb] [           main] o.h.engine.jdbc.spi.SqlExceptionHelper   : ERROR: update or delete on table "users" violates foreign key constraint "fk_studies_responsible_user" on table "studies"
+  Detalhe: Key (id)=(2616) is still referenced from table "studies".
+[INFO] Tests run: 23, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.44 s -- in clinicalstudypb.users.UserIntegrationTest
+[INFO] Running clinicalstudypb.users.UserServiceTest
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.639 s -- in clinicalstudypb.users.UserServiceTest
+[INFO] Running clinicalstudypb.visits.PlannedVisitIntegrationTest
+2026-11-24T01:03:39.116-03:00  INFO 19484 --- [clinicalstudypb] [           main] t.c.s.AnnotationConfigContextLoaderUtils : Could not detect default configuration classes for test class [clinicalstudypb.visits.PlannedVisitIntegrationTest]: PlannedVisitIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-11-24T01:03:39.430-03:00  INFO 19484 --- [clinicalstudypb] [           main] .b.t.c.SpringBootTestContextBootstrapper : Found @SpringBootConfiguration clinicalstudypb.ClinicalStudyPBApplication for test class clinicalstudypb.visits.PlannedVisitIntegrationTest
+[INFO] Tests run: 12, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 11.40 s -- in clinicalstudypb.visits.PlannedVisitIntegrationTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[INFO] Tests run: 940, Failures: 0, Errors: 0, Skipped: 0
+[INFO] 
+[INFO] 
+[INFO] --- jacoco:0.8.13:report (report) @ backend ---
+[INFO] Loading execution data file <clone>\backend\target\jacoco.exec
+[INFO] Analyzed bundle 'ClinicalStudyPB Backend' with 156 classes
+[INFO] 
+[INFO] --- jar:3.4.2:jar (default-jar) @ backend ---
+[INFO] Building jar: <clone>\backend\target\backend-0.0.1-SNAPSHOT.jar
+[INFO] 
+[INFO] --- spring-boot:3.5.16:repackage (repackage) @ backend ---
+[INFO] Replacing main artifact <clone>\backend\target\backend-0.0.1-SNAPSHOT.jar with repackaged archive, adding nested dependencies in BOOT-INF/.
+[INFO] The original artifact has been renamed to <clone>\backend\target\backend-0.0.1-SNAPSHOT.jar.original
+[INFO] 
+[INFO] --- jacoco:0.8.13:check (check) @ backend ---
+[INFO] Loading execution data file <clone>\backend\target\jacoco.exec
+[INFO] Analyzed bundle 'backend' with 156 classes
+[INFO] All coverage checks have been met.
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  28:23 min
+[INFO] Finished at: 2026-11-24T01:04:34-03:00
+[INFO] ------------------------------------------------------------------------

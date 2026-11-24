@@ -1,0 +1,90 @@
+﻿
+> clinicalstudypb-mobile@1.0.0 test
+> jest --ci --runInBand --coverage
+
+-------------------------------|---------|----------|---------|---------|--------------------------------------------------------------------
+File                           | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s                                                  
+-------------------------------|---------|----------|---------|---------|--------------------------------------------------------------------
+All files                      |   92.67 |    89.07 |      97 |   92.66 |                                                                    
+ app                           |   90.71 |    81.15 |    92.3 |   90.71 |                                                                    
+  _layout.tsx                  |     100 |      100 |     100 |     100 |                                                                    
+  activation.tsx               |   92.68 |    83.33 |   88.88 |   92.68 | 59,128,150                                                         
+  change-password.tsx          |      88 |       85 |     100 |      88 | 41,51,99                                                           
+  index.tsx                    |   85.71 |       50 |      90 |   85.71 | 24,32,106                                                          
+  login.tsx                    |    91.3 |     82.6 |   88.88 |    91.3 | 56,62,66,130                                                       
+ app/invitations               |   85.64 |    84.57 |    91.3 |   85.85 |                                                                    
+  [candidateId].tsx            |   84.07 |    83.47 |   89.28 |   84.41 | 51,134-136,164-168,201,217,220,242,271,294,298,301-305,321,346-359 
+  index.tsx                    |   90.38 |    87.03 |   94.44 |   90.19 | 95,100,147-150                                                     
+ app/studies                   |   95.61 |    91.66 |     100 |   95.53 |                                                                    
+  [participantId].tsx          |   96.77 |     92.4 |     100 |   96.72 | 92,134                                                             
+  index.tsx                    |   94.23 |    90.56 |     100 |   94.11 | 94-95,150                                                          
+ app/visits                    |   94.95 |    90.69 |   96.55 |   94.87 |                                                                    
+  [visitId].tsx                |   96.77 |    92.55 |     100 |   96.72 | 72,138                                                             
+  index.tsx                    |   92.98 |    88.46 |   94.11 |   92.85 | 134,149,199-240                                                    
+ auth                          |   92.47 |    85.84 |     100 |   92.37 |                                                                    
+  AuthProvider.tsx             |    88.7 |    75.28 |     100 |    88.7 | 89,122,159,171,190,283,288,302-306,394-395,404-410,515,560         
+  activationForm.ts            |     100 |      100 |     100 |     100 |                                                                    
+  authenticatedSession.ts      |     100 |      100 |     100 |     100 |                                                                    
+  expoSecureStoreAdapter.ts    |     100 |      100 |     100 |     100 |                                                                    
+  loginForm.ts                 |     100 |      100 |     100 |     100 |                                                                    
+  passwordPolicy.ts            |     100 |      100 |     100 |     100 |                                                                    
+  secureSessionStorage.ts      |     100 |      100 |     100 |     100 |                                                                    
+  session.ts                   |   78.78 |    83.72 |     100 |   78.12 | 39,47,50,56,59,86,105                                              
+  sessionStorage.ts            |     100 |      100 |     100 |     100 |                                                                    
+  useSessionExpiration.ts      |     100 |    92.85 |     100 |     100 | 92                                                                 
+ components                    |      92 |    82.45 |    90.9 |      92 |                                                                    
+  ActionButton.tsx             |     100 |    84.21 |     100 |     100 | 42,46                                                              
+  BackLink.tsx                 |     100 |    66.66 |     100 |     100 | 18                                                                 
+  BrandHeader.tsx              |     100 |      100 |     100 |     100 |                                                                    
+  ConfirmDialog.tsx            |      50 |       25 |      50 |      50 | 32-33                                                              
+  MessageBanner.tsx            |     100 |      100 |     100 |     100 |                                                                    
+  ScreenContainer.tsx          |     100 |       80 |     100 |     100 | 29                                                                 
+  StatusBadge.tsx              |     100 |    66.66 |     100 |     100 | 28,35                                                              
+  TextField.tsx                |     100 |      100 |     100 |     100 |                                                                    
+ components/auth               |   96.87 |       90 |     100 |   96.77 |                                                                    
+  PasswordForm.tsx             |   96.87 |       90 |     100 |   96.77 | 60                                                                 
+ components/invitations        |     100 |      100 |     100 |     100 |                                                                    
+  InvitationStatusBadge.tsx    |     100 |      100 |     100 |     100 |                                                                    
+ components/protocol           |     100 |    91.66 |     100 |     100 |                                                                    
+  PlannedVisitCard.tsx         |     100 |    91.66 |     100 |     100 | 19                                                                 
+ components/studies            |     100 |      100 |     100 |     100 |                                                                    
+  ParticipationStatusBadge.tsx |     100 |      100 |     100 |     100 |                                                                    
+  StudyStatusBadge.tsx         |     100 |      100 |     100 |     100 |                                                                    
+ components/visits             |     100 |      100 |     100 |     100 |                                                                    
+  VisitStatusBadge.tsx         |     100 |      100 |     100 |     100 |                                                                    
+ services/api                  |   94.59 |    87.87 |     100 |   94.59 |                                                                    
+  apiClient.ts                 |   93.93 |    87.09 |     100 |   93.93 | 43,49                                                              
+  authorization.ts             |     100 |      100 |     100 |     100 |                                                                    
+ services/auth                 |   95.55 |    94.44 |     100 |   95.55 |                                                                    
+  authApi.ts                   |     100 |      100 |     100 |     100 |                                                                    
+  authErrors.ts                |   94.59 |    94.11 |     100 |   94.59 | 117,122                                                            
+  authTypes.ts                 |     100 |      100 |     100 |     100 |                                                                    
+ services/format               |     100 |      100 |     100 |     100 |                                                                    
+  dateFormat.ts                |     100 |      100 |     100 |     100 |                                                                    
+ services/invitations          |   97.91 |    98.27 |     100 |   97.91 |                                                                    
+  invitationApi.ts             |     100 |      100 |     100 |     100 |                                                                    
+  invitationErrors.ts          |   96.42 |    97.36 |     100 |   96.42 | 81                                                                 
+  invitationPresentation.ts    |     100 |      100 |     100 |     100 |                                                                    
+  invitationTypes.ts           |     100 |      100 |     100 |     100 |                                                                    
+ services/protocol             |   91.66 |    95.83 |     100 |   91.66 |                                                                    
+  protocolValidation.ts        |   91.66 |    95.83 |     100 |   91.66 | 45                                                                 
+ services/studies              |   95.55 |    96.22 |     100 |   95.45 |                                                                    
+  studyApi.ts                  |   86.66 |    94.11 |     100 |   86.66 | 29,46                                                              
+  studyErrors.ts               |     100 |      100 |     100 |     100 |                                                                    
+  studyPresentation.ts         |     100 |      100 |     100 |     100 |                                                                    
+  studyTypes.ts                |     100 |      100 |     100 |     100 |                                                                    
+ services/visits               |   97.22 |    95.65 |     100 |   97.22 |                                                                    
+  visitApi.ts                  |   93.33 |    96.42 |     100 |   93.33 | 28                                                                 
+  visitErrors.ts               |     100 |     92.3 |     100 |     100 | 48                                                                 
+  visitPresentation.ts         |     100 |      100 |     100 |     100 |                                                                    
+  visitTypes.ts                |     100 |      100 |     100 |     100 |                                                                    
+ theme                         |     100 |      100 |     100 |     100 |                                                                    
+  colors.ts                    |     100 |      100 |     100 |     100 |                                                                    
+-------------------------------|---------|----------|---------|---------|--------------------------------------------------------------------
+npm.cmd : 
+ 
+Test Suites: 23 passed, 23 total
+Tests:       260 passed, 260 total
+Snapshots:   0 total
+Time:        407.888 s
+Ran all test suites.

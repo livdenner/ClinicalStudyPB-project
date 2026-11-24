@@ -125,6 +125,20 @@ Em 12/11/2026 o repositório tinha, além de `main`, `development` e da branch d
 | --- | --- | --- |
 | `test/3458-study-transitions` | Sem PR; um commit de 07/11/2026 com dois testes de estados do estudo na web, em conflito com a `development`. | Encerrada por decisão do Gerente em 12/11/2026. Os dois casos (estudo encerrado sem botões de edição ou transição; cancelar a confirmação sem enviar transição) passam para os testes do PBI-24, que reorganiza os botões dos estudos. |
 
+## Regressão RF01–RF11 e instalação limpa (T26.5)
+
+Em 24/11/2026, a `development` em **e975d92** (fim da Sprint 3) foi instalada do zero seguindo o [README principal](../../README.md#5-instalação-e-execução), com o mesmo procedimento da T16.13. Relatório completo: [tests/t26-5](tests/t26-5/README.md). Rastreabilidade por requisito: [regressão RF01–RF11](../../docs/tests/rastreabilidade-regressao-release1.md).
+
+| Item | Resultado |
+| --- | --- |
+| Instalação limpa | Clone novo, `.env` do modelo, `docker compose up -d --build`: Flyway aplicou **V1–V15**; Swagger UI e OpenAPI responderam 200. |
+| Seeds | Os quatro scripts executados duas vezes: saída 0 e contagens idênticas nas 14 tabelas, **sem duplicação**. |
+| Suítes | Backend 940 testes (JaCoCo 97,96% das linhas), web 513, mobile 260, E2E 24/24 com um worker; nenhuma falha de RF. |
+| Conferência manual | Login e logout, usuários, permissões, estudos, critérios, visitas previstas e estados (RF01–RF07): 12 verificações aprovadas. Aplicativo aberto em Android físico com login, estudos e visitas. |
+| Regressões | **Nenhuma** em RF01–RF11. |
+
+O README principal foi corrigido em quatro pontos encontrados na instalação: carga no Git Bash, finais de linha no clone do Windows, seção do aplicativo (login e `EXPO_PUBLIC_API_BASE_URL`) e roteiro e versões desatualizados. Fica recomendada como task prioritária a estabilização do login no E2E local (achado A3): com vários workers, ou no primeiro login após a stack subir, o teste excede o tempo de espera de 5 s.
+
 ## Correção documental da Release 1 (T26.1)
 
 Em 18/11/2026, o [README da Release 1](../release1/README.md) foi corrigido para refletir a versão realmente publicada. 
