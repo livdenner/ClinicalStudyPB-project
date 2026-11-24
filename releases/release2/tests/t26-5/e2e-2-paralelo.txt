@@ -1,0 +1,338 @@
+﻿
+> test:e2e
+> playwright test
+
+npm.cmd : [WebServer] (node:15488) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+ 
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:21604) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: 
+https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[WebServer] [PLUGIN_TIMINGS] JavaScript callbacks ran for 11.6s of this 13.6s build (85%).
+[WebServer] The slowest callbacks, timed inside each callback (the wait before a callback starts is excluded, the time 
+it awaits is included):
+[WebServer]   - plugin @tailwindcss/vite:generate:build transform (78%, 10.6s, 1 call)
+[WebServer] Additional callback time came from callbacks under 1s.
+[WebServer] See https://rolldown.rs/reference/InputOptions.checks#bundlertimings for more details.
+[WebServer] 
+[WebServer] (node:20944) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:15216) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 24 tests using 4 workers
+
+(node:2488) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:6272) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:15812) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:23364) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 [chromium] › e2e\auth\login.spec.ts:28:5 › login › rota protegida sem sessão redireciona para o login (15.3s)
+  x   4 [chromium] › e2e\auth\login.spec.ts:21:5 › login › CA-02.2: e-mail inexistente mostra a mesma mensagem genérica (17.5s)
+  x   2 [chromium] › e2e\auth\login.spec.ts:12:5 › login › CA-02.2: senha errada mostra mensagem genérica e mantém na tela de login (19.6s)
+  x   3 [chromium] › e2e\auth\login.spec.ts:6:5 › login › CA-02.1: pesquisador entra com credenciais válidas e vai para estudos (19.2s)
+(node:6248) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:21808) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:13344) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x   5 [chromium] › e2e\auth\tab-session.spec.ts:6:1 › T24.5 — Perfis por aba: login e logout não substituem a outra sessão no mesmo contexto (8.1s)
+(node:22824) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  x   9 [chromium] › e2e\flows\full-recruitment.spec.ts:289:5 › fluxo completo de recrutamento › recusa do candidato impede a inclusão (13.5s)
+  x   7 [chromium] › e2e\auth\tab-session.spec.ts:57:1 › T24.5 — Expiração por aba: o redirecionamento preserva a outra sessão (23.7s)
+  x   8 [chromium] › e2e\flows\full-recruitment.spec.ts:227:5 › fluxo completo de recrutamento › protocolo, candidato, elegibilidade, aceite do candidato e inclusão (23.0s)
+  x   6 [chromium] › e2e\auth\tab-session.spec.ts:91:1 › T24.5 — Perfis distintos: dois contextos continuam operando após logout em um deles (24.3s)
+(node:9804) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2996) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:14164) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:21648) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok 12 [chromium] › e2e\layout\cards-layout.spec.ts:125:5 › T24.3: estudos com nomes curtos e extensos ficam alinhados em 1366px (5.5s)
+  ok 13 [chromium] › e2e\layout\cards-layout.spec.ts:144:5 › T24.3: candidatos e participantes ficam alinhados em 1366px (6.3s)
+  ok 15 [chromium] › e2e\layout\cards-layout.spec.ts:125:5 › T24.3: estudos com nomes curtos e extensos ficam alinhados em 375px (2.9s)
+  ok 14 [chromium] › e2e\layout\cards-layout.spec.ts:188:5 › T24.3: aba de participantes adapta a listagem em 1366px (3.5s)
+  ok 17 [chromium] › e2e\layout\cards-layout.spec.ts:188:5 › T24.3: aba de participantes adapta a listagem em 375px (3.3s)
+  ok 16 [chromium] › e2e\layout\cards-layout.spec.ts:144:5 › T24.3: candidatos e participantes ficam alinhados em 375px (3.9s)
+  ok 19 [chromium] › e2e\participants\withdrawal.spec.ts:49:5 › T22.3: registra retirada em recrutamento sem liberar vaga (375px) (3.4s)
+  ok 18 [chromium] › e2e\participants\withdrawal.spec.ts:49:5 › T22.3: registra retirada em recrutamento sem liberar vaga (1366px) (3.7s)
+  ok 21 [chromium] › e2e\participants\withdrawal.spec.ts:49:5 › T22.3: registra retirada em participantes do estudo sem liberar vaga (375px) (4.1s)
+  ok 20 [chromium] › e2e\participants\withdrawal.spec.ts:49:5 › T22.3: registra retirada em participantes do estudo sem liberar vaga (1366px) (4.5s)
+  ok 22 [chromium] › e2e\smoke.spec.ts:3:1 › a aplicação carrega e leva o visitante à tela de login (1.5s)
+  ok 24 [chromium] › e2e\studies\create-study.spec.ts:39:5 › cadastro de estudo › valida campos obrigatórios antes de enviar (5.6s)
+  ok 23 [chromium] › e2e\studies\create-study.spec.ts:16:5 › cadastro de estudo › CA-04.1: pesquisador cadastra um estudo e ele persiste na listagem (8.9s)
+  ok 11 [chromium] › e2e\flows\reference-flow.spec.ts:70:5 › fluxo de referência: incluir, agendar e registrar desfecho › coordenador inclui o participante, agenda a visita e registra que foi realizada (37.5s)
+  ok 10 [chromium] › e2e\flows\reference-flow.spec.ts:151:5 › fluxo de referência: incluir, agendar e registrar desfecho › agendar a mesma visita duas vezes mostra o erro da API (39.4s)
+
+
+  1) [chromium] › e2e\auth\login.spec.ts:6:5 › login › CA-02.1: pesquisador entra com credenciais válidas e vai para estudos 
+
+    Error: expect(page).toHaveURL(expected) failed
+
+    Expected pattern: /\/estudos$/
+    Received string:  "http://localhost:4173/login"
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toHaveURL" with timeout 5000ms
+        12 × locator resolved to <html lang="pt-BR">…</html>
+           - unexpected value "http://localhost:4173/login"
+
+
+       at support\auth.ts:26
+
+      24 | export async function loginAsResearcher(page: Page) {
+      25 |     await submitLogin(page, accounts.researcher, DEMO_PASSWORD);
+    > 26 |     await expect(page).toHaveURL(/\/estudos$/);
+         |                        ^
+      27 |     await expect(page.getByRole("heading", { name: "Estudos clínicos" })).toBeVisible();
+      28 | }
+      29 |
+        at loginAsResearcher (<clone>\web\e2e\support\auth.ts:26:24)
+        at <clone>\web\e2e\auth\login.spec.ts:9:9
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\auth-login-login-CA-02-1-p-76e09--válidas-e-vai-para-estudos-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\auth-login-login-CA-02-1-p-76e09--válidas-e-vai-para-estudos-chromium\error-context.md
+
+  2) [chromium] › e2e\auth\login.spec.ts:12:5 › login › CA-02.2: senha errada mostra mensagem genérica e mantém na tela de login 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('alert')
+    Expected substring: "E-mail ou senha inválidos"
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toContainText" getByRole('alert') with timeout 5000ms
+      - waiting for getByRole('alert')
+
+
+      15 |         await submitLogin(page, accounts.researcher, "senha-errada");
+      16 |
+    > 17 |         await expect(page.getByRole("alert")).toContainText("E-mail ou senha inválidos");
+         |                                               ^
+      18 |         await expect(page).toHaveURL(/\/login$/);
+      19 |     });
+      20 |
+        at <clone>\web\e2e\auth\login.spec.ts:17:47
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\auth-login-login-CA-02-2-s-28c1d-a-e-mantém-na-tela-de-login-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\auth-login-login-CA-02-2-s-28c1d-a-e-mantém-na-tela-de-login-chromium\error-context.md
+
+  3) [chromium] › e2e\auth\login.spec.ts:21:5 › login › CA-02.2: e-mail inexistente mostra a mesma mensagem genérica 
+
+    Error: expect(locator).toContainText(expected) failed
+
+    Locator: getByRole('alert')
+    Expected substring: "E-mail ou senha inválidos"
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toContainText" getByRole('alert') with timeout 5000ms
+      - waiting for getByRole('alert')
+
+
+      22 |         await submitLogin(page, "ninguem@clinicalstudypb.test", DEMO_PASSWORD);
+      23 |
+    > 24 |         await expect(page.getByRole("alert")).toContainText("E-mail ou senha inválidos");
+         |                                               ^
+      25 |         await expect(page).toHaveURL(/\/login$/);
+      26 |     });
+      27 |
+        at <clone>\web\e2e\auth\login.spec.ts:24:47
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\auth-login-login-CA-02-2-e-6c81c-a-a-mesma-mensagem-genérica-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\auth-login-login-CA-02-2-e-6c81c-a-a-mesma-mensagem-genérica-chromium\error-context.md
+
+  4) [chromium] › e2e\auth\tab-session.spec.ts:6:1 › T24.5 — Perfis por aba: login e logout não substituem a outra sessão no mesmo contexto 
+
+    Error: expect(page).toHaveURL(expected) failed
+
+    Expected pattern: /\/usuarios$/
+    Received string:  "http://localhost:4173/login"
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toHaveURL" with timeout 5000ms
+        13 × locator resolved to <html lang="pt-BR">…</html>
+           - unexpected value "http://localhost:4173/login"
+
+
+       9 | }) => {
+      10 |     await submitLogin(admin, accounts.administrator, DEMO_PASSWORD);
+    > 11 |     await expect(admin).toHaveURL(/\/usuarios$/);
+         |                         ^
+      12 |     await expect(admin.getByRole("heading", { name: "Usuários e acessos" })).toBeVisible();
+      13 |
+      14 |     // As abas compartilham localStorage; cada uma deve manter sua própria sessão.
+        at <clone>\web\e2e\auth\tab-session.spec.ts:11:25
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\auth-tab-session-T24-5-—-P-d3b51-ra-sessão-no-mesmo-contexto-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\auth-tab-session-T24-5-—-P-d3b51-ra-sessão-no-mesmo-contexto-chromium\error-context.md
+
+  5) [chromium] › e2e\auth\tab-session.spec.ts:57:1 › T24.5 — Expiração por aba: o redirecionamento preserva a outra sessão 
+
+    Error: expect(page).toHaveURL(expected) failed
+
+    Expected pattern: /\/usuarios$/
+    Received string:  "http://localhost:4173/login"
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toHaveURL" with timeout 5000ms
+        12 × locator resolved to <html lang="pt-BR">…</html>
+           - unexpected value "http://localhost:4173/login"
+
+
+      60 | }) => {
+      61 |     await submitLogin(admin, accounts.administrator, DEMO_PASSWORD);
+    > 62 |     await expect(admin).toHaveURL(/\/usuarios$/);
+         |                         ^
+      63 |     const coordenador = await context.newPage();
+      64 |     try {
+      65 |         await submitLogin(coordenador, accounts.coordinator, DEMO_PASSWORD);
+        at <clone>\web\e2e\auth\tab-session.spec.ts:62:25
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\auth-tab-session-T24-5-—-E-83390-nto-preserva-a-outra-sessão-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\auth-tab-session-T24-5-—-E-83390-nto-preserva-a-outra-sessão-chromium\error-context.md
+
+  6) [chromium] › e2e\auth\tab-session.spec.ts:91:1 › T24.5 — Perfis distintos: dois contextos continuam operando após logout em um deles 
+
+    Error: expect(page).toHaveURL(expected) failed
+
+    Expected pattern: /\/usuarios$/
+    Received string:  "http://localhost:4173/login"
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toHaveURL" with timeout 5000ms
+        13 × locator resolved to <html lang="pt-BR">…</html>
+           - unexpected value "http://localhost:4173/login"
+
+
+      101 |             submitLogin(coordenador, accounts.coordinator, DEMO_PASSWORD),
+      102 |         ]);
+    > 103 |         await expect(admin).toHaveURL(/\/usuarios$/);
+          |                             ^
+      104 |         await expect(coordenador).toHaveURL(/\/recrutamento$/);
+      105 |         await Promise.all([admin.reload(), coordenador.reload()]);
+      106 |
+        at <clone>\web\e2e\auth\tab-session.spec.ts:103:29
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\auth-tab-session-T24-5-—-P-a3ab4-ndo-após-logout-em-um-deles-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    attachment #2: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\auth-tab-session-T24-5-—-P-a3ab4-ndo-após-logout-em-um-deles-chromium\test-failed-2.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\auth-tab-session-T24-5-—-P-a3ab4-ndo-após-logout-em-um-deles-chromium\error-context.md
+
+  7) [chromium] › e2e\flows\full-recruitment.spec.ts:227:5 › fluxo completo de recrutamento › protocolo, candidato, elegibilidade, aceite do candidato e inclusão › pesquisador cadastra o estudo 
+
+    Error: expect(page).toHaveURL(expected) failed
+
+    Expected pattern: /\/estudos$/
+    Received string:  "http://localhost:4173/login"
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toHaveURL" with timeout 5000ms
+        13 × locator resolved to <html lang="pt-BR">…</html>
+           - unexpected value "http://localhost:4173/login"
+
+
+       at support\auth.ts:26
+
+      24 | export async function loginAsResearcher(page: Page) {
+      25 |     await submitLogin(page, accounts.researcher, DEMO_PASSWORD);
+    > 26 |     await expect(page).toHaveURL(/\/estudos$/);
+         |                        ^
+      27 |     await expect(page.getByRole("heading", { name: "Estudos clínicos" })).toBeVisible();
+      28 | }
+      29 |
+        at loginAsResearcher (<clone>\web\e2e\support\auth.ts:26:24)
+        at <clone>\web\e2e\flows\full-recruitment.spec.ts:93:9
+        at prepareRecruitingStudy (<clone>\web\e2e\flows\full-recruitment.spec.ts:92:5)
+        at <clone>\web\e2e\flows\full-recruitment.spec.ts:234:25
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\flows-full-recruitment-flu-53886-ite-do-candidato-e-inclusão-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\flows-full-recruitment-flu-53886-ite-do-candidato-e-inclusão-chromium\error-context.md
+
+  8) [chromium] › e2e\flows\full-recruitment.spec.ts:289:5 › fluxo completo de recrutamento › recusa do candidato impede a inclusão › pesquisador cadastra o estudo 
+
+    Error: expect(page).toHaveURL(expected) failed
+
+    Expected pattern: /\/estudos$/
+    Received string:  "http://localhost:4173/login"
+    Timeout: 5000ms
+
+    Call log:
+      - Expect "toHaveURL" with timeout 5000ms
+        12 × locator resolved to <html lang="pt-BR">…</html>
+           - unexpected value "http://localhost:4173/login"
+
+
+       at support\auth.ts:26
+
+      24 | export async function loginAsResearcher(page: Page) {
+      25 |     await submitLogin(page, accounts.researcher, DEMO_PASSWORD);
+    > 26 |     await expect(page).toHaveURL(/\/estudos$/);
+         |                        ^
+      27 |     await expect(page.getByRole("heading", { name: "Estudos clínicos" })).toBeVisible();
+      28 | }
+      29 |
+        at loginAsResearcher (<clone>\web\e2e\support\auth.ts:26:24)
+        at <clone>\web\e2e\flows\full-recruitment.spec.ts:93:9
+        at prepareRecruitingStudy (<clone>\web\e2e\flows\full-recruitment.spec.ts:92:5)
+        at <clone>\web\e2e\flows\full-recruitment.spec.ts:292:25
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\flows-full-recruitment-flu-e783f-candidato-impede-a-inclusão-chromium\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\flows-full-recruitment-flu-e783f-candidato-impede-a-inclusão-chromium\error-context.md
+
+  8 failed
+    [chromium] › e2e\auth\login.spec.ts:6:5 › login › CA-02.1: pesquisador entra com credenciais válidas e vai para estudos 
+    [chromium] › e2e\auth\login.spec.ts:12:5 › login › CA-02.2: senha errada mostra mensagem genérica e mantém na tela de login 
+    [chromium] › e2e\auth\login.spec.ts:21:5 › login › CA-02.2: e-mail inexistente mostra a mesma mensagem genérica 
+    [chromium] › e2e\auth\tab-session.spec.ts:6:1 › T24.5 — Perfis por aba: login e logout não substituem a outra sessão no mesmo contexto 
+    [chromium] › e2e\auth\tab-session.spec.ts:57:1 › T24.5 — Expiração por aba: o redirecionamento preserva a outra sessão 
+    [chromium] › e2e\auth\tab-session.spec.ts:91:1 › T24.5 — Perfis distintos: dois contextos continuam operando após logout em um deles 
+    [chromium] › e2e\flows\full-recruitment.spec.ts:227:5 › fluxo completo de recrutamento › protocolo, candidato, elegibilidade, aceite do candidato e inclusão 
+    [chromium] › e2e\flows\full-recruitment.spec.ts:289:5 › fluxo completo de recrutamento › recusa do candidato impede a inclusão 
+  16 passed (3.3m)

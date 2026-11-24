@@ -64,7 +64,7 @@ A [galeria de capturas](releases/release1/images/README.md) contém sucesso e er
 | Springdoc / OpenAPI | 2.8.17 / contrato em `backend/openapi.yaml`                       |
 | Web                 | React 19.3.1, TypeScript 6.0.3, Vite 8.3.5                        |
 | Interface web       | HeroUI 3.2.6, Tailwind CSS 4.3.3, Lucide React 1.61.0             |
-| Mobile              | Expo 58.0.19, React Native 0.88.0, React 19.3.0, TypeScript 6.0.3 |
+| Mobile              | Expo 58.0.26, React Native 0.88.1, React 19.3.0, TypeScript 6.0.3 |
 | Testes              | JaCoCo 0.8.13, Vitest 5.0.5, Playwright 1.64.1, Jest 30.5.2       |
 | Node.js / npm       | Node 22 no CI; validação com 22.23.4 / npm 10.9.9                 |
 | Docker / Compose    | Validação com 29.9.2 / 5.6.1                                      |
@@ -79,6 +79,8 @@ Instale Git, Docker com Compose e Node.js 22 com npm. Para testes ou execução 
 git clone https://github.com/livdenner/ClinicalStudyPB-project.git
 cd ClinicalStudyPB-project
 ```
+
+No Windows, o Git costuma vir com `core.autocrlf=true` e converte os arquivos para CRLF; como o Prettier do projeto exige LF, `npm run format:check` falharia em todos os arquivos. Clone com `git clone -c core.autocrlf=false https://github.com/livdenner/ClinicalStudyPB-project.git` para manter os finais de linha do repositório. O `clone` traz a `main`, que contém a última versão publicada; para validar o desenvolvimento em curso, use `git checkout development`.
 
 Execute os comandos na pasta indicada. Siga a ordem: banco/backend, carga fictícia, Swagger, web e mobile. O `npm test` da raiz não executa os testes das três aplicações. O `.env` é local; não copie bancos, `node_modules` ou `.env` de outra instalação para validar uma instalação limpa.
 
@@ -134,6 +136,8 @@ docker compose exec db psql -U clinicalstudypb -d clinicalstudypb -v ON_ERROR_ST
 ```
 
 Se você alterou `DB_USER`, use o seu valor no lugar de `clinicalstudypb` após `-U`.
+
+No Git Bash do Windows, o shell converte `/tmp/seed/...` em um caminho do Windows e o `psql` não encontra os arquivos. Use o PowerShell ou prefixe o segundo comando com `MSYS_NO_PATHCONV=1`. Os scripts são repetíveis: executar a carga de novo não duplica registros.
 
 **5. Pare a stack:**
 
@@ -193,12 +197,12 @@ O roteiro abaixo usa apenas a carga, sem preparar dados à mão. Onde a tela ain
 | Passo | Conta | Onde | O que fazer e conferir |
 | --- | --- | --- | --- |
 | 1 | Coordenador | Web, **Recrutamento** | Na vacina, confira as situações Convidado, Aceitou, Recusou, Aguardando decisão e Incluído. Em **Higiene do sono**, inclua Vera ou Wilson na última vaga. A segunda inclusão é recusada por falta de vaga. |
-| 2 | `convite@…` | Aplicativo (primeiro acesso) e Swagger | No app, faça o primeiro acesso com o código `CONVITE-DEMO-2026` e defina a senha. No Swagger, use `GET /api/me/invitations` e `POST /api/me/invitations/{candidateId}/decision`. Na web, use **Atualizar lista** e veja a nova situação. |
-| 3 | `participante@…` | Swagger (telas do app em andamento) | `GET /api/me/studies` mostra o estudo de diabetes (RF17). `GET /api/me/visits` mostra uma visita próxima e uma realizada (RF18). `POST /api/me/invitations/{candidateId}/decision` decide o convite da vacina. |
+| 2 | `convite@…` | Aplicativo | Em **Primeiro acesso? → Ativar conta**, informe o código `CONVITE-DEMO-2026` e defina a senha. Em **Ver convites**, aceite o convite da vacina (RF10). Na web, use **Atualizar lista** e veja a nova situação. Pela API, são `GET /api/me/invitations` e `POST /api/me/invitations/{candidateId}/decision`. |
+| 3 | `participante@…` | Aplicativo | **Ver estudos** mostra o estudo de diabetes (RF17). **Ver visitas** mostra uma visita em **Próximas** e uma em **Histórico** (RF18). Em **Ver convites**, recuse o convite da vacina. Pela API, são `GET /api/me/studies` e `GET /api/me/visits`. |
 | 4 | Coordenador | Web, **Visitas** | No estudo de diabetes, filtre por **Situação** e confira os quatro desfechos. Registre o desfecho da visita remarcada de João. A visita de Lúcia aparece cancelada pela retirada. Pela API, o mesmo filtro é `GET /api/studies/{studyId}/visits?status=…`, e o registro é `POST …/visits/{visitId}/outcome` com `If-Match`. |
 | 5 | Pesquisador | Web, **Visitas** | Em **Ver resultados**, confira os resultados da avaliação inicial de Irene. Em **Registrar resultados**, registre os da visita realizada no passo 4. Pela API, são `GET …/visits/{visitId}/results` e `PUT …/results/{activityId}`. |
 
-O histórico do participante (RF15) já está na API desde a T21.1 (PR #103). No Swagger, `GET …/participants/{participantId}/history` mostra, para Lúcia, a inclusão, as visitas com resultados e a retirada. A tela da web para esse histórico ainda está em revisão no PR #119.
+O histórico do participante (RF15) está na web desde o PR #119: em **Estudos clínicos**, abra o estudo de diabetes, aba **Participantes**, e use **Ver histórico** para Lúcia, que mostra as visitas com resultados e a retirada. Pela API, é `GET …/participants/{participantId}/history`.
 
 `DemoSeedIntegrationTest` executa os quatro scripts em PostgreSQL real e confere três pontos: a repetição sem duplicar dados, as regras da API (resultado só em visita realizada, retirada cancelando as visitas futuras e decisão com autoria do candidato) e a leitura pelos endpoints do coordenador e do aplicativo.
 
@@ -207,9 +211,9 @@ O histórico do participante (RF15) já está na API desde a T21.1 (PR #103). No
 | Arquivo modelo                             | Variável                   | Uso                                                                                                                                                                                      |
 | ------------------------------------------ | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [web/.env.example](web/.env.example)       | `VITE_API_BASE_URL`        | Deixe vazia em desenvolvimento para usar `/api` pelo proxy Vite; para outra API, informe a origem sem `/api` (ex.: `http://localhost:8080`), pois os serviços já acrescentam `/api/...`. |
-| [mobile/.env.example](mobile/.env.example) | `EXPO_PUBLIC_API_BASE_URL` | Base da API para a futura integração; exemplo Android emulador: `http://10.0.2.2:8080/api`. No telefone, use o IP da máquina na rede.                                                    |
+| [mobile/.env.example](mobile/.env.example) | `EXPO_PUBLIC_API_BASE_URL` | Obrigatória para o login e as telas do aplicativo. Emulador Android: `http://10.0.2.2:8080/api`; no telefone, use o IP da máquina na rede (ex.: `http://192.168.0.10:8080/api`). |
 
-São configurações públicas do aplicativo cliente: nunca coloque chaves privadas ou senhas nessas variáveis. Os modelos ficam versionados; arquivos `.env` e a chave JWT ficam fora do Git. O mobile inicial não precisa de conexão com a API para navegar.
+São configurações públicas do aplicativo cliente: nunca coloque chaves privadas ou senhas nessas variáveis. Os modelos ficam versionados; arquivos `.env` e a chave JWT ficam fora do Git.
 
 ### Aplicação web
 
@@ -225,9 +229,9 @@ Mantenha o terminal aberto e acesse o endereço exibido pelo Vite, normalmente `
 
 No PowerShell, use `npm.cmd` se a política de execução impedir o uso de `npm.ps1`. Os comandos de validação estão na [seção de testes](#6-testes-cobertura-e-qualidade).
 
-### Aplicativo mobile inicial
+### Aplicativo mobile
 
-Abra outro terminal na raiz do repositório:
+Abra outro terminal na raiz do repositório. Crie `mobile/.env` a partir de `mobile/.env.example` e informe `EXPO_PUBLIC_API_BASE_URL` conforme a [tabela de variáveis](#variáveis-das-aplicações-cliente); sem ela, o login não alcança a API.
 
 ```bash
 cd mobile
@@ -237,7 +241,7 @@ npm start
 
 Para telefone Android, conecte-o à mesma rede Wi-Fi do computador, abra o Expo Go e leia o QR code exibido pelo Expo. O Expo Go deve ser compatível com o Expo SDK 58 usado pelo projeto. Para emulador, inicie o dispositivo no Android Studio e execute `npm run android` na pasta `mobile/`, ou pressione `a` no terminal do Expo.
 
-Confira a tela **ClinicalStudyPB**, toque em **Ver estudos** e depois em **Voltar ao início**. Essa é a navegação provisória da Release 1: não há login, sessão ou integração de negócio mobile; o login integrado está previsto para a Sprint 3. Não é necessário configurar a URL da API para abrir essas telas.
+Entre com `participante@clinicalstudypb.test` e a senha de demonstração e confira **Ver estudos** e **Ver visitas**. O primeiro acesso de `convite@…` e a decisão de convite estão nos passos 2 e 3 do roteiro acima.
 
 Para configuração de API, alternativas de conexão e passagem de contexto, consulte [mobile/README.md](mobile/README.md). Execute também os [testes e a verificação de compatibilidade](#6-testes-cobertura-e-qualidade).
 
@@ -374,7 +378,7 @@ npm run test:e2e:report
 npm run e2e:stack:down
 ```
 
-No Linux, se faltarem dependências do navegador, use `npx playwright install --with-deps chromium`. O [guia de contribuição](CONTRIBUTING.md#testes-e2e-playwright) detalha o Playwright e os padrões de qualidade. A stack E2E tem banco descartável e backend próprios; não usa o volume do ambiente de desenvolvimento. O Playwright compila e serve a web com proxy para essa API. Os relatórios ficam em `web/playwright-report/` e `web/test-results/`.
+Rode `npm run test:e2e -- --workers=1`, como a CI. Com vários workers em paralelo, os logins podem passar do tempo de espera de 5 s, sobretudo logo após `e2e:stack:up`, quando o primeiro login leva mais de 10 s; a [T26.5](releases/release2/tests/t26-5/README.md#execuções-do-e2e) registra esse comportamento. No Linux, se faltarem dependências do navegador, use `npx playwright install --with-deps chromium`. O [guia de contribuição](CONTRIBUTING.md#testes-e2e-playwright) detalha o Playwright e os padrões de qualidade. A stack E2E tem banco descartável e backend próprios; não usa o volume do ambiente de desenvolvimento. O Playwright compila e serve a web com proxy para essa API. Os relatórios ficam em `web/playwright-report/` e `web/test-results/`.
 
 Na pasta `mobile/`:
 

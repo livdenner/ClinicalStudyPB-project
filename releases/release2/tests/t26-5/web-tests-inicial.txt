@@ -1,0 +1,1274 @@
+﻿
+> test:coverage
+> vitest run --coverage
+
+
+ RUN  v5.0.5 <clone>/web
+      Coverage enabled with v8
+
+npm.cmd : stderr | src/components/visitas/VisitasParticipante.test.tsx > RF12 — agenda por participante (T18.5) > 
+RF12-AP01: envio válido usa POST do estudo e participante corretos com JSON e token
+ 
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/usuarios/ModalUsuario.test.tsx > ModalUsuario > bloqueia o cadastro quando os campos 
+obrigatórios estão vazios
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/usuarios/ModalUsuario.test.tsx > ModalUsuario > bloqueia o cadastro quando os campos 
+obrigatórios estão vazios
+An update to ForwardRef(TextField) inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at 
+https://react.dev/link/wrap-tests-with-act
+An update to ForwardRef(TextField) inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at 
+https://react.dev/link/wrap-tests-with-act
+An update to ForwardRef(Input) inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at 
+https://react.dev/link/wrap-tests-with-act
+An update to ForwardRef(Input) inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at 
+https://react.dev/link/wrap-tests-with-act
+An update to ForwardRef(TextField) inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at 
+https://react.dev/link/wrap-tests-with-act
+An update to ForwardRef(TextField) inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at 
+https://react.dev/link/wrap-tests-with-act
+An update to ForwardRef(TextField) inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at 
+https://react.dev/link/wrap-tests-with-act
+An update to ForwardRef(TextField) inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at 
+https://react.dev/link/wrap-tests-with-act
+An update to ForwardRef(Input) inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at 
+https://react.dev/link/wrap-tests-with-act
+
+stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > valida os campos obrigatórios no cadastro e 
+direciona o foco para o nome
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/usuarios/ModalUsuario.test.tsx > ModalUsuario > rejeita nome e senha formados apenas por 
+espaços
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/pages/visitas/visitas.test.tsx > RF13 — desfechos e atualização da lista (T19.4) > RF13-P07: conflito de 
+versão exige nova confirmação e usa a versão atualizada da visita
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/estudos/ParticipantesEstudo.test.tsx > não envia retirada sem motivo para a API
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/visitas/VisitasParticipante.test.tsx > RF12 — agenda por participante (T18.5) > RF12-AP02: 
+criação aparece na lista existente em ordem cronológica sem nova consulta
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > envia os dados normalizados e preserva o 
+responsável na edição
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/usuarios/ModalUsuario.test.tsx > ModalUsuario > mostra e oculta a senha sem alterar o valor 
+digitado
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/estudos/ParticipantesEstudo.test.tsx > fecha a confirmação sem alterar o participante ao voltar
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/pages/estudos/visitas-previstas.test.tsx > visitas previstas e atividades — RF06 > cadastra após 
+adicionar e remover atividades e atualiza a lista pela API
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > impede salvar o limite inválido 0
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/usuarios/ModalUsuario.test.tsx > ModalUsuario > envia o perfil selecionado e o nome sem 
+espaços ao cadastrar
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/pages/visitas/visitas.test.tsx > RF13 — desfechos e atualização da lista (T19.4) > RF13-P01: confirmar 
+Realizada atualiza o selo sem recarregar a página
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/visitas/VisitasParticipante.test.tsx > RF12 — agenda por participante (T18.5) > RF12-AP04: 
+novo agendamento fica visível mesmo se havia outro filtro selecionado
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/visitas/VisitasParticipante.test.tsx > RF12 — agenda por participante (T18.5) > RF12-AP05: 
+VISIT_ALREADY_SCHEDULED mantém mensagem literal, formulário e campos sem inserir registro
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > impede salvar o limite inválido -1
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/estudos/ParticipantesEstudo.test.tsx > registra a retirada no estudo, atualiza o selo e remove 
+a ação sem consultar a lista novamente
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/pages/visitas/visitas.test.tsx > RF13 — desfechos e atualização da lista (T19.4) > RF13-P01: confirmar 
+Ausente atualiza o selo sem recarregar a página
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/visitas/VisitasParticipante.test.tsx > RF12 — agenda por participante (T18.5) > RF12-AP05: 
+VISIT_DATE_NOT_FUTURE mantém mensagem literal, formulário e campos sem inserir registro
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > impede salvar o limite inválido 1.5
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/usuarios/ModalUsuario.test.tsx > ModalUsuario > preenche a edição sem oferecer alteração de 
+senha
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/usuarios/ModalUsuario.test.tsx > ModalUsuario > chama onFechar ao acionar Cancelar sem salvar
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/pages/estudos/visitas-previstas.test.tsx > visitas previstas e atividades — RF06 > lista atividades e 
+edita durante o recrutamento preservando o ID da atividade restante
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/pages/visitas/visitas.test.tsx > RF13 — desfechos e atualização da lista (T19.4) > RF13-P01: confirmar 
+Cancelar atualiza o selo sem recarregar a página
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/usuarios/ModalUsuario.test.tsx > ModalUsuario > chama onFechar ao acionar Fechar modal sem 
+salvar
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/usuarios/ModalUsuario.test.tsx > ModalUsuario > bloqueia os controles e impede envios 
+repetidos durante o cadastro
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > impede salvar o limite inválido 1000001
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/pages/visitas/visitas.test.tsx > RF13 — desfechos e atualização da lista (T19.4) > RF13-P02: conflito 409 
+consulta a visita atual e remove as ações quando já finalizada
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/pages/estudos/visitas-previstas.test.tsx > visitas previstas e atividades — RF06 > bloqueia visita sem 
+data e atividade sem descrição antes de enviar
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > aceita o limite máximo de 1.000.000 participantes
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/usuarios/ModalUsuario.test.tsx > ModalUsuario > informa sessão expirada e mantém os dados para 
+nova tentativa
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+ ✓ src/pages/estudos/useRequisitosTransicao.test.tsx (15 tests) 20012ms
+   ✓ bloqueia abrir recrutamento e explica os requisitos ausentes: [ 'critério de inclusão', …(2) ] 5393ms
+   ✓ bloqueia abrir recrutamento e explica os requisitos ausentes: [ 'critério de inclusão' ] 1384ms
+   ✓ bloqueia abrir recrutamento e explica os requisitos ausentes: [ 'critério de exclusão' ] 1308ms
+   ✓ bloqueia abrir recrutamento e explica os requisitos ausentes: [ 'visita prevista com atividade' ] 1027ms
+   ✓ libera Abrir recrutamento quando os requisitos são atendidos 2261ms
+   ✓ libera Iniciar execução quando os requisitos são atendidos 1378ms
+   ✓ libera Encerrar estudo quando os requisitos são atendidos 909ms
+   ✓ bloqueia Iniciar execução consultando somente os dados desse estado 1052ms
+   ✓ bloqueia Encerrar estudo consultando somente os dados desse estado 852ms
+   ✓ mantém cancelar e voltar disponíveis durante a consulta e após erro; permite tentar novamente 1324ms
+   ✓ refaz a consulta ao reabrir o menu e após atualização do protocolo 2861ms
+ ✓ src/components/estudos/ParticipantesEstudo.test.tsx (16 tests) 19505ms
+   ✓ não envia retirada sem motivo para a API 6483ms
+   ✓ fecha a confirmação sem alterar o participante ao voltar 1592ms
+   ✓ abre o histórico pela lista e retorna sem recarregar os participantes 1953ms
+   ✓ consulta apenas o estudo solicitado e diferencia participantes ativos e retirados 983ms
+   ✓ recupera uma consulta após erro usando Tentar novamente 418ms
+   ✓ registra a retirada no estudo, atualiza o selo e remove a ação sem consultar a lista novamente 2425ms
+   ✓ não oferece retirada em estudo CLOSED 538ms
+   ✓ não oferece retirada em estudo CANCELLED 417ms
+   ✓ não oferece retirada ao perfil RESEARCHER 512ms
+   ✓ não oferece retirada ao perfil ADMINISTRATOR 844ms
+   ✓ não oferece retirada ao perfil PARTICIPANT 607ms
+   ✓ oferece retirada só ao participante ativo no estado PLANNING 847ms
+   ✓ oferece retirada só ao participante ativo no estado RECRUITMENT 663ms
+   ✓ oferece retirada só ao participante ativo no estado EXECUTION 805ms
+stderr | src/pages/estudos/visitas-previstas.test.tsx > visitas previstas e atividades — RF06 > bloqueia visita sem 
+data e atividade sem descrição antes de enviar
+An update to ForwardRef(TextArea) inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at 
+https://react.dev/link/wrap-tests-with-act
+
+stderr | src/components/usuarios/ModalUsuario.test.tsx > usa Pesquisador como padrão válido e não oferece Participante
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+ ✓ src/components/visitas/VisitasParticipante.test.tsx (16 tests) 22919ms
+   ✓ RF12 — agenda por participante (T18.5) (16)
+     ✓ RF12-AP01: envio válido usa POST do estudo e participante corretos com JSON e token 7753ms
+     ✓ RF12-AP02: criação aparece na lista existente em ordem cronológica sem nova consulta 3655ms
+     ✓ RF12-AP03: filtro de situação apresenta somente os agendamentos correspondentes 1990ms
+     ✓ RF12-AP04: novo agendamento fica visível mesmo se havia outro filtro selecionado 1650ms
+     ✓ RF12-AP05: VISIT_ALREADY_SCHEDULED mantém mensagem literal, formulário e campos sem inserir registro 1310ms
+     ✓ RF12-AP05: VISIT_DATE_NOT_FUTURE mantém mensagem literal, formulário e campos sem inserir registro 1638ms
+     ✓ RF12-AP06: participante retirado permite consulta sem ação ou formulário de agendamento 567ms
+     ✓ RF12-AP07: pesquisador consulta a agenda sem ação de criar agendamento 455ms
+     ✓ RF12-AP08: estudo CANCELLED não oferece agendamento 382ms
+     ✓ RF12-AP10: erro da consulta é exibido literalmente e a lista pode ser consultada de novo 872ms
+     ✓ RF12-AP11: atualizar visitas reflete a situação nova recebida pela API 1196ms
+     ✓ RF12-AP13: voltar retorna ao painel de participantes 372ms
+stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > aceita limite mínimo e datas de início e término 
+iguais
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/pages/estudos/visitas-previstas.test.tsx > visitas previstas e atividades — RF06 > apresenta o erro HTTP 
+no campo e conserva os dados digitados
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > aceita limite mínimo e datas de início e término 
+iguais
+An update to ModalEstudo inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() => {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you're testing the behavior the user would see in the browser. Learn more at 
+https://react.dev/link/wrap-tests-with-act
+
+stderr | src/pages/visitas/visitas.test.tsx > RF13 — desfechos e atualização da lista (T19.4) > RF13-P03: filtros de 
+situação e participante são enviados à API e mantidos após o desfecho
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > chama onFechar ao acionar Cancelar sem enviar 
+dados
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/usuarios/ModalUsuario.test.tsx > bloqueia perfil e situação da própria conta e permite editar 
+seus dados
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > chama onFechar ao acionar Fechar modal sem enviar 
+dados
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/usuarios/ModalUsuario.test.tsx > mantém os controles habilitados para outro administrador
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > bloqueia campos, calendários e fechamento 
+enquanto salva
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+ ✓ src/components/usuarios/ModalUsuario.test.tsx (12 tests) 26219ms
+   ✓ ModalUsuario (9)
+     ✓ bloqueia o cadastro quando os campos obrigatórios estão vazios 6364ms
+     ✓ rejeita nome e senha formados apenas por espaços 2769ms
+     ✓ mostra e oculta a senha sem alterar o valor digitado 2913ms
+     ✓ envia o perfil selecionado e o nome sem espaços ao cadastrar 4277ms
+     ✓ preenche a edição sem oferecer alteração de senha 860ms
+     ✓ chama onFechar ao acionar Cancelar sem salvar 749ms
+     ✓ chama onFechar ao acionar Fechar modal sem salvar 894ms
+     ✓ bloqueia os controles e impede envios repetidos durante o cadastro 2546ms
+     ✓ informa sessão expirada e mantém os dados para nova tentativa 1155ms
+   ✓ usa Pesquisador como padrão válido e não oferece Participante 1546ms
+   ✓ bloqueia perfil e situação da própria conta e permite editar seus dados 1280ms
+   ✓ mantém os controles habilitados para outro administrador 794ms
+stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > mostra o erro de campo da API sem duplicar o 
+resumo e preserva os valores
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/pages/estudos/visitas-previstas.test.tsx > visitas previstas e atividades — RF06 > exclui somente após 
+confirmação e recarrega a lista
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/pages/estudos/visitas-previstas.test.tsx > visitas previstas e atividades — RF06 > exclui somente após 
+confirmação e recarrega a lista
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+ ✓ src/pages/visitas/visitas.test.tsx (12 tests) 27332ms
+   ✓ RF13 — desfechos e atualização da lista (T19.4) (12)
+     ✓ RF13-P07: conflito de versão exige nova confirmação e usa a versão atualizada da visita 9106ms
+     ✓ RF13-P01: confirmar Realizada atualiza o selo sem recarregar a página 4263ms
+     ✓ RF13-P01: confirmar Ausente atualiza o selo sem recarregar a página 2247ms
+     ✓ RF13-P01: confirmar Cancelar atualiza o selo sem recarregar a página 2902ms
+     ✓ RF13-P02: conflito 409 consulta a visita atual e remove as ações quando já finalizada 2977ms
+     ✓ RF13-P03: filtros de situação e participante são enviados à API e mantidos após o desfecho 2199ms
+     ✓ RF13-P04: estudo CLOSED mantém consulta sem ações de desfecho 570ms
+     ✓ RF13-P04: estudo CANCELLED mantém consulta sem ações de desfecho 657ms
+     ✓ RF13-P05: pesquisador consulta visitas sem ações de desfecho 605ms
+     ✓ RF13-P06: erro na listagem é literal e pode ser recuperado 693ms
+     ✓ RF14-P01: RESEARCHER recebe a ação de resultados adequada 559ms
+     ✓ RF14-P01: COORDINATOR recebe a ação de resultados adequada 450ms
+stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > trata HTTP 401 e mantém o formulário disponível
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+ ✓ src/pages/estudos/visitas-previstas.test.tsx (10 tests) 26649ms
+   ✓ visitas previstas e atividades — RF06 (10)
+     ✓ cadastra após adicionar e remover atividades e atualiza a lista pela API 12696ms
+     ✓ lista atividades e edita durante o recrutamento preservando o ID da atividade restante 4859ms
+     ✓ bloqueia visita sem data e atividade sem descrição antes de enviar 2402ms
+     ✓ apresenta o erro HTTP no campo e conserva os dados digitados 2318ms
+     ✓ permite apenas consulta para execução 599ms
+     ✓ permite apenas consulta para encerrado 579ms
+     ✓ permite apenas consulta para coordenador 779ms
+     ✓ permite apenas consulta para outro pesquisador 419ms
+     ✓ permite apenas consulta para cancelado 404ms
+     ✓ exclui somente após confirmação e recarrega a lista 1549ms
+stderr | src/components/estudos/ModalEstudo.test.tsx > ModalEstudo > trata HTTP 403 e mantém o formulário disponível
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+ ✓ src/components/estudos/ModalEstudo.test.tsx (14 tests) 32601ms
+   ✓ ModalEstudo (14)
+     ✓ valida os campos obrigatórios no cadastro e direciona o foco para o nome 8502ms
+     ✓ envia os dados normalizados e preserva o responsável na edição 3244ms
+     ✓ impede salvar o limite inválido 0 2367ms
+     ✓ impede salvar o limite inválido -1 1785ms
+     ✓ impede salvar o limite inválido 1.5 2509ms
+     ✓ impede salvar o limite inválido 1000001 2635ms
+     ✓ aceita o limite máximo de 1.000.000 participantes 1758ms
+     ✓ aceita limite mínimo e datas de início e término iguais 976ms
+     ✓ chama onFechar ao acionar Cancelar sem enviar dados 721ms
+     ✓ chama onFechar ao acionar Fechar modal sem enviar dados 893ms
+     ✓ bloqueia campos, calendários e fechamento enquanto salva 2027ms
+     ✓ mostra o erro de campo da API sem duplicar o resumo e preserva os valores 1466ms
+     ✓ trata HTTP 401 e mantém o formulário disponível 1500ms
+     ✓ trata HTTP 403 e mantém o formulário disponível 2179ms
+ ✓ src/components/visitas/FormularioResultadoAtividade.test.tsx (11 tests) 3096ms
+   ✓ RF14 — campos do resultado (T20.5) (11)
+     ✓ RF14-F01: resultado obrigatório bloqueia gravação e recebe foco 1418ms
+stderr | src/components/visitas/ModalAgendarVisita.test.tsx > RF12 — formulário de agendamento (T18.5) > RF12-AG01: 
+campos obrigatórios impedem envio e recebem indicação de erro
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/visitas/ModalDesfechoVisita.test.tsx > RF13 — confirmação do desfecho (T19.4) > RF13-D01: 
+cancelar com justificativa vazia () é bloqueado
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/visitas/ModalDesfechoVisita.test.tsx > RF13 — confirmação do desfecho (T19.4) > RF13-D01: 
+cancelar com justificativa vazia (   ) é bloqueado
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/visitas/ModalAgendarVisita.test.tsx > RF12 — formulário de agendamento (T18.5) > RF12-AG02: 
+envio válido usa o identificador da visita e o instante de Fortaleza em ISO
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/visitas/ModalDesfechoVisita.test.tsx > RF13 — confirmação do desfecho (T19.4) > RF13-D02: 
+justificativa acima de 500 caracteres não é enviada
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/visitas/ModalDesfechoVisita.test.tsx > RF13 — confirmação do desfecho (T19.4) > RF13-D03: 
+cancelar envia justificativa aparada com a versão da visita
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C01: 
+obrigatórios destacam os quatro campos e focam o primeiro sem HTTP
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/visitas/ModalAgendarVisita.test.tsx > RF12 — formulário de agendamento (T18.5) > RF12-AG03: 
+mensagem HTTP 400 é exibida literalmente
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/visitas/ModalDesfechoVisita.test.tsx > RF13 — confirmação do desfecho (T19.4) > RF13-D04: 
+desfecho DONE só envia após confirmação explícita
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C01: 
+motivo vazio não envia POST
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+ ✓ src/components/candidatos/PainelParticipantesVagas.test.tsx (9 tests) 9762ms
+   ✓ Participantes e vagas (RF11) (5)
+     ✓ mostra o estudo sem participantes e com todas as vagas livres 1139ms
+     ✓ lista os participantes e desconta as vagas ocupadas 409ms
+     ✓ avisa quando o limite de vagas foi atingido 428ms
+     ✓ mostra o carregamento 377ms
+     ✓ mostra o erro e permite tentar novamente 828ms
+   ✓ RF12 — ações da agenda no painel (T18.5) (4)
+     ✓ T21.2/T22.3: reúne quatro ações e preserva as duas consultas para retirados 2827ms
+     ✓ RF12-PV01: participante ativo oferece agendamento para o participante selecionado 747ms
+     ✓ RF12-PV02: participante retirado não recebe ação de agendar e mantém consulta do histórico 2045ms
+     ✓ RF12-PV03: ausência de autorização para agendar mantém somente a consulta 935ms
+stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C02: 
+bloqueia e-mail malformado antes do cadastro
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/visitas/ModalDesfechoVisita.test.tsx > RF13 — confirmação do desfecho (T19.4) > RF13-D04: 
+desfecho ABSENT só envia após confirmação explícita
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C01: 
+motivo espaços não envia POST
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/visitas/ModalAgendarVisita.test.tsx > RF12 — formulário de agendamento (T18.5) > RF12-AG03: 
+mensagem HTTP 409 é exibida literalmente
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/visitas/ModalDesfechoVisita.test.tsx > RF13 — confirmação do desfecho (T19.4) > RF13-D05: erro 
+400 e erro de campo são literais e mantêm o formulário
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+ ✓ src/components/estudos/HistoricoParticipante.test.tsx (8 tests) 17040ms
+   ✓ renderiza histórico completo com visitas, datas, desfechos e resultados sob demanda 6380ms
+   ✓ orienta quando o histórico está vazio 2300ms
+   ✓ exibe a mensagem de erro da API e a opção de tentar novamente 1062ms
+   ✓ recupera o histórico ao tentar novamente após falha 1641ms
+   ✓ preserva a ordem cronológica recebida da API, independentemente dos IDs 1828ms
+   ✓ apresenta a retirada como último evento mesmo com visita futura cancelada 2171ms
+   ✓ informa o carregamento e cancela a consulta ao sair do histórico 826ms
+   ✓ permite voltar à lista pelo botão de navegação 809ms
+stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C01: 
+motivo acima de 500 não envia POST
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/visitas/ModalAgendarVisita.test.tsx > RF12 — formulário de agendamento (T18.5) > RF12-AG04: 
+conflito mantém formulário aberto e preserva visita e data preenchidas
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C02: 
+bloqueia telefone com letras antes do cadastro
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/visitas/ModalDesfechoVisita.test.tsx > RF13 — confirmação do desfecho (T19.4) > RF13-D06: 
+conflito 409 exibe mensagem e consulta sem repetir a gravação
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C02: 
+aceita limite mínimo do motivo sem espaços externos
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+ ✓ src/components/candidatos/CardCandidato.test.tsx (27 tests) 14089ms
+   ✓ RF11-CARD01: bloqueia a inclusão e explica estudo fora do recrutamento 6278ms
+   ✓ RF11-CARD01: bloqueia a inclusão e explica sem vagas 640ms
+   ✓ RF08-CARD02 / T24.5: INVITED mantém a cor semântica e as ações permitidas 588ms
+   ✓ RF08-CARD02 / T24.5: CONSENT_PENDING mantém a cor semântica e as ações permitidas 324ms
+   ✓ RF08-CARD02 / T24.5: GRANTED mantém a cor semântica e as ações permitidas 515ms
+   ✓ RF08-CARD02 / T24.5: DECLINED mantém a cor semântica e as ações permitidas 755ms
+   ✓ T24.5 — Elegibilidade: PENDING usa a cor documentada 431ms
+   ✓ RF11-CARD03: não oferece inclusão sem as pré-condições do candidato ({ eligibilityStatus: 'ELIGIBLE', …(1) }) 456ms
+   ✓ RF08-CARD04: encaminha o candidato original nas ações sem acrescentar dados de apresentação 1232ms
+   ✓ RF11-CARD07: não presume recrutamento quando o contexto do estudo não foi informado 681ms
+   ✓ RF11-CARD08: consentimento e elegibilidade não sobrescrevem situação INCLUDED da API 492ms
+stderr | src/components/visitas/ModalAgendarVisita.test.tsx > RF12 — formulário de agendamento (T18.5) > RF12-AG05: 
+erros de campo da API ficam associados aos respectivos controles
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/visitas/ModalDesfechoVisita.test.tsx > RF13 — confirmação do desfecho (T19.4) > RF13-D07: 
+falha ao atualizar mantém confirmação bloqueada até recuperação
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C02: 
+bloqueia telefone com poucos dígitos antes do cadastro
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C02: 
+aceita limite máximo do motivo sem espaços externos
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/visitas/ModalAgendarVisita.test.tsx > RF12 — formulário de agendamento (T18.5) > RF12-AG06: 
+nova tentativa consulta as visitas previstas após erro de carregamento
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/visitas/ModalDesfechoVisita.test.tsx > RF13 — confirmação do desfecho (T19.4) > RF13-D08: 
+visita finalizada após atualização fica somente em consulta
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C03: 
+conflito CANDIDATE_ALREADY_INCLUDED é literal e atualiza o contexto sem repetir POST
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C02: 
+bloqueia idade zero antes do cadastro
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/visitas/ModalAgendarVisita.test.tsx > RF12 — formulário de agendamento (T18.5) > RF12-AG07: 
+estudo sem visitas previstas mantém o envio bloqueado
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/visitas/ModalDesfechoVisita.test.tsx > RF13 — confirmação do desfecho (T19.4) > RF13-D09: 
+envio pendente não duplica gravação nem permite fechar
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/visitas/ModalAgendarVisita.test.tsx > RF12 — formulário de agendamento (T18.5) > RF12-AG08: 
+condição de agendamento indisponível bloqueia os campos e o envio
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C03: 
+conflito CANDIDATE_ALREADY_CANCELLED é literal e atualiza o contexto sem repetir POST
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/visitas/ModalAgendarVisita.test.tsx > RF12 — formulário de agendamento (T18.5) > RF12-AG09: 
+confirmação pendente impede envio duplicado e fechamento
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C02: 
+bloqueia idade acima do limite antes do cadastro
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/visitas/ModalDesfechoVisita.test.tsx > RF13 — confirmação do desfecho (T19.4) > RF13-D10: 
+voltar ou fechar abandona confirmação sem registrar desfecho
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C03: 
+conflito STUDY_NOT_RECRUITING é literal e atualiza o contexto sem repetir POST
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+ ✓ src/components/visitas/ModalDesfechoVisita.test.tsx (12 tests) 25061ms
+   ✓ RF13 — confirmação do desfecho (T19.4) (12)
+     ✓ RF13-D01: cancelar com justificativa vazia () é bloqueado 3295ms
+     ✓ RF13-D01: cancelar com justificativa vazia (   ) é bloqueado 2780ms
+     ✓ RF13-D02: justificativa acima de 500 caracteres não é enviada 3777ms
+     ✓ RF13-D03: cancelar envia justificativa aparada com a versão da visita 2029ms
+     ✓ RF13-D04: desfecho DONE só envia após confirmação explícita 3183ms
+     ✓ RF13-D04: desfecho ABSENT só envia após confirmação explícita 1891ms
+     ✓ RF13-D05: erro 400 e erro de campo são literais e mantêm o formulário 2817ms
+     ✓ RF13-D06: conflito 409 exibe mensagem e consulta sem repetir a gravação 1283ms
+     ✓ RF13-D07: falha ao atualizar mantém confirmação bloqueada até recuperação 1362ms
+     ✓ RF13-D08: visita finalizada após atualização fica somente em consulta 380ms
+     ✓ RF13-D09: envio pendente não duplica gravação nem permite fechar 1627ms
+     ✓ RF13-D10: voltar ou fechar abandona confirmação sem registrar desfecho 615ms
+stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C02: 
+bloqueia idade fracionária antes do cadastro
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/visitas/ModalAgendarVisita.test.tsx > RF12 — formulário de agendamento (T18.5) > RF12-AG10: 
+cancelar fecha o formulário sem enviar agendamento
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C04: 
+atualização falha bloqueia confirmação e o botão de recuperação não repete POST
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/visitas/ModalAgendarVisita.test.tsx > RF12 — formulário de agendamento (T18.5) > RF12-AG11: 
+falha sem resposta HTTP exibe orientação e permite tentar novamente
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C02: 
+bloqueia nome longo antes do cadastro
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C05: erro 
+de campo da API é literal e mantém o motivo
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C06: 
+contexto não permitido (INCLUDED) impede confirmação
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+ ✓ src/components/visitas/ModalAgendarVisita.test.tsx (12 tests) 28108ms
+   ✓ RF12 — formulário de agendamento (T18.5) (12)
+     ✓ RF12-AG01: campos obrigatórios impedem envio e recebem indicação de erro 5454ms
+     ✓ RF12-AG02: envio válido usa o identificador da visita e o instante de Fortaleza em ISO 5612ms
+     ✓ RF12-AG03: mensagem HTTP 400 é exibida literalmente 4108ms
+     ✓ RF12-AG03: mensagem HTTP 409 é exibida literalmente 4286ms
+     ✓ RF12-AG04: conflito mantém formulário aberto e preserva visita e data preenchidas 1634ms
+     ✓ RF12-AG05: erros de campo da API ficam associados aos respectivos controles 1082ms
+     ✓ RF12-AG06: nova tentativa consulta as visitas previstas após erro de carregamento 967ms
+     ✓ RF12-AG07: estudo sem visitas previstas mantém o envio bloqueado 501ms
+     ✓ RF12-AG08: condição de agendamento indisponível bloqueia os campos e o envio 692ms
+     ✓ RF12-AG09: confirmação pendente impede envio duplicado e fechamento 1813ms
+     ✓ RF12-AG10: cancelar fecha o formulário sem enviar agendamento 912ms
+     ✓ RF12-AG11: falha sem resposta HTTP exibe orientação e permite tentar novamente 1027ms
+stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C02: 
+bloqueia e-mail longo antes do cadastro
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C06: 
+contexto não permitido (CANCELLED) impede confirmação
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C06: 
+contexto não permitido (ACTIVE) impede confirmação
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C07: 
+envio pendente impede envio duplicado e fechamento
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C03: aceita 
+idade limite 1 e normaliza o payload
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ModalCancelarCandidatura.test.tsx > RF08 / OBS-CANCELAMENTO — T17.8 > OBS-C08: 
+voltar ou fechar não envia cancelamento
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+ ✓ src/components/candidatos/ModalCancelarCandidatura.test.tsx (15 tests) 28234ms
+   ✓ RF08 / OBS-CANCELAMENTO — T17.8 (15)
+     ✓ OBS-C01: motivo vazio não envia POST 10809ms
+     ✓ OBS-C01: motivo espaços não envia POST 4497ms
+     ✓ OBS-C01: motivo acima de 500 não envia POST 2009ms
+     ✓ OBS-C02: aceita limite mínimo do motivo sem espaços externos 1184ms
+     ✓ OBS-C02: aceita limite máximo do motivo sem espaços externos 1001ms
+     ✓ OBS-C03: conflito CANDIDATE_ALREADY_INCLUDED é literal e atualiza o contexto sem repetir POST 1308ms
+     ✓ OBS-C03: conflito CANDIDATE_ALREADY_CANCELLED é literal e atualiza o contexto sem repetir POST 1001ms
+     ✓ OBS-C03: conflito STUDY_NOT_RECRUITING é literal e atualiza o contexto sem repetir POST 1407ms
+     ✓ OBS-C04: atualização falha bloqueia confirmação e o botão de recuperação não repete POST 1419ms
+     ✓ OBS-C05: erro de campo da API é literal e mantém o motivo 869ms
+     ✓ OBS-C06: contexto não permitido (INCLUDED) impede confirmação 390ms
+     ✓ OBS-C06: contexto não permitido (CANCELLED) impede confirmação 441ms
+     ✓ OBS-C06: contexto não permitido (ACTIVE) impede confirmação 371ms
+     ✓ OBS-C07: envio pendente impede envio duplicado e fechamento 914ms
+     ✓ OBS-C08: voltar ou fechar não envia cancelamento 420ms
+stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C03: aceita 
+idade limite 130 e normaliza o payload
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C04: e-mail 
+de conta existente mostra vínculo sem código de ativação
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C05: mantém 
+campos e exibe literalmente erro geral e de campo da API
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C06: 
+bloqueia envios e fechamento durante o cadastro pendente
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ModalNovoCandidato.test.tsx > RF08 — cadastro e convite (T17.8) > RF08-C07: 
+cancelar ou fechar antes do envio não cadastra
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+ ✓ src/components/candidatos/ModalNovoCandidato.test.tsx (15 tests) 37369ms
+   ✓ RF08 — cadastro e convite (T17.8) (15)
+     ✓ RF08-C01: obrigatórios destacam os quatro campos e focam o primeiro sem HTTP 8961ms
+     ✓ RF08-C02: bloqueia e-mail malformado antes do cadastro 4964ms
+     ✓ RF08-C02: bloqueia telefone com letras antes do cadastro 3887ms
+     ✓ RF08-C02: bloqueia telefone com poucos dígitos antes do cadastro 1616ms
+     ✓ RF08-C02: bloqueia idade zero antes do cadastro 1347ms
+     ✓ RF08-C02: bloqueia idade acima do limite antes do cadastro 1570ms
+     ✓ RF08-C02: bloqueia idade fracionária antes do cadastro 1786ms
+     ✓ RF08-C02: bloqueia nome longo antes do cadastro 1002ms
+     ✓ RF08-C02: bloqueia e-mail longo antes do cadastro 1313ms
+     ✓ RF08-C03: aceita idade limite 1 e normaliza o payload 2187ms
+     ✓ RF08-C03: aceita idade limite 130 e normaliza o payload 1785ms
+     ✓ RF08-C04: e-mail de conta existente mostra vínculo sem código de ativação 2473ms
+     ✓ RF08-C05: mantém campos e exibe literalmente erro geral e de campo da API 1527ms
+     ✓ RF08-C06: bloqueia envios e fechamento durante o cadastro pendente 2094ms
+     ✓ RF08-C07: cancelar ou fechar antes do envio não cadastra 636ms
+ ✓ src/components/candidatos/ModalConfirmarInclusao.test.tsx (13 tests) 5204ms
+   ✓ Confirmação de inclusão (RF11) (13)
+     ✓ RF11-IN01: confirmação bloqueada sem aceite, elegibilidade ou vaga ({ consentStatus: 'PENDING', …(3) }) 1502ms
+     ✓ RF11-IN01: confirmação bloqueada sem aceite, elegibilidade ou vaga ({ consentStatus: 'GRANTED', …(3) }) 322ms
+     ✓ mantém o modal aberto e mostra o motivo do 409 902ms
+     ✓ mantém o modal aberto e mostra a falta de permissão 340ms
+     ✓ mantém o modal aberto e mostra a sessão expirada 345ms
+     ✓ mantém o modal aberto e mostra o recurso não encontrado 355ms
+stderr | src/components/participantes/ModalRegistrarRetirada.test.tsx > bloqueia motivo inválido e destaca o campo: 
+vazio
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/participantes/ModalRegistrarRetirada.test.tsx > bloqueia motivo inválido e destaca o campo: 
+apenas espaços
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/pages/prototipos.test.tsx > Visão geral e relatórios de demonstração; visitas integradas (T7.2 / RF13) > 
+RF13: consulta visitas reais e confirma desfecho usando a versão da visita
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/participantes/ModalRegistrarRetirada.test.tsx > bloqueia motivo inválido e destaca o campo: 
+mais de 500 caracteres
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/participantes/ModalRegistrarRetirada.test.tsx > confirma com o motivo sem espaços nas 
+extremidades e informa o efeito nas vagas
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+ ✓ src/pages/prototipos.test.tsx (4 tests) 7448ms
+   ✓ Visão geral e relatórios de demonstração; visitas integradas (T7.2 / RF13) (3)
+     ✓ renderiza a página de Visão geral com indicadores, progresso dos estudos e pendências 1953ms
+     ✓ RF13: consulta visitas reais e confirma desfecho usando a versão da visita 4786ms
+     ✓ renderiza indicadores, funil de recrutamento e resumo por estudo em Relatórios 640ms
+stderr | src/components/participantes/ModalRegistrarRetirada.test.tsx > aceita o limite de 500 caracteres do motivo
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/participantes/ModalRegistrarRetirada.test.tsx > mantém o modal aberto e mostra a mensagem 
+exata da API
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/participantes/ModalRegistrarRetirada.test.tsx > impede envio duplicado e fechamento enquanto 
+aguarda a API
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/participantes/ModalRegistrarRetirada.test.tsx > exibe o erro de campo da API e devolve o foco 
+ao motivo
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+ ✓ src/components/estudos/CabecalhoEstudo.test.tsx (12 tests) 7601ms
+   ✓ T24.5 — Botões do estudo: agrupa apenas as transições permitidas em PLANNING 3248ms
+   ✓ T24.5 — Botões do estudo: agrupa apenas as transições permitidas em RECRUITMENT 1019ms
+   ✓ T24.5 — Botões do estudo: agrupa apenas as transições permitidas em EXECUTION 1085ms
+   ✓ T24.5 — Botões do estudo: agrupa apenas as transições permitidas em CANCELLED 767ms
+   ✓ T24.5 — Botões do estudo: recolhe o menu ao solicitar uma transição 604ms
+   ✓ T24.5 — Ação indisponível: explica o bloqueio sem impedir o cancelamento 528ms
+stderr | src/components/participantes/ModalRegistrarRetirada.test.tsx > permite tentar novamente após uma falha 
+inesperada
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+ ✓ src/components/visitas/ListaVisitasAgendadas.test.tsx (19 tests) 8144ms
+   ✓ RF12 — lista de agendamentos (T18.5) (6)
+     ✓ RF12-LS01: lista vazia apresenta orientação sem uma tabela fictícia 421ms
+     ✓ RF12-LS02: situação SCHEDULED da API é exibida como Agendada 1952ms
+     ✓ RF12-LS02: situação CANCELLED da API é exibida como Cancelada 390ms
+   ✓ RF13 / RF14 — ações da lista (T19.4 / T20.5) (13)
+     ✓ RF13-L01: somente SCHEDULED oferece desfecho (SCHEDULED) 754ms
+     ✓ RF13-L01: somente SCHEDULED oferece desfecho (DONE) 620ms
+     ✓ RF13-L01: somente SCHEDULED oferece desfecho (ABSENT) 339ms
+     ✓ RF13-L01: somente SCHEDULED oferece desfecho (CANCELLED) 446ms
+     ✓ RF13-L02: ação Realizada encaminha a visita e o desfecho corretos 493ms
+     ✓ RF13-L02: ação Ausente encaminha a visita e o desfecho corretos 334ms
+     ✓ RF13-L02: ação Cancelar encaminha a visita e o desfecho corretos 376ms
+stderr | src/components/participantes/ModalRegistrarRetirada.test.tsx > permite fechar com Escape sem confirmar a 
+retirada
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/participantes/ModalRegistrarRetirada.test.tsx > permite voltar sem registrar a retirada
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+ ✓ src/components/participantes/ModalRegistrarRetirada.test.tsx (11 tests) 11084ms
+   ✓ bloqueia motivo inválido e destaca o campo: vazio 3501ms
+   ✓ bloqueia motivo inválido e destaca o campo: apenas espaços 915ms
+   ✓ bloqueia motivo inválido e destaca o campo: mais de 500 caracteres 1047ms
+   ✓ confirma com o motivo sem espaços nas extremidades e informa o efeito nas vagas 903ms
+   ✓ aceita o limite de 500 caracteres do motivo 906ms
+   ✓ mantém o modal aberto e mostra a mensagem exata da API 777ms
+   ✓ impede envio duplicado e fechamento enquanto aguarda a API 693ms
+   ✓ exibe o erro de campo da API e devolve o foco ao motivo 675ms
+   ✓ permite tentar novamente após uma falha inesperada 895ms
+   ✓ permite fechar com Escape sem confirmar a retirada 434ms
+   ✓ permite voltar sem registrar a retirada 308ms
+ ✓ src/components/auth/ProtectedRoute.test.tsx (6 tests) 5211ms
+   ✓ Rotas protegidas e menu por perfil (T5.2) (6)
+     ✓ redireciona usuário não autenticado para /login ao acessar rota protegida 1699ms
+     ✓ exibe apenas os itens de menu permitidos para o perfil RESEARCHER 1477ms
+     ✓ exibe apenas os itens de menu permitidos para o perfil ADMINISTRATOR e bloqueia /estudos com 403 730ms
+     ✓ bloqueia acesso direto de RESEARCHER à rota /usuarios com página 403 450ms
+     ✓ bloqueia acesso direto de COORDINATOR a /usuarios sem consultar a API 668ms
+ ✓ src/pages/login/login.test.tsx (5 tests) 5355ms
+   ✓ Login e gestão de sessão (T4.2) (5)
+     ✓ valida campos obrigatórios antes de chamar a API 1760ms
+     ✓ exibe erro quando as credenciais são inválidas ou a conta está inativa (401) 442ms
+     ✓ exibe erro de conexão e não salva sessão quando a API está indisponível 476ms
+     ✓ autentica usuário ativo, persiste a sessão, exibe perfil na Sidebar e encerra a sessão no logout 2642ms
+ ✓ src/components/candidatos/ConsentimentoSimulado.test.tsx (5 tests) 5224ms
+   ✓ RF10 — ConsentimentoSimulado adaptado ao andamento da API (T17.8) (5)
+     ✓ RF10-CS01: decisão CONSENT_PENDING é consultada sem ação de registrar ou reverter consentimento 2203ms
+     ✓ RF10-CS01: decisão GRANTED é consultada sem ação de registrar ou reverter consentimento 764ms
+     ✓ RF10-CS01: decisão DECLINED é consultada sem ação de registrar ou reverter consentimento 732ms
+     ✓ RF10-CS02: atualizar consulta aceite registrado no app e então libera inclusão 1011ms
+     ✓ RF10-CS03: pesquisador consulta a decisão final sem controles de escrita 487ms
+ ✓ src/services/estudos.test.ts (7 tests) 202ms
+ ✓ src/services/auth.test.ts (8 tests) 100ms
+ ✓ src/services/api/apiClient.test.ts (5 tests) 188ms
+stderr | src/components/candidatos/ResultadoCadastroCandidato.test.tsx > RF08 — confirmação do cadastro (T17.8) > 
+RF08-R01: convite mostra código único, validade e aviso de demonstração sem persistir no navegador
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ResultadoCadastroCandidato.test.tsx > RF08 — confirmação do cadastro (T17.8) > 
+RF08-R02: copia exatamente o código e confirma a cópia
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ResultadoCadastroCandidato.test.tsx > RF08 — confirmação do cadastro (T17.8) > 
+RF08-R03: falha na área de transferência orienta a cópia manual e preserva o código
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/candidatos/ResultadoCadastroCandidato.test.tsx > RF08 — confirmação do cadastro (T17.8) > 
+RF08-R04: conta vinculada não mostra convite nem código e permite concluir
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/estudos/ModalEditarEstudo.test.tsx > permissões de edição do estudo > permite ao responsável 
+salvar em recrutamento sem enviar estado
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+ ✓ src/components/estudos/ListaEstudos.test.tsx (3 tests) 2482ms
+   ✓ ListaEstudos (3)
+     ✓ mostra responsáveis, limites e períodos inclusive quando atravessam o ano 2008ms
+     ✓ encaminha o registro correto ao callback de edição 427ms
+ ✓ src/components/candidatos/ResultadoCadastroCandidato.test.tsx (4 tests) 4308ms
+   ✓ RF08 — confirmação do cadastro (T17.8) (4)
+     ✓ RF08-R01: convite mostra código único, validade e aviso de demonstração sem persistir no navegador 2080ms
+     ✓ RF08-R02: copia exatamente o código e confirma a cópia 950ms
+     ✓ RF08-R03: falha na área de transferência orienta a cópia manual e preserva o código 891ms
+     ✓ RF08-R04: conta vinculada não mostra convite nem código e permite concluir 362ms
+stderr | src/components/estudos/ModalEditarEstudo.test.tsx > permissões de edição do estudo > bloqueia a edição por 
+outro pesquisador, inclusive o envio direto do formulário
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+stderr | src/components/estudos/ModalEditarEstudo.test.tsx > permissões de edição do estudo > mantém execução, 
+encerrado e cancelado somente leitura para o próprio responsável
+A PressResponder was rendered without a pressable child. Either call the usePress hook, or wrap your DOM node with 
+<Pressable> component.
+
+ ✓ src/components/estudos/ModalEditarEstudo.test.tsx (3 tests) 8045ms
+   ✓ permissões de edição do estudo (3)
+     ✓ permite ao responsável salvar em recrutamento sem enviar estado 4992ms
+     ✓ bloqueia a edição por outro pesquisador, inclusive o envio direto do formulário 1025ms
+     ✓ mantém execução, encerrado e cancelado somente leitura para o próprio responsável 1972ms
+ ✓ src/components/usuarios/TabelaUsuarios.test.tsx (3 tests) 3489ms
+   ✓ TabelaUsuarios (3)
+     ✓ exibe identificação, perfil e situação de cada usuário 2609ms
+     ✓ envia ao callback o usuário correspondente ao botão de edição 829ms
+ ✓ src/services/participantes.test.ts (2 tests) 103ms
+ ✓ src/components/usuarios/BuscaFiltroUsuarios.test.tsx (8 tests) 11071ms
+   ✓ BuscaFiltroUsuarios (7)
+     ✓ envia o texto digitado para o callback de busca 1001ms
+     ✓ converte a seleção de Administrador para o perfil esperado 2671ms
+     ✓ converte a seleção de Coordenador para o perfil esperado 1137ms
+     ✓ converte a seleção de Pesquisador para o perfil esperado 1140ms
+     ✓ converte a seleção de Ativo para a situação esperada 1189ms
+     ✓ converte a seleção de Inativo para a situação esperada 1207ms
+     ✓ limpa os filtros com Todos os perfis e Todas as situações 1869ms
+   ✓ não oferece Participante no filtro de perfis 827ms
+ ✓ src/components/ui/CardPadrao.test.tsx (2 tests) 1525ms
+   ✓ preserva títulos completos e associa cada card ao seu próprio título 1340ms
+ ✓ src/components/estudos/SeloEstadoEstudo.test.tsx (6 tests) 716ms
+   ✓ T24.5 — Cores dos estudos: PLANNING mantém texto, ícone e tokens documentados 461ms
+ ✓ src/components/estudos/CampoData.test.tsx (4 tests) 3041ms
+   ✓ CampoData (4)
+     ✓ exibe a data recebida em segmentos acessíveis 2119ms
+     ✓ envia a nova data quando o usuário altera um segmento pelo teclado 355ms
+     ✓ bloqueia o calendário e a alteração pelo teclado quando está desabilitado 369ms
+ ✓ src/context/PrototiposContext.test.tsx (11 tests) 380ms
+ ✓ src/components/ui/FormField.test.tsx (1 test) 1405ms
+   ✓ mostra o label e o erro 1383ms
+ ✓ src/components/ui/ErrorMessage.test.tsx (2 tests) 1202ms
+   ✓ mostra a mensagem de erro 1168ms
+ ✓ src/components/estudos/EstadosParticipantes.test.tsx (4 tests) 915ms
+   ✓ T24.5 — Estados dos participantes: ACTIVE mantém sua cor e texto no desktop 677ms
+ ✓ src/components/estudos/BuscaFiltroEstudos.test.tsx (1 test) 1435ms
+   ✓ BuscaFiltroEstudos (1)
+     ✓ exibe a busca atual e informa a digitação e a limpeza pelo callback 1417ms
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+
+Vitest caught 7 unhandled errors during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Failed to start forks worker for test files <home>/AppData/Local/Temp/claude/8b28824a75
+<clone>/web/src/pages/recrutamento/recruta
+mento.test.tsx.
+ ❯ node_modules/vitest/dist/chunks/index.1TqnEahn.js:5921:94
+ ❯ runNextTicks node:internal/process/task_queues:65:5
+ ❯ listOnTimeout node:internal/timers:549:9
+ ❯ process.processTimers node:internal/timers:523:7
+ ❯ Pool.schedule node_modules/vitest/dist/chunks/index.1TqnEahn.js:5921:5
+
+Caused by: Error: [vitest-pool-runner]: Timeout waiting for worker to respond
+ ❯ Timeout.<anonymous> node_modules/vitest/dist/chunks/index.1TqnEahn.js:5418:58
+ ❯ listOnTimeout node:internal/timers:588:17
+ ❯ process.processTimers node:internal/timers:523:7
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Failed to start forks worker for test files <home>/AppData/Local/Temp/claude/8b28824a75
+<clone>/web/src/pages/estudos/visualizar.t
+est.tsx.
+ ❯ node_modules/vitest/dist/chunks/index.1TqnEahn.js:5921:94
+ ❯ runNextTicks node:internal/process/task_queues:65:5
+ ❯ listOnTimeout node:internal/timers:549:9
+ ❯ process.processTimers node:internal/timers:523:7
+ ❯ Pool.schedule node_modules/vitest/dist/chunks/index.1TqnEahn.js:5921:5
+
+Caused by: Error: [vitest-pool-runner]: Timeout waiting for worker to respond
+ ❯ Timeout.<anonymous> node_modules/vitest/dist/chunks/index.1TqnEahn.js:5418:58
+ ❯ listOnTimeout node:internal/timers:588:17
+ ❯ process.processTimers node:internal/timers:523:7
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Failed to start forks worker for test files <home>/AppData/Local/Temp/claude/8b28824a75
+<clone>/web/src/pages/usuarios/listagem.te
+st.tsx.
+ ❯ node_modules/vitest/dist/chunks/index.1TqnEahn.js:5921:94
+ ❯ runNextTicks node:internal/process/task_queues:65:5
+ ❯ listOnTimeout node:internal/timers:549:9
+ ❯ process.processTimers node:internal/timers:523:7
+ ❯ Pool.schedule node_modules/vitest/dist/chunks/index.1TqnEahn.js:5921:5
+
+Caused by: Error: [vitest-pool-runner]: Timeout waiting for worker to respond
+ ❯ Timeout.<anonymous> node_modules/vitest/dist/chunks/index.1TqnEahn.js:5418:58
+ ❯ listOnTimeout node:internal/timers:588:17
+ ❯ process.processTimers node:internal/timers:523:7
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Failed to start forks worker for test files <home>/AppData/Local/Temp/claude/8b28824a75
+<clone>/web/src/pages/estudos/listagem.tes
+t.tsx.
+ ❯ node_modules/vitest/dist/chunks/index.1TqnEahn.js:5921:94
+ ❯ runNextTicks node:internal/process/task_queues:65:5
+ ❯ listOnTimeout node:internal/timers:549:9
+ ❯ process.processTimers node:internal/timers:523:7
+ ❯ Pool.schedule node_modules/vitest/dist/chunks/index.1TqnEahn.js:5921:5
+
+Caused by: Error: [vitest-pool-runner]: Timeout waiting for worker to respond
+ ❯ Timeout.<anonymous> node_modules/vitest/dist/chunks/index.1TqnEahn.js:5418:58
+ ❯ listOnTimeout node:internal/timers:588:17
+ ❯ process.processTimers node:internal/timers:523:7
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Failed to start forks worker for test files <home>/AppData/Local/Temp/claude/8b28824a75
+<clone>/web/src/components/candidatos/Aval
+iacaoElegibilidade.test.tsx.
+ ❯ node_modules/vitest/dist/chunks/index.1TqnEahn.js:5921:94
+ ❯ runNextTicks node:internal/process/task_queues:65:5
+ ❯ listOnTimeout node:internal/timers:549:9
+ ❯ process.processTimers node:internal/timers:523:7
+ ❯ Pool.schedule node_modules/vitest/dist/chunks/index.1TqnEahn.js:5921:5
+
+Caused by: Error: [vitest-pool-runner]: Timeout waiting for worker to respond
+ ❯ Timeout.<anonymous> node_modules/vitest/dist/chunks/index.1TqnEahn.js:5418:58
+ ❯ listOnTimeout node:internal/timers:588:17
+ ❯ process.processTimers node:internal/timers:523:7
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Failed to start forks worker for test files <home>/AppData/Local/Temp/claude/8b28824a75
+<clone>/web/src/components/visitas/ModalRe
+sultadosVisita.test.tsx.
+ ❯ node_modules/vitest/dist/chunks/index.1TqnEahn.js:5921:94
+ ❯ runNextTicks node:internal/process/task_queues:65:5
+ ❯ listOnTimeout node:internal/timers:549:9
+ ❯ process.processTimers node:internal/timers:523:7
+ ❯ Pool.schedule node_modules/vitest/dist/chunks/index.1TqnEahn.js:5921:5
+
+Caused by: Error: [vitest-pool-runner]: Timeout waiting for worker to respond
+ ❯ Timeout.<anonymous> node_modules/vitest/dist/chunks/index.1TqnEahn.js:5418:58
+ ❯ listOnTimeout node:internal/timers:588:17
+ ❯ process.processTimers node:internal/timers:523:7
+
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Failed to start forks worker for test files <home>/AppData/Local/Temp/claude/8b28824a75
+<clone>/web/src/pages/estudos/criterios.te
+st.tsx.
+ ❯ node_modules/vitest/dist/chunks/index.1TqnEahn.js:5921:94
+ ❯ Pool.schedule node_modules/vitest/dist/chunks/index.1TqnEahn.js:5921:5
+
+Caused by: Error: [vitest-pool-runner]: Timeout waiting for worker to respond
+ ❯ Timeout.<anonymous> node_modules/vitest/dist/chunks/index.1TqnEahn.js:5418:58
+ ❯ listOnTimeout node:internal/timers:588:17
+ ❯ process.processTimers node:internal/timers:523:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+
+ Test Files  40 passed (40)
+      Tests  353 passed (353)
+     Errors  7 errors
+   Start at  01:24:06
+   Duration  349.78s (import 37%, environment 27%, tests 24%, setup 9%, transform 3%, worker 1%)
+
+Environment  jsdom was created 40 times · 485.61s total, 27% of tracked time
+             create it once per worker with pool: 'vmThreads' (keeps per-file isolation) or isolate: false (shares it across files)
+             learn more: https://vitest.dev/guide/improving-performance#test-environments
+
+JSON report written to <clone>/web/test-reports/vitest.json
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |    61.9 |    59.46 |   62.28 |   63.62 |                   
+ src               |      75 |    66.66 |     100 |      75 |                   
+  main.tsx         |      75 |    66.66 |     100 |      75 | 27,131            
+ ...nts/candidatos |   61.04 |    63.63 |   62.71 |   61.64 |                   
+  ...ibilidade.tsx |    1.76 |        0 |       0 |    1.92 | 50-537            
+  ...Candidato.tsx |     100 |    94.44 |     100 |     100 | 119-122           
+  ...andidatos.tsx |      75 |       50 |     100 |      75 | 11                
+  ...ndidatura.tsx |   93.65 |    88.13 |    87.5 |   96.49 | 97,112            
+  ...rInclusao.tsx |   81.81 |    80.64 |      80 |   84.37 | 37,40-41,65,80    
+  ...Candidato.tsx |   94.36 |    91.54 |   91.66 |   96.42 | 135,156           
+  ...ntesVagas.tsx |     100 |    97.29 |     100 |     100 | 39                
+  ...Candidato.tsx |    90.9 |    91.66 |     100 |     100 | 18                
+ ...onents/estudos |   72.76 |    73.46 |   79.31 |   72.87 |                   
+  ...roEstudos.tsx |   33.33 |    33.33 |   66.66 |      50 | 35-36             
+  ...lhoEstudo.tsx |     100 |    97.22 |     100 |     100 | 65                
+  CampoData.tsx    |      50 |      100 |      50 |      50 | 70-74             
+  ...icipantes.tsx |     100 |     92.3 |     100 |     100 | 33                
+  ...ticipante.tsx |     100 |    89.28 |     100 |     100 | 36-48             
+  ModalEstudo.tsx  |   89.23 |    89.77 |   83.33 |   90.74 | 69,76-77,93,129   
+  ...ovoEstudo.tsx |       0 |      100 |       0 |       0 | 11                
+  ...caoEstudo.tsx |    2.27 |        0 |       0 |    2.43 | 47-167            
+  ...tesEstudo.tsx |     100 |       75 |     100 |     100 | 35-45,70,144      
+  ResumoEstudo.tsx |       0 |      100 |       0 |       0 | 11                
+  ...icipantes.tsx |     100 |    83.33 |     100 |     100 | 54                
+ ...udos/criterios |    2.12 |        0 |       0 |    2.43 |                   
+  ...iosEstudo.tsx |      10 |        0 |       0 |   11.11 | 14-47             
+  ...oCriterio.tsx |       0 |        0 |       0 |       0 | 31-179            
+ ...itas-previstas |   87.73 |    75.72 |   94.87 |   93.54 |                   
+  ...desVisita.tsx |     100 |     87.5 |     100 |     100 | 17                
+  ...Previstas.tsx |     100 |     87.5 |     100 |     100 | 33                
+  ...aPrevista.tsx |   68.75 |       50 |      75 |   84.61 | 27,45             
+  ...aPrevista.tsx |   87.87 |    78.46 |   94.11 |   92.98 | 63,69,98,135      
+ .../participantes |   98.07 |    94.28 |     100 |     100 |                   
+  ...rRetirada.tsx |   97.36 |    91.66 |     100 |     100 | 34,69             
+ ...ponents/shared |   78.94 |    66.66 |   57.14 |   78.94 |                   
+  Sidebar.tsx      |   78.94 |    66.66 |   57.14 |   78.94 | 64,126-160        
+ src/components/ui |   91.66 |    85.71 |   85.71 |    90.9 |                   
+  Input.tsx        |   66.66 |        0 |       0 |   66.66 | 6                 
+ ...nents/usuarios |      80 |    74.57 |   95.65 |   83.33 |                   
+  ...oUsuarios.tsx |     100 |    85.71 |     100 |     100 | 43,72             
+  ModalUsuario.tsx |   75.67 |    70.32 |   92.85 |      80 | ...8,85,94-95,124 
+  SeloPerfil.tsx   |     100 |       80 |     100 |     100 | 17                
+ ...onents/visitas |   72.75 |    72.95 |   68.83 |    73.7 |                   
+  ...Atividade.tsx |     100 |    94.62 |     100 |     100 | 67,74-77,127,184  
+  ...Agendadas.tsx |     100 |    95.23 |     100 |     100 | 99-102            
+  ...darVisita.tsx |      92 |    86.95 |   93.75 |   96.82 | 101,135           
+  ...choVisita.tsx |   95.16 |    89.39 |    87.5 |   96.55 | 116,131           
+  ...dosVisita.tsx |       0 |        0 |       0 |       0 | 30-325            
+  ...ticipante.tsx |   92.15 |    84.78 |   94.44 |   93.18 | 80,86,241         
+ src/config        |      60 |       50 |   66.66 |   57.89 |                   
+  navigation.tsx   |   52.94 |    41.66 |      60 |      50 | 54,74-86          
+ src/context       |   67.61 |    56.25 |   55.81 |   70.83 |                   
+  AuthContext.tsx  |   88.88 |       90 |      90 |   88.23 | 43-45,91          
+  ...osContext.tsx |   56.52 |     40.9 |   45.45 |   61.29 | ...29,165,248-272 
+ src/data          |      80 |      100 |       0 |      80 |                   
+  ...tipos-mock.ts |      80 |      100 |       0 |      80 | 174               
+ src/hooks         |      50 |       50 |   66.66 |   57.14 |                   
+  ...laEstreita.ts |      50 |       50 |   66.66 |   57.14 | 6-8               
+ src/pages         |   55.55 |    77.77 |      25 |   55.55 |                   
+  forbidden.tsx    |    62.5 |    77.77 |   33.33 |    62.5 | 17-18,51          
+  not-found.tsx    |       0 |      100 |       0 |       0 | 4                 
+ ...ages/dashboard |   69.56 |       35 |   63.63 |   77.77 |                   
+  visao-geral.tsx  |   69.56 |       35 |   63.63 |   77.77 | 79,98-178         
+ src/pages/estudos |   33.33 |    32.29 |   38.55 |   34.22 |                   
+  criterios.tsx    |       0 |        0 |       0 |       0 | 31-175            
+  listagem.tsx     |   44.44 |    44.73 |   38.88 |   47.72 | 22,74-106,130-206 
+  ...lhesEstudo.ts |       0 |        0 |       0 |       0 | 22-174            
+  ...sTransicao.ts |   96.15 |       96 |     100 |     100 | 32                
+  ...previstas.tsx |      88 |    82.53 |   94.11 |   91.04 | ...02-103,115,234 
+  visualizar.tsx   |    2.27 |        0 |       0 |    2.63 | 28-362            
+ src/pages/login   |   91.17 |    76.92 |     100 |   91.17 |                   
+  login.tsx        |   91.17 |    76.92 |     100 |   91.17 | 46-47,64          
+ ...s/recrutamento |   42.12 |    37.25 |   33.87 |   43.92 |                   
+  recrutamento.tsx |   42.12 |    37.25 |   33.87 |   43.92 | ...09-584,624-823 
+ ...ges/relatorios |   63.88 |       50 |    61.9 |   66.66 |                   
+  relatorios.tsx   |   63.88 |       50 |    61.9 |   66.66 | ...26-31,67,84-94 
+ ...pages/usuarios |       0 |        0 |       0 |       0 |                   
+  listagem.tsx     |       0 |        0 |       0 |       0 | 22-206            
+ src/pages/visitas |   76.29 |    61.41 |   72.54 |   78.44 |                   
+  visitas.tsx      |   76.29 |    61.41 |   72.54 |   78.44 | ...36-457,515-517 
+ src/services      |   80.16 |    74.07 |      72 |   79.48 |                   
+  auth.ts          |   85.18 |    64.58 |     100 |   85.18 | ...27-132,136,148 
+  candidatos.ts    |   83.33 |    66.66 |      80 |   83.33 | 26                
+  ...ios-estudo.ts |      50 |      100 |      50 |      50 | 13                
+  elegibilidade.ts |       0 |      100 |       0 |       0 | 9-33              
+  estudos.ts       |   85.71 |      100 |   83.33 |   85.71 | 44                
+  participantes.ts |      75 |      100 |      75 |      75 | 25                
+  ...-transicao.ts |      95 |    94.44 |     100 |   94.11 | 42                
+  ...atividades.ts |       0 |      100 |       0 |       0 | 10-29             
+  usuarios.ts      |   16.66 |        0 |       0 |   16.66 | 7-28              
+ src/services/api  |    92.3 |    81.63 |     100 |   91.89 |                   
+  apiClient.ts     |    92.3 |    81.63 |     100 |   91.89 | 61,72,116         
+ src/utils         |      84 |       75 |    90.9 |    90.9 |                   
+  agendamento.ts   |   85.71 |    83.33 |     100 |     100 | 29                
+  ...cho-visita.ts |     100 |    85.71 |     100 |     100 | 12                
+  erros-api.ts     |   81.25 |    69.23 |     100 |   91.66 | 28                
+  estudos.ts       |   77.77 |    68.75 |      75 |   82.35 | 44-45,56          
+  participantes.ts |     100 |       50 |     100 |     100 | 19                
+  ...atividades.ts |     100 |       80 |     100 |     100 | 10                
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 61.9% ( 1529/2470 )
+Branches     : 59.46% ( 1401/2356 )
+Functions    : 62.28% ( 431/692 )
+Lines        : 63.62% ( 1401/2202 )
+================================================================================
+ERROR: Coverage for lines (75%) does not meet "src/components/candidatos/ListaCandidatos.tsx" threshold (81%) for 
+src/components/candidatos/ListaCandidatos.tsx
+ERROR: Coverage for lines (0%) does not meet "src/components/visitas/ModalResultadosVisita.tsx" threshold (81%) for 
+src/components/visitas/ModalResultadosVisita.tsx

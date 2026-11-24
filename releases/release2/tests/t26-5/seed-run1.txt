@@ -1,0 +1,11 @@
+﻿INSERT 0 4
+docker : psql:/tmp/seed/seed_demo_studies.sql:200: NOTICE:  Estudos de demonstração criados: 6 (já existiam: 0).
+ 
+DO
+psql:/tmp/seed/seed_demo_recruitment.sql:250: NOTICE:  Estudos que receberam dados de recrutamento: 6 (já tinham 
+dados: 0).
+DO
+DO
+psql:/tmp/seed/seed_demo_followup.sql:267: NOTICE:  Acompanhamento de demonstração: 3 candidaturas e 9 agendamentos 
+criados.
+DO

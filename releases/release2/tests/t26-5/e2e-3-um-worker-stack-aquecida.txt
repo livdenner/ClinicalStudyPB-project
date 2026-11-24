@@ -1,0 +1,50 @@
+﻿
+> test:e2e
+> playwright test --workers=1
+
+npm.cmd : [WebServer] (node:316) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+ 
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:20396) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] [plugin builtin:vite-reporter] 
+[WebServer] (!) Some chunks are larger than 500 kB after minification. Consider:
+[WebServer] - Using dynamic import() to code-split the application
+[WebServer] - Use build.rolldownOptions.output.codeSplitting to improve chunking: 
+https://rolldown.rs/reference/OutputOptions.codeSplitting
+[WebServer] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+[WebServer] (node:22244) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:11020) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 24 tests using 1 worker
+
+(node:3668) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ok  1 [chromium] › e2e\auth\login.spec.ts:6:5 › login › CA-02.1: pesquisador entra com credenciais válidas e vai para estudos (4.2s)
+  ok  2 [chromium] › e2e\auth\login.spec.ts:12:5 › login › CA-02.2: senha errada mostra mensagem genérica e mantém na tela de login (2.7s)
+  ok  3 [chromium] › e2e\auth\login.spec.ts:21:5 › login › CA-02.2: e-mail inexistente mostra a mesma mensagem genérica (2.7s)
+  ok  4 [chromium] › e2e\auth\login.spec.ts:28:5 › login › rota protegida sem sessão redireciona para o login (1.2s)
+  ok  5 [chromium] › e2e\auth\tab-session.spec.ts:6:1 › T24.5 — Perfis por aba: login e logout não substituem a outra sessão no mesmo contexto (6.2s)
+  ok  6 [chromium] › e2e\auth\tab-session.spec.ts:57:1 › T24.5 — Expiração por aba: o redirecionamento preserva a outra sessão (6.5s)
+  ok  7 [chromium] › e2e\auth\tab-session.spec.ts:91:1 › T24.5 — Perfis distintos: dois contextos continuam operando após logout em um deles (4.1s)
+  ok  8 [chromium] › e2e\flows\full-recruitment.spec.ts:227:5 › fluxo completo de recrutamento › protocolo, candidato, elegibilidade, aceite do candidato e inclusão (33.6s)
+  ok  9 [chromium] › e2e\flows\full-recruitment.spec.ts:289:5 › fluxo completo de recrutamento › recusa do candidato impede a inclusão (21.1s)
+  ok 10 [chromium] › e2e\flows\reference-flow.spec.ts:70:5 › fluxo de referência: incluir, agendar e registrar desfecho › coordenador inclui o participante, agenda a visita e registra que foi realizada (11.0s)
+  ok 11 [chromium] › e2e\flows\reference-flow.spec.ts:151:5 › fluxo de referência: incluir, agendar e registrar desfecho › agendar a mesma visita duas vezes mostra o erro da API (9.0s)
+  ok 12 [chromium] › e2e\layout\cards-layout.spec.ts:125:5 › T24.3: estudos com nomes curtos e extensos ficam alinhados em 1366px (1.7s)
+  ok 13 [chromium] › e2e\layout\cards-layout.spec.ts:144:5 › T24.3: candidatos e participantes ficam alinhados em 1366px (2.0s)
+  ok 14 [chromium] › e2e\layout\cards-layout.spec.ts:188:5 › T24.3: aba de participantes adapta a listagem em 1366px (2.3s)
+  ok 15 [chromium] › e2e\layout\cards-layout.spec.ts:125:5 › T24.3: estudos com nomes curtos e extensos ficam alinhados em 375px (1.5s)
+  ok 16 [chromium] › e2e\layout\cards-layout.spec.ts:144:5 › T24.3: candidatos e participantes ficam alinhados em 375px (2.3s)
+  ok 17 [chromium] › e2e\layout\cards-layout.spec.ts:188:5 › T24.3: aba de participantes adapta a listagem em 375px (2.2s)
+  ok 18 [chromium] › e2e\participants\withdrawal.spec.ts:49:5 › T22.3: registra retirada em recrutamento sem liberar vaga (1366px) (2.4s)
+  ok 19 [chromium] › e2e\participants\withdrawal.spec.ts:49:5 › T22.3: registra retirada em recrutamento sem liberar vaga (375px) (2.3s)
+  ok 20 [chromium] › e2e\participants\withdrawal.spec.ts:49:5 › T22.3: registra retirada em participantes do estudo sem liberar vaga (1366px) (4.0s)
+  ok 21 [chromium] › e2e\participants\withdrawal.spec.ts:49:5 › T22.3: registra retirada em participantes do estudo sem liberar vaga (375px) (2.3s)
+  ok 22 [chromium] › e2e\smoke.spec.ts:3:1 › a aplicação carrega e leva o visitante à tela de login (1.0s)
+  ok 23 [chromium] › e2e\studies\create-study.spec.ts:16:5 › cadastro de estudo › CA-04.1: pesquisador cadastra um estudo e ele persiste na listagem (4.8s)
+  ok 24 [chromium] › e2e\studies\create-study.spec.ts:39:5 › cadastro de estudo › valida campos obrigatórios antes de enviar (3.3s)
+
+  24 passed (3.2m)
