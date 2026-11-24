@@ -19,11 +19,11 @@ A Release 2 leva o estudo do recrutamento ao acompanhamento e põe o participant
 
 A Sprint 4 fica com confirmação de presença e solicitação de reagendamento (RF19) e de retirada (RF20) no aplicativo, painel (RF21) e relatório (RF22) na web, a integração completa e os testes integrados. Notificações, caixa de mensagens e a simplificação geral da navegação, também pedidas pela professora, foram adiadas para a Sprint 4 ou para o backlog.
 
-## Alterações de escopo aprovadas pela PO
+## Alterações de escopo aprovadas pelo PO
 
 ### Identidade do candidato e decisão de consentimento no aplicativo (PBI-17)
 
-**Origem:** observação da professora sobre a Release 1, pedindo candidato com mais dados, conta mínima, primeiro login no aplicativo com troca de senha e decisão de consentimento pelo próprio candidato. A mudança foi aprovada pela PO no planejamento da Sprint 3 e altera a interface de RF10 prevista no enunciado: a decisão sai da web do coordenador e passa ao aplicativo do candidato.
+**Origem:** observação da professora sobre a Release 1, pedindo candidato com mais dados, conta mínima, primeiro login no aplicativo com troca de senha e decisão de consentimento pelo próprio candidato. A mudança foi aprovada pelo PO no planejamento da Sprint 3 e altera a interface de RF10 prevista no enunciado: a decisão sai da web do coordenador e passa ao aplicativo do candidato.
 
 | Aspecto | Release 1 | Release 2 |
 | --- | --- | --- |
@@ -36,6 +36,20 @@ A Sprint 4 fica com confirmação de presença e solicitação de reagendamento 
 Sem envio de e-mail nesta sprint: o código de ativação é exibido ao coordenador na web, como recurso de demonstração, e repassado ao candidato. Notificações e caixa de mensagens ficaram para a Sprint 4.
 
 O contrato está definido no [`openapi.yaml`](../../backend/openapi.yaml) (T17.1); a implementação no backend, na web e no aplicativo foi feita nas tarefas T17.2 a T17.10, e o E2E do fluxo, na T17.11.
+
+### Decisões do PO na Sprint 3
+
+Regras de negócio definidas pelo PO em 12/11/2026, antes dos contratos OpenAPI, e seguidas pela implementação.
+
+| Tema | Regra adotada |
+| --- | --- |
+| Código de ativação | Vale 72 horas e só pode ser usado uma vez. O coordenador pode gerar um novo código, que invalida o anterior. |
+| Convite e termo simulado | O convite mostra os dados do estudo, as visitas previstas e um termo fictício, sem valor legal. A decisão do candidato é única. |
+| E-mail de conta da equipe | O cadastro do candidato é recusado com 409. Se o e-mail já for de um participante, a candidatura é vinculada à conta existente. |
+| Agendamento | Só em estudo em recrutamento ou execução, e só para participante incluído e ativo. |
+| Resultados | Só o pesquisador responsável pelo estudo registra e edita; o coordenador apenas consulta. |
+| Retirada | A vaga continua ocupada, e o participante retirado não pode ser reincluído no mesmo estudo. |
+| Estudo com visitas agendadas | Para encerrar, é preciso registrar antes o desfecho de todas as visitas agendadas (409 `STUDY_HAS_SCHEDULED_VISITS`). Cancelar o estudo cancela as visitas agendadas. |
 
 ## Rastreabilidade dos requisitos
 
