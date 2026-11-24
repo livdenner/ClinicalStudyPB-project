@@ -1,19 +1,23 @@
 # Release 2 — Acompanhamento de participantes e aplicativo
 
-Entrega das Sprints **3 (11–23/11/2026)** e **4 (24/11–07/12/2026)**. Documento em construção: nesta versão registra as alterações de escopo aprovadas pela PO e a linha de base da Sprint 3; escopo completo, rastreabilidade, testes e processo entram no registro da sprint (T26.4). O projeto usa dados fictícios e consentimento estritamente simulado.
+Entrega das Sprints **3 (10–23/11/2026)** e **4 (24/11–07/12/2026)**. Este documento registra a Sprint 3 (T26.4); a Sprint 4 completa RF19–RF22, e a tag `release2` será publicada no fechamento dela. O projeto usa dados fictícios e consentimento estritamente simulado.
 
-[Instalação e execução](../../README.md#5-instalação-e-execução) · [OpenAPI](../../backend/openapi.yaml) · [Capturas](images/README.md) · [Testes e cobertura](tests/README.md) · [Release 1](../release1/README.md) · [Azure DevOps TEAM5](https://dev.azure.com/engsw2/TEAM5)
+[Instalação e execução](../../README.md#5-instalação-e-execução) · [Diagramas](../../docs/diagrams/README.md) · [OpenAPI](../../backend/openapi.yaml) · [Capturas](images/README.md) · [Testes e cobertura](tests/README.md) · [Processo da Sprint 3](processo/README.md) · [Release 1](../release1/README.md) · [Azure DevOps TEAM5](https://dev.azure.com/engsw2/TEAM5)
 
-## Evidências da Sprint 3 (T25.2)
+## Situação da Sprint 3
 
-As evidências se referem ao commit final da sprint, `development` **e975d92** (merge do PR #113, 23/11/2026), sem PR aberto naquela data.
+| Item | Valor |
+| --- | --- |
+| Commit avaliado | `development` **e975d92** (merge do PR #113, 23/11/2026), o último da sprint, sem PR aberto naquela data. A [CI 45287852924](https://github.com/livdenner/ClinicalStudyPB-project/actions/runs/45287852924) aprovou Backend, Web, E2E Web e Mobile. |
+| Integração | 53 PRs da equipe, do #71 ao #126, todos revisados por outra frente antes do merge ([lista](processo/integracoes-pr.csv)). |
+| Tasks | 49 de 52 integradas até 23/11. Na madrugada de 24/11 entraram a T25.2 (evidências, PR #124) e a T26.5 (regressão RF01–RF11 e instalação limpa, PR #126); a T26.4 é este registro. |
+| Versão publicada | Nenhuma ainda: a tag `release2` e a GitHub Release saem no fechamento da Sprint 4, em 07/12/2026. |
 
-| Evidência | Resultado | Onde |
-| --- | --- | --- |
-| CI do commit avaliado | [Execução 45287852924](https://github.com/livdenner/ClinicalStudyPB-project/actions/runs/45287852924): Backend, Web, E2E Web e Mobile aprovados; 1737 testes, nenhuma falha. | [Logs e relatório](tests/ci-e975d92/README.md) |
-| Cobertura do backend (JaCoCo) | **97,96% das linhas (1972/2013)**, acima da meta de 80%; ramos 87,15%. A CI reprova o build abaixo de 80%. | [Cobertura por módulo](tests/ci-e975d92/README.md#cobertura-do-backend-jacoco), [CSV](tests/ci-e975d92/backend-coverage.csv) |
-| Web, E2E e mobile | 513 testes Vitest (89,69% das linhas), 24 E2E Playwright, 260 testes Jest (92,66% das linhas) e E2E mobile no emulador Android aprovado. | [Testes da Release 2](tests/README.md) |
-| Capturas das telas novas | 31 capturas de sucesso, erro e consulta, nomeadas por RF, cobrindo RF02, RF03, RF08, RF10 e RF12–RF18 na web e no aplicativo, sem credenciais. | [Galeria](images/README.md) |
+## Objetivo e escopo
+
+A Release 2 leva o estudo do recrutamento ao acompanhamento e põe o participante no aplicativo. A Sprint 3 entregou, na web, agenda, desfecho, resultados, histórico e retirada (RF12–RF16) e, no aplicativo, login, primeiro acesso e as áreas de estudos e visitas do participante (RF02, RF03, RF17 e RF18). Também atendeu às observações urgentes da professora sobre a Release 1: identidade e consentimento do candidato (PBI-17), UX da web e sessão por aba (PBI-24) e rastreabilidade dos testes (PBI-25).
+
+A Sprint 4 fica com confirmação de presença e solicitação de reagendamento (RF19) e de retirada (RF20) no aplicativo, painel (RF21) e relatório (RF22) na web, a integração completa e os testes integrados. Notificações, caixa de mensagens e a simplificação geral da navegação, também pedidas pela professora, foram adiadas para a Sprint 4 ou para o backlog.
 
 ## Alterações de escopo aprovadas pela PO
 
@@ -31,7 +35,54 @@ As evidências se referem ao commit final da sprint, `development` **e975d92** (
 
 Sem envio de e-mail nesta sprint: o código de ativação é exibido ao coordenador na web, como recurso de demonstração, e repassado ao candidato. Notificações e caixa de mensagens ficaram para a Sprint 4.
 
-O contrato está definido no [`openapi.yaml`](../../backend/openapi.yaml) (T17.1); a implementação no backend, na web e no aplicativo é feita nas tarefas T17.2 a T17.10.
+O contrato está definido no [`openapi.yaml`](../../backend/openapi.yaml) (T17.1); a implementação no backend, na web e no aplicativo foi feita nas tarefas T17.2 a T17.10, e o E2E do fluxo, na T17.11.
+
+## Rastreabilidade dos requisitos
+
+Situação avaliada no commit final da Sprint 3, `development` **e975d92**. **Concluído** indica fluxo disponível de ponta a ponta, com testes automatizados e captura. As linhas de RF02, RF03, RF08, RF10 e RF11 registram o que mudou com o PBI-17. As capturas estão na [galeria](images/README.md), e os números de testes, em [Testes e cobertura](#testes-e-cobertura).
+
+| RF | Requisito / situação | Implementação e tela | Evidência e testes | Observação ou pendência |
+| --- | --- | --- | --- | --- |
+| RF02, RF03 | Login, primeiro acesso e perfil no aplicativo — **concluído** | `POST /api/auth/login`, `POST /api/auth/activation` e `PUT /api/auth/password`; telas de login, ativação e troca de senha no aplicativo, que aceita só `PARTICIPANT`. | [Credenciais inválidas](images/rf02-app-erro-credenciais.png), [senha definida](images/rf02-app-sucesso-senha-definida.png), [perfil sem acesso](images/rf03-app-erro-perfil-sem-acesso.png); [ActivationIntegrationTest](../../backend/src/test/java/clinicalstudypb/auth/ActivationIntegrationTest.java), [telas de autenticação](../../mobile/src/__tests__/authScreens.test.tsx), [E2E mobile](../../mobile/e2e/maestro/login-proximas-visitas.yaml). | Código de ativação de uso único, válido por 72 horas; a troca de senha é obrigatória antes de qualquer tela do participante. PRs #73, #77 e #95. |
+| RF08 | Candidatos com conta e convite — **concluído, alterado** | `POST …/candidates` com nome, idade, e-mail e telefone: cria a conta `PARTICIPANT` ou vincula a existente e emite o código de ativação; [cadastro](../../web/src/components/candidatos/ModalNovoCandidato.tsx) e [confirmação](../../web/src/components/candidatos/ResultadoCadastroCandidato.tsx) na web. | [Campos obrigatórios](images/rf08-erro-campos-obrigatorios.png), [convite emitido](images/rf08-sucesso-candidato-com-convite.png); [CandidateIntegrationTest](../../backend/src/test/java/clinicalstudypb/candidates/CandidateIntegrationTest.java), [matriz de permissões](../../backend/src/test/java/clinicalstudypb/candidates/CandidateFlowPermissionMatrixIntegrationTest.java), [modal de cadastro](../../web/src/components/candidatos/ModalNovoCandidato.test.tsx). | A duplicidade passou a ser verificada pela conta, não por nome e idade. Sem envio de e-mail: o código aparece para o coordenador, como recurso de demonstração. PRs #76, #84 e #96. |
+| RF10 | Consentimento decidido pelo candidato — **concluído, alterado** | `GET /api/me/invitations` e `POST /api/me/invitations/{candidateId}/decision`; convites no aplicativo. A web só consulta a decisão. | [Convite aceito](images/rf10-app-sucesso-convite-aceito.png), [decisões na web](images/rf10-consulta-decisoes-na-web.png); [StudyInvitationServiceTest](../../backend/src/test/java/clinicalstudypb/consent/StudyInvitationServiceTest.java), [SimulatedConsentIntegrationTest](../../backend/src/test/java/clinicalstudypb/consent/SimulatedConsentIntegrationTest.java), [convites no app](../../mobile/src/__tests__/invitations.test.tsx), [E2E do fluxo completo](../../web/e2e/flows/full-recruitment.spec.ts). | Decisão única, com autoria do candidato; o coordenador recebe 403 se tentar registrar. PRs #93, #109 e #106. |
+| RF11 | Inclusão após o aceite — **concluído** | `POST …/inclusion` exige elegibilidade `ELIGIBLE` e aceite do candidato; modal de confirmação e painel de vagas na web. | [Limite de vagas](images/rf11-erro-limite-de-vagas.png); [ParticipantIntegrationTest](../../backend/src/test/java/clinicalstudypb/participants/ParticipantIntegrationTest.java), [E2E do fluxo completo](../../web/e2e/flows/full-recruitment.spec.ts). | Regra da Release 1 mantida. O E2E percorre convite, decisão pela API e inclusão pela web (T17.11, PR #106). |
+| RF12 | Agendamento de visitas — **concluído** | `POST` e `GET …/participants/{participantId}/visits`, `GET /api/studies/{studyId}/visits`; [agendamento](../../web/src/components/visitas/ModalAgendarVisita.tsx) pelo card do participante na web. | [Visita agendada](images/rf12-sucesso-visita-agendada.png), [agendamento duplicado](images/rf12-erro-agendamento-duplicado.png); [ScheduledVisitIntegrationTest](../../backend/src/test/java/clinicalstudypb/scheduling/ScheduledVisitIntegrationTest.java), [modal de agendamento](../../web/src/components/visitas/ModalAgendarVisita.test.tsx), [E2E do fluxo de referência](../../web/e2e/flows/reference-flow.spec.ts). | Só para participante incluído e ativo, visita prevista do protocolo e data futura; a duplicidade considera visitas agendadas e realizadas. PRs #71, #79, #86 e #99. |
+| RF13 | Desfecho de visitas — **concluído** | `POST …/visits/{visitId}/outcome` com `If-Match`; tela [Visitas](../../web/src/pages/visitas/visitas.tsx), com filtro por situação e [confirmação do desfecho](../../web/src/components/visitas/ModalDesfechoVisita.tsx). | [Quatro desfechos](images/rf13-agenda-com-quatro-desfechos.png), [cancelamento sem justificativa](images/rf13-erro-cancelamento-sem-justificativa.png); [ScheduledVisitServiceTest](../../backend/src/test/java/clinicalstudypb/scheduling/ScheduledVisitServiceTest.java), [modal de desfecho](../../web/src/components/visitas/ModalDesfechoVisita.test.tsx), [E2E do fluxo de referência](../../web/e2e/flows/reference-flow.spec.ts). | Realizada, ausente ou cancelada com justificativa; estados finais não mudam; atualização concorrente retorna 409. PRs #88, #102, #100 e #116. |
+| RF14 | Resultados fictícios das avaliações — **concluído** | `GET …/visits/{visitId}/results` e `PUT …/results/{activityId}`; [resultados da visita](../../web/src/components/visitas/ModalResultadosVisita.tsx) na tela Visitas. | [Resultado salvo](images/rf14-sucesso-resultado-registrado.png), [resultado obrigatório](images/rf14-erro-resultado-obrigatorio.png); [ActivityResultIntegrationTest](../../backend/src/test/java/clinicalstudypb/results/ActivityResultIntegrationTest.java), [modal de resultados](../../web/src/components/visitas/ModalResultadosVisita.test.tsx). | Só em visita realizada e para as atividades da visita prevista. PRs #75, #97, #114, #104 e #116. |
+| RF15 | Histórico do participante — **concluído, com pendência** | `GET …/participants/{participantId}/history`; **Ver histórico** na aba Participantes do estudo ([linha do tempo](../../web/src/components/estudos/HistoricoParticipante.tsx)). | [Histórico](images/rf15-historico-participante.png); [ParticipantHistoryIntegrationTest](../../backend/src/test/java/clinicalstudypb/history/ParticipantHistoryIntegrationTest.java), [linha do tempo](../../web/src/components/estudos/HistoricoParticipante.test.tsx). | Pesquisador responsável ou coordenador; participante de outro estudo não aparece. **Pendência:** os resultados mostram o identificador da atividade ("Atividade #10"), porque a resposta do histórico não traz o nome. PRs #103, #119 e #120. |
+| RF16 | Retirada de participante — **concluído** | `POST …/participants/{participantId}/withdrawal` com motivo; **Registrar retirada** no recrutamento e na aba Participantes ([modal](../../web/src/components/participantes/ModalRegistrarRetirada.tsx)). | [Retirada registrada](images/rf16-sucesso-retirada-registrada.png), [motivo obrigatório](images/rf16-erro-motivo-obrigatorio.png); [ParticipantWithdrawalIntegrationTest](../../backend/src/test/java/clinicalstudypb/participants/ParticipantWithdrawalIntegrationTest.java), [modal de retirada](../../web/src/components/participantes/ModalRegistrarRetirada.test.tsx), [E2E da retirada](../../web/e2e/participants/withdrawal.spec.ts). | Só o coordenador; cancela as visitas futuras, bloqueia novos agendamentos e mantém a vaga ocupada; retirada duplicada retorna 409. PRs #81, #89, #110 e #111. |
+| RF17 | Estudos do participante no aplicativo — **concluído** | `GET /api/me/studies`; **Ver estudos** e o protocolo do estudo no [aplicativo](../../mobile/src/app/studies/index.tsx). | [Meus estudos](images/rf17-app-meus-estudos.png), [protocolo](images/rf17-app-protocolo-do-estudo.png); [ParticipantSelfIntegrationTest](../../backend/src/test/java/clinicalstudypb/me/ParticipantSelfIntegrationTest.java), [telas de estudos](../../mobile/src/__tests__/studies.test.tsx). | O participante vem do token; outros perfis recebem 403 em `/api/me`. PRs #94 e #112. |
+| RF18 | Visitas do participante no aplicativo — **concluído** | `GET /api/me/visits`; **Ver visitas**, com **Próximas** e **Histórico**, no [aplicativo](../../mobile/src/app/visits/index.tsx). | [Próximas](images/rf18-app-emulador-proximas-visitas.png) e [histórico](images/rf18-app-emulador-historico-visitas.png) no emulador; [ParticipantSelfIntegrationTest](../../backend/src/test/java/clinicalstudypb/me/ParticipantSelfIntegrationTest.java), [telas de visitas](../../mobile/src/__tests__/visits.test.tsx), [E2E mobile](../../mobile/e2e/maestro/login-proximas-visitas.yaml). | O detalhe da visita reserva o espaço do RF19, sem botões ativos. PRs #94, #117 e #121. |
+| RF19 | Confirmar presença prevista ou solicitar reagendamento (aplicativo) — **Sprint 4** | — | — | Confirmar presença não comprova comparecimento; a realização continua sendo registrada no RF13. |
+| RF20 | Solicitar retirada voluntária (aplicativo) — **Sprint 4** | — | — | Solicitar (RF20) e registrar a retirada (RF16) são eventos diferentes; a relação será refinada antes da implementação. |
+| RF21 | Painel com candidatos, incluídos e visitas (web) — **Sprint 4** | A **Visão geral** da web ainda é protótipo. | — | — |
+| RF22 | Relatório de recrutamento e acompanhamento por estudo (web) — **Sprint 4** | A tela **Relatórios** ainda é protótipo. | — | — |
+| RF01–RF11 | Regressão da Release 1 — **aprovada (T26.5)** | RF01 ganhou a proteção da própria conta e do último administrador ativo (PR #85). | [Relatório da T26.5](tests/t26-5/README.md), [rastreabilidade por RF](../../docs/tests/rastreabilidade-regressao-release1.md), [regressão web de RF04–RF11 da T24.5](tests/t24-5/README.md). | Instalação limpa com V1–V15 e as quatro cargas, executadas duas vezes sem duplicar; suítes, E2E e conferência manual sem regressão. |
+
+As rotas abreviadas pertencem ao estudo, candidato, participante ou visita informados no [contrato OpenAPI](../../backend/openapi.yaml).
+
+## Resumo técnico por frente
+
+### Backend
+
+O contrato OpenAPI foi definido antes das implementações (T17.1, T18.1 e T20.1) e reúne as rotas novas: ativação e troca de senha em `/api/auth`; agenda, desfecho, resultados, histórico e retirada em `/api/studies/{studyId}`; convites, estudos e visitas do participante em `/api/me`. Entraram quatro módulos e as migrações V11–V15, descritos na [alteração de arquitetura](#alteração-de-arquitetura-t263).
+
+### Web
+
+A lista de recrutamento passou a cadastrar o candidato com e-mail e telefone, mostrar o código de ativação e acompanhar o convite até a decisão. Os cards dos participantes ganharam **Agendar** e **Registrar retirada**; a tela **Visitas** lista a agenda do estudo e registra desfechos e resultados; a aba **Participantes** do estudo mostra o histórico. O PBI-24 reorganizou as ações do estudo por estado, aplicou cores semânticas, alinhou os cards em 1366 e 375 px e isolou a sessão por aba do navegador (`sessionStorage`).
+
+### Mobile
+
+O aplicativo deixou de ser uma navegação provisória: aceita só contas de participante e cobre login, primeiro acesso com código, troca obrigatória de senha, convites com a decisão do consentimento, estudos e visitas. O [README mobile](../../mobile/README.md) explica configuração, emulador, conta de demonstração e o E2E com Maestro.
+
+### Dados e seeds
+
+As três cargas da Release 1 ganharam a quarta, `seed_demo_followup.sql` (T26.6), com convite pendente de código conhecido, participante com senha definida, os quatro desfechos, resultados e uma retirada. Os cenários estão no [README principal](../../README.md#cenários-do-acompanhamento-e-do-fluxo-do-candidato).
+
+### DevOps e qualidade
+
+Cada execução de testes, local ou na CI, gera um Markdown com uma linha por teste (T25.1); na CI, o bot `clinicalstudypb-ci-reports[bot]` versiona esses relatórios em [docs/test-ci](../../docs/test-ci/README.md). O workflow [E2E Mobile](../../.github/workflows/mobile-e2e.yml) roda o Maestro num emulador Android.
 
 ## Alteração de arquitetura (T26.3)
 
@@ -52,24 +103,33 @@ A arquitetura continua sendo um monólito modular em camadas, com um único back
 | [Sequência](../../docs/diagrams/README.md#sequências) | Página 4 com o cadastro por e-mail e telefone, a criação ou o vínculo da conta, o convite e a duplicidade verificada pela conta. Página 5 redesenhada para a decisão pelo candidato. Página 7, nova, com agendamento e desfecho. |
 | [Arquitetura](../../docs/diagrams/arquitetura.png) | Doze módulos e o aplicativo ligado à API. |
 
-## Roteiro de demonstração
+## Demonstração e capturas
+
+A [galeria](images/README.md) relaciona 31 capturas de sucesso, erro e consulta aos RF, com ambiente, passos e resultado (T25.2). Foram obtidas com API e PostgreSQL reais e a carga fictícia, sobre o commit avaliado; as do emulador Android vêm do E2E mobile da CI. As capturas do E2E do fluxo de referência ficam em [evidencias/t19-5-fluxo-referencia](evidencias/t19-5-fluxo-referencia/README.md).
+
+![Agenda do estudo com os quatro desfechos](images/rf13-agenda-com-quatro-desfechos.png)
+
+<img src="images/rf10-app-sucesso-convite-aceito.png" alt="Convite aceito no aplicativo" width="240"> <img src="images/rf18-app-emulador-proximas-visitas.png" alt="Próximas visitas no emulador" width="240">
+
+### Roteiro de demonstração
 
 O roteiro usa apenas a carga de demonstração, sem preparar dados à mão. Antes de começar, siga a [instalação](../../README.md#5-instalação-e-execução): suba a stack, carregue os quatro scripts de `backend/dev/`, abra a [web](../../README.md#aplicação-web) e o [aplicativo](../../mobile/README.md#configurar-a-url-da-api) apontando para a API. As contas e os cenários da carga estão em [Banco e usuários de demonstração](../../README.md#banco-e-usuários-de-demonstração). A senha das contas da equipe é `Demo@Clinical2026`.
 
 | Passo | Conta | Onde | O que fazer e conferir |
 | --- | --- | --- | --- |
-| 1 | `coordenador@…` | Web, **Recrutamento** | No estudo **Vacina contra influenza em idosos**, confira as situações Convidado, Aceitou, Recusou, Aguardando decisão e Incluído. Em **Higiene do sono em trabalhadores noturnos**, inclua Vera Lúcia Fonseca na última vaga. A inclusão de Wilson Barbosa Leite é recusada: "O estudo atingiu o limite de participantes" (RF11). |
+| 1 | `coordenador@…` | Web, **Recrutamento** | No estudo **Vacina contra influenza em idosos**, confira as situações Convidado, Aceitou, Recusou, Aguardando decisão e Incluído. Em **Higiene do sono em trabalhadores noturnos**, inclua Vera Lúcia Fonseca na última vaga. A inclusão de Wilson Barbosa Leite é recusada: "O estudo atingiu o limite de participantes" (RF11). Em seguida, use **Agendar** no card de Vera, escolha a visita prevista e uma data futura (RF12). |
 | 2 | `convite@…` | Aplicativo | Em **Primeiro acesso? → Ativar conta**, informe o e-mail e o código `CONVITE-DEMO-2026` e defina a senha. Em **Ver convites**, abra o convite da vacina e use **Aceitar convite** (RF10). Na web, o coordenador usa **Atualizar lista** e vê Rosa Helena Prates como Aceitou. |
 | 3 | `participante@…` | Aplicativo | **Ver estudos** mostra **Controle glicêmico no diabetes tipo 2** (RF17). **Ver visitas** mostra o acompanhamento de 3 meses em **Próximas** e a avaliação inicial em **Histórico** (RF18). Em **Ver convites**, recuse o convite da vacina; a decisão fica somente leitura. |
 | 4 | `coordenador@…` | Web, **Visitas** | No estudo de diabetes, filtre por **Situação** e confira os quatro desfechos: agendada, realizada, ausente e cancelada. Registre como realizada a avaliação inicial remarcada de João Batista Freitas (RF13). A visita de Lúcia Mendes Araújo aparece cancelada com a nota "Retirada do participante". |
 | 5 | `pesquisador@…` | Web, **Visitas** | Em **Ver resultados**, confira hemoglobina glicada e orientação nutricional na avaliação inicial de Irene Gomes Vieira. Em **Registrar resultados**, registre os da visita de João realizada no passo 4 (RF14). |
 | 6 | `coordenador@…` | Web, **Estudos clínicos** → estudo de diabetes → aba **Participantes** | Use **Registrar retirada** para Irene, com um motivo, e confirme. O selo passa a Retirado, a visita futura dela é cancelada e a vaga continua ocupada (RF16). Em **Ver histórico**, confira a linha do tempo de Irene e a de Lúcia: visita realizada com os resultados, visita cancelada e retirada (RF15). |
+| 7 | `pesquisador@…` e `administrador@…` | Web, duas abas do mesmo navegador | Como pesquisador, abra **Estudos clínicos** → **Vacina contra influenza em idosos**: o selo mostra o estado com a cor semântica, e as mudanças de estado permitidas ficam no menu **Alterar estado**. Em outra aba, entre como administrador: as duas sessões ficam ativas ao mesmo tempo, e **Sair** numa aba não encerra a outra (PBI-24). |
 
-Cada passo também pode ser feito pelo [Swagger UI](http://localhost:8080/swagger-ui/index.html), com o token da conta indicada:
+Os passos 1 a 6 também podem ser feitos pelo [Swagger UI](http://localhost:8080/swagger-ui/index.html), com o token da conta indicada:
 
 | Passo | Endpoints |
 | --- | --- |
-| 1 | `GET /api/studies/{studyId}/candidates` e `POST …/candidates/{candidateId}/inclusion` |
+| 1 | `GET /api/studies/{studyId}/candidates`, `POST …/candidates/{candidateId}/inclusion` e `POST …/participants/{participantId}/visits` |
 | 2 | `POST /api/auth/activation`, `PUT /api/auth/password`, `GET /api/me/invitations` e `POST /api/me/invitations/{candidateId}/decision` |
 | 3 | `GET /api/me/studies`, `GET /api/me/visits` e `POST /api/me/invitations/{candidateId}/decision` |
 | 4 | `GET /api/studies/{studyId}/visits?status=…` e `POST …/visits/{visitId}/outcome` com `If-Match` |
@@ -78,54 +138,35 @@ Cada passo também pode ser feito pelo [Swagger UI](http://localhost:8080/swagge
 
 As ações do roteiro são definitivas: inclusão, decisões, código de ativação usado, desfecho, resultados e retirada. Executar os scripts de novo não as desfaz. Para repetir a demonstração do início, recrie o banco com `docker compose down -v`, suba a stack e carregue a carga outra vez.
 
-Em 22/11/2026, os seis passos foram executados pela API sobre a `development` em `008dabb`, numa stack descartável com a carga completa: todas as respostas e situações descritas acima foram confirmadas. As telas correspondentes são cobertas pelos testes da web e do aplicativo.
+Em 22/11/2026, os seis passos foram executados pela API sobre a `development` em `008dabb`, numa stack descartável com a carga completa: todas as respostas e situações descritas acima foram confirmadas. As telas correspondentes são cobertas pelos testes da web e do aplicativo. O agendamento do passo 1 e o passo 7 entraram no registro da sprint (T26.4): o agendamento tem [captura](images/rf12-sucesso-visita-agendada.png) e E2E na T19.5, e o passo 7, que só existe na web, é coberto pelos [testes da T24.5](tests/t24-5/README.md).
 
-## Linha de base da Sprint 3 (T26.2)
+A demonstração cobre do PBI-17 ao PBI-24, só com dados fictícios:
 
-Verificação feita em 12/11/2026 para garantir que a Sprint 3 parte da versão publicada da Release 1, sem PRs pendentes nem migrações inconsistentes.
-
-| Item | Resultado |
+| PBI | Passos |
 | --- | --- |
-| Commit base | `development` **72bfdd4** (merge do PR #68). `main` **8e88d15**, com a tag `release1` (PR #70). |
-| Divergência entre `development` e `main` | Nenhuma além do merge: `development` não tem commits fora de `main`; `main` tem só o commit de merge do PR #70. |
-| CI no GitHub | [Execução do push em 72bfdd4](https://github.com/livdenner/ClinicalStudyPB-project/actions/runs/42756752300) (10/11/2026): Backend, Web, E2E e Mobile com sucesso. |
-| Migrações | Flyway V1–V10; a Release 1 termina em `V10__create_participants.sql`. A próxima livre é V11, a combinar entre as frentes antes de criar. |
-| PRs da Sprint 2 | Nenhum aberto em 12/11/2026. O único PR aberto é o #71, da Sprint 3. |
-| Bloqueios | Nenhum. |
+| PBI-17 — identidade, primeiro acesso e consentimento do candidato | 1, 2 e 3 |
+| PBI-18 — agendamento (RF12) | 1 e 4 |
+| PBI-19 — desfecho (RF13) | 4 |
+| PBI-20 — resultados (RF14) | 5 |
+| PBI-21 — histórico (RF15) | 6 |
+| PBI-22 — retirada (RF16) | 6 |
+| PBI-23 — estudos e visitas no aplicativo (RF17 e RF18) | 3 |
+| PBI-24 — UX da web e sessão por aba | 7 |
 
-### Execução local dos quatro jobs da CI
+## Testes e cobertura
 
-Mesmos comandos de [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml), executados sobre uma cópia limpa de 72bfdd4 em 12/11/2026 (Windows 11, Node.js 24, Java 21, Docker 29.9.2, Compose 5.6.1).
+Números do commit avaliado, `development` **e975d92**, na [CI 45287852924](https://github.com/livdenner/ClinicalStudyPB-project/actions/runs/45287852924) (T25.2). O [relatório de testes](tests/README.md) traz logs, suítes, cobertura por módulo e o relatório teste a teste.
 
-| Job | Comandos | Resultado |
+| Evidência | Resultado | Onde |
 | --- | --- | --- |
-| Backend | `./mvnw -B -ntp verify` | 487 testes, 0 falhas; Checkstyle sem violações; JaCoCo 97,27% de linhas (891/916), regras de cobertura atendidas. |
-| Web | `npm ci`, `format:check`, `lint`, `test:coverage`, `build` | Formatação, lint e build sem erros; Vitest com 25 arquivos e 200 testes aprovados; 86,75% de linhas. |
-| Mobile | `npm ci`, `npm test -- --ci --coverage` | 2 suítes e 2 testes aprovados. |
-| E2E | `npx playwright install chromium`, `e2e:stack:up`, `test:e2e`, `e2e:stack:down` | 8 testes aprovados contra backend e PostgreSQL reais. |
+| CI do commit avaliado | [Execução 45287852924](https://github.com/livdenner/ClinicalStudyPB-project/actions/runs/45287852924): Backend, Web, E2E Web e Mobile aprovados; 1737 testes, nenhuma falha. | [Logs e relatório](tests/ci-e975d92/README.md) |
+| Cobertura do backend (JaCoCo) | **97,96% das linhas (1972/2013)**, acima da meta de 80%; ramos 87,15%. A CI reprova o build abaixo de 80%. | [Cobertura por módulo](tests/ci-e975d92/README.md#cobertura-do-backend-jacoco), [CSV](tests/ci-e975d92/backend-coverage.csv) |
+| Web, E2E e mobile | 513 testes Vitest (89,69% das linhas), 24 E2E Playwright, 260 testes Jest (92,66% das linhas) e E2E mobile no emulador Android aprovado. | [Testes da Release 2](tests/README.md) |
+| Capturas das telas novas | 31 capturas de sucesso, erro e consulta, nomeadas por RF, cobrindo RF02, RF03, RF08, RF10 e RF12–RF18 na web e no aplicativo, sem credenciais. | [Galeria](images/README.md) |
 
-Na primeira execução local, o `test:coverage` da web falhou por sobrecarga da máquina, que rodava os outros jobs e o Docker ao mesmo tempo: três arquivos de teste não iniciaram (timeout do worker do Vitest) e um teste de login excedeu o tempo de espera. Repetido isoladamente, passou por completo. A CI do GitHub aprovou o mesmo commit.
+A meta de 80% é das linhas do backend e é verificada pela própria CI. O histórico automático de cada execução fica em [docs/test-ci](../../docs/test-ci/README.md).
 
-### Compose do zero e migrações (apenas testes)
-
-Os dois cenários cobrem as duas situações de quem instala ou atualiza o projeto: começar com um banco vazio ou continuar com o banco que já tem. Ambos foram testados com o `compose.yaml` da raiz, em projetos Docker temporários e separados do ambiente de desenvolvimento, com credenciais fictícias; os contêineres, volumes e imagens de teste foram removidos ao final.
-
-| Cenário | O que comprova | Resultado |
-| --- | --- | --- |
-| Banco novo (instalação limpa) | Uma instalação do zero chega ao esquema atual e aceita os seeds. | Imagem do backend construída; Flyway aplicou as 10 migrações (V1–V10); `/v3/api-docs` respondeu 200; os três seeds de `backend/dev/` foram carregados sem erro, como no README principal; login do coordenador de demonstração respondeu 200. |
-| Banco existente (atualização) | Quem já tem um banco da Release 1 continua usando o mesmo banco, sem recriá-lo. | Sobre uma cópia de um banco local já em V10, o Flyway validou as 10 migrações, sem nenhuma pendente, e o backend iniciou normalmente. |
-
-As migrações novas da Sprint 3 (a partir de V11) devem passar pelos mesmos dois cenários antes da integração.
-
-### Branches antigas
-
-Em 12/11/2026 o repositório tinha, além de `main`, `development` e da branch do PR #71, uma única branch antiga:
-
-| Branch | Situação | Destino |
-| --- | --- | --- |
-| `test/3458-study-transitions` | Sem PR; um commit de 07/11/2026 com dois testes de estados do estudo na web, em conflito com a `development`. | Encerrada por decisão do Gerente em 12/11/2026. Os dois casos (estudo encerrado sem botões de edição ou transição; cancelar a confirmação sem enviar transição) passam para os testes do PBI-24, que reorganiza os botões dos estudos. |
-
-## Regressão RF01–RF11 e instalação limpa (T26.5)
+### Regressão RF01–RF11 e instalação limpa (T26.5)
 
 Em 24/11/2026, a `development` em **e975d92** (fim da Sprint 3) foi instalada do zero seguindo o [README principal](../../README.md#5-instalação-e-execução), com o mesmo procedimento da T16.13. Relatório completo: [tests/t26-5](tests/t26-5/README.md). Rastreabilidade por requisito: [regressão RF01–RF11](../../docs/tests/rastreabilidade-regressao-release1.md).
 
@@ -139,29 +180,15 @@ Em 24/11/2026, a `development` em **e975d92** (fim da Sprint 3) foi instalada do
 
 O README principal foi corrigido em quatro pontos encontrados na instalação: carga no Git Bash, finais de linha no clone do Windows, seção do aplicativo (login e `EXPO_PUBLIC_API_BASE_URL`) e roteiro e versões desatualizados. Fica recomendada como task prioritária a estabilização do login no E2E local (achado A3): com vários workers, ou no primeiro login após a stack subir, o teste excede o tempo de espera de 5 s.
 
-## Correção documental da Release 1 (T26.1)
-
-Em 18/11/2026, o [README da Release 1](../release1/README.md) foi corrigido para refletir a versão realmente publicada. 
-
-| Item | Correção |
-| --- | --- |
-| Versão | Tag `release1` e [GitHub Release](https://github.com/livdenner/ClinicalStudyPB-project/releases/tag/release1) publicadas em 10/11/2026, sobre `main` **8e88d15** (PR #70). |
-| Matriz RF09–RF11 | Testes de componentes de elegibilidade, consentimento, modal de inclusão e painel de vagas (PRs #68 e #69); consentimento consultado na API pela lista de candidatos (PR #67); E2E do fluxo completo (PR #65). |
-| Testes | Números de uma execução nova na tag, em [tests/tag-release1](../release1/tests/tag-release1/); os da consolidação anterior ficam como histórico. |
-| Pendências | Ficaram só o login e os fluxos mobile e os rótulos do consentimento; E2E completo, testes de componentes e publicação da tag foram retirados por estarem concluídos. |
-| Processo e galeria | Registram o fechamento da release depois do corte da Sprint 2 e que as capturas são anteriores à tag. |
-
-Alteração apenas documental, integrada pela `development`: o conteúdo da tag `release1` não mudou.
-
-## Regressão web de UX e sessão (T24.5)
+### Regressão web de UX e sessão (T24.5)
 
 A [matriz da T24.5](tests/t24-5/README.md) relaciona as observações sobre ações, cores, cards e sessão aos testes executados, com a regressão das telas RF04–RF11, os resultados históricos de 21/11/2026 e a revalidação após integrar a development. O fluxo completo de recrutamento foi adaptado pela T17.11 e já está integrado pela PR #106.
 
-## Rastreabilidade e testes do aplicativo mobile (T23.4)
+### Rastreabilidade e testes do aplicativo mobile (T23.4)
 
 Em **21/11/2026** (commit `3b2f7b0`), a suíte Jest do aplicativo mobile atingiu **23 suítes e 260 testes aprovados (0 falhas)** usando Jest + React Native Testing Library com HTTP inteiramente simulado e **zero chamadas reais de rede**, além de validação de tipos via `npx.cmd tsc --noEmit`. A meta mínima global de **80% de linhas** está configurada em [`mobile/package.json`](../../mobile/package.json) (`coverageThreshold.global.lines`), e todos os casos executados estão registrados em [`2026-11-21_22-15_T23-4_mobile-jest.md`](../../docs/test-runs/2026-11-21_22-15_T23-4_mobile-jest.md).
 
-### Matriz de rastreabilidade mobile por RF
+#### Matriz de rastreabilidade mobile por RF
 
 | RF | Requisito e telas cobertas | Cenários verificados (sucesso, vazio/validação e erro) | Suítes de teste |
 | --- | --- | --- | --- |
@@ -171,11 +198,11 @@ Em **21/11/2026** (commit `3b2f7b0`), a suíte Jest do aplicativo mobile atingiu
 | RF17 | Consulta de estudos e protocolo pelo participante (`studies/index.tsx`, `studies/[participantId].tsx`, `PlannedVisitCard`) | **Sucesso:** listagem de `/api/me/studies` com separação semântica de `studyStatus` e `participationStatus` (incluindo `WITHDRAWN` e `CLOSED`), navegação para detalhe direto por rota com objetivo, período civil e visitas previstas (**Data prevista** e atividades). **Vazio/validação:** lista vazia orientando acesso aos convites, protocolo sem visitas previstas, estado desconhecido neutro e recusa de identificador inválido sem chamar a API. **Erro:** falha inicial com **Tentar novamente** sem mascarar como lista vazia, indisponibilidade de participação alheia (`404`), preservação de dados anteriores em erro ao voltar ao foco, abortamento via `AbortController`, `401`, `403 PASSWORD_CHANGE_REQUIRED` e limpeza na troca de conta. | [`studies.test.tsx`](../../mobile/src/__tests__/studies.test.tsx), [`navigation.test.tsx`](../../mobile/src/__tests__/navigation.test.tsx), [`plannedVisitCard.test.tsx`](../../mobile/src/__tests__/plannedVisitCard.test.tsx), [`studyApi.test.ts`](../../mobile/src/__tests__/studyApi.test.ts), [`studyPresentation.test.ts`](../../mobile/src/__tests__/studyPresentation.test.ts) |
 | RF18 | Próximas visitas, histórico de comparecimento e detalhe (`visits/index.tsx`, `visits/[visitId].tsx`) | **Sucesso:** listagem de `/api/me/visits` em abas **Próximas** (`SCHEDULED`) e **Histórico** (`DONE`, `ABSENT`, `CANCELLED` com motivo exibido apenas em cancelada), migração de **Próximas** para **Histórico** após desfecho e detalhe com atividades previstas e bloco reservado para RF19 (sem botões ativos). **Vazio/validação:** estados vazios independentes para **Próximas** e **Histórico**, visita sem atividades previstas e rejeição de ID de texto ou zero sem chamar a API. **Erro:** falha inicial com recuperação, tradução segura de payload inválido e `403` sem vazar detalhes, visita ausente no detalhe, aviso de consulta anterior ao falhar no foco, `401`, `403 PASSWORD_CHANGE_REQUIRED` e descarte após logout. | [`visits.test.tsx`](../../mobile/src/__tests__/visits.test.tsx), [`navigation.test.tsx`](../../mobile/src/__tests__/navigation.test.tsx), [`visitApi.test.ts`](../../mobile/src/__tests__/visitApi.test.ts), [`visitPresentation.test.ts`](../../mobile/src/__tests__/visitPresentation.test.ts) |
 
-### E2E mobile no emulador (T23.5)
+#### E2E mobile no emulador (T23.5)
 
 Além do Jest, o fluxo E2E-MOB-01 (login do participante → **Próximas** e **Histórico** de visitas, RF02 e RF18) roda com o Maestro num emulador Android, contra a stack de `compose.e2e.yaml` com a seed padrão. Na CI, passou em 23/11/2026 (execução [45103422414](https://github.com/livdenner/ClinicalStudyPB-project/actions/runs/45103422414)). A decisão de ferramenta está no [README mobile](../../mobile/README.md#decisão-de-ferramenta-maestro), e o cenário e os resultados estão em [`rastreabilidade-e2e-mobile.md`](../../docs/tests/rastreabilidade-e2e-mobile.md).
 
-### Cobertura mobile (`npm.cmd run test:report -- --runInBand --coverage`)
+#### Cobertura mobile (`npm.cmd run test:report -- --runInBand --coverage`)
 
 | Escopo | Instruções | Branches | Funções | Linhas |
 | --- | --- | --- | --- | --- |
@@ -186,3 +213,22 @@ Além do Jest, o fluxo E2E-MOB-01 (login do participante → **Próximas** e **H
 | Telas de visitas (`app/visits`) | 94,95% (113/119) | 90,69% (156/172) | 96,55% (28/29) | **94,87%** (111/117) |
 | Autenticação e sessão (`auth`) | 92,47% (332/359) | 85,84% (182/212) | 100,00% (70/70) | **92,37%** (327/354) |
 | Formulário de senha (`components/auth`) | 96,87% (31/32) | 90,00% (9/10) | 100,00% (9/9) | **96,77%** (30/31) |
+
+## Processo da Sprint 3
+
+O [documento de processo](processo/README.md) reúne meta, backlog, papéis, contribuições, revisão cruzada, burndown, linha de base (T26.2), correção da Release 1 (T26.1), revisão e retrospectiva. Allan foi gerente e PO; Lucas, backend; Raffael, web 1; Lívia, web 2; Júlio, mobile; e Júlia, QA/DevOps.
+
+![Burndown da Sprint 3 no Azure DevOps](processo/burndown-azure-sprint3.png)
+
+![Burndown de integração da Sprint 3](processo/burndown-sprint3.png)
+
+O primeiro gráfico é o do Azure DevOps, com o trabalho restante apontado pela equipe. O segundo usa as horas planejadas das tasks e a data real de merge do último PR de cada uma. A comparação dos dois está em [planejado x realizado](processo/README.md#burndown-do-azure-devops).
+
+## Pendências e passagem para a Sprint 4
+
+- **Login no E2E local (achado A3 da T26.5).** Task prioritária: com vários workers, ou no primeiro login depois de subir a stack, o login passa do limite de 5 s. Aquecer o backend no `e2e:stack:up` ou aumentar o tempo de espera.
+- **Finais de linha (achado A2 da T26.5).** Avaliar `* text=auto eol=lf` no `.gitattributes`, em task própria.
+- **Nome da atividade no histórico (RF15).** Incluir o nome da atividade nos resultados da resposta do histórico e exibi-lo na web, no lugar de "Atividade #10".
+- **RF19–RF22.** Confirmação de presença e reagendamento, solicitação de retirada no aplicativo, painel e relatório na web.
+- **Observações adiadas.** Notificações e caixa de mensagens (hoje o código de ativação aparece para o coordenador) e a simplificação geral da navegação.
+- **Publicação.** Tag `release2` e GitHub Release no fechamento da Sprint 4.

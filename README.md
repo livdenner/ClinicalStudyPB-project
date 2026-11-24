@@ -2,31 +2,31 @@
 
 ## 1. Projeto, escopo e equipe
 
-ClinicalStudyPB é um sistema acadêmico de gestão de estudos clínicos. A Release 1 reúne administração de usuários, autenticação, estudos, protocolo e recrutamento (RF01–RF11), com backend Java, aplicação web e estrutura inicial mobile. O consentimento usa exclusivamente dados fictícios e não possui assinatura ou validade clínica/jurídica.
+ClinicalStudyPB é um sistema acadêmico de gestão de estudos clínicos. A Release 1 reuniu administração de usuários, autenticação, estudos, protocolo e recrutamento (RF01–RF11), com backend Java, aplicação web e estrutura inicial mobile. A Release 2, em andamento, acrescenta o acompanhamento dos participantes na web (RF12–RF16) e o aplicativo do participante (login, RF17 e RF18); a Sprint 4 completa RF19–RF22. O consentimento usa exclusivamente dados fictícios e não possui assinatura ou validade clínica/jurídica.
 
-| Integrante | Sprint 1  | Sprint 2  |
-| ---------- | --------- | --------- |
-| Lívia      | Gerência  | Backend   |
-| Lucas      | Backend   | Gerência  |
-| Raffael    | Web 1     | Web 1     |
-| Allan      | Web 2     | Web 2     |
-| Júlio      | Mobile    | Mobile    |
-| Júlia      | QA/DevOps | QA/DevOps |
+| Integrante | Sprint 1  | Sprint 2  | Sprint 3  |
+| ---------- | --------- | --------- | --------- |
+| Lívia      | Gerência  | Backend   | Web 2     |
+| Lucas      | Backend   | Gerência  | Backend   |
+| Raffael    | Web 1     | Web 1     | Web 1     |
+| Allan      | Web 2     | Web 2     | Gerência  |
+| Júlio      | Mobile    | Mobile    | Mobile    |
+| Júlia      | QA/DevOps | QA/DevOps | QA/DevOps |
 
-Consulte as [entregas, evidências e pendências da Release 1](releases/release1/README.md), o [processo das duas sprints](releases/release1/processo/README.md), o [índice de releases](releases/README.md) e as [convenções de contribuição](CONTRIBUTING.md). O planejamento e acompanhamento da equipe ficam no [Azure DevOps TEAM5](https://dev.azure.com/engsw2/TEAM5).
+Consulte as [entregas, evidências e pendências da Release 1](releases/release1/README.md) e o [registro da Release 2](releases/release2/README.md), o processo das [Sprints 1 e 2](releases/release1/processo/README.md) e da [Sprint 3](releases/release2/processo/README.md), o [índice de releases](releases/README.md) e as [convenções de contribuição](CONTRIBUTING.md). O planejamento e acompanhamento da equipe ficam no [Azure DevOps TEAM5](https://dev.azure.com/engsw2/TEAM5).
 
 ## 2. Arquitetura e diagramas
 
-O backend é um **monólito modular em camadas**, executado como uma aplicação Spring Boot. Os módulos `auth`, `users`, `studies`, `criteria`, `visits`, `candidates`, `consent` e `participants` separam `api`, `application`, `domain` e `infrastructure`. `shared` reúne autenticação HTTP, configurações e tratamento de erros comuns. Integrações entre módulos usam os serviços públicos; cada módulo mantém sua persistência interna.
+O backend é um **monólito modular em camadas**, executado como uma aplicação Spring Boot. Os módulos `auth`, `users`, `studies`, `criteria`, `visits`, `candidates`, `consent`, `participants`, `scheduling` e `results` separam `api`, `application`, `domain` e `infrastructure`; `history` e `me` são módulos de consulta, só com `api` e `application`. `shared` reúne autenticação HTTP, configurações e tratamento de erros comuns. Integrações entre módulos usam os serviços públicos; cada módulo mantém sua persistência interna.
 
-A web chama a API REST com JWT; somente o backend acessa o PostgreSQL. O Flyway versiona o esquema e o Hibernate valida seu mapeamento. O mobile da Release 1 navega entre duas telas iniciais; a integração de login pertence à Sprint 3.
+A web e o aplicativo mobile chamam a API REST com JWT; somente o backend acessa o PostgreSQL. O Flyway versiona o esquema (V1–V15) e o Hibernate valida seu mapeamento. O mobile integra login, ativação por código, troca obrigatória de senha, convites com decisão de consentimento, estudos e visitas do participante pelas rotas `/api/auth` e `/api/me`.
 
-| Diagrama        | Visualização no GitHub                                                                                            | Fonte editável                               | PDF                                                  |
-| --------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------- |
-| Casos de uso    | [RF01–RF11](docs/diagrams/casos-de-uso.png)                                                                       | [Draw.io](docs/diagrams/casos-de-uso.drawio) | [PDF](docs/diagrams/casos-de-uso.drawio.pdf)         |
-| Classes/domínio | [Estudos e protocolo](docs/diagrams/classes.png), [recrutamento](docs/diagrams/classes-recrutamento.png)          | [Draw.io](docs/diagrams/classes.drawio)      | [PDF, 2 páginas](docs/diagrams/classes.drawio.pdf)   |
-| Sequência       | [Protocolo e estados](docs/diagrams/sequencia.png), [galeria dos seis fluxos](docs/diagrams/README.md#sequências) | [Draw.io](docs/diagrams/sequencia.drawio)    | [PDF, 6 páginas](docs/diagrams/sequencia.drawio.pdf) |
-| Arquitetura     | [Aplicações, módulos e banco](docs/diagrams/arquitetura.png)                                                      | [Draw.io](docs/diagrams/arquitetura.drawio)  | [PDF](docs/diagrams/arquitetura.drawio.pdf)          |
+| Diagrama        | Visualização no GitHub                                                                                                                                               | Fonte editável                               | PDF                                                  |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------- |
+| Casos de uso    | [RF01–RF18](docs/diagrams/casos-de-uso.png)                                                                                                                          | [Draw.io](docs/diagrams/casos-de-uso.drawio) | [PDF](docs/diagrams/casos-de-uso.drawio.pdf)         |
+| Classes/domínio | [Estudos e protocolo](docs/diagrams/classes.png), [recrutamento](docs/diagrams/classes-recrutamento.png), [acompanhamento](docs/diagrams/classes-acompanhamento.png) | [Draw.io](docs/diagrams/classes.drawio)      | [PDF, 3 páginas](docs/diagrams/classes.drawio.pdf)   |
+| Sequência       | [Protocolo e estados](docs/diagrams/sequencia.png), [galeria dos sete fluxos](docs/diagrams/README.md#sequências)                                                    | [Draw.io](docs/diagrams/sequencia.drawio)    | [PDF, 7 páginas](docs/diagrams/sequencia.drawio.pdf) |
+| Arquitetura     | [Aplicações, módulos e banco](docs/diagrams/arquitetura.png)                                                                                                         | [Draw.io](docs/diagrams/arquitetura.drawio)  | [PDF](docs/diagrams/arquitetura.drawio.pdf)          |
 
 ![Arquitetura do ClinicalStudyPB](docs/diagrams/arquitetura.png)
 
@@ -34,25 +34,29 @@ Os arquivos mantêm a notação UML, as cores e o modelo Draw.io preexistentes. 
 
 ## 3. Funcionalidades e demonstração
 
-| Requisitos       | Fluxo e perfil                                                                                                             | Situação na Release 1                                  |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| RF01–RF03        | Administrador gerencia usuários; login/logout e autorização por perfil protegem as rotas web e HTTP.                       | Backend e web concluídos.                              |
-| RF04             | Pesquisador cadastra, consulta e edita seus estudos; coordenador consulta estudos.                                         | Backend e web concluídos.                              |
-| RF05–RF07        | Pesquisador responsável cadastra critérios de inclusão/exclusão, configura visitas/atividades e altera o estado do estudo. | Backend e web concluídos.                              |
-| RF08–RF10        | Coordenador cadastra candidatos, responde critérios e registra consentimento simulado.                                     | Backend e web concluídos.                              |
-| RF11             | Coordenador inclui candidato elegível com consentimento concedido e vaga disponível, com painel de vagas e confirmação.    | Backend e web concluídos.                              |
-| Mobile           | Estrutura inicial com navegação Início ↔ Estudos provisórios.                                                              | Escopo inicial concluído; login integrado na Sprint 3. |
-| DevOps/Qualidade | Compose, Flyway, carga fictícia e CI de backend, web, E2E e mobile.                                                        | Ambiente e pipeline validados; relatórios na release.  |
+| Requisitos       | Fluxo e perfil                                                                                                                                         | Situação                                                             |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| RF01–RF03        | Administrador gerencia usuários; login/logout e autorização por perfil protegem as rotas web e HTTP.                                                   | Backend e web concluídos na Release 1.                               |
+| RF04             | Pesquisador cadastra, consulta e edita seus estudos; coordenador consulta estudos.                                                                     | Backend e web concluídos na Release 1.                               |
+| RF05–RF07        | Pesquisador responsável cadastra critérios de inclusão/exclusão, configura visitas/atividades e altera o estado do estudo.                             | Backend e web concluídos na Release 1.                               |
+| RF08–RF10        | Coordenador cadastra candidatos com e-mail e telefone e responde critérios; o candidato ativa a conta e decide o consentimento simulado no aplicativo. | Concluídos; conta, convite e decisão no aplicativo desde a Sprint 3. |
+| RF11             | Coordenador inclui candidato elegível que aceitou o convite, com vaga disponível, painel de vagas e confirmação.                                       | Backend e web concluídos.                                            |
+| RF12–RF14        | Coordenador agenda visitas e registra desfechos; pesquisador registra resultados fictícios da visita realizada.                                        | Backend e web concluídos na Sprint 3.                                |
+| RF15–RF16        | Histórico do participante; coordenador registra a retirada, que cancela as visitas futuras.                                                            | Backend e web concluídos na Sprint 3.                                |
+| RF17–RF18        | Participante consulta, no aplicativo, os próprios estudos, as próximas visitas e o histórico.                                                          | Backend e aplicativo concluídos na Sprint 3.                         |
+| RF19–RF22        | Confirmação de presença e solicitações no aplicativo; painel e relatório na web.                                                                       | Previstos para a Sprint 4.                                           |
+| Mobile           | Login, primeiro acesso com código e troca obrigatória de senha, só para participantes.                                                                 | Concluído na Sprint 3.                                               |
+| DevOps/Qualidade | Compose, Flyway V1–V15, quatro cargas fictícias, CI de backend, web, E2E e mobile e relatório por execução de testes.                                  | Ambiente e pipeline validados; relatórios nas releases.              |
 
-O [quadro RF01–RF11 da Release 1](releases/release1/README.md#rastreabilidade-dos-requisitos) identifica implementação, testes e integração de cada tela. Painel e relatórios ainda usam protótipos; essa navegação não constitui evidência de persistência dessas funcionalidades. A tela de visitas consulta a API real, conforme o fluxo da T19.3 abaixo.
+O [quadro RF01–RF11 da Release 1](releases/release1/README.md#rastreabilidade-dos-requisitos) identifica implementação, testes e integração de cada tela; a [matriz da Release 2](releases/release2/README.md#rastreabilidade-dos-requisitos) faz o mesmo para RF12–RF22 e para o que mudou em RF02, RF03, RF08, RF10 e RF11. Painel e relatórios (RF21 e RF22) ainda usam protótipos; essa navegação não constitui evidência de persistência dessas funcionalidades. A tela de visitas consulta a API real, conforme o fluxo da T19.3 abaixo.
 
-O [roteiro da Release 1](releases/release1/README.md#roteiro-de-demonstração) detalha a demonstração por perfil, do cadastro de usuários à inclusão. Para o mobile, confira **ClinicalStudyPB → Ver estudos → Voltar ao início**.
+O [roteiro da Release 2](releases/release2/README.md#roteiro-de-demonstração) demonstra, com a carga fictícia, o primeiro acesso e a decisão do convite no aplicativo, as áreas de estudos e visitas do participante, a agenda, os desfechos, os resultados, a retirada e o histórico. O [roteiro da Release 1](releases/release1/README.md#roteiro-de-demonstração) continua válido para o cadastro de usuários, estudos, critérios e a inclusão; o consentimento, que ele registra na web, passou ao candidato no aplicativo.
 
 ![Critérios e recrutamento pela API real](releases/release1/images/05-criterios-sucesso.jpg)
 
 ![Validação de permissão](releases/release1/images/10-permissao-negada.jpg)
 
-A [galeria de capturas](releases/release1/images/README.md) contém sucesso e erro, ambiente, requisitos e passos de reprodução. A [validação Android](releases/release1/tests/t16-13/README.md) registra a abertura e a navegação confirmadas em dispositivo.
+As galerias de capturas da [Release 1](releases/release1/images/README.md) e da [Release 2](releases/release2/images/README.md) contêm sucesso e erro, ambiente, requisitos e passos de reprodução. A [validação Android](releases/release1/tests/t16-13/README.md) registra a abertura e a navegação confirmadas em dispositivo.
 
 ## 4. Stack e pré-requisitos
 
@@ -65,7 +69,7 @@ A [galeria de capturas](releases/release1/images/README.md) contém sucesso e er
 | Web                 | React 19.3.1, TypeScript 6.0.3, Vite 8.3.5                        |
 | Interface web       | HeroUI 3.2.6, Tailwind CSS 4.3.3, Lucide React 1.61.0             |
 | Mobile              | Expo 58.0.26, React Native 0.88.1, React 19.3.0, TypeScript 6.0.3 |
-| Testes              | JaCoCo 0.8.13, Vitest 5.0.5, Playwright 1.64.1, Jest 30.5.2       |
+| Testes              | JaCoCo 0.8.13, Vitest 5.0.5, Playwright 1.64.1, Jest 30.5.2, Maestro |
 | Node.js / npm       | Node 22 no CI; validação com 22.23.4 / npm 10.9.9                 |
 | Docker / Compose    | Validação com 29.9.2 / 5.6.1                                      |
 
@@ -192,17 +196,7 @@ backend/dev/
 | Cancelada | Diabetes: acompanhamento de 3 meses de João, cancelado pelo coordenador com justificativa. | RF13 |
 | Retirada | Diabetes: Lúcia Mendes Araújo, retirada em 10/11/2026. A visita futura foi cancelada com a nota "Retirada do participante". | RF15 e RF16 |
 
-O roteiro abaixo usa apenas a carga, sem preparar dados à mão. Onde a tela ainda não foi integrada, o passo é feito pelo [Swagger UI](http://localhost:8080/swagger-ui/index.html), com o token da conta indicada em "Authorize".
-
-| Passo | Conta | Onde | O que fazer e conferir |
-| --- | --- | --- | --- |
-| 1 | Coordenador | Web, **Recrutamento** | Na vacina, confira as situações Convidado, Aceitou, Recusou, Aguardando decisão e Incluído. Em **Higiene do sono**, inclua Vera ou Wilson na última vaga. A segunda inclusão é recusada por falta de vaga. |
-| 2 | `convite@…` | Aplicativo | Em **Primeiro acesso? → Ativar conta**, informe o código `CONVITE-DEMO-2026` e defina a senha. Em **Ver convites**, aceite o convite da vacina (RF10). Na web, use **Atualizar lista** e veja a nova situação. Pela API, são `GET /api/me/invitations` e `POST /api/me/invitations/{candidateId}/decision`. |
-| 3 | `participante@…` | Aplicativo | **Ver estudos** mostra o estudo de diabetes (RF17). **Ver visitas** mostra uma visita em **Próximas** e uma em **Histórico** (RF18). Em **Ver convites**, recuse o convite da vacina. Pela API, são `GET /api/me/studies` e `GET /api/me/visits`. |
-| 4 | Coordenador | Web, **Visitas** | No estudo de diabetes, filtre por **Situação** e confira os quatro desfechos. Registre o desfecho da visita remarcada de João. A visita de Lúcia aparece cancelada pela retirada. Pela API, o mesmo filtro é `GET /api/studies/{studyId}/visits?status=…`, e o registro é `POST …/visits/{visitId}/outcome` com `If-Match`. |
-| 5 | Pesquisador | Web, **Visitas** | Em **Ver resultados**, confira os resultados da avaliação inicial de Irene. Em **Registrar resultados**, registre os da visita realizada no passo 4. Pela API, são `GET …/visits/{visitId}/results` e `PUT …/results/{activityId}`. |
-
-O histórico do participante (RF15) está na web desde o PR #119: em **Estudos clínicos**, abra o estudo de diabetes, aba **Participantes**, e use **Ver histórico** para Lúcia, que mostra as visitas com resultados e a retirada. Pela API, é `GET …/participants/{participantId}/history`.
+O [roteiro de demonstração da Release 2](releases/release2/README.md#roteiro-de-demonstração) percorre esses cenários na web e no aplicativo, com os endpoints equivalentes para o Swagger UI. As ações do roteiro não são desfeitas ao executar os scripts de novo; para repetir a demonstração, recrie o banco com `docker compose down -v`. O passo a passo no aplicativo também está no [README mobile](mobile/README.md#roteiro-de-demonstração).
 
 `DemoSeedIntegrationTest` executa os quatro scripts em PostgreSQL real e confere três pontos: a repetição sem duplicar dados, as regras da API (resultado só em visita realizada, retirada cancelando as visitas futuras e decisão com autoria do candidato) e a leitura pelos endpoints do coordenador e do aplicativo.
 
@@ -211,9 +205,9 @@ O histórico do participante (RF15) está na web desde o PR #119: em **Estudos c
 | Arquivo modelo                             | Variável                   | Uso                                                                                                                                                                                      |
 | ------------------------------------------ | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [web/.env.example](web/.env.example)       | `VITE_API_BASE_URL`        | Deixe vazia em desenvolvimento para usar `/api` pelo proxy Vite; para outra API, informe a origem sem `/api` (ex.: `http://localhost:8080`), pois os serviços já acrescentam `/api/...`. |
-| [mobile/.env.example](mobile/.env.example) | `EXPO_PUBLIC_API_BASE_URL` | Obrigatória para o login e as telas do aplicativo. Emulador Android: `http://10.0.2.2:8080/api`; no telefone, use o IP da máquina na rede (ex.: `http://192.168.0.10:8080/api`). |
+| [mobile/.env.example](mobile/.env.example) | `EXPO_PUBLIC_API_BASE_URL` | Obrigatória para o login e as telas do aplicativo, terminada em `/api`. Emulador Android: `http://10.0.2.2:8080/api`; no telefone físico, use o IPv4 da máquina na rede (ex.: `http://192.168.0.10:8080/api`). |
 
-São configurações públicas do aplicativo cliente: nunca coloque chaves privadas ou senhas nessas variáveis. Os modelos ficam versionados; arquivos `.env` e a chave JWT ficam fora do Git.
+São configurações públicas do aplicativo cliente: nunca coloque chaves privadas ou senhas nessas variáveis. Os modelos ficam versionados; arquivos `.env` e a chave JWT ficam fora do Git. O aplicativo exige a API em execução para autenticação, ativação por código e telas do participante.
 
 ### Aplicação web
 
@@ -231,19 +225,17 @@ No PowerShell, use `npm.cmd` se a política de execução impedir o uso de `npm.
 
 ### Aplicativo mobile
 
-Abra outro terminal na raiz do repositório. Crie `mobile/.env` a partir de `mobile/.env.example` e informe `EXPO_PUBLIC_API_BASE_URL` conforme a [tabela de variáveis](#variáveis-das-aplicações-cliente); sem ela, o login não alcança a API.
+Copie `mobile/.env.example` para `mobile/.env` e confirme `EXPO_PUBLIC_API_BASE_URL` (o padrão `http://10.0.2.2:8080/api` já atende o emulador Android; no telefone físico, use o IPv4 da máquina). Com o backend e as 4 seeds em execução, abra outro terminal na raiz do repositório:
 
 ```bash
 cd mobile
 npm ci
-npm start
+npm run android
 ```
 
-Para telefone Android, conecte-o à mesma rede Wi-Fi do computador, abra o Expo Go e leia o QR code exibido pelo Expo. O Expo Go deve ser compatível com o Expo SDK 58 usado pelo projeto. Para emulador, inicie o dispositivo no Android Studio e execute `npm run android` na pasta `mobile/`, ou pressione `a` no terminal do Expo.
+No Windows (PowerShell), use `npm.cmd run android`. Para usar em telefone Android com o **Expo Go** (compatível com **Expo SDK 58**), conecte o celular à mesma rede Wi-Fi, ajuste o IPv4 em `mobile/.env` e rode `npm start` (ou `npm.cmd start`).
 
-Entre com `participante@clinicalstudypb.test` e a senha de demonstração e confira **Ver estudos** e **Ver visitas**. O primeiro acesso de `convite@…` e a decisão de convite estão nos passos 2 e 3 do roteiro acima.
-
-Para configuração de API, alternativas de conexão e passagem de contexto, consulte [mobile/README.md](mobile/README.md). Execute também os [testes e a verificação de compatibilidade](#6-testes-cobertura-e-qualidade).
+O app aceita apenas contas de participante: entre em **Primeiro acesso? → Ativar conta** com `convite@clinicalstudypb.test` e o código `CONVITE-DEMO-2026` (seguido de troca obrigatória de senha e decisão de convite), ou entre direto com `participante@clinicalstudypb.test` e `Demo@Clinical2026` para consultar estudos e visitas. Esse percurso corresponde aos passos 2 e 3 do [roteiro da Release 2](releases/release2/README.md#roteiro-de-demonstração). Siga o guia completo no [README mobile](mobile/README.md), o [roteiro passo a passo no aplicativo](mobile/README.md#roteiro-de-demonstração), as [mudanças de configuração do Expo](mobile/README.md#configuração-do-expo-e-mudanças-registradas) e os [testes E2E com Maestro](mobile/README.md#testes-e2e-maestro). Execute também os [testes e a verificação de compatibilidade](#6-testes-cobertura-e-qualidade).
 
 ### Backend fora do contêiner (alternativa)
 
@@ -323,6 +315,14 @@ As mensagens gerais e de campo recebidas da API são exibidas no formulário. Em
 
 Os campos não salvos são descartados ao fechar o formulário. A interface usa as cores semânticas do PBI-24 e os botões de criação já adotados na Web. O teste existente da página foi adaptado para a opção de consulta após o desfecho; os novos cenários específicos de resultados pertencem à task de testes Web correspondente. Testes, lint e build desta implementação devem ser executados na pasta `web/` do worktree da T20.4.
 
+### Testes Web de candidatos, desfechos e resultados (T17.8, T19.4 e T20.5)
+
+As três tasks de testes são reunidas em uma branch própria a partir da `development`, com HTTP simulado e dados fictícios. A [matriz de rastreabilidade](docs/tests/rastreabilidade-candidatos-desfechos-resultados-web.md) relaciona cenários, requisitos e arquivos para o PBI-25.
+
+As suítes existentes de elegibilidade e recrutamento foram preservadas e ampliadas. `ConsentimentoSimulado.test.tsx` foi recuperado e adaptado ao fluxo atual: a Web consulta a decisão do candidato e não registra nem reverte consentimento. Cadastro, convite, cancelamento e filtro de cancelados, desfechos com confirmação/conflito e resultados por atividade possuem cobertura própria. O controle exige 81% de linhas individualmente nos componentes abrangidos e mantém os limites de agendamento existentes. A confirmação desse percentual depende da execução de `npm run test:coverage -- --maxWorkers=2`.
+
+Executar testes, lint e build em `web/` do worktree da branch de testes. O relatório JSON continua alimentando o PBI-25; as evidências locais devem seguir `docs/test-runs/README.md`. A preparação dos testes não representa uma execução aprovada.
+
 ### Sessão por aba (T24.4)
 
 Agora dá para usar perfis diferentes em abas do mesmo navegador. A sessão fica no `sessionStorage`: recarregar mantém o login, mas sair ou deixar a sessão expirar afeta apenas aquela aba. Depois da expiração, é preciso entrar novamente.
@@ -384,14 +384,14 @@ Na pasta `mobile/`:
 
 ```bash
 npm ci
-npm test -- --ci --runInBand --coverage
+npm run test:report -- --runInBand --coverage
 npx tsc --noEmit
 npx expo install --check
 ```
 
-A cobertura fica em `mobile/coverage/`. Confira também a abertura real no Android. Recomendações do Expo devem ser registradas antes de alterar o lockfile; veja o [relatório da T16.13](releases/release1/tests/t16-13/README.md).
+Os testes Jest simulam HTTP sem chamadas reais de rede e exigem cobertura global mínima de **80% de linhas** (`coverageThreshold` em `mobile/package.json`). O relatório JSON e a cobertura ficam em `mobile/test-reports/` e `mobile/coverage/`. Os testes E2E mobile no emulador Android usam **Maestro** contra `compose.e2e.yaml` e estão documentados em [`mobile/README.md`](mobile/README.md#testes-e2e-maestro) e [`docs/tests/rastreabilidade-e2e-mobile.md`](docs/tests/rastreabilidade-e2e-mobile.md). Confira também a abertura real no emulador ou dispositivo; alterações de dependências do Expo devem ser registradas em [`mobile/README.md`](mobile/README.md#configuração-do-expo-e-mudanças-registradas) (histórico inicial no [relatório da T16.13](releases/release1/tests/t16-13/README.md)).
 
-A [CI](.github/workflows/ci.yml) executa backend, web, E2E e mobile em PRs e pushes para `development` e `main`, publicando artefatos JaCoCo, JUnit, Vitest, Jest e Playwright. O JaCoCo exige **80% de linhas no backend**, com as exclusões técnicas declaradas no POM; não se aplica esse mesmo limite à cobertura web/mobile. Os [resultados versionados da Release 1](releases/release1/tests/README.md) identificam comandos, versão, contagens e evidências.
+A [CI](.github/workflows/ci.yml) executa backend, web, E2E web e mobile Jest em PRs e pushes para `development` e `main`, publicando artefatos JaCoCo, JUnit, Vitest, Jest e Playwright; o workflow [E2E Mobile](.github/workflows/mobile-e2e.yml) executa o fluxo Maestro no emulador Android e publica `maestro-report`. O JaCoCo exige **80% de linhas no backend** (com as exclusões técnicas declaradas no POM) e o Jest exige **80% de linhas no mobile**; na web, o Vitest verifica a cobertura mínima configurada por componente. Os [resultados versionados da Release 1](releases/release1/tests/README.md) identificam comandos, versão, contagens e evidências da entrega anterior.
 
 ## 7. Swagger UI e contrato da API
 

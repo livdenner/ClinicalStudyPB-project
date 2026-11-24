@@ -7,6 +7,7 @@ As evidências ficam separadas por execução, como na [Release 1](../../release
 | Execução | Commit | O que registra |
 | --- | --- | --- |
 | [CI do commit final da Sprint 3](ci-e975d92/README.md) | `development` **e975d92** (23/11/2026) | Logs dos quatro jobs da CI, cobertura JaCoCo do backend, suítes JUnit, relatório teste a teste (T25.1) e E2E mobile no emulador Android. |
+| [Regressão RF01–RF11 e instalação limpa (T26.5)](t26-5/README.md) | `development` **e975d92** (24/11/2026) | Instalação do zero pelo README, cargas executadas duas vezes sem duplicar, suítes de backend, web, E2E e mobile e conferência manual de RF01–RF07. |
 | [Regressão web de UX e sessão (T24.5)](t24-5/README.md) | `development` até `92b2f4f` | Matriz das observações sobre ações, cores, cards e sessão, com os testes executados. |
 | [Fluxo de referência E2E (T19.5)](../evidencias/t19-5-fluxo-referencia/README.md) | Ver o README da evidência | Capturas do E2E Playwright: inclusão, agendamento, desfecho e agendamento duplicado. |
 

@@ -1,0 +1,53 @@
+task,pbi,descricao,papel,responsavel,horas_planejadas,prs,integrada_em_fortaleza,situacao
+T17.1,PBI-17,"Definir no OpenAPI a identidade do candidato, convite de ativação, decisão de consentimento e permissões",Gerente,Allan,2.0,#73 #74,2026-11-13T16:54:14-03:00,Integrada
+T17.2,PBI-17,Backend: vincular candidato a usuário existente por e-mail ou criar conta mínima com convite de ativação,Backend,Lucas,4.0,#76,2026-11-13T22:44:41-03:00,Integrada
+T17.3,PBI-17,"Backend: ativação segura da conta, primeiro login e troca obrigatória de senha",Backend,Lucas,3.5,#77,2026-11-14T16:58:50-03:00,Integrada
+T17.4,PBI-17,Backend: transferir a decisão de consentimento (aceite ou recusa) ao candidato autenticado,Backend,Lucas,2.5,#93,2026-11-17T21:09:50-03:00,Integrada
+T17.5,PBI-17,"Testes backend de vínculo, convite, ativação, troca de senha, permissões e consentimento",QA,Júlia,2.0,#83,2026-11-18T19:09:54-03:00,Integrada
+T17.6,PBI-17,"Web: formulário de candidato com dados mínimos (nome, e-mail, idade, telefone) e vínculo ou convite",Web 2,Lívia,3.0,#84,2026-11-18T23:03:54-03:00,Integrada
+T17.7,PBI-17,Web: andamento do convite e da decisão do candidato; inclusão habilitada só após aceite,Web 2,Lívia,2.0,#96,2026-11-19T22:19:31-03:00,Integrada
+T17.8,PBI-17,Testes web do formulário de candidato e do andamento do convite,Web 2,Lívia,1.5,#116,2026-11-23T00:48:41-03:00,Integrada
+T17.9,PBI-17,"Mobile: login, ativação por código, completar cadastro, troca obrigatória de senha e sessão expirada (RF02/RF03 mobile)",Mobile,Júlio,7.0,#95,2026-11-18T22:39:50-03:00,Integrada
+T17.10,PBI-17,"Mobile: convite, detalhes do estudo e aceite ou recusa do consentimento pelo candidato",Mobile,Júlio,3.5,#109,2026-11-21T20:56:56-03:00,Integrada
+T17.11,PBI-17,"E2E web: adaptar full-recruitment.spec.ts ao novo fluxo (convite, decisão do candidato pela API e inclusão pelo coordenador)",QA,Júlia,3.0,#106,2026-11-23T01:05:15-03:00,Integrada
+T18.1,PBI-18,"Definir contrato OpenAPI de agendamento e desfecho (RF12/RF13): visita prevista, participante, data, conflitos e permissões",Gerente,Allan,2.0,#71 #78,2026-11-13T21:15:35-03:00,Integrada
+T18.2,PBI-18,"Backend RF12: migração, serviço e API de agendamento (participante incluído, visita prevista, data futura, duplicidade)",Backend,Lucas,5.0,#79,2026-11-14T14:26:41-03:00,Integrada
+T18.3,PBI-18,"Testes backend de agendamento: regras unitárias, integração PostgreSQL, acesso negado e duplicidade",Backend,Lucas,2.0,#86,2026-11-17T18:44:48-03:00,Integrada
+T18.4,PBI-18,Web RF12: agendar visita para participante incluído (visita prevista + data) e exibir erros da API,Web 2,Lívia,4.0,#99,2026-11-21T13:14:21-03:00,Integrada
+T18.5,PBI-18,Testes web do formulário de agendamento e das mensagens de conflito,Web 2,Lívia,1.5,#99,2026-11-21T13:14:21-03:00,Integrada
+T19.1,PBI-19,"Backend RF13: desfecho realizada, ausente ou cancelada com transições permitidas, autoria e conflito de versão",Backend,Lucas,3.5,#88,2026-11-16T17:23:05-03:00,Integrada
+T19.2,PBI-19,"Testes backend dos três desfechos, transição inválida e atualização concorrente",Backend,Lucas,1.5,#102,2026-11-19T22:19:02-03:00,Integrada
+T19.3,PBI-19,Web RF13: lista de agendamentos do estudo e ações de desfecho com confirmação e feedback,Web 2,Lívia,3.0,#100,2026-11-21T19:15:30-03:00,Integrada
+T19.4,PBI-19,"Testes web das ações de desfecho, erro de conflito e atualização da lista",Web 2,Lívia,1.5,#116,2026-11-23T00:48:41-03:00,Integrada
+T19.5,PBI-19,E2E web do fluxo de referência: incluir participante → agendar visita → registrar desfecho,QA,Júlia,3.0,#108,2026-11-23T01:31:53-03:00,Integrada
+T20.1,PBI-20,"Definir contrato OpenAPI de resultados, histórico e retirada (RF14/RF15/RF16)",Gerente,Allan,2.0,#75,2026-11-13T22:47:00-03:00,Integrada
+T20.2,PBI-20,"Backend RF14: registrar resultados fictícios por atividade de visita realizada, com validação e autoria",Backend,Lucas,4.0,#97,2026-11-19T17:36:22-03:00,Integrada
+T20.3,PBI-20,"Testes backend de resultados: visita não realizada, atividade inexistente e sucesso",Backend,Lucas,1.5,#114,2026-11-22T20:38:41-03:00,Integrada
+T20.4,PBI-20,Web RF14: formulário de resultados fictícios das atividades da visita realizada,Web 2,Lívia,3.5,#104,2026-11-21T20:11:13-03:00,Integrada
+T20.5,PBI-20,Testes web do formulário de resultados e validações,Web 2,Lívia,1.5,#116,2026-11-23T00:48:41-03:00,Integrada
+T21.1,PBI-21,"Backend RF15: consulta de histórico de visitas e avaliações do participante (agendamentos, desfechos e resultados)",Gerente,Allan,3.0,#103,2026-11-20T14:52:54-03:00,Integrada
+T21.2,PBI-21,"Web RF15: tela de histórico do participante com visitas, desfechos e resultados",Web 1,Raffael,4.0,#119,2026-11-22T22:09:33-03:00,Integrada
+T21.3,PBI-21,"Testes web do histórico: lista vazia, erro da API e renderização dos registros",Web 1,Raffael,1.5,#120,2026-11-23T12:26:51-03:00,Integrada
+T22.1,PBI-22,Backend RF16: retirada do participante com motivo e data; bloqueia novos agendamentos e cancela visitas futuras,Gerente,Allan,3.0,#81,2026-11-14T16:59:07-03:00,Integrada
+T22.2,PBI-22,"Testes backend da retirada: participante já retirado, bloqueio de agendamento e persistência",Gerente,Allan,1.5,#89,2026-11-17T20:36:10-03:00,Integrada
+T22.3,PBI-22,"Web RF16: registrar retirada com motivo, confirmação e atualização do painel de participantes",Web 1,Raffael,3.5,#110,2026-11-22T11:57:26-03:00,Integrada
+T22.4,PBI-22,Testes web da retirada e dos estados exibidos,Web 1,Raffael,1.5,#111,2026-11-23T20:01:34-03:00,Integrada
+T23.1,PBI-23,Backend: endpoints do participante autenticado para estudos incluídos e visitas (RF17/RF18),Gerente,Allan,2.5,#94,2026-11-17T21:30:00-03:00,Integrada
+T23.2,PBI-23,Mobile RF17: estudos em que o participante autenticado está incluído,Mobile,Júlio,2.5,#112,2026-11-21T21:23:22-03:00,Integrada
+T23.3,PBI-23,Mobile RF18: próximas visitas e histórico de comparecimento do participante,Mobile,Júlio,3.0,#117,2026-11-21T22:24:59-03:00,Integrada
+T23.4,PBI-23,"Testes Jest de login, ativação, decisão do candidato, estudos e visitas (sucesso, vazio e erro)",Mobile,Júlio,4.0,#118,2026-11-22T14:58:01-03:00,Integrada
+T23.5,PBI-23,Escolher ferramenta de E2E mobile e automatizar um fluxo: login e listagem de visitas,QA,Júlia,2.0,#121,2026-11-23T01:04:59-03:00,Integrada
+T24.1,PBI-24,Web: reorganizar botões e ações dentro do estudo por tarefa do usuário,Web 1,Raffael,3.0,#87,2026-11-16T01:10:13-03:00,Integrada
+T24.2,PBI-24,"Web: cores semânticas (verde sucesso, vermelho erro, amarelo atenção, neutro para ações comuns)",Web 1,Raffael,2.0,#80,2026-11-15T11:19:02-03:00,Integrada
+T24.3,PBI-24,Web: alinhar cards e grades em desktop e largura de celular,Web 1,Raffael,1.5,#101,2026-11-20T14:17:00-03:00,Integrada
+T24.4,PBI-24,"Web: sessão isolada por aba, permitindo perfis diferentes em abas distintas",Web 1,Raffael,3.0,#92,2026-11-18T11:19:44-03:00,Integrada
+T24.5,PBI-24,"Testes web de ações por estado, cores/estados e duas abas com perfis distintos",Web 1,Raffael,1.5,#115,2026-11-23T20:01:55-03:00,Integrada
+T25.1,PBI-25,"Gerar MD por execução de testes, com data/hora e commit no nome, uma linha por teste com resultado, em docs/tests/execucoes",QA,Júlia,4.0,#82,2026-11-15T19:08:21-03:00,Integrada
+T25.2,PBI-25,"Evidências: cobertura JaCoCo >= 80%, relatórios da CI e capturas das novas telas web e mobile",QA,Júlia,1.0,#124,2026-11-24T00:50:13-03:00,Integrada depois de 23/11
+T26.1,PBI-26,"Atualizar releases/release1/README.md para o estado real da tag release1 (8e88d15): PRs #61 a #70, E2E completo, testes RF09–RF11 e pendências",Gerente,Allan,2.0,#98,2026-11-18T21:05:50-03:00,Integrada
+T26.2,PBI-26,"Confirmar linha de base da Sprint 3: development 72bfdd4 igual a main 8e88d15, migrações V1–V10 e CI verdes antes de iniciar RF12",Gerente,Allan,1.5,#72,2026-11-12T16:24:22-03:00,Integrada
+T26.3,PBI-26,"Revisar diagramas e guia de uso para o novo fluxo de identidade, consentimento e acompanhamento",Gerente,Allan,1.5,#122,2026-11-23T20:01:16-03:00,Integrada
+T26.4,PBI-26,"Registro da Sprint 3: processo, burndown do Azure DevOps, revisão cruzada, demonstração e início do README da Release 2",Gerente,Allan,2.5,,,Pendente
+T26.5,PBI-26,Regressão RF01–RF11 e instalação limpa com as novas migrações e seeds,QA,Júlia,2.0,#126,2026-11-24T02:27:02-03:00,Integrada depois de 23/11
+T26.6,PBI-26,"Seeds de demonstração do acompanhamento: candidatos convidados, agendamentos, desfechos, resultados e uma retirada",QA,Júlia,2.0,#107,2026-11-22T22:26:19-03:00,Integrada
+T26.7,PBI-26,"README mobile: fluxo de ativação por código, credenciais fictícias de participante, execução no emulador e E2E mobile",Mobile,Júlio,1.5,#123,2026-11-23T17:29:45-03:00,Integrada
