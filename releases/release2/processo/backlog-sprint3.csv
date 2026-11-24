@@ -1,0 +1,11 @@
+pbi,descricao,rf,horas_planejadas,quantidade_tarefas,tarefas_integradas_ate_23_11
+PBI-17,"Identidade, primeiro acesso e consentimento do candidato (observação da professora) + login mobile",RF01/RF08/RF10/RF11; RF02/RF03 mobile,34,11,11
+PBI-18,Agendamento de visitas,RF12,14.5,5,5
+PBI-19,Desfecho de visitas,RF13,12.5,5,5
+PBI-20,Resultados fictícios das avaliações,RF14,12.5,5,5
+PBI-21,Histórico do participante,RF15,8.5,3,3
+PBI-22,Retirada de participante,RF16,9.5,4,4
+PBI-23,Estudos e visitas no aplicativo,RF17/RF18,14,5,5
+PBI-24,UX urgente da web e sessão por aba (observações da professora),Qualidade,11,5,5
+PBI-25,Rastreabilidade de testes e evidências (observação da professora),Qualidade,5,2,1
+PBI-26,"Linha de base, documentação e registro da Sprint 3",Qualidade,13,7,5
