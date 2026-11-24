@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="test" tests="1" failures="0" time="66.945" timestamp="2026-11-23T20:48:16">
+    <testcase id="Login do participante e próximas visitas" name="Login do participante e próximas visitas" classname="Login do participante e próximas visitas" file="mobile/e2e/maestro/login-proximas-visitas.yaml" time="66.907" timestamp="2026-11-23T20:48:16" status="SUCCESS"/>
+  </testsuite>
+</testsuites>
