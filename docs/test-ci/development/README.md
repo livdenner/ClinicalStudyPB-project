@@ -7,10 +7,13 @@ com **uma linha por teste** e o resultado de cada um. O nome segue `AAAA-MM-DD_H
 com data e hora em America/Fortaleza. Os arquivos são gerados por `scripts/relatorio-testes/gerar.mjs`;
 veja o [guia de contribuição](../../../CONTRIBUTING.md#relatório-de-execução-dos-testes).
 
-**Última execução:** [2026-11-23_20-08_e3d5772](2026-11-23_20-08_e3d5772.md)
+**Última execução:** [2026-11-24_04-29_61ef632](2026-11-24_04-29_61ef632.md)
 
 | Data/hora | Commit | Integração | Ambiente | Testes | ✅ | ❌ | ⏭️ | ⚠️ | Situação |
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| [24/11/2026 04:29](2026-11-24_04-29_61ef632.md) | `61ef632` | [PR #127](https://github.com/livdenner/ClinicalStudyPB-project/pull/127) (`docs/registro-sprint3-t26-4`): Registra a Sprint 3 e restaura o README principal - Task 4039 (T26.4) | CI (GitHub Actions) | 1737 | 1737 | 0 | 0 | 0 | ✅ ok |
+| [24/11/2026 02:32](2026-11-24_02-32_866bffb.md) | `866bffb` | [PR #126](https://github.com/livdenner/ClinicalStudyPB-project/pull/126) (`test/t26-5-regressao-instalacao-limpa`): test(regressao): regressão RF01–RF11 e instalação limpa da Sprint 3 (T26.5) | CI (GitHub Actions) | 1737 | 1737 | 0 | 0 | 0 | ✅ ok |
+| [24/11/2026 00:53](2026-11-24_00-53_acfb87c.md) | `acfb87c` | [PR #124](https://github.com/livdenner/ClinicalStudyPB-project/pull/124) (`docs/t25-2-evidencias-release2`): docs(release2): evidências de cobertura, CI e telas da Sprint 3 (T25.2) | CI (GitHub Actions) | 797 | 797 | 0 | 0 | 0 | ⚠️ sem Backend · JUnit |
 | [23/11/2026 20:08](2026-11-23_20-08_e3d5772.md) | `e3d5772` | [PR #115](https://github.com/livdenner/ClinicalStudyPB-project/pull/115) (`test/4033-ux-session-regression-web`): T24.5: testa ações por estado, cores e sessões isoladas por aba | CI (GitHub Actions) | 1737 | 1737 | 0 | 0 | 0 | ✅ ok |
 | [23/11/2026 20:07](2026-11-23_20-07_2f53cb7.md) | `2f53cb7` | [PR #111](https://github.com/livdenner/ClinicalStudyPB-project/pull/111) (`test/4023-participant-withdrawal-web`): Test/4023 participant withdrawal web | CI (GitHub Actions) | 1709 | 1709 | 0 | 0 | 0 | ✅ ok |
 | [23/11/2026 20:06](2026-11-23_20-06_32c195b.md) | `32c195b` | [PR #122](https://github.com/livdenner/ClinicalStudyPB-project/pull/122) (`docs/diagramas-release2-t26-3`): Atualiza diagramas, arquitetura e roteiro de demonstração da Release 2 - Task 4038 (T26.3) | CI (GitHub Actions) | 1703 | 1703 | 0 | 0 | 0 | ✅ ok |
