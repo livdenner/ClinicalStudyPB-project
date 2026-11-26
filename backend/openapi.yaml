@@ -1,15 +1,16 @@
 openapi: 3.0.3
 info:
   title: ClinicalStudyPB API
-  version: 1.7.1
+  version: 1.8.0
   description: |
     Contrato da Release 1 (RF01 a RF11) e da Release 2 em andamento. As rotas
     da Sprint 3 (identidade, ativação e decisão de consentimento do candidato;
     agendamento e desfecho de visitas, RF12 e RF13; resultados, histórico e
     retirada, RF14 a RF16; estudos e visitas do participante no app, RF17 e
-    RF18) são o alvo acordado; sua
-    presença aqui não indica implementação pronta, e elas só aparecem no
-    Swagger UI gerado pela aplicação depois de implementadas.
+    RF18) e da Sprint 4 em andamento (confirmação de presença prevista e
+    reagendamento, RF19) são o alvo acordado; sua presença aqui não indica
+    implementação pronta, e novas rotas só aparecem no Swagger UI gerado pela
+    aplicação depois de implementadas.
 
     Convenções acordadas:
     - Os nomes JSON usam camelCase; os nomes do banco permanecem em snake_case.
@@ -31,6 +32,11 @@ info:
       registra a retirada (RF16); ambos consultam o histórico do participante (RF15).
     - PARTICIPANT consulta só os próprios estudos e visitas em /api/me (RF17/RF18);
       a conta vem do token, nunca de parâmetro, e os demais perfis recebem 403.
+    - No RF19, PARTICIPANT confirma presença prevista (intenção, sem marcar
+      DONE) ou solicita reagendamento de visita futura da própria participação
+      ativa; COORDINATOR decide o pedido (ACCEPTED cancela a visita atual e
+      cria uma nova SCHEDULED atomicamente, ou DECLINED com justificativa), e
+      RESEARCHER apenas consulta os pedidos.
     - Erros de regra de negócio da Release 2 trazem `code` estável no ProblemDetail.
 servers:
   - url: /
@@ -514,9 +520,11 @@ paths:
         - CANCELLED cancela, na mesma transação, todas as visitas SCHEDULED do
           estudo: passam a CANCELLED com outcomeNote "Cancelamento do estudo",
           outcomeByUserId do pesquisador que cancelou, outcomeAt igual ao
-          instante do cancelamento e version incrementada. Visitas DONE, ABSENT
-          ou CANCELLED não mudam. Desfazer o cancelamento (volta a PLANNING ou
-          RECRUITMENT) não reabre essas visitas; é preciso agendar de novo.
+          instante do cancelamento e version incrementada, além de marcar
+          eventuais solicitações de reagendamento PENDING (RF19) como CANCELLED.
+          Visitas DONE, ABSENT ou CANCELLED não mudam. Desfazer o cancelamento
+          (volta a PLANNING ou RECRUITMENT) não reabre essas visitas nem as
+          solicitações canceladas; é preciso agendar de novo.
         - A mudança de estado e o agendamento são serializados por estudo: um
           agendamento concorrente com CLOSED ou CANCELLED é recusado ou entra
           antes e é tratado pela regra acima.
@@ -1437,7 +1445,9 @@ paths:
           passam a CANCELLED, com outcomeNote "Retirada do participante", o
           mesmo autor e instante, e version incrementada (um desfecho enviado
           depois com a versão antiga recebe 409 VERSION_MISMATCH ou
-          VISIT_OUTCOME_FINAL);
+          VISIT_OUTCOME_FINAL); eventuais solicitações de reagendamento PENDING
+          das visitas afetadas (ou do participante retirado) passam
+          automaticamente a CANCELLED (RF19);
         - novos agendamentos passam a responder 409 PARTICIPANT_WITHDRAWN.
         Se o cancelamento das visitas falhar, a retirada não é gravada.
 
@@ -1581,8 +1591,11 @@ paths:
           DONE para a mesma visita prevista. Visitas ABSENT ou CANCELLED não
           impedem um novo agendamento.
 
-        Não há rota para remarcar: para mudar a data, registre o desfecho
-        CANCELLED com justificativa e agende de novo.
+        Para remarcar diretamente sem solicitação do participante, registre o
+        desfecho CANCELLED com justificativa e agende de novo. Quando houver
+        solicitação de reagendamento pelo aplicativo (RF19), o aceite em
+        POST /api/studies/{studyId}/reschedule-requests/{requestId}/decision
+        cancela a visita atual e cria o novo agendamento atomicamente.
       security:
         - bearerAuth: []
       requestBody:
@@ -1666,7 +1679,9 @@ paths:
       description: |
         Somente COORDINATOR. Transições permitidas: SCHEDULED para DONE, ABSENT
         ou CANCELLED. DONE, ABSENT e CANCELLED são finais e não mudam. Grava
-        autor e instante e incrementa version.
+        autor e instante e incrementa version. Se a visita possuir solicitação
+        de reagendamento PENDING (RF19), o registro de desfecho marca essa
+        solicitação automaticamente como CANCELLED.
 
         Regras e erros:
         - 400 CANCELLATION_REASON_REQUIRED: outcome=CANCELLED sem note preenchida.
@@ -1716,6 +1731,229 @@ paths:
                 outcomeByUserId: 2
                 outcomeAt: '2026-11-20T10:05:00-03:00'
                 version: 1
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/studies/{studyId}/reschedule-requests:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+    get:
+      tags: [Visitas agendadas]
+      summary: Lista as solicitações de reagendamento do estudo (RF19, T28.1)
+      description: |
+        RESEARCHER ou COORDINATOR; PARTICIPANT e ADMINISTRATOR recebem 403.
+        Inclui solicitações de participantes retirados posteriormente (cujos
+        pedidos abertos passam a CANCELLED). Ordenação: PENDING primeiro (da
+        mais antiga para a mais recente para atendimento FIFO) e demais por
+        createdAt decrescente, com desempate por id. Retorna [] quando não há
+        registros para os filtros aplicados; estudo inexistente responde 404.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filtra pela situação da solicitação (PENDING, ACCEPTED, DECLINED ou CANCELLED)
+          schema:
+            $ref: '#/components/schemas/RescheduleRequestStatus'
+        - name: participantId
+          in: query
+          required: false
+          description: Filtra pelas solicitações de um participante do estudo
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+          description: Solicitações de reagendamento do estudo
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VisitRescheduleRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/studies/{studyId}/reschedule-requests/{requestId}/decision:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+      - $ref: '#/components/parameters/RescheduleRequestId'
+    post:
+      tags: [Visitas agendadas]
+      parameters:
+        - $ref: '#/components/parameters/RescheduleRequestVersion'
+      summary: Aceita ou recusa uma solicitação de reagendamento (RF19, T28.1)
+      description: |
+        Somente COORDINATOR; RESEARCHER, PARTICIPANT e ADMINISTRATOR recebem 403.
+        Usa travamento otimista por If-Match (VisitRescheduleRequest.version) e
+        bloqueio pessimista na ordem estudo -> participante -> visita para
+        evitar decisões duplicadas ou corrida com desfecho (RF13) e retirada
+        (RF16).
+
+        Comportamento por decisão:
+        - ACCEPTED: exige newScheduledAt futura dentro do período do estudo
+          (fuso America/Fortaleza); note é opcional. Na mesma transação:
+          (1) marca a visita original SCHEDULED como CANCELLED com justificativa
+          de reagendamento aceito e atualiza sua version; (2) cria nova visita
+          SCHEDULED para a mesma plannedVisitId com version=0 e sem herdar
+          presenceConfirmedAt; (3) atualiza a solicitação para ACCEPTED com
+          newScheduledVisitId, newScheduledAt, autoria, instante e version+1.
+        - DECLINED: exige note preenchida após trim (justificativa obrigatória);
+          newScheduledAt não deve ser informada. Mantém a visita original
+          SCHEDULED inalterada (incluindo eventual presenceConfirmedAt) e
+          atualiza a solicitação para DECLINED com decisionNote, autoria,
+          instante e version+1.
+
+        Regras e erros (em ordem de avaliação após validar formato e escopo):
+        - 400 INVALID_IF_MATCH: cabeçalho If-Match ausente, vazio ou diferente
+          do formato "<número>".
+        - 400: decision ausente ou diferente de ACCEPTED e DECLINED, ou
+          observação maior que 500 caracteres.
+        - 400 RESCHEDULE_NEW_DATE_REQUIRED: decision=ACCEPTED sem newScheduledAt.
+        - 400 VISIT_DATE_NOT_FUTURE: newScheduledAt não é posterior ao instante atual.
+        - 400 VISIT_DATE_OUTSIDE_STUDY_PERIOD: data de newScheduledAt (fuso
+          America/Fortaleza) fora de startDate a endDate do estudo.
+        - 400 RESCHEDULE_DECISION_NOTE_REQUIRED: decision=DECLINED sem note
+          preenchida após trim.
+        - 404: estudo ou solicitação inexistente, ou solicitação pertencente a
+          outro estudo.
+        - 409 VERSION_MISMATCH: If-Match diferente da version atual da solicitação.
+        - 409 STUDY_READ_ONLY: estudo em CLOSED ou CANCELLED.
+        - 409 PARTICIPANT_WITHDRAWN: participante retirado (RF16).
+        - 409 RESCHEDULE_REQUEST_NOT_PENDING: a solicitação já está em ACCEPTED,
+          DECLINED ou CANCELLED.
+        - 409 VISIT_OUTCOME_FINAL: a visita original não está mais em SCHEDULED.
+        - 409 VISIT_ALREADY_SCHEDULED: o participante já possui outra visita
+          SCHEDULED ou DONE para a mesma visita prevista (desconsiderando a
+          própria visita original cancelada atomicamente no ACCEPTED).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RescheduleRequestDecisionRequest'
+            examples:
+              aceita:
+                value:
+                  decision: ACCEPTED
+                  newScheduledAt: '2027-03-17T14:00:00-03:00'
+                  note: Horário ajustado conforme disponibilidade do ambulatório
+              recusada:
+                value:
+                  decision: DECLINED
+                  note: Janela do protocolo não comporta adiamento superior a 7 dias
+      responses:
+        '200':
+          description: Decisão registrada sobre a solicitação de reagendamento
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Nova versão da solicitação de reagendamento
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescheduleRequestDecisionResponse'
+              examples:
+                aceita:
+                  value:
+                    request:
+                      id: 7
+                      studyId: 1
+                      participantId: 4
+                      participantName: Ana Souza
+                      visitId: 15
+                      plannedVisitId: 3
+                      plannedVisitName: Retorno
+                      originalScheduledAt: '2027-03-10T12:00:00Z'
+                      status: ACCEPTED
+                      reason: Tenho exame em outra cidade na mesma manhã
+                      suggestedScheduledAt: '2027-03-17T14:00:00-03:00'
+                      requestedByUserId: 9
+                      createdAt: '2027-03-01T15:10:00Z'
+                      decidedByUserId: 2
+                      decidedAt: '2027-03-02T11:00:00Z'
+                      decisionNote: Horário ajustado conforme disponibilidade do ambulatório
+                      newScheduledVisitId: 18
+                      newScheduledAt: '2027-03-17T17:00:00Z'
+                      version: 1
+                    originalVisit:
+                      id: 15
+                      studyId: 1
+                      participantId: 4
+                      participantName: Ana Souza
+                      plannedVisitId: 3
+                      plannedVisitName: Retorno
+                      scheduledAt: '2027-03-10T12:00:00Z'
+                      status: CANCELLED
+                      createdByUserId: 2
+                      createdAt: '2027-02-15T12:00:00Z'
+                      outcomeByUserId: 2
+                      outcomeAt: '2027-03-02T11:00:00Z'
+                      outcomeNote: Cancelada por reagendamento aceito
+                      version: 1
+                    newVisit:
+                      id: 18
+                      studyId: 1
+                      participantId: 4
+                      participantName: Ana Souza
+                      plannedVisitId: 3
+                      plannedVisitName: Retorno
+                      scheduledAt: '2027-03-17T17:00:00Z'
+                      status: SCHEDULED
+                      createdByUserId: 2
+                      createdAt: '2027-03-02T11:00:00Z'
+                      version: 0
+                recusada:
+                  value:
+                    request:
+                      id: 7
+                      studyId: 1
+                      participantId: 4
+                      participantName: Ana Souza
+                      visitId: 15
+                      plannedVisitId: 3
+                      plannedVisitName: Retorno
+                      originalScheduledAt: '2027-03-10T12:00:00Z'
+                      status: DECLINED
+                      reason: Tenho exame em outra cidade na mesma manhã
+                      requestedByUserId: 9
+                      createdAt: '2027-03-01T15:10:00Z'
+                      decidedByUserId: 2
+                      decidedAt: '2027-03-02T11:00:00Z'
+                      decisionNote: Janela do protocolo não comporta adiamento superior a 7 dias
+                      version: 1
+                    originalVisit:
+                      id: 15
+                      studyId: 1
+                      participantId: 4
+                      participantName: Ana Souza
+                      plannedVisitId: 3
+                      plannedVisitName: Retorno
+                      scheduledAt: '2027-03-10T12:00:00Z'
+                      status: SCHEDULED
+                      createdByUserId: 2
+                      createdAt: '2027-02-15T12:00:00Z'
+                      presenceConfirmedAt: '2027-03-01T14:20:00Z'
+                      version: 0
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1999,9 +2237,13 @@ paths:
         - history: visitas com desfecho DONE, ABSENT ou CANCELLED, por
           scheduledAt decrescente (a mais recente primeiro).
         Empates na mesma data seguem o id da visita. As duas listas vêm vazias
-        quando a conta não tem visita. Observações da equipe sobre visitas
+        quando a conta não tem visita. Visitas SCHEDULED podem incluir
+        presenceConfirmedAt quando a presença prevista já foi confirmada (sem
+        alterar status) e rescheduleRequest com a solicitação de reagendamento
+        mais recente da visita (RF19). Observações da equipe sobre visitas
         realizadas ou ausências não são expostas; em CANCELLED, a justificativa
-        vem em cancellationReason.
+        vem em cancellationReason (e eventual recusa ou aceite de reagendamento
+        aparece em rescheduleRequest).
       security:
         - bearerAuth: []
       responses:
@@ -2021,6 +2263,7 @@ paths:
                     plannedVisitName: Retorno
                     scheduledAt: '2027-03-10T12:00:00Z'
                     status: SCHEDULED
+                    presenceConfirmedAt: '2027-03-01T14:20:00Z'
                     activities:
                       - id: 22
                         name: Aferição clínica
@@ -2042,6 +2285,139 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+
+  /api/me/visits/{visitId}/confirmation:
+    parameters:
+      - $ref: '#/components/parameters/VisitId'
+    post:
+      tags: [Dados do participante]
+      summary: Confirma a presença prevista em visita agendada (RF19, T28.1)
+      description: |
+        Somente PARTICIPANT, dono da participação da visita; outros perfis
+        recebem 403. A conta vem do token, nunca de parâmetro.
+
+        Operação idempotente de intenção do participante: registra
+        presenceConfirmedAt na primeira confirmação e mantém status=SCHEDULED
+        (confirmar presença prevista nunca marca a visita como DONE). Em nova
+        chamada enquanto a visita permanecer válida (SCHEDULED, futura,
+        participação ACTIVE e estudo não read-only), responde 200 preservando o
+        presenceConfirmedAt original.
+
+        Regras e erros (bloqueio pessimista na ordem estudo -> participante ->
+        visita):
+        - 404: visita inexistente ou pertencente à participação de outra conta
+          (sem revelar sua existência).
+        - 409 STUDY_READ_ONLY: estudo em CLOSED ou CANCELLED.
+        - 409 PARTICIPANT_WITHDRAWN: participação retirada (RF16).
+        - 409 VISIT_OUTCOME_FINAL: a visita já está em DONE, ABSENT ou CANCELLED.
+        - 409 VISIT_NOT_FUTURE: visita em SCHEDULED cuja data scheduledAt não é
+          posterior ao instante atual.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Presença prevista confirmada (ou já confirmada anteriormente)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParticipantVisit'
+              example:
+                id: 15
+                studyId: 1
+                studyTitle: Acompanhamento de hipertensão
+                participantId: 4
+                plannedVisitId: 3
+                plannedVisitName: Retorno
+                scheduledAt: '2027-03-10T12:00:00Z'
+                status: SCHEDULED
+                presenceConfirmedAt: '2027-03-01T14:20:00Z'
+                activities:
+                  - id: 22
+                    name: Aferição clínica
+                    description: Acompanhamento dos sinais vitais
+                    position: 1
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/me/visits/{visitId}/reschedule-request:
+    parameters:
+      - $ref: '#/components/parameters/VisitId'
+    post:
+      tags: [Dados do participante]
+      summary: Solicita o reagendamento de uma visita agendada (RF19, T28.1)
+      description: |
+        Somente PARTICIPANT, dono da participação da visita; outros perfis
+        recebem 403. A conta vem do token, nunca de parâmetro.
+
+        Cria uma solicitação de reagendamento com status PENDING (no máximo 1
+        solicitação PENDING por visita). Enquanto a solicitação estiver PENDING
+        (ou se for DECLINED/CANCELLED), a visita original permanece válida em
+        SCHEDULED até que o coordenador aceite o pedido.
+
+        Regras e erros (bloqueio pessimista na ordem estudo -> participante ->
+        visita):
+        - 400: reason ausente, vazio ou só espaços após trim, ou maior que 500
+          caracteres (ex. RESCHEDULE_REASON_REQUIRED ou erro de validação).
+        - 400 VISIT_DATE_NOT_FUTURE: suggestedScheduledAt informada não é
+          posterior ao instante atual.
+        - 400 VISIT_DATE_OUTSIDE_STUDY_PERIOD: suggestedScheduledAt informada
+          está fora do período do estudo (startDate a endDate, dia no fuso
+          America/Fortaleza).
+        - 404: visita inexistente ou pertencente à participação de outra conta
+          (sem revelar sua existência).
+        - 409 STUDY_READ_ONLY: estudo em CLOSED ou CANCELLED.
+        - 409 PARTICIPANT_WITHDRAWN: participação retirada (RF16).
+        - 409 VISIT_OUTCOME_FINAL: a visita já está em DONE, ABSENT ou CANCELLED.
+        - 409 VISIT_NOT_FUTURE: visita em SCHEDULED cuja data scheduledAt não é
+          posterior ao instante atual.
+        - 409 RESCHEDULE_REQUEST_ALREADY_PENDING: já existe solicitação PENDING
+          em aberto para esta visita (inclusive em envios concorrentes).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VisitRescheduleRequestCreate'
+            examples:
+              comDataSugerida:
+                value:
+                  reason: Tenho exame em outra cidade na mesma manhã
+                  suggestedScheduledAt: '2027-03-17T14:00:00-03:00'
+              semDataSugerida:
+                value:
+                  reason: Preciso remarcar por compromisso médico inadiável
+      responses:
+        '201':
+          description: Solicitação de reagendamento registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParticipantRescheduleRequest'
+              example:
+                id: 7
+                visitId: 15
+                status: PENDING
+                reason: Tenho exame em outra cidade na mesma manhã
+                suggestedScheduledAt: '2027-03-17T17:00:00Z'
+                createdAt: '2027-03-01T15:10:00Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
 
 components:
   securitySchemes:
@@ -2142,6 +2518,26 @@ components:
         type: integer
         format: int64
         minimum: 1
+    RescheduleRequestId:
+      name: requestId
+      in: path
+      required: true
+      description: Identificador BIGINT da solicitação de reagendamento
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    RescheduleRequestVersion:
+      name: If-Match
+      in: header
+      required: true
+      description: |
+        ETag forte com VisitRescheduleRequest.version entre aspas, por exemplo "0".
+        É a versão da solicitação de reagendamento, não a da visita nem a do estudo.
+        Divergência responde 409.
+      schema:
+        type: string
+        pattern: '^"[0-9]+"$'
   schemas:
     UserRole:
       type: string
@@ -2871,6 +3267,15 @@ components:
           type: string
           readOnly: true
           description: Justificativa do cancelamento; presente só em CANCELLED
+        presenceConfirmedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: >
+            Instante da confirmação de presença prevista (RF19); ausente
+            enquanto o participante não confirmar. Nunca altera status=SCHEDULED.
+        rescheduleRequest:
+          $ref: '#/components/schemas/ParticipantRescheduleRequest'
         activities:
           type: array
           readOnly: true
@@ -3156,11 +3561,270 @@ components:
           type: string
           readOnly: true
           description: Observação ou justificativa do desfecho, quando houver
+        presenceConfirmedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: >
+            Instante da confirmação de presença prevista pelo participante (RF19);
+            ausente enquanto não confirmada ou em nova visita criada por reagendamento.
+        rescheduleRequest:
+          $ref: '#/components/schemas/VisitRescheduleRequestSummary'
         version:
           type: integer
           format: int64
           readOnly: true
           description: Versão para If-Match; também enviada no cabeçalho ETag
+    RescheduleRequestStatus:
+      type: string
+      description: |
+        Situação da solicitação de reagendamento (RF19):
+        PENDING=Aguardando análise da coordenação;
+        ACCEPTED=Aceita com criação atômica de novo agendamento;
+        DECLINED=Recusada com justificativa (visita original segue válida);
+        CANCELLED=Cancelada automaticamente por desfecho (RF13), retirada (RF16)
+        ou encerramento/cancelamento do estudo.
+      enum: [PENDING, ACCEPTED, DECLINED, CANCELLED]
+    RescheduleRequestDecision:
+      type: string
+      description: Decisão do coordenador sobre solicitação PENDING (RF19)
+      enum: [ACCEPTED, DECLINED]
+    VisitRescheduleRequestCreate:
+      type: object
+      description: Pedido de reagendamento enviado pelo participante autenticado (RF19)
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Motivo obrigatório do pedido de reagendamento (não pode ficar em branco)
+        suggestedScheduledAt:
+          type: string
+          format: date-time
+          description: |
+            Data e hora sugeridas pelo participante, opcional, ISO 8601 com fuso
+            (ex. 2027-03-17T14:00:00-03:00). Quando informada, deve ser futura
+            e cair dentro do período do estudo no fuso America/Fortaleza.
+    ParticipantRescheduleRequest:
+      type: object
+      description: Visão do participante sobre a solicitação de reagendamento de uma visita (RF19)
+      required: [id, visitId, status, reason, createdAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        visitId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Identificador da visita agendada original vinculada ao pedido
+        status:
+          $ref: '#/components/schemas/RescheduleRequestStatus'
+        reason:
+          type: string
+          readOnly: true
+          description: Motivo informado pelo participante na abertura do pedido
+        suggestedScheduledAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Data/hora sugerida pelo participante, quando informada
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        decidedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Instante da decisão da coordenação ou do cancelamento automático; ausente em PENDING
+        decisionNote:
+          type: string
+          readOnly: true
+          description: Justificativa ou observação da decisão (obrigatória em DECLINED); ausente quando não houver
+        newScheduledVisitId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Identificador da nova visita SCHEDULED criada; presente só quando status=ACCEPTED
+        newScheduledAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Data e hora da nova visita criada; presente só quando status=ACCEPTED
+    VisitRescheduleRequestSummary:
+      type: object
+      description: Resumo da solicitação de reagendamento mais recente vinculada a uma ScheduledVisit (RF19)
+      required: [id, status, reason, createdAt, version]
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/RescheduleRequestStatus'
+        reason:
+          type: string
+          readOnly: true
+        suggestedScheduledAt:
+          type: string
+          format: date-time
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        decidedByUserId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Coordenador que decidiu (ACCEPTED ou DECLINED); ausente em PENDING ou CANCELLED automático
+        decidedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Instante da decisão ou do cancelamento automático; ausente em PENDING
+        decisionNote:
+          type: string
+          readOnly: true
+          description: Observação ou justificativa da decisão, quando houver
+        newScheduledVisitId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Identificador da nova visita SCHEDULED criada; presente só em ACCEPTED
+        newScheduledAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Data/hora da nova visita criada; presente só em ACCEPTED
+        version:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Versão da solicitação para envio em If-Match ao decidir o pedido
+    VisitRescheduleRequest:
+      type: object
+      description: Solicitação de reagendamento exibida à equipe do estudo (RF19)
+      required: [id, studyId, participantId, participantName, visitId, plannedVisitId,
+                 plannedVisitName, originalScheduledAt, status, reason,
+                 requestedByUserId, createdAt, version]
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        studyId:
+          type: integer
+          format: int64
+          readOnly: true
+        participantId:
+          type: integer
+          format: int64
+          readOnly: true
+        participantName:
+          type: string
+          readOnly: true
+        visitId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Identificador da visita agendada original
+        plannedVisitId:
+          type: integer
+          format: int64
+          readOnly: true
+        plannedVisitName:
+          type: string
+          readOnly: true
+        originalScheduledAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Data/hora originalmente agendada da visita vinculada
+        status:
+          $ref: '#/components/schemas/RescheduleRequestStatus'
+        reason:
+          type: string
+          readOnly: true
+        suggestedScheduledAt:
+          type: string
+          format: date-time
+          readOnly: true
+        requestedByUserId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Usuário PARTICIPANT que abriu a solicitação
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        decidedByUserId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Coordenador que decidiu (ACCEPTED ou DECLINED); ausente em PENDING ou CANCELLED automático
+        decidedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Instante da decisão ou do cancelamento automático; ausente em PENDING
+        decisionNote:
+          type: string
+          readOnly: true
+          description: Observação do aceite ou justificativa obrigatória da recusa
+        newScheduledVisitId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Identificador da nova visita SCHEDULED criada; presente só em ACCEPTED
+        newScheduledAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Data/hora da nova visita criada; presente só em ACCEPTED
+        version:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Versão para If-Match na decisão; também enviada no cabeçalho ETag
+    RescheduleRequestDecisionRequest:
+      type: object
+      description: Decisão do coordenador sobre solicitação PENDING (RF19)
+      required: [decision]
+      properties:
+        decision:
+          $ref: '#/components/schemas/RescheduleRequestDecision'
+        newScheduledAt:
+          type: string
+          format: date-time
+          description: |
+            Nova data e hora da visita, ISO 8601 com fuso. Obrigatória quando
+            decision=ACCEPTED; deve ser futura e estar dentro do período do
+            estudo (dia no fuso America/Fortaleza). Deve ficar ausente em DECLINED.
+        note:
+          type: string
+          maxLength: 500
+          description: |
+            Observação opcional em ACCEPTED; justificativa obrigatória (não
+            pode ficar em branco após trim) quando decision=DECLINED.
+    RescheduleRequestDecisionResponse:
+      type: object
+      description: |
+        Resultado da decisão sobre solicitação de reagendamento (RF19): traz a
+        solicitação atualizada, a visita original atualizada (CANCELLED em
+        ACCEPTED; SCHEDULED em DECLINED) e a nova visita SCHEDULED quando aceita.
+      required: [request, originalVisit]
+      properties:
+        request:
+          $ref: '#/components/schemas/VisitRescheduleRequest'
+        originalVisit:
+          $ref: '#/components/schemas/ScheduledVisit'
+        newVisit:
+          $ref: '#/components/schemas/ScheduledVisit'
     ApiError:
       type: object
       required: [code, message]
