@@ -1,5 +1,6 @@
 package clinicalstudypb.auth.application;
 
+import clinicalstudypb.auth.domain.ActivationException;
 import clinicalstudypb.auth.domain.InvalidCredentialsException;
 import clinicalstudypb.auth.domain.PasswordChangeException;
 import clinicalstudypb.candidates.application.CandidateInvitationService;
@@ -63,12 +64,23 @@ public class PasswordChangeService {
     public AuthService.AuthenticatedUser changePassword(String currentPassword, String newPassword) {
         Long userId = currentActor.userId();
         User user = userService.findLockedById(userId)
-                .filter(User::isActive)
                 .orElseThrow(InvalidCredentialsException::new);
 
         boolean firstAccess = user.isActivationPending();
-        if (!firstAccess && !matchesCurrentPassword(currentPassword, user.getPasswordHash())) {
-            throw PasswordChangeException.currentPasswordInvalid();
+        if (firstAccess) {
+            boolean hasUsableInvite = invitationService.find(user.getId())
+                    .filter(invite -> invite.getUsedAt() == null)
+                    .isPresent();
+            if (!hasUsableInvite || !user.isActive()) {
+                throw ActivationException.invalid();
+            }
+        } else {
+            if (!user.isActive()) {
+                throw new InvalidCredentialsException();
+            }
+            if (!matchesCurrentPassword(currentPassword, user.getPasswordHash())) {
+                throw PasswordChangeException.currentPasswordInvalid();
+            }
         }
         if (!satisfiesPolicy(newPassword)) {
             throw PasswordChangeException.policy();

@@ -18,6 +18,7 @@ import clinicalstudypb.results.application.ActivityResultService;
 import clinicalstudypb.results.application.ActivityResultService.WriteResult;
 import clinicalstudypb.results.domain.ActivityResult;
 import clinicalstudypb.results.infrastructure.ActivityResultRepository;
+import clinicalstudypb.results.infrastructure.NamedActivityResult;
 import clinicalstudypb.scheduling.domain.ScheduledVisit;
 import clinicalstudypb.scheduling.domain.ScheduledVisitStatus;
 import clinicalstudypb.scheduling.domain.SchedulingConflictException;
@@ -99,7 +100,7 @@ class ActivityResultServiceTest {
         when(visits.findByIdAndStudyIdAndParticipantId(VISIT_ID, STUDY_ID, PARTICIPANT_ID))
                 .thenReturn(Optional.of(visit));
         when(plannedVisits.findByStudyAndId(STUDY_ID, PLANNED_VISIT_ID)).thenReturn(Optional.of(planned));
-        when(results.findByVisitId(VISIT_ID)).thenReturn(List.of(recorded));
+        when(results.findByVisitId(VISIT_ID)).thenReturn(List.of(new NamedActivityResult(recorded, "Pressão")));
 
         VisitResultsResponse response = service.get(STUDY_ID, PARTICIPANT_ID, VISIT_ID);
 
@@ -109,6 +110,7 @@ class ActivityResultServiceTest {
         assertEquals(ScheduledVisitStatus.ABSENT, response.status());
         assertEquals(2, response.activities().size());
         assertEquals(FIRST_ACTIVITY_ID, response.activities().get(0).activityId());
+        assertEquals("Pressão", response.activities().get(0).result().activityName());
         assertEquals("120x80 mmHg", response.activities().get(0).result().value());
         assertEquals(SECOND_ACTIVITY_ID, response.activities().get(1).activityId());
         assertNull(response.activities().get(1).result());
@@ -161,6 +163,7 @@ class ActivityResultServiceTest {
         assertTrue(written.created());
         assertEquals(VISIT_ID, written.result().visitId());
         assertEquals(FIRST_ACTIVITY_ID, written.result().activityId());
+        assertEquals("Pressão", written.result().activityName());
         assertEquals("120x80 mmHg", written.result().value());
         assertEquals("Repouso", written.result().note());
         assertEquals(RESEARCHER_ID, written.result().recordedByUserId());
@@ -280,12 +283,13 @@ class ActivityResultServiceTest {
     void findByVisitIdMapsPersistedResults() {
         ActivityResult first = new ActivityResult(
                 VISIT_ID, FIRST_ACTIVITY_ID, "120x80 mmHg", null, RESEARCHER_ID, NOW_MICROS);
-        when(results.findByVisitId(VISIT_ID)).thenReturn(List.of(first));
+        when(results.findByVisitId(VISIT_ID)).thenReturn(List.of(new NamedActivityResult(first, "Pressão")));
 
         List<ActivityResultResponse> mapped = service.findByVisitId(VISIT_ID);
 
         assertEquals(1, mapped.size());
         assertEquals(FIRST_ACTIVITY_ID, mapped.get(0).activityId());
+        assertEquals("Pressão", mapped.get(0).activityName());
         assertEquals("120x80 mmHg", mapped.get(0).value());
     }
 
@@ -306,15 +310,21 @@ class ActivityResultServiceTest {
         ActivityResult visit8Act1 = new ActivityResult(
                 VISIT_ID, FIRST_ACTIVITY_ID, "120x80 mmHg", null, RESEARCHER_ID, NOW_MICROS);
         when(results.findByVisitIdIn(List.of(9L, VISIT_ID)))
-                .thenReturn(List.of(visit9Act1, visit9Act2, visit8Act1));
+                .thenReturn(List.of(
+                        new NamedActivityResult(visit9Act1, "Pressão"),
+                        new NamedActivityResult(visit9Act2, "Peso"),
+                        new NamedActivityResult(visit8Act1, "Pressão")));
 
         Map<Long, List<ActivityResultResponse>> grouped = service.findByVisitIds(List.of(9L, VISIT_ID));
 
         assertEquals(List.of(9L, VISIT_ID), List.copyOf(grouped.keySet()));
         assertEquals(2, grouped.get(9L).size());
         assertEquals(FIRST_ACTIVITY_ID, grouped.get(9L).get(0).activityId());
+        assertEquals("Pressão", grouped.get(9L).get(0).activityName());
         assertEquals(SECOND_ACTIVITY_ID, grouped.get(9L).get(1).activityId());
+        assertEquals("Peso", grouped.get(9L).get(1).activityName());
         assertEquals(1, grouped.get(VISIT_ID).size());
+        assertEquals("Pressão", grouped.get(VISIT_ID).get(0).activityName());
         assertEquals("120x80 mmHg", grouped.get(VISIT_ID).get(0).value());
     }
 

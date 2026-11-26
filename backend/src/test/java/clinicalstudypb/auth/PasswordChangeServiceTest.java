@@ -15,14 +15,17 @@ import clinicalstudypb.auth.application.AuthService;
 import clinicalstudypb.auth.application.JwtService;
 import clinicalstudypb.auth.application.JwtToken;
 import clinicalstudypb.auth.application.PasswordChangeService;
+import clinicalstudypb.auth.domain.ActivationException;
 import clinicalstudypb.auth.domain.InvalidCredentialsException;
 import clinicalstudypb.auth.domain.PasswordChangeException;
 import clinicalstudypb.candidates.application.CandidateInvitationService;
+import clinicalstudypb.candidates.domain.CandidateActivationInvite;
 import clinicalstudypb.shared.CurrentActor;
 import clinicalstudypb.users.application.UserService;
 import clinicalstudypb.users.domain.User;
 import clinicalstudypb.users.domain.UserRole;
 import clinicalstudypb.users.infrastructure.PasswordEncodingConfig;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -73,6 +76,7 @@ class PasswordChangeServiceTest {
         User participant = invitedStartedUser();
         JwtToken unrestricted = new JwtToken("jwt-irrestrito", 3600);
         when(userService.findLockedById(USER_ID)).thenReturn(Optional.of(participant));
+        when(invitationService.find(USER_ID)).thenReturn(Optional.of(pendingInvite()));
         when(jwtService.issue(participant)).thenReturn(unrestricted);
 
         AuthService.AuthenticatedUser result = service.changePassword(null, VALID_PASSWORD);
@@ -82,6 +86,59 @@ class PasswordChangeServiceTest {
         assertFalse(participant.isActivationPending());
         assertTrue(passwordEncoder.matches(VALID_PASSWORD, participant.getPasswordHash()));
         verify(invitationService).consume(USER_ID);
+    }
+
+    @Test
+    void firstAccessWithoutInviteIsRejectedWithoutActivatingOrChangingPassword() {
+        User participant = invitedStartedUser();
+        String originalHash = participant.getPasswordHash();
+        when(userService.findLockedById(USER_ID)).thenReturn(Optional.of(participant));
+        when(invitationService.find(USER_ID)).thenReturn(Optional.empty());
+
+        ActivationException error = assertThrows(ActivationException.class,
+                () -> service.changePassword(null, VALID_PASSWORD));
+
+        assertEquals("ACTIVATION_INVALID", error.getCode());
+        assertTrue(participant.isActivationPending());
+        assertEquals(originalHash, participant.getPasswordHash());
+        verify(invitationService, never()).consume(any());
+        verify(jwtService, never()).issue(any());
+    }
+
+    @Test
+    void firstAccessWithConsumedInviteIsRejected() {
+        User participant = invitedStartedUser();
+        CandidateActivationInvite used = pendingInvite();
+        used.markUsed(Instant.now());
+        when(userService.findLockedById(USER_ID)).thenReturn(Optional.of(participant));
+        when(invitationService.find(USER_ID)).thenReturn(Optional.of(used));
+
+        ActivationException error = assertThrows(ActivationException.class,
+                () -> service.changePassword(null, VALID_PASSWORD));
+
+        assertEquals("ACTIVATION_INVALID", error.getCode());
+        assertTrue(participant.isActivationPending());
+        verify(invitationService, never()).consume(any());
+        verify(jwtService, never()).issue(any());
+    }
+
+    @Test
+    void firstAccessWhenPendingAccountWasSuspendedIsRejectedEvenWithNewInvite() {
+        User participant = invitedStartedUser();
+        participant.suspendPendingActivation();
+        String originalHash = participant.getPasswordHash();
+        when(userService.findLockedById(USER_ID)).thenReturn(Optional.of(participant));
+        when(invitationService.find(USER_ID)).thenReturn(Optional.of(pendingInvite()));
+
+        ActivationException error = assertThrows(ActivationException.class,
+                () -> service.changePassword(null, VALID_PASSWORD));
+
+        assertEquals("ACTIVATION_INVALID", error.getCode());
+        assertFalse(participant.isActive());
+        assertTrue(participant.isActivationPending());
+        assertEquals(originalHash, participant.getPasswordHash());
+        verify(invitationService, never()).consume(any());
+        verify(jwtService, never()).issue(any());
     }
 
     @Test
@@ -123,6 +180,7 @@ class PasswordChangeServiceTest {
         User participant = invitedStartedUser();
         String originalHash = participant.getPasswordHash();
         when(userService.findLockedById(USER_ID)).thenReturn(Optional.of(participant));
+        when(invitationService.find(USER_ID)).thenReturn(Optional.of(pendingInvite()));
 
         PasswordChangeException error = assertThrows(PasswordChangeException.class,
                 () -> service.changePassword(null, candidatePassword));
@@ -150,6 +208,7 @@ class PasswordChangeServiceTest {
     void passwordOver72CharactersIsRejected() {
         User participant = invitedStartedUser();
         when(userService.findLockedById(USER_ID)).thenReturn(Optional.of(participant));
+        when(invitationService.find(USER_ID)).thenReturn(Optional.of(pendingInvite()));
 
         String overChars = "A1" + "a".repeat(71);
         assertEquals("PASSWORD_POLICY", assertThrows(PasswordChangeException.class,
@@ -160,6 +219,7 @@ class PasswordChangeServiceTest {
     void unicodePasswordWithin72CharactersUsesAllItsUtf8Bytes() {
         User participant = invitedStartedUser();
         when(userService.findLockedById(USER_ID)).thenReturn(Optional.of(participant));
+        when(invitationService.find(USER_ID)).thenReturn(Optional.of(pendingInvite()));
         when(jwtService.issue(participant)).thenReturn(new JwtToken("jwt-unicode", 3600));
         String password = "A1" + "ç".repeat(70);
 
@@ -180,6 +240,11 @@ class PasswordChangeServiceTest {
         when(userService.findLockedById(USER_ID)).thenReturn(Optional.of(deactivated));
         assertThrows(InvalidCredentialsException.class, () -> service.changePassword(OLD_PASSWORD, VALID_PASSWORD));
         verify(invitationService, never()).consume(any());
+    }
+
+    private CandidateActivationInvite pendingInvite() {
+        Instant now = Instant.now();
+        return new CandidateActivationInvite(USER_ID, "hash", now, now.plusSeconds(3600));
     }
 
     private User invitedStartedUser() {

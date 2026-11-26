@@ -161,11 +161,14 @@ class ParticipantHistoryIntegrationTest extends IntegrationTestSupport {
                 .andExpect(jsonPath("$.visits[0].version").value(1))
                 .andExpect(jsonPath("$.visits[0].results[*].activityId").value(contains(
                         pressure.intValue(), weight.intValue())))
+                .andExpect(jsonPath("$.visits[0].results[*].activityName").value(contains("Pressão", "Peso")))
                 .andExpect(jsonPath("$.visits[0].results[0].visitId").value(anaDone))
+                .andExpect(jsonPath("$.visits[0].results[0].activityName").value("Pressão"))
                 .andExpect(jsonPath("$.visits[0].results[0].value").value("120x80 mmHg"))
                 .andExpect(jsonPath("$.visits[0].results[0].note").value("Em repouso"))
                 .andExpect(jsonPath("$.visits[0].results[0].recordedByUserId").value(researcher.getId()))
                 .andExpect(jsonPath("$.visits[0].results[0].recordedAt").value("2027-01-10T13:00:00Z"))
+                .andExpect(jsonPath("$.visits[0].results[1].activityName").value("Peso"))
                 .andExpect(jsonPath("$.visits[0].results[1].value").value("70 kg"))
                 .andExpect(jsonPath("$.visits[0].results[1].note").doesNotExist())
                 .andExpect(jsonPath("$.visits[1].outcomeNote").value("Não compareceu"))
@@ -203,6 +206,7 @@ class ParticipantHistoryIntegrationTest extends IntegrationTestSupport {
                 .andExpect(jsonPath("$.visits[0].status").value("DONE"))
                 .andExpect(jsonPath("$.visits[0].results", hasSize(1)))
                 .andExpect(jsonPath("$.visits[0].results[0].activityId").value(interview))
+                .andExpect(jsonPath("$.visits[0].results[0].activityName").value("Entrevista"))
                 .andExpect(jsonPath("$.visits[0].results[0].value").value("Relato sem queixas"))
                 .andExpect(jsonPath("$.visits[0].results[0].recordedByUserId").value(researcher.getId()));
     }
@@ -224,6 +228,7 @@ class ParticipantHistoryIntegrationTest extends IntegrationTestSupport {
                 .andExpect(jsonPath("$.participant.withdrawal.cancelledVisitCount").value(1))
                 .andExpect(jsonPath("$.visits[*].id").value(contains(daviDone.intValue(), daviFuture.intValue())))
                 .andExpect(jsonPath("$.visits[0].status").value("DONE"))
+                .andExpect(jsonPath("$.visits[0].results[0].activityName").value("Pressão"))
                 .andExpect(jsonPath("$.visits[0].results[0].value").value("130x85 mmHg"))
                 .andExpect(jsonPath("$.visits[1].status").value("CANCELLED"))
                 .andExpect(jsonPath("$.visits[1].outcomeNote").value("Retirada do participante"))

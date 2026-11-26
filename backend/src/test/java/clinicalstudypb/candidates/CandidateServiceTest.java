@@ -1,10 +1,12 @@
 package clinicalstudypb.candidates;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -218,16 +220,39 @@ class CandidateServiceTest {
     }
 
     @Test
+    void cancelSuspendsStartedPendingActivationAndInvalidatesInvite() {
+        Candidate candidate = candidate(9L, 3L, 7L);
+        User pendingUser = user(UserRole.PARTICIPANT, false);
+        pendingUser.beginActivation();
+        when(studyService.lockForCandidateRegistration(3L)).thenReturn(study(StudyStatus.RECRUITMENT));
+        when(candidateRepository.findForConsentUpdate(9L, 3L)).thenReturn(Optional.of(candidate));
+        when(participantRepository.existsByStudyIdAndCandidateId(3L, 9L)).thenReturn(false);
+        when(currentActor.userId()).thenReturn(99L);
+        when(candidateRepository.saveAndFlush(candidate)).thenReturn(candidate);
+        when(userService.findLockedById(7L)).thenReturn(Optional.of(pendingUser));
+        when(candidateRepository.existsByUserIdAndCancelledAtIsNull(7L)).thenReturn(false);
+
+        service.cancel(3L, 9L, "Candidatura cancelada");
+
+        assertFalse(pendingUser.isActive());
+        assertTrue(pendingUser.isActivationPending());
+        verify(invitationService).invalidate(7L);
+    }
+
+    @Test
     void cancelKeepsInviteWhenInactiveUserHasAnotherActiveCandidacyOrIsAlreadyActive() {
         Candidate first = candidate(9L, 3L, 7L);
+        User pendingUser = user(UserRole.PARTICIPANT, false);
+        pendingUser.beginActivation();
         when(studyService.lockForCandidateRegistration(3L)).thenReturn(study(StudyStatus.RECRUITMENT));
         when(candidateRepository.findForConsentUpdate(9L, 3L)).thenReturn(Optional.of(first));
         when(candidateRepository.saveAndFlush(first)).thenReturn(first);
         when(currentActor.userId()).thenReturn(99L);
-        when(userService.findLockedById(7L)).thenReturn(Optional.of(user(UserRole.PARTICIPANT, false)));
+        when(userService.findLockedById(7L)).thenReturn(Optional.of(pendingUser));
         when(candidateRepository.existsByUserIdAndCancelledAtIsNull(7L)).thenReturn(true);
 
         service.cancel(3L, 9L, "Outro estudo ativo");
+        assertTrue(pendingUser.isActive());
         verify(invitationService, never()).invalidate(7L);
 
         Candidate activeCandidate = candidate(10L, 4L, 8L);

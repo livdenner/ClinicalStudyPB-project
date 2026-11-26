@@ -200,6 +200,7 @@ public class CandidateService {
         User user = lockUser(candidate.getUserId());
         if (user.isActivationPending()
                 && !candidateRepository.existsByUserIdAndCancelledAtIsNull(user.getId())) {
+            user.suspendPendingActivation();
             invitationService.invalidate(user.getId());
         }
         return saved;
