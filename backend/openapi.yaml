@@ -1815,10 +1815,11 @@ paths:
           presenceConfirmedAt; (3) atualiza a solicitação para ACCEPTED com
           newScheduledVisitId, newScheduledAt, autoria, instante e version+1.
         - DECLINED: exige note preenchida após trim (justificativa obrigatória);
-          newScheduledAt não deve ser informada. Mantém a visita original
-          SCHEDULED inalterada (incluindo eventual presenceConfirmedAt) e
-          atualiza a solicitação para DECLINED com decisionNote, autoria,
-          instante e version+1.
+          newScheduledAt não deve ser informada (seu envio responde 400
+          RESCHEDULE_NEW_DATE_NOT_ALLOWED). Mantém a visita original SCHEDULED
+          inalterada (incluindo eventual presenceConfirmedAt) e atualiza a
+          solicitação para DECLINED com decisionNote, autoria, instante e
+          version+1.
 
         Regras e erros (em ordem de avaliação após validar formato e escopo):
         - 400 INVALID_IF_MATCH: cabeçalho If-Match ausente, vazio ou diferente
@@ -1826,6 +1827,8 @@ paths:
         - 400: decision ausente ou diferente de ACCEPTED e DECLINED, ou
           observação maior que 500 caracteres.
         - 400 RESCHEDULE_NEW_DATE_REQUIRED: decision=ACCEPTED sem newScheduledAt.
+        - 400 RESCHEDULE_NEW_DATE_NOT_ALLOWED: newScheduledAt informada com
+          decision=DECLINED.
         - 400 VISIT_DATE_NOT_FUTURE: newScheduledAt não é posterior ao instante atual.
         - 400 VISIT_DATE_OUTSIDE_STUDY_PERIOD: data de newScheduledAt (fuso
           America/Fortaleza) fora de startDate a endDate do estudo.
@@ -1835,6 +1838,10 @@ paths:
           outro estudo.
         - 409 VERSION_MISMATCH: If-Match diferente da version atual da solicitação.
         - 409 STUDY_READ_ONLY: estudo em CLOSED ou CANCELLED.
+        - 409 STUDY_STATUS_DOES_NOT_ALLOW_SCHEDULING: decision=ACCEPTED com
+          estudo em PLANNING (criar novo agendamento exige RECRUITMENT ou
+          EXECUTION, conforme RF12); decision=DECLINED continua permitida em
+          PLANNING.
         - 409 PARTICIPANT_WITHDRAWN: participante retirado (RF16).
         - 409 RESCHEDULE_REQUEST_NOT_PENDING: a solicitação já está em ACCEPTED,
           DECLINED ou CANCELLED.
@@ -1886,7 +1893,7 @@ paths:
                       originalScheduledAt: '2027-03-10T12:00:00Z'
                       status: ACCEPTED
                       reason: Tenho exame em outra cidade na mesma manhã
-                      suggestedScheduledAt: '2027-03-17T14:00:00-03:00'
+                      suggestedScheduledAt: '2027-03-17T17:00:00Z'
                       requestedByUserId: 9
                       createdAt: '2027-03-01T15:10:00Z'
                       decidedByUserId: 2
@@ -2297,17 +2304,25 @@ paths:
         recebem 403. A conta vem do token, nunca de parâmetro.
 
         Operação idempotente de intenção do participante: registra
-        presenceConfirmedAt na primeira confirmação e mantém status=SCHEDULED
-        (confirmar presença prevista nunca marca a visita como DONE). Em nova
-        chamada enquanto a visita permanecer válida (SCHEDULED, futura,
+        presenceConfirmedAt na primeira confirmação, mantém status=SCHEDULED
+        (confirmar presença prevista nunca marca a visita como DONE) e
+        preserva ScheduledVisit.version (não incrementa version, evitando
+        conflito 409 VERSION_MISMATCH com registro de desfecho no RF13). Em
+        nova chamada enquanto a visita permanecer válida (SCHEDULED, futura,
         participação ACTIVE e estudo não read-only), responde 200 preservando o
         presenceConfirmedAt original.
+
+        Mesmo quando já existir solicitação de reagendamento PENDING para a
+        visita, a API aceita a chamada (200) e mantém o pedido PENDING intacto,
+        pois a visita original segue válida em SCHEDULED até decisão da
+        coordenação (a UI mobile pode ocultar a ação enquanto PENDING).
 
         Regras e erros (bloqueio pessimista na ordem estudo -> participante ->
         visita):
         - 404: visita inexistente ou pertencente à participação de outra conta
           (sem revelar sua existência).
-        - 409 STUDY_READ_ONLY: estudo em CLOSED ou CANCELLED.
+        - 409 STUDY_READ_ONLY: estudo em CLOSED ou CANCELLED (visitas SCHEDULED
+          existentes em estudo que retornou a PLANNING permanecem confirmáveis).
         - 409 PARTICIPANT_WITHDRAWN: participação retirada (RF16).
         - 409 VISIT_OUTCOME_FINAL: a visita já está em DONE, ABSENT ou CANCELLED.
         - 409 VISIT_NOT_FUTURE: visita em SCHEDULED cuja data scheduledAt não é
@@ -2362,8 +2377,10 @@ paths:
 
         Regras e erros (bloqueio pessimista na ordem estudo -> participante ->
         visita):
-        - 400: reason ausente, vazio ou só espaços após trim, ou maior que 500
-          caracteres (ex. RESCHEDULE_REASON_REQUIRED ou erro de validação).
+        - 400 RESCHEDULE_REASON_REQUIRED: reason ausente, vazio ou só espaços
+          após trim.
+        - 400: reason com mais de 500 caracteres após trim ou corpo JSON
+          malformado.
         - 400 VISIT_DATE_NOT_FUTURE: suggestedScheduledAt informada não é
           posterior ao instante atual.
         - 400 VISIT_DATE_OUTSIDE_STUDY_PERIOD: suggestedScheduledAt informada
@@ -2371,7 +2388,10 @@ paths:
           America/Fortaleza).
         - 404: visita inexistente ou pertencente à participação de outra conta
           (sem revelar sua existência).
-        - 409 STUDY_READ_ONLY: estudo em CLOSED ou CANCELLED.
+        - 409 STUDY_READ_ONLY: estudo em CLOSED ou CANCELLED (visitas SCHEDULED
+          existentes em estudo que retornou a PLANNING aceitam abertura de
+          pedido; o eventual aceite pelo coordenador exigirá RECRUITMENT ou
+          EXECUTION).
         - 409 PARTICIPANT_WITHDRAWN: participação retirada (RF16).
         - 409 VISIT_OUTCOME_FINAL: a visita já está em DONE, ABSENT ou CANCELLED.
         - 409 VISIT_NOT_FUTURE: visita em SCHEDULED cuja data scheduledAt não é
@@ -3567,14 +3587,17 @@ components:
           readOnly: true
           description: >
             Instante da confirmação de presença prevista pelo participante (RF19);
-            ausente enquanto não confirmada ou em nova visita criada por reagendamento.
+            ausente enquanto não confirmada ou em nova visita criada por
+            reagendamento. Não altera ScheduledVisit.version.
         rescheduleRequest:
           $ref: '#/components/schemas/VisitRescheduleRequestSummary'
         version:
           type: integer
           format: int64
           readOnly: true
-          description: Versão para If-Match; também enviada no cabeçalho ETag
+          description: >
+            Versão para If-Match (também enviada no cabeçalho ETag); muda
+            apenas em desfechos/cancelamentos, não ao confirmar presença.
     RescheduleRequestStatus:
       type: string
       description: |
@@ -3804,7 +3827,8 @@ components:
           description: |
             Nova data e hora da visita, ISO 8601 com fuso. Obrigatória quando
             decision=ACCEPTED; deve ser futura e estar dentro do período do
-            estudo (dia no fuso America/Fortaleza). Deve ficar ausente em DECLINED.
+            estudo (dia no fuso America/Fortaleza). Deve ficar ausente em
+            DECLINED (seu envio responde 400 RESCHEDULE_NEW_DATE_NOT_ALLOWED).
         note:
           type: string
           maxLength: 500
