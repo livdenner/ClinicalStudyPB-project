@@ -1,14 +1,15 @@
 openapi: 3.0.3
 info:
   title: ClinicalStudyPB API
-  version: 1.7.1
+  version: 1.8.0
   description: |
     Contrato da Release 1 (RF01 a RF11) e da Release 2 em andamento. As rotas
     da Sprint 3 (identidade, ativação e decisão de consentimento do candidato;
     agendamento e desfecho de visitas, RF12 e RF13; resultados, histórico e
     retirada, RF14 a RF16; estudos e visitas do participante no app, RF17 e
-    RF18) são o alvo acordado; sua
-    presença aqui não indica implementação pronta, e elas só aparecem no
+    RF18) e da Sprint 4 em andamento (painel de acompanhamento e relatório
+    simplificado com exportação CSV, RF21 e RF22) são o alvo acordado; sua
+    presença aqui não indica implementação pronta, e novas rotas só aparecem no
     Swagger UI gerado pela aplicação depois de implementadas.
 
     Convenções acordadas:
@@ -31,6 +32,10 @@ info:
       registra a retirada (RF16); ambos consultam o histórico do participante (RF15).
     - PARTICIPANT consulta só os próprios estudos e visitas em /api/me (RF17/RF18);
       a conta vem do token, nunca de parâmetro, e os demais perfis recebem 403.
+    - No RF21 (/api/monitoring/dashboard) e no RF22 (/api/studies/{studyId}/report
+      e report.csv), apenas RESEARCHER e COORDINATOR têm acesso (ADMINISTRATOR e
+      PARTICIPANT recebem 403); ambos compartilham exatamente a mesma definição
+      matemática de métricas e não expõem lista nominal de participantes.
     - Erros de regra de negócio da Release 2 trazem `code` estável no ProblemDetail.
 servers:
   - url: /
@@ -49,6 +54,7 @@ tags:
   - name: Resultados
   - name: Convites do participante
   - name: Dados do participante
+  - name: Monitoramento
 paths:
   /api/auth/login:
     post:
@@ -2043,6 +2049,343 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
+  /api/monitoring/dashboard:
+    get:
+      tags: [Monitoramento]
+      summary: Consulta o painel consolidado de acompanhamento (RF21, T30.1)
+      description: |
+        Somente RESEARCHER e COORDINATOR; ADMINISTRATOR e PARTICIPANT recebem
+        403 (decisão de PO alinhada ao enunciado). Retorna os indicadores reais
+        consolidados em summary e detalhados por estudo em studies (ordenados por
+        studyId crescente), sem listagem nominal de participantes/candidatos e
+        sem dados fictícios hardcoded. Em banco vazio, summary traz zeros
+        válidos e studies vem como [].
+
+        Definição matemática compartilhada com RF22 (/report e /report.csv):
+        - participants.total = active + withdrawn (vagas ocupadas, pois
+          retirada não devolve vaga); participants.distinctPeople conta userId
+          únicos entre participantes incluídos no escopo.
+        - candidates.total = soma dos 7 estados de CandidateStatus (byStatus);
+          candidates.distinctPeople conta userId únicos entre essas
+          candidaturas.
+        - candidates.byEligibility (pending, eligible, ineligible) considera
+          apenas candidaturas não canceladas (status != CANCELLED), garantindo
+          pending + eligible + ineligible = total - byStatus.cancelled.
+        - visits.total = done + absent + cancelled + pending; visits.pending
+          considera todas as visitas SCHEDULED (incluindo vencidas sem
+          desfecho), e visits.overduePending é o subconjunto de pending com
+          scheduledAt <= generatedAt.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: studyId
+          in: query
+          required: false
+          description: Filtra o painel para um único estudo; estudo inexistente responde 404
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+          description: Indicadores consolidados e detalhados por estudo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonitoringDashboard'
+              example:
+                generatedAt: '2026-11-26T15:00:00Z'
+                summary:
+                  studies:
+                    total: 2
+                    planning: 0
+                    recruitment: 1
+                    execution: 1
+                    closed: 0
+                    cancelled: 0
+                  candidates:
+                    total: 22
+                    distinctPeople: 20
+                    byStatus:
+                      invited: 3
+                      active: 3
+                      consentPending: 2
+                      granted: 2
+                      declined: 1
+                      included: 10
+                      cancelled: 1
+                    byEligibility:
+                      pending: 4
+                      eligible: 15
+                      ineligible: 2
+                  participants:
+                    total: 10
+                    active: 8
+                    withdrawn: 2
+                    distinctPeople: 9
+                  visits:
+                    total: 25
+                    done: 11
+                    absent: 2
+                    cancelled: 4
+                    pending: 8
+                    overduePending: 1
+                studies:
+                  - studyId: 1
+                    studyTitle: Acompanhamento de hipertensão
+                    studyStatus: EXECUTION
+                    startDate: '2027-01-01'
+                    endDate: '2027-12-31'
+                    participantLimit: 30
+                    candidates:
+                      total: 15
+                      distinctPeople: 14
+                      byStatus:
+                        invited: 1
+                        active: 2
+                        consentPending: 1
+                        granted: 1
+                        declined: 1
+                        included: 8
+                        cancelled: 1
+                      byEligibility:
+                        pending: 2
+                        eligible: 11
+                        ineligible: 1
+                    participants:
+                      total: 8
+                      active: 6
+                      withdrawn: 2
+                      distinctPeople: 8
+                    visits:
+                      total: 20
+                      done: 10
+                      absent: 2
+                      cancelled: 3
+                      pending: 5
+                      overduePending: 1
+                  - studyId: 2
+                    studyTitle: Controle glicêmico em adultos
+                    studyStatus: RECRUITMENT
+                    startDate: '2027-02-01'
+                    endDate: '2027-11-30'
+                    participantLimit: 20
+                    candidates:
+                      total: 7
+                      distinctPeople: 7
+                      byStatus:
+                        invited: 2
+                        active: 1
+                        consentPending: 1
+                        granted: 1
+                        declined: 0
+                        included: 2
+                        cancelled: 0
+                      byEligibility:
+                        pending: 2
+                        eligible: 4
+                        ineligible: 1
+                    participants:
+                      total: 2
+                      active: 2
+                      withdrawn: 0
+                      distinctPeople: 2
+                    visits:
+                      total: 5
+                      done: 1
+                      absent: 0
+                      cancelled: 1
+                      pending: 3
+                      overduePending: 0
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/studies/{studyId}/report:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+    get:
+      tags: [Monitoramento]
+      summary: Gera o relatório simplificado do estudo em JSON (RF22, T30.1)
+      description: |
+        Somente RESEARCHER e COORDINATOR; ADMINISTRATOR e PARTICIPANT recebem
+        403. Retorna exclusivamente agregados gerenciais do estudo (sem PDF e
+        sem listagem nominal de pacientes/candidatos), usando exatamente as
+        mesmas definições matemáticas do painel RF21.
+
+        Filtros opcionais startDate e endDate (YYYY-MM-DD, inclusive, no fuso
+        America/Fortaleza):
+        - Sem filtros, candidates, participants e visits coincidem exatamente com
+          o detalhamento do estudo em GET /api/monitoring/dashboard.
+        - Com filtro de período, visits considera scheduledAt e participants
+          considera includedAt dentro do intervalo [startDate, endDate];
+          candidates reflete o retrato consolidado atual do estudo.
+        - Se startDate > endDate, responde 400 INVALID_REPORT_PERIOD.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          required: false
+          description: Data inicial opcional do recorte (YYYY-MM-DD, inclusive, fuso America/Fortaleza)
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: false
+          description: Data final opcional do recorte (YYYY-MM-DD, inclusive, fuso America/Fortaleza)
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Relatório agregado do estudo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudyReport'
+              example:
+                generatedAt: '2026-11-26T15:00:00Z'
+                studyId: 1
+                studyTitle: Acompanhamento de hipertensão
+                studyStatus: EXECUTION
+                studyStartDate: '2027-01-01'
+                studyEndDate: '2027-12-31'
+                participantLimit: 30
+                candidates:
+                  total: 15
+                  distinctPeople: 14
+                  byStatus:
+                    invited: 1
+                    active: 2
+                    consentPending: 1
+                    granted: 1
+                    declined: 1
+                    included: 8
+                    cancelled: 1
+                  byEligibility:
+                    pending: 2
+                    eligible: 11
+                    ineligible: 1
+                participants:
+                  total: 8
+                  active: 6
+                  withdrawn: 2
+                  distinctPeople: 8
+                visits:
+                  total: 20
+                  done: 10
+                  absent: 2
+                  cancelled: 3
+                  pending: 5
+                  overduePending: 1
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/studies/{studyId}/report.csv:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+    get:
+      tags: [Monitoramento]
+      summary: Exporta o relatório simplificado do estudo em CSV (RF22, T30.1)
+      description: |
+        Somente RESEARCHER e COORDINATOR; ADMINISTRATOR e PARTICIPANT recebem
+        403. Aplica exatamente os mesmos filtros (startDate e endDate) e os
+        mesmos cálculos agregados de GET /api/studies/{studyId}/report, sem
+        listagem nominal de pacientes.
+
+        Formato de resposta:
+        - Content-Type text/csv com encoding UTF-8 e Content-Disposition
+          attachment; filename="relatorio-estudo-{studyId}.csv".
+        - Estrutura tabular com cabeçalho secao,indicador,valor e escape RFC
+          4180.
+        - Proteção contra CSV formula injection: células textuais iniciadas por
+          =, +, -, @ ou precedidas por tab/CR recebem prefixo ' antes da
+          serialização.
+        - Se startDate > endDate, responde 400 INVALID_REPORT_PERIOD.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          required: false
+          description: Data inicial opcional do recorte (YYYY-MM-DD, inclusive, fuso America/Fortaleza)
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: false
+          description: Data final opcional do recorte (YYYY-MM-DD, inclusive, fuso America/Fortaleza)
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Arquivo CSV com os indicadores agregados do estudo
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              description: Anexo para download no formato attachment; filename="relatorio-estudo-{studyId}.csv"
+          content:
+            text/csv:
+              schema:
+                type: string
+              example: |
+                secao,indicador,valor
+                estudo,studyId,1
+                estudo,studyTitle,Acompanhamento de hipertensão
+                estudo,studyStatus,EXECUTION
+                estudo,studyStartDate,2027-01-01
+                estudo,studyEndDate,2027-12-31
+                estudo,participantLimit,30
+                filtro,filterStartDate,
+                filtro,filterEndDate,
+                filtro,generatedAt,2026-11-26T15:00:00Z
+                candidatos,total,15
+                candidatos,distinctPeople,14
+                candidatos,invited,1
+                candidatos,active,2
+                candidatos,consentPending,1
+                candidatos,granted,1
+                candidatos,declined,1
+                candidatos,included,8
+                candidatos,cancelled,1
+                candidatos,eligibilityPending,2
+                candidatos,eligibilityEligible,11
+                candidatos,eligibilityIneligible,1
+                participantes,total,8
+                participantes,active,6
+                participantes,withdrawn,2
+                participantes,distinctPeople,8
+                visitas,total,20
+                visitas,done,10
+                visitas,absent,2
+                visitas,cancelled,3
+                visitas,pending,5
+                visitas,overduePending,1
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -3161,6 +3504,282 @@ components:
           format: int64
           readOnly: true
           description: Versão para If-Match; também enviada no cabeçalho ETag
+    StudyCounts:
+      type: object
+      description: Quantitativo consolidado de estudos por situação (RF21)
+      required: [total, planning, recruitment, execution, closed, cancelled]
+      properties:
+        total:
+          type: integer
+          minimum: 0
+          readOnly: true
+        planning:
+          type: integer
+          minimum: 0
+          readOnly: true
+        recruitment:
+          type: integer
+          minimum: 0
+          readOnly: true
+        execution:
+          type: integer
+          minimum: 0
+          readOnly: true
+        closed:
+          type: integer
+          minimum: 0
+          readOnly: true
+        cancelled:
+          type: integer
+          minimum: 0
+          readOnly: true
+    CandidateStatusCounts:
+      type: object
+      description: Distribuição de candidaturas pelos sete valores de CandidateStatus (RF21/RF22)
+      required: [invited, active, consentPending, granted, declined, included, cancelled]
+      properties:
+        invited:
+          type: integer
+          minimum: 0
+          readOnly: true
+        active:
+          type: integer
+          minimum: 0
+          readOnly: true
+        consentPending:
+          type: integer
+          minimum: 0
+          readOnly: true
+        granted:
+          type: integer
+          minimum: 0
+          readOnly: true
+        declined:
+          type: integer
+          minimum: 0
+          readOnly: true
+        included:
+          type: integer
+          minimum: 0
+          readOnly: true
+        cancelled:
+          type: integer
+          minimum: 0
+          readOnly: true
+    EligibilityStatusCounts:
+      type: object
+      description: |
+        Contagem de elegibilidade apenas das candidaturas não canceladas
+        (status != CANCELLED), garantindo soma igual a total - cancelled (RF21/RF22).
+      required: [pending, eligible, ineligible]
+      properties:
+        pending:
+          type: integer
+          minimum: 0
+          readOnly: true
+        eligible:
+          type: integer
+          minimum: 0
+          readOnly: true
+        ineligible:
+          type: integer
+          minimum: 0
+          readOnly: true
+    CandidateMetrics:
+      type: object
+      description: Métricas compartilhadas de candidaturas e pessoas distintas (RF21/RF22)
+      required: [total, distinctPeople, byStatus, byEligibility]
+      properties:
+        total:
+          type: integer
+          minimum: 0
+          readOnly: true
+          description: Total de candidaturas no escopo (soma de byStatus)
+        distinctPeople:
+          type: integer
+          minimum: 0
+          readOnly: true
+          description: Pessoas distintas (userId únicos) entre as candidaturas do escopo
+        byStatus:
+          $ref: '#/components/schemas/CandidateStatusCounts'
+        byEligibility:
+          $ref: '#/components/schemas/EligibilityStatusCounts'
+    ParticipantMetrics:
+      type: object
+      description: |
+        Métricas compartilhadas de participantes incluídos (RF21/RF22).
+        total = active + withdrawn (vagas ocupadas); distinctPeople conta
+        contas únicas incluídas no escopo.
+      required: [total, active, withdrawn, distinctPeople]
+      properties:
+        total:
+          type: integer
+          minimum: 0
+          readOnly: true
+        active:
+          type: integer
+          minimum: 0
+          readOnly: true
+        withdrawn:
+          type: integer
+          minimum: 0
+          readOnly: true
+        distinctPeople:
+          type: integer
+          minimum: 0
+          readOnly: true
+    VisitMetrics:
+      type: object
+      description: |
+        Métricas compartilhadas de visitas agendadas (RF21/RF22).
+        total = done + absent + cancelled + pending; overduePending é o
+        subconjunto de pending com scheduledAt <= generatedAt.
+      required: [total, done, absent, cancelled, pending, overduePending]
+      properties:
+        total:
+          type: integer
+          minimum: 0
+          readOnly: true
+        done:
+          type: integer
+          minimum: 0
+          readOnly: true
+        absent:
+          type: integer
+          minimum: 0
+          readOnly: true
+        cancelled:
+          type: integer
+          minimum: 0
+          readOnly: true
+        pending:
+          type: integer
+          minimum: 0
+          readOnly: true
+        overduePending:
+          type: integer
+          minimum: 0
+          readOnly: true
+    MonitoringSummary:
+      type: object
+      description: Bloco consolidado do painel de acompanhamento (RF21)
+      required: [studies, candidates, participants, visits]
+      properties:
+        studies:
+          $ref: '#/components/schemas/StudyCounts'
+        candidates:
+          $ref: '#/components/schemas/CandidateMetrics'
+        participants:
+          $ref: '#/components/schemas/ParticipantMetrics'
+        visits:
+          $ref: '#/components/schemas/VisitMetrics'
+    StudyMonitoringMetrics:
+      type: object
+      description: Métricas detalhadas de um estudo no painel de acompanhamento (RF21)
+      required: [studyId, studyTitle, studyStatus, startDate, endDate, participantLimit,
+                 candidates, participants, visits]
+      properties:
+        studyId:
+          type: integer
+          format: int64
+          readOnly: true
+        studyTitle:
+          type: string
+          readOnly: true
+        studyStatus:
+          $ref: '#/components/schemas/StudyStatus'
+        startDate:
+          type: string
+          format: date
+          readOnly: true
+        endDate:
+          type: string
+          format: date
+          readOnly: true
+        participantLimit:
+          type: integer
+          minimum: 1
+          readOnly: true
+        candidates:
+          $ref: '#/components/schemas/CandidateMetrics'
+        participants:
+          $ref: '#/components/schemas/ParticipantMetrics'
+        visits:
+          $ref: '#/components/schemas/VisitMetrics'
+    MonitoringDashboard:
+      type: object
+      description: Painel real de acompanhamento gerencial (RF21)
+      required: [generatedAt, summary, studies]
+      properties:
+        generatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Instante de geração da fotografia de métricas
+        studyId:
+          type: integer
+          format: int64
+          minimum: 1
+          readOnly: true
+          description: Identificador do estudo filtrado, quando informado em query
+        summary:
+          $ref: '#/components/schemas/MonitoringSummary'
+        studies:
+          type: array
+          readOnly: true
+          description: Lista ordenada por studyId crescente; [] quando não houver estudos
+          items:
+            $ref: '#/components/schemas/StudyMonitoringMetrics'
+    StudyReport:
+      type: object
+      description: |
+        Relatório simplificado agregado de um estudo (RF22), sem listagem
+        nominal de participantes ou candidatos e com exatamente as mesmas
+        definições matemáticas de RF21.
+      required: [generatedAt, studyId, studyTitle, studyStatus, studyStartDate,
+                 studyEndDate, participantLimit, candidates, participants, visits]
+      properties:
+        generatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        studyId:
+          type: integer
+          format: int64
+          readOnly: true
+        studyTitle:
+          type: string
+          readOnly: true
+        studyStatus:
+          $ref: '#/components/schemas/StudyStatus'
+        studyStartDate:
+          type: string
+          format: date
+          readOnly: true
+        studyEndDate:
+          type: string
+          format: date
+          readOnly: true
+        participantLimit:
+          type: integer
+          minimum: 1
+          readOnly: true
+        filterStartDate:
+          type: string
+          format: date
+          readOnly: true
+          description: Data inicial aplicada ao filtro de período, quando informada
+        filterEndDate:
+          type: string
+          format: date
+          readOnly: true
+          description: Data final aplicada ao filtro de período, quando informada
+        candidates:
+          $ref: '#/components/schemas/CandidateMetrics'
+        participants:
+          $ref: '#/components/schemas/ParticipantMetrics'
+        visits:
+          $ref: '#/components/schemas/VisitMetrics'
     ApiError:
       type: object
       required: [code, message]
