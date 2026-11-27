@@ -43,6 +43,6 @@ public class IntegratedStudyReadiness implements StudyReadiness {
     @Override
     @Transactional(readOnly = true)
     public boolean hasIncludedParticipant(Long studyId) {
-        return participantLookup.countIncluded(studyId) > 0;
+        return participantLookup.countActiveIncluded(studyId) > 0;
     }
 }

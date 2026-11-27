@@ -20,10 +20,10 @@ public interface StudyReadiness {
     boolean hasInclusionAndExclusionCriteria(Long studyId);
 
     /**
-     * Verifica se ao menos um participante foi incluído.
+     * Verifica se há ao menos um participante ativo incluído no estudo.
      *
      * @param studyId identificador do estudo
-     * @return verdadeiro quando há participante incluído
+     * @return verdadeiro quando há participante ativo incluído
      */
     boolean hasIncludedParticipant(Long studyId);
 }

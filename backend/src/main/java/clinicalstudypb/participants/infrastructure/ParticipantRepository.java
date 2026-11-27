@@ -1,6 +1,7 @@
 package clinicalstudypb.participants.infrastructure;
 
 import clinicalstudypb.participants.domain.Participant;
+import clinicalstudypb.participants.domain.ParticipantStatus;
 import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
@@ -34,6 +35,15 @@ public interface ParticipantRepository extends JpaRepository<Participant, Long> 
      * @return quantidade de participantes incluídos
      */
     long countByStudyId(Long studyId);
+
+    /**
+     * Conta as inclusões persistidas de um estudo com a situação informada.
+     *
+     * @param studyId estudo consultado
+     * @param status situação desejada do participante
+     * @return quantidade de participantes na situação informada
+     */
+    long countByStudyIdAndStatus(Long studyId, ParticipantStatus status);
 
     /**
      * Lista os vínculos persistidos somente no estudo solicitado.

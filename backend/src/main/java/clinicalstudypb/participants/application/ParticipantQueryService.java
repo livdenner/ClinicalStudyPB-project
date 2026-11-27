@@ -1,6 +1,7 @@
 package clinicalstudypb.participants.application;
 
 import clinicalstudypb.participants.domain.Participant;
+import clinicalstudypb.participants.domain.ParticipantStatus;
 import clinicalstudypb.participants.infrastructure.ParticipantRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,13 @@ public class ParticipantQueryService implements ParticipantLookup {
     @Transactional(readOnly = true)
     public long countIncluded(Long studyId) {
         return participantRepository.countByStudyId(studyId);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    @Transactional(readOnly = true)
+    public long countActiveIncluded(Long studyId) {
+        return participantRepository.countByStudyIdAndStatus(studyId, ParticipantStatus.ACTIVE);
     }
 
     /**

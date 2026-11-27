@@ -19,10 +19,18 @@ public interface ParticipantLookup {
     boolean isIncluded(Long studyId, Long candidateId);
 
     /**
-     * Consulta a quantidade de inclusões reais do estudo.
+     * Consulta a quantidade de inclusões reais do estudo, incluindo retirados.
      *
      * @param studyId estudo consultado
      * @return quantidade de participantes incluídos no estudo
      */
     long countIncluded(Long studyId);
+
+    /**
+     * Consulta a quantidade de participantes ativos incluídos no estudo.
+     *
+     * @param studyId estudo consultado
+     * @return quantidade de participantes com situação {@code ACTIVE}
+     */
+    long countActiveIncluded(Long studyId);
 }
