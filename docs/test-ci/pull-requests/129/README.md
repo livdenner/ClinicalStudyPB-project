@@ -7,8 +7,9 @@ com **uma linha por teste** e o resultado de cada um. O nome segue `AAAA-MM-DD_H
 com data e hora em America/Fortaleza. Os arquivos são gerados por `scripts/relatorio-testes/gerar.mjs`;
 veja o [guia de contribuição](../../../../CONTRIBUTING.md#relatório-de-execução-dos-testes).
 
-**Última execução:** [2026-11-26_02-17_d94e62b](2026-11-26_02-17_d94e62b.md)
+**Última execução:** [2026-11-27_17-49_24a5af5](2026-11-27_17-49_24a5af5.md)
 
 | Data/hora | Commit | Integração | Ambiente | Testes | ✅ | ❌ | ⏭️ | ⚠️ | Situação |
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| [27/11/2026 17:49](2026-11-27_17-49_24a5af5.md) | `24a5af5` | [PR #129](https://github.com/livdenner/ClinicalStudyPB-project/pull/129): docs(openapi): define contrato do RF20 (T29.1) — em revisão, ainda não integrado | CI (GitHub Actions) | 1737 | 1737 | 0 | 0 | 0 | ✅ ok |
 | [26/11/2026 02:17](2026-11-26_02-17_d94e62b.md) | `d94e62b` | [PR #129](https://github.com/livdenner/ClinicalStudyPB-project/pull/129): docs(openapi): define contrato do RF20 (T29.1) — em revisão, ainda não integrado | CI (GitHub Actions) | 1737 | 1737 | 0 | 0 | 0 | ✅ ok |
