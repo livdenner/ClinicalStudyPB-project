@@ -1,16 +1,16 @@
 openapi: 3.0.3
 info:
   title: ClinicalStudyPB API
-  version: 1.8.0
+  version: 1.9.0
   description: |
     Contrato da Release 1 (RF01 a RF11) e da Release 2 em andamento. As rotas
     da Sprint 3 (identidade, ativação e decisão de consentimento do candidato;
     agendamento e desfecho de visitas, RF12 e RF13; resultados, histórico e
     retirada, RF14 a RF16; estudos e visitas do participante no app, RF17 e
     RF18) e da Sprint 4 em andamento (confirmação de presença prevista e
-    reagendamento, RF19) são o alvo acordado; sua presença aqui não indica
-    implementação pronta, e novas rotas só aparecem no Swagger UI gerado pela
-    aplicação depois de implementadas.
+    reagendamento, RF19; solicitação de retirada voluntária, RF20) são o alvo
+    acordado; sua presença aqui não indica implementação pronta, e novas rotas
+    só aparecem no Swagger UI gerado pela aplicação depois de implementadas.
 
     Convenções acordadas:
     - Os nomes JSON usam camelCase; os nomes do banco permanecem em snake_case.
@@ -37,6 +37,11 @@ info:
       ativa; COORDINATOR decide o pedido (ACCEPTED cancela a visita atual e
       cria uma nova SCHEDULED atomicamente, ou DECLINED com justificativa), e
       RESEARCHER apenas consulta os pedidos.
+    - No RF20, PARTICIPANT solicita retirada voluntária de participação ACTIVE
+      em /api/me/studies/{participantId}/withdrawal-request (motivo opcional,
+      sem ação de recusa); COORDINATOR consulta os pedidos e efetiva a saída
+      reutilizando POST /api/studies/{studyId}/participants/{participantId}/withdrawal
+      (RF16), enquanto RESEARCHER apenas consulta.
     - Erros de regra de negócio da Release 2 trazem `code` estável no ProblemDetail.
 servers:
   - url: /
@@ -512,19 +517,24 @@ paths:
         Para iniciar RECRUITMENT: critérios de inclusão e exclusão e visita com
         atividade. Para iniciar EXECUTION: ao menos um participante incluído.
 
-        Visitas agendadas (Sprint 3):
+        Visitas agendadas e retiradas voluntárias (Sprints 3 e 4):
         - CLOSED exige que nenhuma visita do estudo esteja SCHEDULED; o
           coordenador registra antes o desfecho de cada uma (DONE, ABSENT ou
           CANCELLED). Caso contrário responde 409 STUDY_HAS_SCHEDULED_VISITS,
-          sem alterar o estudo nem as visitas.
+          sem alterar o estudo nem as visitas. Ao concluir CLOSED, eventuais
+          solicitações de retirada voluntária PENDING (RF20) passam
+          automaticamente a CANCELLED com resolvedByUserId e resolvedAt do
+          encerramento.
         - CANCELLED cancela, na mesma transação, todas as visitas SCHEDULED do
           estudo: passam a CANCELLED com outcomeNote "Cancelamento do estudo",
           outcomeByUserId do pesquisador que cancelou, outcomeAt igual ao
-          instante do cancelamento e version incrementada, além de marcar
-          eventuais solicitações de reagendamento PENDING (RF19) como CANCELLED.
-          Visitas DONE, ABSENT ou CANCELLED não mudam. Desfazer o cancelamento
-          (volta a PLANNING ou RECRUITMENT) não reabre essas visitas nem as
-          solicitações canceladas; é preciso agendar de novo.
+          instante do cancelamento e version incrementada; além de marcar
+          eventuais solicitações de reagendamento PENDING (RF19) e de retirada
+          voluntária PENDING (RF20) como CANCELLED (nestas últimas gravando
+          resolvedByUserId e resolvedAt). Visitas DONE, ABSENT ou CANCELLED não
+          mudam. Desfazer o cancelamento (volta a PLANNING ou RECRUITMENT) não
+          reabre essas visitas nem as solicitações canceladas; é preciso agendar
+          de novo.
         - A mudança de estado e o agendamento são serializados por estudo: um
           agendamento concorrente com CLOSED ou CANCELLED é recusado ou entra
           antes e é tratado pela regra acima.
@@ -1448,13 +1458,21 @@ paths:
           VISIT_OUTCOME_FINAL); eventuais solicitações de reagendamento PENDING
           das visitas afetadas (ou do participante retirado) passam
           automaticamente a CANCELLED (RF19);
+        - eventual solicitação de retirada voluntária PENDING (RF20) desse
+          participante passa automaticamente a COMPLETED, gravando
+          resolvedByUserId e resolvedAt na mesma transação (seja a saída
+          iniciada diretamente pelo coordenador ou a partir do pedido no app;
+          não existe recusa para retirada voluntária);
         - novos agendamentos passam a responder 409 PARTICIPANT_WITHDRAWN.
         Se o cancelamento das visitas falhar, a retirada não é gravada.
 
-        Visitas SCHEDULED já vencidas continuam aguardando desfecho, e visitas
-        realizadas antes da retirada continuam aceitando resultados (RF14). A
-        vaga não volta ao estudo e o participante não pode ser reincluído
-        (decisão da PO).
+        Quando houver solicitação prévia com motivo informado pelo participante,
+        a interface web pode pré-preencher esse motivo em reason ao efetivar a
+        retirada (ou registrar justificativa informada pela coordenação caso o
+        participante não tenha enviado motivo). Visitas SCHEDULED já vencidas
+        continuam aguardando desfecho, e visitas realizadas antes da retirada
+        continuam aceitando resultados (RF14). A vaga não volta ao estudo e o
+        participante não pode ser reincluído (decisão da PO).
 
         Regras e erros:
         - 400: reason ausente ou em branco.
@@ -1499,6 +1517,74 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+
+  /api/studies/{studyId}/withdrawal-requests:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+    get:
+      tags: [Participantes]
+      summary: Lista as solicitações de retirada voluntária do estudo (RF20, T29.1)
+      description: |
+        RESEARCHER ou COORDINATOR; PARTICIPANT e ADMINISTRATOR recebem 403.
+        RESEARCHER consulta em modo somente leitura; COORDINATOR usa a lista
+        para efetivar a saída pela rota existente de RF16
+        (POST /api/studies/{studyId}/participants/{participantId}/withdrawal),
+        pois não existe ação de recusa para retirada voluntária.
+        Ordenação: solicitações PENDING primeiro (por requestedAt crescente,
+        atendimento FIFO) e demais (COMPLETED, CANCELLED) por requestedAt
+        decrescente, com desempate por id. Retorna [] quando não há registros
+        para os filtros aplicados; estudo inexistente responde 404.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filtra pela situação da solicitação (PENDING, COMPLETED ou CANCELLED)
+          schema:
+            $ref: '#/components/schemas/WithdrawalRequestStatus'
+        - name: participantId
+          in: query
+          required: false
+          description: Filtra pelas solicitações de um participante do estudo
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+          description: Solicitações de retirada voluntária do estudo
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WithdrawalRequest'
+              example:
+                - id: 3
+                  studyId: 2
+                  participantId: 5
+                  participantName: Carlos Lima
+                  status: PENDING
+                  reason: Mudança de cidade impede comparecimento às próximas visitas
+                  requestedAt: '2026-11-26T12:30:00Z'
+                - id: 2
+                  studyId: 2
+                  participantId: 4
+                  participantName: Ana Souza
+                  status: COMPLETED
+                  reason: Indisponibilidade de horários no semestre
+                  requestedAt: '2026-11-20T14:00:00Z'
+                  resolvedByUserId: 2
+                  resolvedAt: '2026-11-21T15:20:00Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
   /api/studies/{studyId}/visits:
     parameters:
@@ -2187,9 +2273,12 @@ paths:
         (ACTIVE) ou retirada (WITHDRAWN), da inclusão mais recente para a mais
         antiga, incluindo as visitas previstas do protocolo na ordem
         (plannedVisits, [] quando não houver). Estudos encerrados ou cancelados
-        continuam na lista, com studyStatus atualizado. Candidaturas ainda não
-        incluídas ficam em /api/me/invitations. Retorna [] quando a conta não
-        tem inclusão.
+        continuam na lista, com studyStatus atualizado. Quando houver
+        solicitação de retirada voluntária (RF20), withdrawalRequest traz o
+        pedido mais recente da participação; enquanto PENDING,
+        participationStatus segue ACTIVE até a efetivação pelo coordenador
+        via RF16. Candidaturas ainda não incluídas ficam em /api/me/invitations.
+        Retorna [] quando a conta não tem inclusão.
       security:
         - bearerAuth: []
       responses:
@@ -2202,6 +2291,24 @@ paths:
                 items:
                   $ref: '#/components/schemas/ParticipantStudy'
               example:
+                - participantId: 5
+                  studyId: 2
+                  studyTitle: Avaliação de adesão nutricional
+                  studyObjective: Acompanhar adesão alimentar fictícia em adultos
+                  studyStatus: EXECUTION
+                  startDate: '2027-01-01'
+                  endDate: '2027-12-31'
+                  responsibleName: Paula Pesquisadora
+                  participationStatus: ACTIVE
+                  includedAt: '2026-11-12T10:00:00Z'
+                  withdrawalRequest:
+                    id: 3
+                    participantId: 5
+                    studyId: 2
+                    status: PENDING
+                    reason: Mudança de cidade impede comparecimento às próximas visitas
+                    requestedAt: '2026-11-26T12:30:00Z'
+                  plannedVisits: []
                 - participantId: 4
                   studyId: 1
                   studyTitle: Acompanhamento de hipertensão
@@ -2227,6 +2334,87 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+
+  /api/me/studies/{participantId}/withdrawal-request:
+    parameters:
+      - $ref: '#/components/parameters/ParticipantId'
+    post:
+      tags: [Dados do participante]
+      summary: Solicita a retirada voluntária do estudo (RF20, T29.1)
+      description: |
+        Somente PARTICIPANT, dono da participação; outros perfis recebem 403.
+        A conta vem do token, nunca de parâmetro.
+
+        Registra solicitação de retirada voluntária com status=PENDING (no
+        máximo 1 solicitação PENDING por participação). A participação
+        permanece ACTIVE até que o coordenador efetive a saída pelo fluxo de
+        RF16 (POST /api/studies/{studyId}/participants/{participantId}/withdrawal),
+        que cancela as visitas futuras e conclui este pedido como COMPLETED. Não
+        há recusa para solicitação de retirada voluntária.
+
+        Usa bloqueio pessimista na ordem estudo -> participante (mesma ordem do
+        RF16) para evitar duplicidade ou corrida com retirada e encerramento/
+        cancelamento do estudo.
+
+        Regras e erros (em ordem após validar formato e posse):
+        - 400: corpo JSON malformado ou reason com mais de 500 caracteres após
+          trim. Quando reason vier ausente, vazio ou só espaços após trim, o
+          pedido é registrado sem motivo.
+        - 404: participação inexistente ou pertencente a outra conta (sem
+          revelar sua existência).
+        - 409 STUDY_READ_ONLY: estudo em CLOSED ou CANCELLED (participações
+          ACTIVE em estudo que retornou a PLANNING seguem podendo solicitar
+          retirada voluntária).
+        - 409 PARTICIPANT_ALREADY_WITHDRAWN: a participação já está em WITHDRAWN.
+        - 409 WITHDRAWAL_REQUEST_ALREADY_PENDING: já existe solicitação PENDING
+          em aberto para esta participação (inclusive em envios concorrentes).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VoluntaryWithdrawalRequestCreate'
+            examples:
+              comMotivo:
+                value:
+                  reason: Mudança de cidade impede comparecimento às próximas visitas
+              semMotivo:
+                value: {}
+      responses:
+        '201':
+          description: Solicitação de retirada voluntária registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParticipantWithdrawalRequestView'
+              examples:
+                comMotivo:
+                  value:
+                    id: 3
+                    participantId: 5
+                    studyId: 2
+                    status: PENDING
+                    reason: Mudança de cidade impede comparecimento às próximas visitas
+                    requestedAt: '2026-11-26T12:30:00Z'
+                semMotivo:
+                  value:
+                    id: 4
+                    participantId: 6
+                    studyId: 3
+                    status: PENDING
+                    requestedAt: '2026-11-26T13:00:00Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
 
   /api/me/visits:
     get:
@@ -3190,7 +3378,10 @@ components:
           description: Instante da decisão; ausente em CONSENT_PENDING
     ParticipantStudy:
       type: object
-      description: Estudo em que a conta autenticada participa (RF17)
+      description: |
+        Estudo em que a conta autenticada participa (RF17). Quando houver
+        solicitação de retirada voluntária (RF20), withdrawalRequest traz o
+        pedido mais recente (ausente caso nunca tenha solicitado).
       required: [participantId, studyId, studyTitle, studyObjective, studyStatus, startDate,
                  endDate, responsibleName, participationStatus, includedAt, plannedVisits]
       properties:
@@ -3236,6 +3427,8 @@ components:
           description: |
             Instante da retirada; ausente quando participationStatus=ACTIVE. O
             motivo e a autoria da retirada não são expostos ao participante.
+        withdrawalRequest:
+          $ref: '#/components/schemas/ParticipantWithdrawalRequestView'
         plannedVisits:
           type: array
           readOnly: true
@@ -3379,6 +3572,110 @@ components:
           minimum: 0
           readOnly: true
           description: Quantidade de visitas futuras canceladas pela retirada
+    WithdrawalRequestStatus:
+      type: string
+      description: |
+        Situação da solicitação de retirada voluntária (RF20):
+        PENDING=Aguardando efetivação pelo coordenador via RF16;
+        COMPLETED=Concluída automaticamente ao efetivar a retirada em RF16 (com
+        resolvedByUserId e resolvedAt);
+        CANCELLED=Cancelada automaticamente pelo sistema ao encerrar (CLOSED) ou
+        cancelar (CANCELLED) o estudo.
+      enum: [PENDING, COMPLETED, CANCELLED]
+    VoluntaryWithdrawalRequestCreate:
+      type: object
+      description: Pedido opcional de retirada voluntária enviado pelo participante (RF20)
+      properties:
+        reason:
+          type: string
+          maxLength: 500
+          description: |
+            Motivo opcional informado pelo participante; espaços nas
+            extremidades são removidos e valores em branco equivalem a motivo
+            não informado.
+    ParticipantWithdrawalRequestView:
+      type: object
+      description: |
+        Visão do participante sobre a solicitação de retirada voluntária mais
+        recente (RF20). A autoria da resolução não é exposta ao participante.
+      required: [id, participantId, studyId, status, requestedAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        participantId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Participação da conta autenticada no estudo
+        studyId:
+          type: integer
+          format: int64
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/WithdrawalRequestStatus'
+        reason:
+          type: string
+          maxLength: 500
+          readOnly: true
+          description: Motivo informado pelo participante, quando preenchido
+        requestedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Instante de criação da solicitação atribuído pelo servidor
+        resolvedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: |
+            Instante da conclusão (RF16) ou do cancelamento automático pelo
+            ciclo de vida do estudo; ausente em PENDING.
+    WithdrawalRequest:
+      type: object
+      description: Solicitação de retirada voluntária exibida à equipe do estudo (RF20)
+      required: [id, studyId, participantId, participantName, status, requestedAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        studyId:
+          type: integer
+          format: int64
+          readOnly: true
+        participantId:
+          type: integer
+          format: int64
+          readOnly: true
+        participantName:
+          type: string
+          readOnly: true
+          description: Nome do participante incluído, para exibição em listas
+        status:
+          $ref: '#/components/schemas/WithdrawalRequestStatus'
+        reason:
+          type: string
+          maxLength: 500
+          readOnly: true
+          description: Motivo opcional informado pelo participante, quando preenchido
+        requestedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        resolvedByUserId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: |
+            Usuário que efetivou a retirada (COMPLETED) ou encerrou/cancelou o
+            estudo (CANCELLED); ausente em PENDING.
+        resolvedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Instante de conclusão ou cancelamento; ausente em PENDING
     ActivityResultWriteRequest:
       type: object
       required: [value]
