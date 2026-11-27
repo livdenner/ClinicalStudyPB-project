@@ -504,7 +504,8 @@ paths:
         de origem; cancelamento em EXECUTION e CLOSED são terminais.
         expectedStatus deve refletir o estado atual; divergência responde 409.
         Para iniciar RECRUITMENT: critérios de inclusão e exclusão e visita com
-        atividade. Para iniciar EXECUTION: ao menos um participante incluído.
+        atividade. Para iniciar EXECUTION: ao menos um participante ativo
+        incluído.
 
         Visitas agendadas (Sprint 3):
         - CLOSED exige que nenhuma visita do estudo esteja SCHEDULED; o

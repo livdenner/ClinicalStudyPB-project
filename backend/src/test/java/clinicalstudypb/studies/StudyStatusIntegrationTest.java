@@ -166,7 +166,7 @@ class StudyStatusIntegrationTest extends IntegrationTestSupport {
         when(readiness.hasInclusionAndExclusionCriteria(studyId)).thenReturn(true);
         advance("RECRUITMENT", "PLANNING", researcherToken).andExpect(status().isOk());
         expectConflict(advance("EXECUTION", "RECRUITMENT", researcherToken),
-                "ao menos um participante");
+                "ao menos um participante ativo");
         assertStoredStatus("RECRUITMENT");
         assertHistoryCount(1);
     }

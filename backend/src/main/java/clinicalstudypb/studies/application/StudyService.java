@@ -225,7 +225,7 @@ public class StudyService {
             StudyReadiness readiness = readinessProvider.getIfAvailable();
             if (readiness == null || !readiness.hasIncludedParticipant(id)) {
                 throw new ProtocolConflictException(
-                        "Inclua ao menos um participante antes de iniciar a execução.");
+                        "Inclua ao menos um participante ativo antes de iniciar a execução.");
             }
         }
         if (previous == StudyStatus.CANCELLED) {

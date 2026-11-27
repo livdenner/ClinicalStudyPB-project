@@ -378,8 +378,24 @@ class StudyServiceTest {
         study.advanceStatus(StudyStatus.RECRUITMENT);
         when(studyRepository.findByIdForUpdate(3L)).thenReturn(Optional.of(study));
 
-        assertThrows(ProtocolConflictException.class,
+        ProtocolConflictException error = assertThrows(ProtocolConflictException.class,
                 () -> studyService.advanceStatus(3L, StudyStatus.EXECUTION, StudyStatus.RECRUITMENT, null));
+        assertEquals("Inclua ao menos um participante ativo antes de iniciar a execução.", error.getMessage());
+        assertEquals(StudyStatus.RECRUITMENT, study.getStatus());
+        verifyNoInteractions(historyRepository);
+    }
+
+    @Test
+    void executionIsBlockedWhenNoActiveParticipantExists() {
+        Study study = study("Estudo", 10);
+        study.advanceStatus(StudyStatus.RECRUITMENT);
+        when(studyRepository.findByIdForUpdate(3L)).thenReturn(Optional.of(study));
+        when(readinessProvider.getIfAvailable()).thenReturn(readiness);
+        when(readiness.hasIncludedParticipant(3L)).thenReturn(false);
+
+        ProtocolConflictException error = assertThrows(ProtocolConflictException.class,
+                () -> studyService.advanceStatus(3L, StudyStatus.EXECUTION, StudyStatus.RECRUITMENT, null));
+        assertEquals("Inclua ao menos um participante ativo antes de iniciar a execução.", error.getMessage());
         assertEquals(StudyStatus.RECRUITMENT, study.getStatus());
         verifyNoInteractions(historyRepository);
     }

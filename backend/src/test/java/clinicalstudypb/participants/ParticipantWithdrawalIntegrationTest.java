@@ -1,5 +1,6 @@
 package clinicalstudypb.participants;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -7,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -239,8 +241,44 @@ class ParticipantWithdrawalIntegrationTest extends ParticipantIntegrationSupport
 
         include(single.getId(), carla).andExpect(status().isConflict());
         include(single.getId(), bruna).andExpect(status().isConflict());
+        transition(single.getId(), StudyStatus.EXECUTION, StudyStatus.RECRUITMENT)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail", containsString("participante ativo")));
+        assertEquals("RECRUITMENT", jdbc.queryForObject(
+                "SELECT status FROM studies WHERE id = ?", String.class, single.getId()));
         assertEquals(1L, jdbc.queryForObject(
                 "SELECT COUNT(*) FROM participants WHERE study_id = ?", Long.class, single.getId()));
+    }
+
+    @Test
+    void executionIsBlockedWithOnlyWithdrawnParticipantsAndAllowedOnceAnActiveParticipantExists() throws Exception {
+        Long firstParticipantId = includeSuccessfully(study.getId(), candidateId).get("id").asLong();
+        withdraw(study.getId(), firstParticipantId, coordinatorToken, "{\"reason\":\"Desistiu antes da execução\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("WITHDRAWN"));
+
+        transition(study.getId(), StudyStatus.EXECUTION, StudyStatus.RECRUITMENT)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail", containsString("participante ativo")));
+        assertEquals("RECRUITMENT", jdbc.queryForObject(
+                "SELECT status FROM studies WHERE id = ?", String.class, study.getId()));
+
+        Long secondCandidate = candidate(study, "Bruna Melo", EligibilityStatus.ELIGIBLE, ConsentDecision.GRANTED);
+        includeSuccessfully(study.getId(), secondCandidate);
+
+        mockMvc.perform(put(studyPath(study.getId()))
+                        .header(HttpHeaders.AUTHORIZATION, bearer(researcherToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"title":"Estudo de inclusão","objective":"Objetivo",
+                                 "responsibleUserId":%d,"startDate":"2027-01-01",
+                                 "endDate":"2027-12-31","participantLimit":1}
+                                """.formatted(researcher.getId())))
+                .andExpect(status().isConflict());
+
+        transition(study.getId(), StudyStatus.EXECUTION, StudyStatus.RECRUITMENT)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("EXECUTION"));
     }
 
     @Test
