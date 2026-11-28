@@ -7,10 +7,14 @@ com **uma linha por teste** e o resultado de cada um. O nome segue `AAAA-MM-DD_H
 com data e hora em America/Fortaleza. Os arquivos são gerados por `scripts/relatorio-testes/gerar.mjs`;
 veja o [guia de contribuição](../../../CONTRIBUTING.md#relatório-de-execução-dos-testes).
 
-**Última execução:** [2026-11-24_04-29_61ef632](2026-11-24_04-29_61ef632.md)
+**Última execução:** [2026-11-27_23-02_2922ef7](2026-11-27_23-02_2922ef7.md)
 
 | Data/hora | Commit | Integração | Ambiente | Testes | ✅ | ❌ | ⏭️ | ⚠️ | Situação |
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| [27/11/2026 23:02](2026-11-27_23-02_2922ef7.md) | `2922ef7` | [PR #131](https://github.com/livdenner/ClinicalStudyPB-project/pull/131) (`docs/openapi-patients-t32-1`): docs(openapi): define contrato de gestao de pacientes (T32.1) | CI (GitHub Actions) | 1737 | 1737 | 0 | 0 | 0 | ✅ ok |
+| [27/11/2026 21:36](2026-11-27_21-36_abd838b.md) | `abd838b` | [PR #130](https://github.com/livdenner/ClinicalStudyPB-project/pull/130) (`docs/openapi-rf21-rf22-t30-1`): docs(openapi): define contrato de RF21 e RF22 (T30.1) | CI (GitHub Actions) | 1737 | 1737 | 0 | 0 | 0 | ✅ ok |
+| [27/11/2026 18:19](2026-11-27_18-19_820fe21.md) | `820fe21` | [PR #129](https://github.com/livdenner/ClinicalStudyPB-project/pull/129) (`docs/openapi-rf20-t29-1`): docs(openapi): define contrato do RF20 (T29.1) | CI (GitHub Actions) | 1737 | 1737 | 0 | 0 | 0 | ✅ ok |
+| [26/11/2026 23:10](2026-11-26_23-10_1aebe78.md) | `1aebe78` | [PR #128](https://github.com/livdenner/ClinicalStudyPB-project/pull/128) (`docs/openapi-rf19-t28-1`): docs(openapi): define contrato do RF19 (T28.1) | CI (GitHub Actions) | 1737 | 1737 | 0 | 0 | 0 | ✅ ok |
 | [24/11/2026 04:29](2026-11-24_04-29_61ef632.md) | `61ef632` | [PR #127](https://github.com/livdenner/ClinicalStudyPB-project/pull/127) (`docs/registro-sprint3-t26-4`): Registra a Sprint 3 e restaura o README principal - Task 4039 (T26.4) | CI (GitHub Actions) | 1737 | 1737 | 0 | 0 | 0 | ✅ ok |
 | [24/11/2026 02:32](2026-11-24_02-32_866bffb.md) | `866bffb` | [PR #126](https://github.com/livdenner/ClinicalStudyPB-project/pull/126) (`test/t26-5-regressao-instalacao-limpa`): test(regressao): regressão RF01–RF11 e instalação limpa da Sprint 3 (T26.5) | CI (GitHub Actions) | 1737 | 1737 | 0 | 0 | 0 | ✅ ok |
 | [24/11/2026 00:53](2026-11-24_00-53_acfb87c.md) | `acfb87c` | [PR #124](https://github.com/livdenner/ClinicalStudyPB-project/pull/124) (`docs/t25-2-evidencias-release2`): docs(release2): evidências de cobertura, CI e telas da Sprint 3 (T25.2) | CI (GitHub Actions) | 797 | 797 | 0 | 0 | 0 | ⚠️ sem Backend · JUnit |
