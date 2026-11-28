@@ -2984,8 +2984,10 @@ paths:
         Somente COORDINATOR; ADMINISTRATOR, RESEARCHER e PARTICIPANT recebem 403.
         Lista exclusivamente contas com perfil PARTICIPANT (nunca misturadas a
         /api/users), ordenadas por nome (sem diferença de maiúsculas) e userId
-        crescente, sem nenhuma operação de exclusão física (DELETE). Retorna []
-        quando não há registros para os filtros aplicados.
+        crescente, sem nenhuma operação de exclusão física (DELETE). Em cada
+        conta, studies traz o histórico completo de candidaturas e participações
+        (incluindo CANCELLED), ordenado por studyId e candidateId crescentes.
+        Retorna [] quando não há registros para os filtros aplicados.
 
         Estados derivados da conta (PatientAccountStatus):
         - ACTIVE: conta ativada pelo participante (active=true,
@@ -2996,8 +2998,10 @@ paths:
           ausente) cujo convite venceu (expiresAt <= agora) ou foi invalidado
           antes da ativação; elegível para POST /api/patients/{userId}/archive-expired.
         - ARCHIVED: conta nunca ativada arquivada logicamente (archivedAt
-          preenchido). Não autentica nem ativa código antigo, mas pode receber
-          novo convite se voltar a ser cadastrada como candidata.
+          preenchido). Não autentica nem ativa código antigo; ao emitir novo
+          convite (recadastro em POST /api/studies/{studyId}/candidates ou
+          reemissão em POST /api/studies/{studyId}/candidates/{candidateId}/invitation),
+          archivedAt é limpo e a conta retorna para PENDING_ACTIVATION.
         - DEACTIVATED: conta desativada pelo coordenador (active=false,
           activationPending=false, archivedAt ausente), preservando todo o
           histórico de candidaturas e participações.
@@ -3069,15 +3073,16 @@ paths:
         Somente COORDINATOR; ADMINISTRATOR, RESEARCHER e PARTICIPANT recebem 403.
         Desativa uma conta PARTICIPANT em transação com bloqueio pessimista da
         conta sem apagar usuários, candidaturas, participações ou histórico, e
-        invalida eventual convite de ativação ainda não utilizado. Após
-        desativada, a conta não autentica em /api/auth/login (401) nem ativa
-        código antigo em /api/auth/activation (400 ACTIVATION_INVALID).
+        invalida eventual convite de ativação ainda não utilizado. Quando a
+        conta estiver em ARCHIVED, a desativação limpa archivedAt e transita a
+        conta para DEACTIVATED (200 OK). Após desativada, a conta não autentica
+        em /api/auth/login (401) nem ativa código antigo em /api/auth/activation
+        (400 ACTIVATION_INVALID).
 
         Regras e erros:
         - 404: usuário inexistente ou cujo perfil não é PARTICIPANT (contas da
           equipe continuam em /api/users).
-        - 409 PATIENT_ALREADY_DEACTIVATED: a conta já foi desativada (ou já
-          está inativa como DEACTIVATED).
+        - 409 PATIENT_ALREADY_DEACTIVATED: a conta já está em DEACTIVATED.
         - 409 PATIENT_HAS_ACTIVE_PARTICIPATION: a conta possui participação com
           status ACTIVE em ao menos um estudo; é necessário registrar a retirada
           do participante via RF16 antes de desativar a conta.
@@ -3124,8 +3129,10 @@ paths:
         Marca logicamente (archivedAt) uma conta PARTICIPANT em estado EXPIRED
         (nunca ativada e com convite vencido ou ausente), sem excluir
         candidaturas nem registros históricos, e invalida o convite pendente.
-        Conta arquivada não autentica nem ativa código antigo, mas pode receber
-        novo convite se voltar a ser cadastrada como candidata em um estudo.
+        Conta arquivada não autentica nem ativa código antigo; ao emitir novo
+        convite (recadastro em POST /api/studies/{studyId}/candidates ou
+        reemissão em POST /api/studies/{studyId}/candidates/{candidateId}/invitation),
+        archivedAt é limpo e a conta retorna para PENDING_ACTIVATION.
 
         Regras e erros:
         - 404: usuário inexistente ou cujo perfil não é PARTICIPANT.
@@ -5035,7 +5042,7 @@ components:
         studies:
           type: array
           readOnly: true
-          description: Vínculos de candidatura/participação por estudo; [] quando não houver
+          description: Histórico completo de candidaturas/participações por estudo (inclui CANCELLED), ordenado por studyId e candidateId crescentes; [] quando não houver
           items:
             $ref: '#/components/schemas/PatientStudySummary'
     ApiError:
