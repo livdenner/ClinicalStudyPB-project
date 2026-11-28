@@ -1,16 +1,18 @@
 openapi: 3.0.3
 info:
   title: ClinicalStudyPB API
-  version: 1.8.0
+  version: 1.11.0
   description: |
     Contrato da Release 1 (RF01 a RF11) e da Release 2 em andamento. As rotas
     da Sprint 3 (identidade, ativação e decisão de consentimento do candidato;
     agendamento e desfecho de visitas, RF12 e RF13; resultados, histórico e
     retirada, RF14 a RF16; estudos e visitas do participante no app, RF17 e
-    RF18) e da Sprint 4 em andamento (gestão de contas de pacientes/candidatos,
-    Backlog 2.2 a 2.4) são o alvo acordado; sua presença aqui não indica
-    implementação pronta, e novas rotas só aparecem no Swagger UI gerado pela
-    aplicação depois de implementadas.
+    RF18) e da Sprint 4 em andamento (confirmação de presença prevista e
+    reagendamento, RF19; solicitação de retirada voluntária, RF20; painel de
+    acompanhamento e relatório simplificado com exportação CSV, RF21 e RF22;
+    gestão de contas de pacientes/candidatos, Backlog 2.2 a 2.4) são o alvo
+    acordado; sua presença aqui não indica implementação pronta, e novas rotas
+    só aparecem no Swagger UI gerado pela aplicação depois de implementadas.
 
     Convenções acordadas:
     - Os nomes JSON usam camelCase; os nomes do banco permanecem em snake_case.
@@ -32,6 +34,20 @@ info:
       registra a retirada (RF16); ambos consultam o histórico do participante (RF15).
     - PARTICIPANT consulta só os próprios estudos e visitas em /api/me (RF17/RF18);
       a conta vem do token, nunca de parâmetro, e os demais perfis recebem 403.
+    - No RF19, PARTICIPANT confirma presença prevista (intenção, sem marcar
+      DONE) ou solicita reagendamento de visita futura da própria participação
+      ativa; COORDINATOR decide o pedido (ACCEPTED cancela a visita atual e
+      cria uma nova SCHEDULED atomicamente, ou DECLINED com justificativa), e
+      RESEARCHER apenas consulta os pedidos.
+    - No RF20, PARTICIPANT solicita retirada voluntária de participação ACTIVE
+      em /api/me/studies/{participantId}/withdrawal-request (motivo opcional,
+      sem ação de recusa); COORDINATOR consulta os pedidos e efetiva a saída
+      reutilizando POST /api/studies/{studyId}/participants/{participantId}/withdrawal
+      (RF16), enquanto RESEARCHER apenas consulta.
+    - No RF21 (/api/monitoring/dashboard) e no RF22 (/api/studies/{studyId}/report
+      e report.csv), apenas RESEARCHER e COORDINATOR têm acesso (ADMINISTRATOR e
+      PARTICIPANT recebem 403); ambos compartilham exatamente a mesma definição
+      matemática de métricas e não expõem lista nominal de participantes.
     - Contas PARTICIPANT são gerenciadas exclusivamente pelo COORDINATOR em
       /api/patients (consulta, desativação segura sem exclusão física e
       arquivamento de contas nunca ativadas expiradas), mantendo /api/users
@@ -54,6 +70,7 @@ tags:
   - name: Resultados
   - name: Convites do participante
   - name: Dados do participante
+  - name: Monitoramento
   - name: Pacientes
 paths:
   /api/auth/login:
@@ -512,17 +529,24 @@ paths:
         Para iniciar RECRUITMENT: critérios de inclusão e exclusão e visita com
         atividade. Para iniciar EXECUTION: ao menos um participante incluído.
 
-        Visitas agendadas (Sprint 3):
+        Visitas agendadas e retiradas voluntárias (Sprints 3 e 4):
         - CLOSED exige que nenhuma visita do estudo esteja SCHEDULED; o
           coordenador registra antes o desfecho de cada uma (DONE, ABSENT ou
           CANCELLED). Caso contrário responde 409 STUDY_HAS_SCHEDULED_VISITS,
-          sem alterar o estudo nem as visitas.
+          sem alterar o estudo nem as visitas. Ao concluir CLOSED, eventuais
+          solicitações de retirada voluntária PENDING (RF20) passam
+          automaticamente a CANCELLED com resolvedByUserId e resolvedAt do
+          encerramento.
         - CANCELLED cancela, na mesma transação, todas as visitas SCHEDULED do
           estudo: passam a CANCELLED com outcomeNote "Cancelamento do estudo",
           outcomeByUserId do pesquisador que cancelou, outcomeAt igual ao
-          instante do cancelamento e version incrementada. Visitas DONE, ABSENT
-          ou CANCELLED não mudam. Desfazer o cancelamento (volta a PLANNING ou
-          RECRUITMENT) não reabre essas visitas; é preciso agendar de novo.
+          instante do cancelamento e version incrementada; além de marcar
+          eventuais solicitações de reagendamento PENDING (RF19) e de retirada
+          voluntária PENDING (RF20) como CANCELLED (nestas últimas gravando
+          resolvedByUserId e resolvedAt). Visitas DONE, ABSENT ou CANCELLED não
+          mudam. Desfazer o cancelamento (volta a PLANNING ou RECRUITMENT) não
+          reabre essas visitas nem as solicitações canceladas; é preciso agendar
+          de novo.
         - A mudança de estado e o agendamento são serializados por estudo: um
           agendamento concorrente com CLOSED ou CANCELLED é recusado ou entra
           antes e é tratado pela regra acima.
@@ -1443,14 +1467,24 @@ paths:
           passam a CANCELLED, com outcomeNote "Retirada do participante", o
           mesmo autor e instante, e version incrementada (um desfecho enviado
           depois com a versão antiga recebe 409 VERSION_MISMATCH ou
-          VISIT_OUTCOME_FINAL);
+          VISIT_OUTCOME_FINAL); eventuais solicitações de reagendamento PENDING
+          das visitas afetadas (ou do participante retirado) passam
+          automaticamente a CANCELLED (RF19);
+        - eventual solicitação de retirada voluntária PENDING (RF20) desse
+          participante passa automaticamente a COMPLETED, gravando
+          resolvedByUserId e resolvedAt na mesma transação (seja a saída
+          iniciada diretamente pelo coordenador ou a partir do pedido no app;
+          não existe recusa para retirada voluntária);
         - novos agendamentos passam a responder 409 PARTICIPANT_WITHDRAWN.
         Se o cancelamento das visitas falhar, a retirada não é gravada.
 
-        Visitas SCHEDULED já vencidas continuam aguardando desfecho, e visitas
-        realizadas antes da retirada continuam aceitando resultados (RF14). A
-        vaga não volta ao estudo e o participante não pode ser reincluído
-        (decisão da PO).
+        Quando houver solicitação prévia com motivo informado pelo participante,
+        a interface web pode pré-preencher esse motivo em reason ao efetivar a
+        retirada (ou registrar justificativa informada pela coordenação caso o
+        participante não tenha enviado motivo). Visitas SCHEDULED já vencidas
+        continuam aguardando desfecho, e visitas realizadas antes da retirada
+        continuam aceitando resultados (RF14). A vaga não volta ao estudo e o
+        participante não pode ser reincluído (decisão da PO).
 
         Regras e erros:
         - 400: reason ausente ou em branco.
@@ -1495,6 +1529,74 @@ paths:
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/Conflict'
+
+  /api/studies/{studyId}/withdrawal-requests:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+    get:
+      tags: [Participantes]
+      summary: Lista as solicitações de retirada voluntária do estudo (RF20, T29.1)
+      description: |
+        RESEARCHER ou COORDINATOR; PARTICIPANT e ADMINISTRATOR recebem 403.
+        RESEARCHER consulta em modo somente leitura; COORDINATOR usa a lista
+        para efetivar a saída pela rota existente de RF16
+        (POST /api/studies/{studyId}/participants/{participantId}/withdrawal),
+        pois não existe ação de recusa para retirada voluntária.
+        Ordenação: solicitações PENDING primeiro (por requestedAt crescente,
+        atendimento FIFO) e demais (COMPLETED, CANCELLED) por requestedAt
+        decrescente, com desempate por id. Retorna [] quando não há registros
+        para os filtros aplicados; estudo inexistente responde 404.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filtra pela situação da solicitação (PENDING, COMPLETED ou CANCELLED)
+          schema:
+            $ref: '#/components/schemas/WithdrawalRequestStatus'
+        - name: participantId
+          in: query
+          required: false
+          description: Filtra pelas solicitações de um participante do estudo
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+          description: Solicitações de retirada voluntária do estudo
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WithdrawalRequest'
+              example:
+                - id: 3
+                  studyId: 2
+                  participantId: 5
+                  participantName: Carlos Lima
+                  status: PENDING
+                  reason: Mudança de cidade impede comparecimento às próximas visitas
+                  requestedAt: '2026-11-26T12:30:00Z'
+                - id: 2
+                  studyId: 2
+                  participantId: 4
+                  participantName: Ana Souza
+                  status: COMPLETED
+                  reason: Indisponibilidade de horários no semestre
+                  requestedAt: '2026-11-20T14:00:00Z'
+                  resolvedByUserId: 2
+                  resolvedAt: '2026-11-21T15:20:00Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
   /api/studies/{studyId}/visits:
     parameters:
@@ -1587,8 +1689,11 @@ paths:
           DONE para a mesma visita prevista. Visitas ABSENT ou CANCELLED não
           impedem um novo agendamento.
 
-        Não há rota para remarcar: para mudar a data, registre o desfecho
-        CANCELLED com justificativa e agende de novo.
+        Para remarcar diretamente sem solicitação do participante, registre o
+        desfecho CANCELLED com justificativa e agende de novo. Quando houver
+        solicitação de reagendamento pelo aplicativo (RF19), o aceite em
+        POST /api/studies/{studyId}/reschedule-requests/{requestId}/decision
+        cancela a visita atual e cria o novo agendamento atomicamente.
       security:
         - bearerAuth: []
       requestBody:
@@ -1672,7 +1777,9 @@ paths:
       description: |
         Somente COORDINATOR. Transições permitidas: SCHEDULED para DONE, ABSENT
         ou CANCELLED. DONE, ABSENT e CANCELLED são finais e não mudam. Grava
-        autor e instante e incrementa version.
+        autor e instante e incrementa version. Se a visita possuir solicitação
+        de reagendamento PENDING (RF19), o registro de desfecho marca essa
+        solicitação automaticamente como CANCELLED.
 
         Regras e erros:
         - 400 CANCELLATION_REASON_REQUIRED: outcome=CANCELLED sem note preenchida.
@@ -1722,6 +1829,236 @@ paths:
                 outcomeByUserId: 2
                 outcomeAt: '2026-11-20T10:05:00-03:00'
                 version: 1
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/studies/{studyId}/reschedule-requests:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+    get:
+      tags: [Visitas agendadas]
+      summary: Lista as solicitações de reagendamento do estudo (RF19, T28.1)
+      description: |
+        RESEARCHER ou COORDINATOR; PARTICIPANT e ADMINISTRATOR recebem 403.
+        Inclui solicitações de participantes retirados posteriormente (cujos
+        pedidos abertos passam a CANCELLED). Ordenação: PENDING primeiro (da
+        mais antiga para a mais recente para atendimento FIFO) e demais por
+        createdAt decrescente, com desempate por id. Retorna [] quando não há
+        registros para os filtros aplicados; estudo inexistente responde 404.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filtra pela situação da solicitação (PENDING, ACCEPTED, DECLINED ou CANCELLED)
+          schema:
+            $ref: '#/components/schemas/RescheduleRequestStatus'
+        - name: participantId
+          in: query
+          required: false
+          description: Filtra pelas solicitações de um participante do estudo
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+          description: Solicitações de reagendamento do estudo
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VisitRescheduleRequest'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/studies/{studyId}/reschedule-requests/{requestId}/decision:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+      - $ref: '#/components/parameters/RescheduleRequestId'
+    post:
+      tags: [Visitas agendadas]
+      parameters:
+        - $ref: '#/components/parameters/RescheduleRequestVersion'
+      summary: Aceita ou recusa uma solicitação de reagendamento (RF19, T28.1)
+      description: |
+        Somente COORDINATOR; RESEARCHER, PARTICIPANT e ADMINISTRATOR recebem 403.
+        Usa travamento otimista por If-Match (VisitRescheduleRequest.version) e
+        bloqueio pessimista na ordem estudo -> participante -> visita para
+        evitar decisões duplicadas ou corrida com desfecho (RF13) e retirada
+        (RF16).
+
+        Comportamento por decisão:
+        - ACCEPTED: exige newScheduledAt futura dentro do período do estudo
+          (fuso America/Fortaleza); note é opcional. Na mesma transação:
+          (1) marca a visita original SCHEDULED como CANCELLED com justificativa
+          de reagendamento aceito e atualiza sua version; (2) cria nova visita
+          SCHEDULED para a mesma plannedVisitId com version=0 e sem herdar
+          presenceConfirmedAt; (3) atualiza a solicitação para ACCEPTED com
+          newScheduledVisitId, newScheduledAt, autoria, instante e version+1.
+        - DECLINED: exige note preenchida após trim (justificativa obrigatória);
+          newScheduledAt não deve ser informada (seu envio responde 400
+          RESCHEDULE_NEW_DATE_NOT_ALLOWED). Mantém a visita original SCHEDULED
+          inalterada (incluindo eventual presenceConfirmedAt) e atualiza a
+          solicitação para DECLINED com decisionNote, autoria, instante e
+          version+1.
+
+        Regras e erros (em ordem de avaliação após validar formato e escopo):
+        - 400 INVALID_IF_MATCH: cabeçalho If-Match ausente, vazio ou diferente
+          do formato "<número>".
+        - 400: decision ausente ou diferente de ACCEPTED e DECLINED, ou
+          observação maior que 500 caracteres.
+        - 400 RESCHEDULE_NEW_DATE_REQUIRED: decision=ACCEPTED sem newScheduledAt.
+        - 400 RESCHEDULE_NEW_DATE_NOT_ALLOWED: newScheduledAt informada com
+          decision=DECLINED.
+        - 400 VISIT_DATE_NOT_FUTURE: newScheduledAt não é posterior ao instante atual.
+        - 400 VISIT_DATE_OUTSIDE_STUDY_PERIOD: data de newScheduledAt (fuso
+          America/Fortaleza) fora de startDate a endDate do estudo.
+        - 400 RESCHEDULE_DECISION_NOTE_REQUIRED: decision=DECLINED sem note
+          preenchida após trim.
+        - 404: estudo ou solicitação inexistente, ou solicitação pertencente a
+          outro estudo.
+        - 409 VERSION_MISMATCH: If-Match diferente da version atual da solicitação.
+        - 409 STUDY_READ_ONLY: estudo em CLOSED ou CANCELLED.
+        - 409 STUDY_STATUS_DOES_NOT_ALLOW_SCHEDULING: decision=ACCEPTED com
+          estudo em PLANNING (criar novo agendamento exige RECRUITMENT ou
+          EXECUTION, conforme RF12); decision=DECLINED continua permitida em
+          PLANNING.
+        - 409 PARTICIPANT_WITHDRAWN: participante retirado (RF16).
+        - 409 RESCHEDULE_REQUEST_NOT_PENDING: a solicitação já está em ACCEPTED,
+          DECLINED ou CANCELLED.
+        - 409 VISIT_OUTCOME_FINAL: a visita original não está mais em SCHEDULED.
+        - 409 VISIT_ALREADY_SCHEDULED: o participante já possui outra visita
+          SCHEDULED ou DONE para a mesma visita prevista (desconsiderando a
+          própria visita original cancelada atomicamente no ACCEPTED).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RescheduleRequestDecisionRequest'
+            examples:
+              aceita:
+                value:
+                  decision: ACCEPTED
+                  newScheduledAt: '2027-03-17T14:00:00-03:00'
+                  note: Horário ajustado conforme disponibilidade do ambulatório
+              recusada:
+                value:
+                  decision: DECLINED
+                  note: Janela do protocolo não comporta adiamento superior a 7 dias
+      responses:
+        '200':
+          description: Decisão registrada sobre a solicitação de reagendamento
+          headers:
+            ETag:
+              schema:
+                type: string
+              description: Nova versão da solicitação de reagendamento
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RescheduleRequestDecisionResponse'
+              examples:
+                aceita:
+                  value:
+                    request:
+                      id: 7
+                      studyId: 1
+                      participantId: 4
+                      participantName: Ana Souza
+                      visitId: 15
+                      plannedVisitId: 3
+                      plannedVisitName: Retorno
+                      originalScheduledAt: '2027-03-10T12:00:00Z'
+                      status: ACCEPTED
+                      reason: Tenho exame em outra cidade na mesma manhã
+                      suggestedScheduledAt: '2027-03-17T17:00:00Z'
+                      requestedByUserId: 9
+                      createdAt: '2027-03-01T15:10:00Z'
+                      decidedByUserId: 2
+                      decidedAt: '2027-03-02T11:00:00Z'
+                      decisionNote: Horário ajustado conforme disponibilidade do ambulatório
+                      newScheduledVisitId: 18
+                      newScheduledAt: '2027-03-17T17:00:00Z'
+                      version: 1
+                    originalVisit:
+                      id: 15
+                      studyId: 1
+                      participantId: 4
+                      participantName: Ana Souza
+                      plannedVisitId: 3
+                      plannedVisitName: Retorno
+                      scheduledAt: '2027-03-10T12:00:00Z'
+                      status: CANCELLED
+                      createdByUserId: 2
+                      createdAt: '2027-02-15T12:00:00Z'
+                      outcomeByUserId: 2
+                      outcomeAt: '2027-03-02T11:00:00Z'
+                      outcomeNote: Cancelada por reagendamento aceito
+                      version: 1
+                    newVisit:
+                      id: 18
+                      studyId: 1
+                      participantId: 4
+                      participantName: Ana Souza
+                      plannedVisitId: 3
+                      plannedVisitName: Retorno
+                      scheduledAt: '2027-03-17T17:00:00Z'
+                      status: SCHEDULED
+                      createdByUserId: 2
+                      createdAt: '2027-03-02T11:00:00Z'
+                      version: 0
+                recusada:
+                  value:
+                    request:
+                      id: 7
+                      studyId: 1
+                      participantId: 4
+                      participantName: Ana Souza
+                      visitId: 15
+                      plannedVisitId: 3
+                      plannedVisitName: Retorno
+                      originalScheduledAt: '2027-03-10T12:00:00Z'
+                      status: DECLINED
+                      reason: Tenho exame em outra cidade na mesma manhã
+                      requestedByUserId: 9
+                      createdAt: '2027-03-01T15:10:00Z'
+                      decidedByUserId: 2
+                      decidedAt: '2027-03-02T11:00:00Z'
+                      decisionNote: Janela do protocolo não comporta adiamento superior a 7 dias
+                      version: 1
+                    originalVisit:
+                      id: 15
+                      studyId: 1
+                      participantId: 4
+                      participantName: Ana Souza
+                      plannedVisitId: 3
+                      plannedVisitName: Retorno
+                      scheduledAt: '2027-03-10T12:00:00Z'
+                      status: SCHEDULED
+                      createdByUserId: 2
+                      createdAt: '2027-02-15T12:00:00Z'
+                      presenceConfirmedAt: '2027-03-01T14:20:00Z'
+                      version: 0
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1948,9 +2285,12 @@ paths:
         (ACTIVE) ou retirada (WITHDRAWN), da inclusão mais recente para a mais
         antiga, incluindo as visitas previstas do protocolo na ordem
         (plannedVisits, [] quando não houver). Estudos encerrados ou cancelados
-        continuam na lista, com studyStatus atualizado. Candidaturas ainda não
-        incluídas ficam em /api/me/invitations. Retorna [] quando a conta não
-        tem inclusão.
+        continuam na lista, com studyStatus atualizado. Quando houver
+        solicitação de retirada voluntária (RF20), withdrawalRequest traz o
+        pedido mais recente da participação; enquanto PENDING,
+        participationStatus segue ACTIVE até a efetivação pelo coordenador
+        via RF16. Candidaturas ainda não incluídas ficam em /api/me/invitations.
+        Retorna [] quando a conta não tem inclusão.
       security:
         - bearerAuth: []
       responses:
@@ -1963,6 +2303,24 @@ paths:
                 items:
                   $ref: '#/components/schemas/ParticipantStudy'
               example:
+                - participantId: 5
+                  studyId: 2
+                  studyTitle: Avaliação de adesão nutricional
+                  studyObjective: Acompanhar adesão alimentar fictícia em adultos
+                  studyStatus: EXECUTION
+                  startDate: '2027-01-01'
+                  endDate: '2027-12-31'
+                  responsibleName: Paula Pesquisadora
+                  participationStatus: ACTIVE
+                  includedAt: '2026-11-12T10:00:00Z'
+                  withdrawalRequest:
+                    id: 3
+                    participantId: 5
+                    studyId: 2
+                    status: PENDING
+                    reason: Mudança de cidade impede comparecimento às próximas visitas
+                    requestedAt: '2026-11-26T12:30:00Z'
+                  plannedVisits: []
                 - participantId: 4
                   studyId: 1
                   studyTitle: Acompanhamento de hipertensão
@@ -1989,6 +2347,87 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
+  /api/me/studies/{participantId}/withdrawal-request:
+    parameters:
+      - $ref: '#/components/parameters/ParticipantId'
+    post:
+      tags: [Dados do participante]
+      summary: Solicita a retirada voluntária do estudo (RF20, T29.1)
+      description: |
+        Somente PARTICIPANT, dono da participação; outros perfis recebem 403.
+        A conta vem do token, nunca de parâmetro.
+
+        Registra solicitação de retirada voluntária com status=PENDING (no
+        máximo 1 solicitação PENDING por participação). A participação
+        permanece ACTIVE até que o coordenador efetive a saída pelo fluxo de
+        RF16 (POST /api/studies/{studyId}/participants/{participantId}/withdrawal),
+        que cancela as visitas futuras e conclui este pedido como COMPLETED. Não
+        há recusa para solicitação de retirada voluntária.
+
+        Usa bloqueio pessimista na ordem estudo -> participante (mesma ordem do
+        RF16) para evitar duplicidade ou corrida com retirada e encerramento/
+        cancelamento do estudo.
+
+        Regras e erros (em ordem após validar formato e posse):
+        - 400: corpo JSON malformado ou reason com mais de 500 caracteres após
+          trim. Quando reason vier ausente, vazio ou só espaços após trim, o
+          pedido é registrado sem motivo.
+        - 404: participação inexistente ou pertencente a outra conta (sem
+          revelar sua existência).
+        - 409 STUDY_READ_ONLY: estudo em CLOSED ou CANCELLED (participações
+          ACTIVE em estudo que retornou a PLANNING seguem podendo solicitar
+          retirada voluntária).
+        - 409 PARTICIPANT_ALREADY_WITHDRAWN: a participação já está em WITHDRAWN.
+        - 409 WITHDRAWAL_REQUEST_ALREADY_PENDING: já existe solicitação PENDING
+          em aberto para esta participação (inclusive em envios concorrentes).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VoluntaryWithdrawalRequestCreate'
+            examples:
+              comMotivo:
+                value:
+                  reason: Mudança de cidade impede comparecimento às próximas visitas
+              semMotivo:
+                value: {}
+      responses:
+        '201':
+          description: Solicitação de retirada voluntária registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParticipantWithdrawalRequestView'
+              examples:
+                comMotivo:
+                  value:
+                    id: 3
+                    participantId: 5
+                    studyId: 2
+                    status: PENDING
+                    reason: Mudança de cidade impede comparecimento às próximas visitas
+                    requestedAt: '2026-11-26T12:30:00Z'
+                semMotivo:
+                  value:
+                    id: 4
+                    participantId: 6
+                    studyId: 3
+                    status: PENDING
+                    requestedAt: '2026-11-26T13:00:00Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
   /api/me/visits:
     get:
       tags: [Dados do participante]
@@ -2005,9 +2444,13 @@ paths:
         - history: visitas com desfecho DONE, ABSENT ou CANCELLED, por
           scheduledAt decrescente (a mais recente primeiro).
         Empates na mesma data seguem o id da visita. As duas listas vêm vazias
-        quando a conta não tem visita. Observações da equipe sobre visitas
+        quando a conta não tem visita. Visitas SCHEDULED podem incluir
+        presenceConfirmedAt quando a presença prevista já foi confirmada (sem
+        alterar status) e rescheduleRequest com a solicitação de reagendamento
+        mais recente da visita (RF19). Observações da equipe sobre visitas
         realizadas ou ausências não são expostas; em CANCELLED, a justificativa
-        vem em cancellationReason.
+        vem em cancellationReason (e eventual recusa ou aceite de reagendamento
+        aparece em rescheduleRequest).
       security:
         - bearerAuth: []
       responses:
@@ -2027,6 +2470,7 @@ paths:
                     plannedVisitName: Retorno
                     scheduledAt: '2027-03-10T12:00:00Z'
                     status: SCHEDULED
+                    presenceConfirmedAt: '2027-03-01T14:20:00Z'
                     activities:
                       - id: 22
                         name: Aferição clínica
@@ -2048,6 +2492,489 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+
+  /api/me/visits/{visitId}/confirmation:
+    parameters:
+      - $ref: '#/components/parameters/VisitId'
+    post:
+      tags: [Dados do participante]
+      summary: Confirma a presença prevista em visita agendada (RF19, T28.1)
+      description: |
+        Somente PARTICIPANT, dono da participação da visita; outros perfis
+        recebem 403. A conta vem do token, nunca de parâmetro.
+
+        Operação idempotente de intenção do participante: registra
+        presenceConfirmedAt na primeira confirmação, mantém status=SCHEDULED
+        (confirmar presença prevista nunca marca a visita como DONE) e
+        preserva ScheduledVisit.version (não incrementa version, evitando
+        conflito 409 VERSION_MISMATCH com registro de desfecho no RF13). Em
+        nova chamada enquanto a visita permanecer válida (SCHEDULED, futura,
+        participação ACTIVE e estudo não read-only), responde 200 preservando o
+        presenceConfirmedAt original.
+
+        Mesmo quando já existir solicitação de reagendamento PENDING para a
+        visita, a API aceita a chamada (200) e mantém o pedido PENDING intacto,
+        pois a visita original segue válida em SCHEDULED até decisão da
+        coordenação (a UI mobile pode ocultar a ação enquanto PENDING).
+
+        Regras e erros (bloqueio pessimista na ordem estudo -> participante ->
+        visita):
+        - 404: visita inexistente ou pertencente à participação de outra conta
+          (sem revelar sua existência).
+        - 409 STUDY_READ_ONLY: estudo em CLOSED ou CANCELLED (visitas SCHEDULED
+          existentes em estudo que retornou a PLANNING permanecem confirmáveis).
+        - 409 PARTICIPANT_WITHDRAWN: participação retirada (RF16).
+        - 409 VISIT_OUTCOME_FINAL: a visita já está em DONE, ABSENT ou CANCELLED.
+        - 409 VISIT_NOT_FUTURE: visita em SCHEDULED cuja data scheduledAt não é
+          posterior ao instante atual.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Presença prevista confirmada (ou já confirmada anteriormente)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParticipantVisit'
+              example:
+                id: 15
+                studyId: 1
+                studyTitle: Acompanhamento de hipertensão
+                participantId: 4
+                plannedVisitId: 3
+                plannedVisitName: Retorno
+                scheduledAt: '2027-03-10T12:00:00Z'
+                status: SCHEDULED
+                presenceConfirmedAt: '2027-03-01T14:20:00Z'
+                activities:
+                  - id: 22
+                    name: Aferição clínica
+                    description: Acompanhamento dos sinais vitais
+                    position: 1
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/me/visits/{visitId}/reschedule-request:
+    parameters:
+      - $ref: '#/components/parameters/VisitId'
+    post:
+      tags: [Dados do participante]
+      summary: Solicita o reagendamento de uma visita agendada (RF19, T28.1)
+      description: |
+        Somente PARTICIPANT, dono da participação da visita; outros perfis
+        recebem 403. A conta vem do token, nunca de parâmetro.
+
+        Cria uma solicitação de reagendamento com status PENDING (no máximo 1
+        solicitação PENDING por visita). Enquanto a solicitação estiver PENDING
+        (ou se for DECLINED/CANCELLED), a visita original permanece válida em
+        SCHEDULED até que o coordenador aceite o pedido.
+
+        Regras e erros (bloqueio pessimista na ordem estudo -> participante ->
+        visita):
+        - 400 RESCHEDULE_REASON_REQUIRED: reason ausente, vazio ou só espaços
+          após trim.
+        - 400: reason com mais de 500 caracteres após trim ou corpo JSON
+          malformado.
+        - 400 VISIT_DATE_NOT_FUTURE: suggestedScheduledAt informada não é
+          posterior ao instante atual.
+        - 400 VISIT_DATE_OUTSIDE_STUDY_PERIOD: suggestedScheduledAt informada
+          está fora do período do estudo (startDate a endDate, dia no fuso
+          America/Fortaleza).
+        - 404: visita inexistente ou pertencente à participação de outra conta
+          (sem revelar sua existência).
+        - 409 STUDY_READ_ONLY: estudo em CLOSED ou CANCELLED (visitas SCHEDULED
+          existentes em estudo que retornou a PLANNING aceitam abertura de
+          pedido; o eventual aceite pelo coordenador exigirá RECRUITMENT ou
+          EXECUTION).
+        - 409 PARTICIPANT_WITHDRAWN: participação retirada (RF16).
+        - 409 VISIT_OUTCOME_FINAL: a visita já está em DONE, ABSENT ou CANCELLED.
+        - 409 VISIT_NOT_FUTURE: visita em SCHEDULED cuja data scheduledAt não é
+          posterior ao instante atual.
+        - 409 RESCHEDULE_REQUEST_ALREADY_PENDING: já existe solicitação PENDING
+          em aberto para esta visita (inclusive em envios concorrentes).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VisitRescheduleRequestCreate'
+            examples:
+              comDataSugerida:
+                value:
+                  reason: Tenho exame em outra cidade na mesma manhã
+                  suggestedScheduledAt: '2027-03-17T14:00:00-03:00'
+              semDataSugerida:
+                value:
+                  reason: Preciso remarcar por compromisso médico inadiável
+      responses:
+        '201':
+          description: Solicitação de reagendamento registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParticipantRescheduleRequest'
+              example:
+                id: 7
+                visitId: 15
+                status: PENDING
+                reason: Tenho exame em outra cidade na mesma manhã
+                suggestedScheduledAt: '2027-03-17T17:00:00Z'
+                createdAt: '2027-03-01T15:10:00Z'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/monitoring/dashboard:
+    get:
+      tags: [Monitoramento]
+      summary: Consulta o painel consolidado de acompanhamento (RF21, T30.1)
+      description: |
+        Somente RESEARCHER e COORDINATOR; ADMINISTRATOR e PARTICIPANT recebem
+        403 (decisão de PO alinhada ao enunciado). Retorna os indicadores reais
+        consolidados em summary e detalhados por estudo em studies (ordenados por
+        studyId crescente), sem listagem nominal de participantes/candidatos e
+        sem dados fictícios hardcoded. Em banco vazio, summary traz zeros
+        válidos e studies vem como [].
+
+        Definição matemática compartilhada com RF22 (/report e /report.csv):
+        - participants.total = active + withdrawn (vagas ocupadas, pois
+          retirada não devolve vaga); participants.distinctPeople conta userId
+          únicos entre participantes incluídos no escopo.
+        - candidates.total = soma dos 7 estados de CandidateStatus (byStatus);
+          candidates.distinctPeople conta userId únicos entre essas
+          candidaturas.
+        - candidates.byEligibility (pending, eligible, ineligible) considera
+          apenas candidaturas não canceladas (status != CANCELLED), garantindo
+          pending + eligible + ineligible = total - byStatus.cancelled.
+        - visits.total = done + absent + cancelled + pending; visits.pending
+          considera todas as visitas SCHEDULED (incluindo vencidas sem
+          desfecho), e visits.overduePending é o subconjunto de pending com
+          scheduledAt <= generatedAt.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: studyId
+          in: query
+          required: false
+          description: Filtra o painel para um único estudo; estudo inexistente responde 404
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+      responses:
+        '200':
+          description: Indicadores consolidados e detalhados por estudo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonitoringDashboard'
+              example:
+                generatedAt: '2026-11-26T15:00:00Z'
+                summary:
+                  studies:
+                    total: 2
+                    planning: 0
+                    recruitment: 1
+                    execution: 1
+                    closed: 0
+                    cancelled: 0
+                  candidates:
+                    total: 22
+                    distinctPeople: 20
+                    byStatus:
+                      invited: 3
+                      active: 3
+                      consentPending: 2
+                      granted: 2
+                      declined: 1
+                      included: 10
+                      cancelled: 1
+                    byEligibility:
+                      pending: 4
+                      eligible: 15
+                      ineligible: 2
+                  participants:
+                    total: 10
+                    active: 8
+                    withdrawn: 2
+                    distinctPeople: 9
+                  visits:
+                    total: 25
+                    done: 11
+                    absent: 2
+                    cancelled: 4
+                    pending: 8
+                    overduePending: 1
+                studies:
+                  - studyId: 1
+                    studyTitle: Acompanhamento de hipertensão
+                    studyStatus: EXECUTION
+                    startDate: '2027-01-01'
+                    endDate: '2027-12-31'
+                    participantLimit: 30
+                    candidates:
+                      total: 15
+                      distinctPeople: 14
+                      byStatus:
+                        invited: 1
+                        active: 2
+                        consentPending: 1
+                        granted: 1
+                        declined: 1
+                        included: 8
+                        cancelled: 1
+                      byEligibility:
+                        pending: 2
+                        eligible: 11
+                        ineligible: 1
+                    participants:
+                      total: 8
+                      active: 6
+                      withdrawn: 2
+                      distinctPeople: 8
+                    visits:
+                      total: 20
+                      done: 10
+                      absent: 2
+                      cancelled: 3
+                      pending: 5
+                      overduePending: 1
+                  - studyId: 2
+                    studyTitle: Controle glicêmico em adultos
+                    studyStatus: RECRUITMENT
+                    startDate: '2027-02-01'
+                    endDate: '2027-11-30'
+                    participantLimit: 20
+                    candidates:
+                      total: 7
+                      distinctPeople: 7
+                      byStatus:
+                        invited: 2
+                        active: 1
+                        consentPending: 1
+                        granted: 1
+                        declined: 0
+                        included: 2
+                        cancelled: 0
+                      byEligibility:
+                        pending: 2
+                        eligible: 4
+                        ineligible: 1
+                    participants:
+                      total: 2
+                      active: 2
+                      withdrawn: 0
+                      distinctPeople: 2
+                    visits:
+                      total: 5
+                      done: 1
+                      absent: 0
+                      cancelled: 1
+                      pending: 3
+                      overduePending: 0
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/studies/{studyId}/report:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+    get:
+      tags: [Monitoramento]
+      summary: Gera o relatório simplificado do estudo em JSON (RF22, T30.1)
+      description: |
+        Somente RESEARCHER e COORDINATOR; ADMINISTRATOR e PARTICIPANT recebem
+        403. Retorna exclusivamente agregados gerenciais do estudo (sem PDF e
+        sem listagem nominal de pacientes/candidatos), usando exatamente as
+        mesmas definições matemáticas do painel RF21.
+
+        Filtros opcionais startDate e endDate (YYYY-MM-DD, inclusive, no fuso
+        America/Fortaleza):
+        - Sem filtros, candidates, participants e visits coincidem exatamente com
+          o detalhamento do estudo em GET /api/monitoring/dashboard.
+        - Com filtro de período, visits considera scheduledAt e participants
+          considera includedAt dentro do intervalo [startDate, endDate];
+          candidates reflete o retrato consolidado atual do estudo.
+        - Se startDate > endDate, responde 400 INVALID_REPORT_PERIOD.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          required: false
+          description: Data inicial opcional do recorte (YYYY-MM-DD, inclusive, fuso America/Fortaleza)
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: false
+          description: Data final opcional do recorte (YYYY-MM-DD, inclusive, fuso America/Fortaleza)
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Relatório agregado do estudo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudyReport'
+              example:
+                generatedAt: '2026-11-26T15:00:00Z'
+                studyId: 1
+                studyTitle: Acompanhamento de hipertensão
+                studyStatus: EXECUTION
+                studyStartDate: '2027-01-01'
+                studyEndDate: '2027-12-31'
+                participantLimit: 30
+                candidates:
+                  total: 15
+                  distinctPeople: 14
+                  byStatus:
+                    invited: 1
+                    active: 2
+                    consentPending: 1
+                    granted: 1
+                    declined: 1
+                    included: 8
+                    cancelled: 1
+                  byEligibility:
+                    pending: 2
+                    eligible: 11
+                    ineligible: 1
+                participants:
+                  total: 8
+                  active: 6
+                  withdrawn: 2
+                  distinctPeople: 8
+                visits:
+                  total: 20
+                  done: 10
+                  absent: 2
+                  cancelled: 3
+                  pending: 5
+                  overduePending: 1
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/studies/{studyId}/report.csv:
+    parameters:
+      - $ref: '#/components/parameters/StudyId'
+    get:
+      tags: [Monitoramento]
+      summary: Exporta o relatório simplificado do estudo em CSV (RF22, T30.1)
+      description: |
+        Somente RESEARCHER e COORDINATOR; ADMINISTRATOR e PARTICIPANT recebem
+        403. Aplica exatamente os mesmos filtros (startDate e endDate) e os
+        mesmos cálculos agregados de GET /api/studies/{studyId}/report, sem
+        listagem nominal de pacientes.
+
+        Formato de resposta:
+        - Content-Type text/csv com encoding UTF-8 e Content-Disposition
+          attachment; filename="relatorio-estudo-{studyId}.csv".
+        - Estrutura tabular com cabeçalho secao,indicador,valor e escape RFC
+          4180.
+        - Proteção contra CSV formula injection: células textuais iniciadas por
+          =, +, -, @ ou precedidas por tab/CR recebem prefixo ' antes da
+          serialização.
+        - Se startDate > endDate, responde 400 INVALID_REPORT_PERIOD.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          required: false
+          description: Data inicial opcional do recorte (YYYY-MM-DD, inclusive, fuso America/Fortaleza)
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: false
+          description: Data final opcional do recorte (YYYY-MM-DD, inclusive, fuso America/Fortaleza)
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Arquivo CSV com os indicadores agregados do estudo
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              description: Anexo para download no formato attachment; filename="relatorio-estudo-{studyId}.csv"
+          content:
+            text/csv:
+              schema:
+                type: string
+              example: |
+                secao,indicador,valor
+                estudo,studyId,1
+                estudo,studyTitle,Acompanhamento de hipertensão
+                estudo,studyStatus,EXECUTION
+                estudo,studyStartDate,2027-01-01
+                estudo,studyEndDate,2027-12-31
+                estudo,participantLimit,30
+                filtro,filterStartDate,
+                filtro,filterEndDate,
+                filtro,generatedAt,2026-11-26T15:00:00Z
+                candidatos,total,15
+                candidatos,distinctPeople,14
+                candidatos,invited,1
+                candidatos,active,2
+                candidatos,consentPending,1
+                candidatos,granted,1
+                candidatos,declined,1
+                candidatos,included,8
+                candidatos,cancelled,1
+                candidatos,eligibilityPending,2
+                candidatos,eligibilityEligible,11
+                candidatos,eligibilityIneligible,1
+                participantes,total,8
+                participantes,active,6
+                participantes,withdrawn,2
+                participantes,distinctPeople,8
+                visitas,total,20
+                visitas,done,10
+                visitas,absent,2
+                visitas,cancelled,3
+                visitas,pending,5
+                visitas,overduePending,1
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
   /api/patients:
     get:
@@ -2335,6 +3262,26 @@ components:
         type: integer
         format: int64
         minimum: 1
+    RescheduleRequestId:
+      name: requestId
+      in: path
+      required: true
+      description: Identificador BIGINT da solicitação de reagendamento
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+    RescheduleRequestVersion:
+      name: If-Match
+      in: header
+      required: true
+      description: |
+        ETag forte com VisitRescheduleRequest.version entre aspas, por exemplo "0".
+        É a versão da solicitação de reagendamento, não a da visita nem a do estudo.
+        Divergência responde 409.
+      schema:
+        type: string
+        pattern: '^"[0-9]+"$'
   schemas:
     UserRole:
       type: string
@@ -2967,7 +3914,10 @@ components:
           description: Instante da decisão; ausente em CONSENT_PENDING
     ParticipantStudy:
       type: object
-      description: Estudo em que a conta autenticada participa (RF17)
+      description: |
+        Estudo em que a conta autenticada participa (RF17). Quando houver
+        solicitação de retirada voluntária (RF20), withdrawalRequest traz o
+        pedido mais recente (ausente caso nunca tenha solicitado).
       required: [participantId, studyId, studyTitle, studyObjective, studyStatus, startDate,
                  endDate, responsibleName, participationStatus, includedAt, plannedVisits]
       properties:
@@ -3013,6 +3963,8 @@ components:
           description: |
             Instante da retirada; ausente quando participationStatus=ACTIVE. O
             motivo e a autoria da retirada não são expostos ao participante.
+        withdrawalRequest:
+          $ref: '#/components/schemas/ParticipantWithdrawalRequestView'
         plannedVisits:
           type: array
           readOnly: true
@@ -3064,6 +4016,15 @@ components:
           type: string
           readOnly: true
           description: Justificativa do cancelamento; presente só em CANCELLED
+        presenceConfirmedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: >
+            Instante da confirmação de presença prevista (RF19); ausente
+            enquanto o participante não confirmar. Nunca altera status=SCHEDULED.
+        rescheduleRequest:
+          $ref: '#/components/schemas/ParticipantRescheduleRequest'
         activities:
           type: array
           readOnly: true
@@ -3147,6 +4108,110 @@ components:
           minimum: 0
           readOnly: true
           description: Quantidade de visitas futuras canceladas pela retirada
+    WithdrawalRequestStatus:
+      type: string
+      description: |
+        Situação da solicitação de retirada voluntária (RF20):
+        PENDING=Aguardando efetivação pelo coordenador via RF16;
+        COMPLETED=Concluída automaticamente ao efetivar a retirada em RF16 (com
+        resolvedByUserId e resolvedAt);
+        CANCELLED=Cancelada automaticamente pelo sistema ao encerrar (CLOSED) ou
+        cancelar (CANCELLED) o estudo.
+      enum: [PENDING, COMPLETED, CANCELLED]
+    VoluntaryWithdrawalRequestCreate:
+      type: object
+      description: Pedido opcional de retirada voluntária enviado pelo participante (RF20)
+      properties:
+        reason:
+          type: string
+          maxLength: 500
+          description: |
+            Motivo opcional informado pelo participante; espaços nas
+            extremidades são removidos e valores em branco equivalem a motivo
+            não informado.
+    ParticipantWithdrawalRequestView:
+      type: object
+      description: |
+        Visão do participante sobre a solicitação de retirada voluntária mais
+        recente (RF20). A autoria da resolução não é exposta ao participante.
+      required: [id, participantId, studyId, status, requestedAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        participantId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Participação da conta autenticada no estudo
+        studyId:
+          type: integer
+          format: int64
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/WithdrawalRequestStatus'
+        reason:
+          type: string
+          maxLength: 500
+          readOnly: true
+          description: Motivo informado pelo participante, quando preenchido
+        requestedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Instante de criação da solicitação atribuído pelo servidor
+        resolvedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: |
+            Instante da conclusão (RF16) ou do cancelamento automático pelo
+            ciclo de vida do estudo; ausente em PENDING.
+    WithdrawalRequest:
+      type: object
+      description: Solicitação de retirada voluntária exibida à equipe do estudo (RF20)
+      required: [id, studyId, participantId, participantName, status, requestedAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        studyId:
+          type: integer
+          format: int64
+          readOnly: true
+        participantId:
+          type: integer
+          format: int64
+          readOnly: true
+        participantName:
+          type: string
+          readOnly: true
+          description: Nome do participante incluído, para exibição em listas
+        status:
+          $ref: '#/components/schemas/WithdrawalRequestStatus'
+        reason:
+          type: string
+          maxLength: 500
+          readOnly: true
+          description: Motivo opcional informado pelo participante, quando preenchido
+        requestedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        resolvedByUserId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: |
+            Usuário que efetivou a retirada (COMPLETED) ou encerrou/cancelou o
+            estudo (CANCELLED); ausente em PENDING.
+        resolvedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Instante de conclusão ou cancelamento; ausente em PENDING
     ActivityResultWriteRequest:
       type: object
       required: [value]
@@ -3349,11 +4414,550 @@ components:
           type: string
           readOnly: true
           description: Observação ou justificativa do desfecho, quando houver
+        presenceConfirmedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: >
+            Instante da confirmação de presença prevista pelo participante (RF19);
+            ausente enquanto não confirmada ou em nova visita criada por
+            reagendamento. Não altera ScheduledVisit.version.
+        rescheduleRequest:
+          $ref: '#/components/schemas/VisitRescheduleRequestSummary'
         version:
           type: integer
           format: int64
           readOnly: true
-          description: Versão para If-Match; também enviada no cabeçalho ETag
+          description: >
+            Versão para If-Match (também enviada no cabeçalho ETag); muda
+            apenas em desfechos/cancelamentos, não ao confirmar presença.
+    RescheduleRequestStatus:
+      type: string
+      description: |
+        Situação da solicitação de reagendamento (RF19):
+        PENDING=Aguardando análise da coordenação;
+        ACCEPTED=Aceita com criação atômica de novo agendamento;
+        DECLINED=Recusada com justificativa (visita original segue válida);
+        CANCELLED=Cancelada automaticamente por desfecho (RF13), retirada (RF16)
+        ou encerramento/cancelamento do estudo.
+      enum: [PENDING, ACCEPTED, DECLINED, CANCELLED]
+    RescheduleRequestDecision:
+      type: string
+      description: Decisão do coordenador sobre solicitação PENDING (RF19)
+      enum: [ACCEPTED, DECLINED]
+    VisitRescheduleRequestCreate:
+      type: object
+      description: Pedido de reagendamento enviado pelo participante autenticado (RF19)
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Motivo obrigatório do pedido de reagendamento (não pode ficar em branco)
+        suggestedScheduledAt:
+          type: string
+          format: date-time
+          description: |
+            Data e hora sugeridas pelo participante, opcional, ISO 8601 com fuso
+            (ex. 2027-03-17T14:00:00-03:00). Quando informada, deve ser futura
+            e cair dentro do período do estudo no fuso America/Fortaleza.
+    ParticipantRescheduleRequest:
+      type: object
+      description: Visão do participante sobre a solicitação de reagendamento de uma visita (RF19)
+      required: [id, visitId, status, reason, createdAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        visitId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Identificador da visita agendada original vinculada ao pedido
+        status:
+          $ref: '#/components/schemas/RescheduleRequestStatus'
+        reason:
+          type: string
+          readOnly: true
+          description: Motivo informado pelo participante na abertura do pedido
+        suggestedScheduledAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Data/hora sugerida pelo participante, quando informada
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        decidedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Instante da decisão da coordenação ou do cancelamento automático; ausente em PENDING
+        decisionNote:
+          type: string
+          readOnly: true
+          description: Justificativa ou observação da decisão (obrigatória em DECLINED); ausente quando não houver
+        newScheduledVisitId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Identificador da nova visita SCHEDULED criada; presente só quando status=ACCEPTED
+        newScheduledAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Data e hora da nova visita criada; presente só quando status=ACCEPTED
+    VisitRescheduleRequestSummary:
+      type: object
+      description: Resumo da solicitação de reagendamento mais recente vinculada a uma ScheduledVisit (RF19)
+      required: [id, status, reason, createdAt, version]
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/RescheduleRequestStatus'
+        reason:
+          type: string
+          readOnly: true
+        suggestedScheduledAt:
+          type: string
+          format: date-time
+          readOnly: true
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        decidedByUserId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Coordenador que decidiu (ACCEPTED ou DECLINED); ausente em PENDING ou CANCELLED automático
+        decidedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Instante da decisão ou do cancelamento automático; ausente em PENDING
+        decisionNote:
+          type: string
+          readOnly: true
+          description: Observação ou justificativa da decisão, quando houver
+        newScheduledVisitId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Identificador da nova visita SCHEDULED criada; presente só em ACCEPTED
+        newScheduledAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Data/hora da nova visita criada; presente só em ACCEPTED
+        version:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Versão da solicitação para envio em If-Match ao decidir o pedido
+    VisitRescheduleRequest:
+      type: object
+      description: Solicitação de reagendamento exibida à equipe do estudo (RF19)
+      required: [id, studyId, participantId, participantName, visitId, plannedVisitId,
+                 plannedVisitName, originalScheduledAt, status, reason,
+                 requestedByUserId, createdAt, version]
+      properties:
+        id:
+          type: integer
+          format: int64
+          readOnly: true
+        studyId:
+          type: integer
+          format: int64
+          readOnly: true
+        participantId:
+          type: integer
+          format: int64
+          readOnly: true
+        participantName:
+          type: string
+          readOnly: true
+        visitId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Identificador da visita agendada original
+        plannedVisitId:
+          type: integer
+          format: int64
+          readOnly: true
+        plannedVisitName:
+          type: string
+          readOnly: true
+        originalScheduledAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Data/hora originalmente agendada da visita vinculada
+        status:
+          $ref: '#/components/schemas/RescheduleRequestStatus'
+        reason:
+          type: string
+          readOnly: true
+        suggestedScheduledAt:
+          type: string
+          format: date-time
+          readOnly: true
+        requestedByUserId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Usuário PARTICIPANT que abriu a solicitação
+        createdAt:
+          type: string
+          format: date-time
+          readOnly: true
+        decidedByUserId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Coordenador que decidiu (ACCEPTED ou DECLINED); ausente em PENDING ou CANCELLED automático
+        decidedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Instante da decisão ou do cancelamento automático; ausente em PENDING
+        decisionNote:
+          type: string
+          readOnly: true
+          description: Observação do aceite ou justificativa obrigatória da recusa
+        newScheduledVisitId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Identificador da nova visita SCHEDULED criada; presente só em ACCEPTED
+        newScheduledAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Data/hora da nova visita criada; presente só em ACCEPTED
+        version:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Versão para If-Match na decisão; também enviada no cabeçalho ETag
+    RescheduleRequestDecisionRequest:
+      type: object
+      description: Decisão do coordenador sobre solicitação PENDING (RF19)
+      required: [decision]
+      properties:
+        decision:
+          $ref: '#/components/schemas/RescheduleRequestDecision'
+        newScheduledAt:
+          type: string
+          format: date-time
+          description: |
+            Nova data e hora da visita, ISO 8601 com fuso. Obrigatória quando
+            decision=ACCEPTED; deve ser futura e estar dentro do período do
+            estudo (dia no fuso America/Fortaleza). Deve ficar ausente em
+            DECLINED (seu envio responde 400 RESCHEDULE_NEW_DATE_NOT_ALLOWED).
+        note:
+          type: string
+          maxLength: 500
+          description: |
+            Observação opcional em ACCEPTED; justificativa obrigatória (não
+            pode ficar em branco após trim) quando decision=DECLINED.
+    RescheduleRequestDecisionResponse:
+      type: object
+      description: |
+        Resultado da decisão sobre solicitação de reagendamento (RF19): traz a
+        solicitação atualizada, a visita original atualizada (CANCELLED em
+        ACCEPTED; SCHEDULED em DECLINED) e a nova visita SCHEDULED quando aceita.
+      required: [request, originalVisit]
+      properties:
+        request:
+          $ref: '#/components/schemas/VisitRescheduleRequest'
+        originalVisit:
+          $ref: '#/components/schemas/ScheduledVisit'
+        newVisit:
+          $ref: '#/components/schemas/ScheduledVisit'
+    StudyCounts:
+      type: object
+      description: Quantitativo consolidado de estudos por situação (RF21)
+      required: [total, planning, recruitment, execution, closed, cancelled]
+      properties:
+        total:
+          type: integer
+          minimum: 0
+          readOnly: true
+        planning:
+          type: integer
+          minimum: 0
+          readOnly: true
+        recruitment:
+          type: integer
+          minimum: 0
+          readOnly: true
+        execution:
+          type: integer
+          minimum: 0
+          readOnly: true
+        closed:
+          type: integer
+          minimum: 0
+          readOnly: true
+        cancelled:
+          type: integer
+          minimum: 0
+          readOnly: true
+    CandidateStatusCounts:
+      type: object
+      description: Distribuição de candidaturas pelos sete valores de CandidateStatus (RF21/RF22)
+      required: [invited, active, consentPending, granted, declined, included, cancelled]
+      properties:
+        invited:
+          type: integer
+          minimum: 0
+          readOnly: true
+        active:
+          type: integer
+          minimum: 0
+          readOnly: true
+        consentPending:
+          type: integer
+          minimum: 0
+          readOnly: true
+        granted:
+          type: integer
+          minimum: 0
+          readOnly: true
+        declined:
+          type: integer
+          minimum: 0
+          readOnly: true
+        included:
+          type: integer
+          minimum: 0
+          readOnly: true
+        cancelled:
+          type: integer
+          minimum: 0
+          readOnly: true
+    EligibilityStatusCounts:
+      type: object
+      description: |
+        Contagem de elegibilidade apenas das candidaturas não canceladas
+        (status != CANCELLED), garantindo soma igual a total - cancelled (RF21/RF22).
+      required: [pending, eligible, ineligible]
+      properties:
+        pending:
+          type: integer
+          minimum: 0
+          readOnly: true
+        eligible:
+          type: integer
+          minimum: 0
+          readOnly: true
+        ineligible:
+          type: integer
+          minimum: 0
+          readOnly: true
+    CandidateMetrics:
+      type: object
+      description: Métricas compartilhadas de candidaturas e pessoas distintas (RF21/RF22)
+      required: [total, distinctPeople, byStatus, byEligibility]
+      properties:
+        total:
+          type: integer
+          minimum: 0
+          readOnly: true
+          description: Total de candidaturas no escopo (soma de byStatus)
+        distinctPeople:
+          type: integer
+          minimum: 0
+          readOnly: true
+          description: Pessoas distintas (userId únicos) entre as candidaturas do escopo
+        byStatus:
+          $ref: '#/components/schemas/CandidateStatusCounts'
+        byEligibility:
+          $ref: '#/components/schemas/EligibilityStatusCounts'
+    ParticipantMetrics:
+      type: object
+      description: |
+        Métricas compartilhadas de participantes incluídos (RF21/RF22).
+        total = active + withdrawn (vagas ocupadas); distinctPeople conta
+        contas únicas incluídas no escopo.
+      required: [total, active, withdrawn, distinctPeople]
+      properties:
+        total:
+          type: integer
+          minimum: 0
+          readOnly: true
+        active:
+          type: integer
+          minimum: 0
+          readOnly: true
+        withdrawn:
+          type: integer
+          minimum: 0
+          readOnly: true
+        distinctPeople:
+          type: integer
+          minimum: 0
+          readOnly: true
+    VisitMetrics:
+      type: object
+      description: |
+        Métricas compartilhadas de visitas agendadas (RF21/RF22).
+        total = done + absent + cancelled + pending; overduePending é o
+        subconjunto de pending com scheduledAt <= generatedAt.
+      required: [total, done, absent, cancelled, pending, overduePending]
+      properties:
+        total:
+          type: integer
+          minimum: 0
+          readOnly: true
+        done:
+          type: integer
+          minimum: 0
+          readOnly: true
+        absent:
+          type: integer
+          minimum: 0
+          readOnly: true
+        cancelled:
+          type: integer
+          minimum: 0
+          readOnly: true
+        pending:
+          type: integer
+          minimum: 0
+          readOnly: true
+        overduePending:
+          type: integer
+          minimum: 0
+          readOnly: true
+    MonitoringSummary:
+      type: object
+      description: Bloco consolidado do painel de acompanhamento (RF21)
+      required: [studies, candidates, participants, visits]
+      properties:
+        studies:
+          $ref: '#/components/schemas/StudyCounts'
+        candidates:
+          $ref: '#/components/schemas/CandidateMetrics'
+        participants:
+          $ref: '#/components/schemas/ParticipantMetrics'
+        visits:
+          $ref: '#/components/schemas/VisitMetrics'
+    StudyMonitoringMetrics:
+      type: object
+      description: Métricas detalhadas de um estudo no painel de acompanhamento (RF21)
+      required: [studyId, studyTitle, studyStatus, startDate, endDate, participantLimit,
+                 candidates, participants, visits]
+      properties:
+        studyId:
+          type: integer
+          format: int64
+          readOnly: true
+        studyTitle:
+          type: string
+          readOnly: true
+        studyStatus:
+          $ref: '#/components/schemas/StudyStatus'
+        startDate:
+          type: string
+          format: date
+          readOnly: true
+        endDate:
+          type: string
+          format: date
+          readOnly: true
+        participantLimit:
+          type: integer
+          minimum: 1
+          readOnly: true
+        candidates:
+          $ref: '#/components/schemas/CandidateMetrics'
+        participants:
+          $ref: '#/components/schemas/ParticipantMetrics'
+        visits:
+          $ref: '#/components/schemas/VisitMetrics'
+    MonitoringDashboard:
+      type: object
+      description: Painel real de acompanhamento gerencial (RF21)
+      required: [generatedAt, summary, studies]
+      properties:
+        generatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Instante de geração da fotografia de métricas
+        studyId:
+          type: integer
+          format: int64
+          minimum: 1
+          readOnly: true
+          description: Identificador do estudo filtrado, quando informado em query
+        summary:
+          $ref: '#/components/schemas/MonitoringSummary'
+        studies:
+          type: array
+          readOnly: true
+          description: Lista ordenada por studyId crescente; [] quando não houver estudos
+          items:
+            $ref: '#/components/schemas/StudyMonitoringMetrics'
+    StudyReport:
+      type: object
+      description: |
+        Relatório simplificado agregado de um estudo (RF22), sem listagem
+        nominal de participantes ou candidatos e com exatamente as mesmas
+        definições matemáticas de RF21.
+      required: [generatedAt, studyId, studyTitle, studyStatus, studyStartDate,
+                 studyEndDate, participantLimit, candidates, participants, visits]
+      properties:
+        generatedAt:
+          type: string
+          format: date-time
+          readOnly: true
+        studyId:
+          type: integer
+          format: int64
+          readOnly: true
+        studyTitle:
+          type: string
+          readOnly: true
+        studyStatus:
+          $ref: '#/components/schemas/StudyStatus'
+        studyStartDate:
+          type: string
+          format: date
+          readOnly: true
+        studyEndDate:
+          type: string
+          format: date
+          readOnly: true
+        participantLimit:
+          type: integer
+          minimum: 1
+          readOnly: true
+        filterStartDate:
+          type: string
+          format: date
+          readOnly: true
+          description: Data inicial aplicada ao filtro de período, quando informada
+        filterEndDate:
+          type: string
+          format: date
+          readOnly: true
+          description: Data final aplicada ao filtro de período, quando informada
+        candidates:
+          $ref: '#/components/schemas/CandidateMetrics'
+        participants:
+          $ref: '#/components/schemas/ParticipantMetrics'
+        visits:
+          $ref: '#/components/schemas/VisitMetrics'
     PatientAccountStatus:
       type: string
       description: |
