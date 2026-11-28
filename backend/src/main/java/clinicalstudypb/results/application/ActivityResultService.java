@@ -64,7 +64,7 @@ public class ActivityResultService implements ActivityResultLookup {
         ScheduledVisit visit = findVisit(studyId, participantId, visitId);
         PlannedVisitResponse planned = findPlannedVisit(studyId, visit.getPlannedVisitId());
         Map<Long, ActivityResultResponse> byActivity = results.findByVisitId(visitId).stream()
-                .map(ActivityResultResponse::from)
+                .map(row -> ActivityResultResponse.from(row.result(), row.activityName()))
                 .collect(Collectors.toMap(ActivityResultResponse::activityId, Function.identity()));
         List<VisitResultActivityResponse> activities = planned.activities().stream()
                 .sorted(Comparator.comparing(PlannedActivityResponse::position))
@@ -84,10 +84,11 @@ public class ActivityResultService implements ActivityResultLookup {
                 visitId, studyId, participantId).orElseThrow(
                     () -> new ResourceNotFoundException("Agendamento não encontrado: " + visitId));
         PlannedVisitResponse planned = findPlannedVisit(studyId, visit.getPlannedVisitId());
-        boolean belongsToVisit = planned.activities().stream().anyMatch(activity -> activity.id().equals(activityId));
-        if (!belongsToVisit) {
-            throw new ResourceNotFoundException("Atividade não encontrada nesta visita: " + activityId);
-        }
+        PlannedActivityResponse matchedActivity = planned.activities().stream()
+                .filter(activity -> activity.id().equals(activityId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Atividade não encontrada nesta visita: " + activityId));
         if (study.getStatus() == StudyStatus.CLOSED || study.getStatus() == StudyStatus.CANCELLED) {
             throw new SchedulingConflictException("STUDY_READ_ONLY", "O estudo não aceita resultados de atividades.");
         }
@@ -106,13 +107,16 @@ public class ActivityResultService implements ActivityResultLookup {
             result.replace(normalizedValue, normalizedNote,
                     currentActor.userId(), clock.instant().truncatedTo(ChronoUnit.MICROS));
         }
-        return new WriteResult(ActivityResultResponse.from(results.saveAndFlush(result)), created);
+        return new WriteResult(
+                ActivityResultResponse.from(results.saveAndFlush(result), matchedActivity.name()), created);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ActivityResultResponse> findByVisitId(Long visitId) {
-        return results.findByVisitId(visitId).stream().map(ActivityResultResponse::from).toList();
+        return results.findByVisitId(visitId).stream()
+                .map(row -> ActivityResultResponse.from(row.result(), row.activityName()))
+                .toList();
     }
 
     @Override
@@ -123,7 +127,7 @@ public class ActivityResultService implements ActivityResultLookup {
         }
         // A consulta já ordena por visita e posição; o LinkedHashMap e o toList preservam essa ordem.
         return results.findByVisitIdIn(visitIds).stream()
-                .map(ActivityResultResponse::from)
+                .map(row -> ActivityResultResponse.from(row.result(), row.activityName()))
                 .collect(Collectors.groupingBy(ActivityResultResponse::visitId, LinkedHashMap::new,
                         Collectors.toList()));
     }

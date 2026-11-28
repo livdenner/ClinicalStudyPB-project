@@ -53,7 +53,7 @@ class ActivityResultControllerTest {
     @Test
     void getReturnsVisitActivitiesAndOmitsMissingResultField() throws Exception {
         ActivityResultResponse recorded = new ActivityResultResponse(
-                8L, 10L, "120x80 mmHg", "Em repouso", 7L, RECORDED_AT);
+                8L, 10L, "Pressão", "120x80 mmHg", "Em repouso", 7L, RECORDED_AT);
         VisitResultsResponse response = new VisitResultsResponse(
                 8L, 4L, "Visita inicial", ScheduledVisitStatus.DONE,
                 List.of(
@@ -68,6 +68,7 @@ class ActivityResultControllerTest {
                 .andExpect(jsonPath("$.plannedVisitName").value("Visita inicial"))
                 .andExpect(jsonPath("$.status").value("DONE"))
                 .andExpect(jsonPath("$.activities[0].activityId").value(10))
+                .andExpect(jsonPath("$.activities[0].result.activityName").value("Pressão"))
                 .andExpect(jsonPath("$.activities[0].result.value").value("120x80 mmHg"))
                 .andExpect(jsonPath("$.activities[0].result.note").value("Em repouso"))
                 .andExpect(jsonPath("$.activities[0].result.recordedByUserId").value(7))
@@ -92,7 +93,7 @@ class ActivityResultControllerTest {
     @Test
     void putReturnsCreatedWhenResultIsInserted() throws Exception {
         ActivityResultResponse saved = new ActivityResultResponse(
-                8L, 10L, "120x80 mmHg", "Repouso", 7L, RECORDED_AT);
+                8L, 10L, "Pressão", "120x80 mmHg", "Repouso", 7L, RECORDED_AT);
         when(service.put(2L, 3L, 8L, 10L, "120x80 mmHg", "Repouso"))
                 .thenReturn(new WriteResult(saved, true));
 
@@ -102,6 +103,7 @@ class ActivityResultControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.visitId").value(8))
                 .andExpect(jsonPath("$.activityId").value(10))
+                .andExpect(jsonPath("$.activityName").value("Pressão"))
                 .andExpect(jsonPath("$.value").value("120x80 mmHg"))
                 .andExpect(jsonPath("$.note").value("Repouso"))
                 .andExpect(jsonPath("$.recordedByUserId").value(7));
@@ -110,7 +112,7 @@ class ActivityResultControllerTest {
     @Test
     void putReturnsOkWhenExistingResultIsReplacedAndOmitsNullNote() throws Exception {
         ActivityResultResponse saved = new ActivityResultResponse(
-                8L, 10L, "130x85 mmHg", null, 9L, RECORDED_AT);
+                8L, 10L, "Pressão", "130x85 mmHg", null, 9L, RECORDED_AT);
         when(service.put(2L, 3L, 8L, 10L, "130x85 mmHg", null))
                 .thenReturn(new WriteResult(saved, false));
 
@@ -118,6 +120,7 @@ class ActivityResultControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"value\":\"130x85 mmHg\"}"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.activityName").value("Pressão"))
                 .andExpect(jsonPath("$.value").value("130x85 mmHg"))
                 .andExpect(jsonPath("$.note").doesNotExist())
                 .andExpect(jsonPath("$.recordedByUserId").value(9));
@@ -150,7 +153,7 @@ class ActivityResultControllerTest {
         String value200 = "v".repeat(200);
         String note500 = "n".repeat(500);
         ActivityResultResponse saved = new ActivityResultResponse(
-                8L, 10L, value200, note500, 7L, RECORDED_AT);
+                8L, 10L, "Pressão", value200, note500, 7L, RECORDED_AT);
         when(service.put(2L, 3L, 8L, 10L, value200, note500))
                 .thenReturn(new WriteResult(saved, true));
 

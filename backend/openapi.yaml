@@ -180,6 +180,8 @@ paths:
         Regras de senha: 8 a 72 caracteres, com ao menos uma letra e um número.
 
         Regras e erros:
+        - 400 ACTIVATION_INVALID: no primeiro acesso, convite ausente,
+          invalidado (ex. candidatura cancelada) ou já consumido.
         - 400 PASSWORD_POLICY: newPassword fora das regras de senha.
         - 400 CURRENT_PASSWORD_INVALID: currentPassword ausente ou incorreta
           quando exigida.
@@ -4234,7 +4236,7 @@ components:
           description: Observação opcional
     ActivityResult:
       type: object
-      required: [visitId, activityId, value, recordedByUserId, recordedAt]
+      required: [visitId, activityId, activityName, value, recordedByUserId, recordedAt]
       properties:
         visitId:
           type: integer
@@ -4244,6 +4246,10 @@ components:
           type: integer
           format: int64
           readOnly: true
+        activityName:
+          type: string
+          readOnly: true
+          description: Nome atual da atividade prevista no protocolo
         value:
           type: string
           maxLength: 200

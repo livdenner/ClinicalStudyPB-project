@@ -142,6 +142,7 @@ class ActivityResultIntegrationTest extends IntegrationTestSupport {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"value\":\" 120x80 mmHg \",\"note\":\" repouso \"}"))
                 .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.activityName").value("Primeira"))
                 .andExpect(jsonPath("$.value").value("120x80 mmHg"))
                 .andExpect(jsonPath("$.note").value("repouso"))
                 .andExpect(jsonPath("$.recordedByUserId").value(researcherId));
@@ -152,6 +153,7 @@ class ActivityResultIntegrationTest extends IntegrationTestSupport {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"value\":\"130x90 mmHg\"}"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.activityName").value("Primeira"))
                 .andExpect(jsonPath("$.note").doesNotExist());
         assertEquals(1, countResults());
         assertEquals("130x90 mmHg", jdbc.queryForObject(
@@ -159,6 +161,7 @@ class ActivityResultIntegrationTest extends IntegrationTestSupport {
         mockMvc.perform(get(RESULTS, studyId, participantId, visitId)
                         .header(HttpHeaders.AUTHORIZATION, bearer(researcherToken)))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.activities[0].result.activityName").value("Primeira"))
                 .andExpect(jsonPath("$.activities[0].result.value").value("130x90 mmHg"))
                 .andExpect(jsonPath("$.activities[1].result").doesNotExist());
     }

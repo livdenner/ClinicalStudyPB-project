@@ -150,6 +150,14 @@ public class User {
         this.active = true;
     }
 
+    /** Reverte o início do primeiro acesso quando o convite é invalidado antes da definição de senha. */
+    public void suspendPendingActivation() {
+        if (role != UserRole.PARTICIPANT || !activationPending) {
+            throw new IllegalStateException("A conta não possui ativação pendente.");
+        }
+        this.active = false;
+    }
+
     /** Marca o usuário como ativo. */
     public void activate() {
         this.active = true;

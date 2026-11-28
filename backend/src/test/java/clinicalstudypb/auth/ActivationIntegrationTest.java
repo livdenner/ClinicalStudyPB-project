@@ -13,10 +13,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import clinicalstudypb.candidates.application.CandidateInvitationService;
 import clinicalstudypb.candidates.infrastructure.CandidateActivationInviteRepository;
+import clinicalstudypb.studies.domain.Study;
+import clinicalstudypb.studies.domain.StudyStatus;
 import clinicalstudypb.support.IntegrationTestSupport;
 import clinicalstudypb.users.domain.User;
 import clinicalstudypb.users.domain.UserRole;
+import com.fasterxml.jackson.databind.JsonNode;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -220,6 +224,86 @@ class ActivationIntegrationTest extends IntegrationTestSupport {
                 .andExpect(jsonPath("$.code").value("ACTIVATION_INVALID"));
         User saved = userRepository.findById(invited.getId()).orElseThrow();
         assertFalse(saved.isActive());
+    }
+
+    @Test
+    void cancellingCandidateAfterStartingActivationBlocksPasswordSetupEvenAfterReregistration() throws Exception {
+        User researcher = saveUser("Pesquisador", "activation.researcher@test.local", UserRole.RESEARCHER);
+        User coordinator = saveUser("Coordenador", "activation.coordinator@test.local", UserRole.COORDINATOR);
+        String coordinatorToken = tokenFor(coordinator.getEmail());
+        Study study = new Study("Estudo Ativação", "Bloqueio pós-cancelamento", researcher.getId(),
+                LocalDate.of(2027, 1, 1), LocalDate.of(2027, 12, 31), 10);
+        study.advanceStatus(StudyStatus.RECRUITMENT);
+        study = studyRepository.saveAndFlush(study);
+
+        String candidateEmail = "cancelado.ativacao@test.local";
+        String candidatePayload = """
+                {"name":"Carlos Lima","age":31,"email":"%s","phone":"(83) 99999-1234"}
+                """.formatted(candidateEmail);
+        String firstCandidateBody = mockMvc.perform(post("/api/studies/{studyId}/candidates", study.getId())
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(candidatePayload))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        JsonNode firstCandidate = objectMapper.readTree(firstCandidateBody);
+        long candidateId = firstCandidate.path("id").asLong();
+        long candidateUserId = firstCandidate.path("userId").asLong();
+        String initialCode = firstCandidate.path("activation").path("activationCode").asText();
+
+        String restrictedBody = activate(candidateEmail, initialCode)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.user.active").value(true))
+                .andExpect(jsonPath("$.user.mustChangePassword").value(true))
+                .andReturn().getResponse().getContentAsString();
+        String oldRestrictedToken = objectMapper.readTree(restrictedBody).path("accessToken").asText();
+
+        mockMvc.perform(post("/api/studies/{studyId}/candidates/{candidateId}/cancellation",
+                        study.getId(), candidateId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"Cadastro incorreto\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELLED"));
+
+        User afterCancel = userRepository.findById(candidateUserId).orElseThrow();
+        assertFalse(afterCancel.isActive());
+        assertTrue(afterCancel.isActivationPending());
+        assertFalse(invitationRepository.existsById(candidateUserId));
+
+        changePassword(oldRestrictedToken, null, "NovaSenha2026")
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.code").value("ACTIVATION_INVALID"));
+
+        User afterRejectedSetup = userRepository.findById(candidateUserId).orElseThrow();
+        assertFalse(afterRejectedSetup.isActive());
+        assertTrue(afterRejectedSetup.isActivationPending());
+        login(candidateEmail, "NovaSenha2026").andExpect(status().isUnauthorized());
+
+        String reregisteredBody = mockMvc.perform(post("/api/studies/{studyId}/candidates", study.getId())
+                        .header(HttpHeaders.AUTHORIZATION, bearer(coordinatorToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(candidatePayload))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        String newCode = objectMapper.readTree(reregisteredBody).path("activation").path("activationCode").asText();
+
+        changePassword(oldRestrictedToken, null, "NovaSenha2026")
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.code").value("ACTIVATION_INVALID"));
+
+        String freshRestrictedBody = activate(candidateEmail, newCode)
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        String freshRestrictedToken = objectMapper.readTree(freshRestrictedBody).path("accessToken").asText();
+
+        changePassword(freshRestrictedToken, null, "NovaSenha2026")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.user.active").value(true))
+                .andExpect(jsonPath("$.user.mustChangePassword").value(false));
+        login(candidateEmail, "NovaSenha2026").andExpect(status().isOk());
     }
 
     @Test

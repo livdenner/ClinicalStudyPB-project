@@ -245,6 +245,24 @@ class UserServiceTest {
         verify(userRepository).delete(targetForDelete);
     }
 
+    @Test
+    void suspendPendingActivationRevertsActiveFlagOnlyForPendingParticipants() {
+        User invited = User.invitedParticipant("Candidata", "candidata@example.com", "{bcrypt}hash");
+        invited.beginActivation();
+        assertTrue(invited.isActive());
+        assertTrue(invited.isActivationPending());
+
+        invited.suspendPendingActivation();
+        assertFalse(invited.isActive());
+        assertTrue(invited.isActivationPending());
+
+        User activeParticipant = new User("Participante", "participante@example.com",
+                "{bcrypt}hash", UserRole.PARTICIPANT);
+        User staff = new User("Pesquisador", "staff@example.com", "{bcrypt}hash", UserRole.RESEARCHER);
+        assertThrows(IllegalStateException.class, activeParticipant::suspendPendingActivation);
+        assertThrows(IllegalStateException.class, staff::suspendPendingActivation);
+    }
+
     private User userWithId(Long id, String name, String email, UserRole role) {
         User user = new User(name, email, "{bcrypt}hash", role);
         ReflectionTestUtils.setField(user, "id", id);

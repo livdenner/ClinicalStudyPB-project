@@ -13,14 +13,16 @@ public interface ActivityResultRepository extends Repository<ActivityResult, Lon
 
     Optional<ActivityResult> findByVisitIdAndActivityId(Long visitId, Long activityId);
 
-    @Query("SELECT r FROM ActivityResult r, PlannedActivity a "
+    @Query("SELECT new clinicalstudypb.results.infrastructure.NamedActivityResult(r, a.name) "
+            + "FROM ActivityResult r, PlannedActivity a "
             + "WHERE r.visitId = :visitId AND a.id = r.activityId ORDER BY a.position")
-    List<ActivityResult> findByVisitId(@Param("visitId") Long visitId);
+    List<NamedActivityResult> findByVisitId(@Param("visitId") Long visitId);
 
     /** Resultados das visitas informadas, agrupados por visita e na ordem do protocolo. */
-    @Query("SELECT r FROM ActivityResult r, PlannedActivity a "
+    @Query("SELECT new clinicalstudypb.results.infrastructure.NamedActivityResult(r, a.name) "
+            + "FROM ActivityResult r, PlannedActivity a "
             + "WHERE r.visitId IN :visitIds AND a.id = r.activityId ORDER BY r.visitId, a.position, r.id")
-    List<ActivityResult> findByVisitIdIn(@Param("visitIds") Collection<Long> visitIds);
+    List<NamedActivityResult> findByVisitIdIn(@Param("visitIds") Collection<Long> visitIds);
 
     ActivityResult saveAndFlush(ActivityResult result);
 }
