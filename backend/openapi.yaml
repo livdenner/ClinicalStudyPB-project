@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: ClinicalStudyPB API
-  version: 1.10.0
+  version: 1.11.0
   description: |
     Contrato da Release 1 (RF01 a RF11) e da Release 2 em andamento. As rotas
     da Sprint 3 (identidade, ativação e decisão de consentimento do candidato;
@@ -9,10 +9,10 @@ info:
     retirada, RF14 a RF16; estudos e visitas do participante no app, RF17 e
     RF18) e da Sprint 4 em andamento (confirmação de presença prevista e
     reagendamento, RF19; solicitação de retirada voluntária, RF20; painel de
-    acompanhamento e relatório simplificado com exportação CSV, RF21 e RF22)
-    são o alvo acordado; sua presença aqui não indica implementação pronta, e
-    novas rotas só aparecem no Swagger UI gerado pela aplicação depois de
-    implementadas.
+    acompanhamento e relatório simplificado com exportação CSV, RF21 e RF22;
+    gestão de contas de pacientes/candidatos, Backlog 2.2 a 2.4) são o alvo
+    acordado; sua presença aqui não indica implementação pronta, e novas rotas
+    só aparecem no Swagger UI gerado pela aplicação depois de implementadas.
 
     Convenções acordadas:
     - Os nomes JSON usam camelCase; os nomes do banco permanecem em snake_case.
@@ -48,6 +48,10 @@ info:
       e report.csv), apenas RESEARCHER e COORDINATOR têm acesso (ADMINISTRATOR e
       PARTICIPANT recebem 403); ambos compartilham exatamente a mesma definição
       matemática de métricas e não expõem lista nominal de participantes.
+    - Contas PARTICIPANT são gerenciadas exclusivamente pelo COORDINATOR em
+      /api/patients (consulta, desativação segura sem exclusão física e
+      arquivamento de contas nunca ativadas expiradas), mantendo /api/users
+      restrito à equipe (ADMINISTRATOR, RESEARCHER e COORDINATOR).
     - Erros de regra de negócio da Release 2 trazem `code` estável no ProblemDetail.
 servers:
   - url: /
@@ -67,6 +71,7 @@ tags:
   - name: Convites do participante
   - name: Dados do participante
   - name: Monitoramento
+  - name: Pacientes
 paths:
   /api/auth/login:
     post:
@@ -132,8 +137,8 @@ paths:
 
         Regras e erros (sem revelar se a conta existe):
         - 400 ACTIVATION_INVALID: e-mail e código não correspondem a uma
-          ativação pendente (inclui código já consumido, substituído ou e-mail
-          inexistente).
+          ativação pendente (inclui código já consumido, substituído, e-mail
+          inexistente ou conta desativada/arquivada em /api/patients).
         - 410 ACTIVATION_EXPIRED: e-mail e código correspondem, mas o prazo de
           72 horas passou. O candidato deve pedir um novo código ao coordenador.
       security: []
@@ -207,8 +212,8 @@ paths:
       description: |
         Restrito ao perfil ADMINISTRATOR. Lista só as contas da equipe
         (ADMINISTRATOR, COORDINATOR e RESEARCHER). Contas PARTICIPANT não
-        aparecem: nascem e são acompanhadas pelo cadastro de candidato do
-        coordenador.
+        aparecem aqui: nascem pelo cadastro de candidato e são gerenciadas
+        exclusivamente pelo COORDINATOR nas rotas /api/patients (Backlog 2.2 a 2.4).
 
         Regras das rotas /api/users (Sprint 3):
         - Contas PARTICIPANT não são criadas nem administradas aqui: perfil
@@ -2971,6 +2976,200 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /api/patients:
+    get:
+      tags: [Pacientes]
+      summary: Lista contas de pacientes/candidatos com resumo de estudos (Backlog 2.2, T32.1)
+      description: |
+        Somente COORDINATOR; ADMINISTRATOR, RESEARCHER e PARTICIPANT recebem 403.
+        Lista exclusivamente contas com perfil PARTICIPANT (nunca misturadas a
+        /api/users), ordenadas por nome (sem diferença de maiúsculas) e userId
+        crescente, sem nenhuma operação de exclusão física (DELETE). Em cada
+        conta, studies traz o histórico completo de candidaturas e participações
+        (incluindo CANCELLED), ordenado por studyId e candidateId crescentes.
+        Retorna [] quando não há registros para os filtros aplicados.
+
+        Estados derivados da conta (PatientAccountStatus):
+        - ACTIVE: conta ativada pelo participante (active=true,
+          activationPending=false e archivedAt ausente).
+        - PENDING_ACTIVATION: conta nunca ativada (activationPending=true,
+          archivedAt ausente) com convite ainda vigente (expiresAt > agora).
+        - EXPIRED: conta nunca ativada (activationPending=true, archivedAt
+          ausente) cujo convite venceu (expiresAt <= agora) ou foi invalidado
+          antes da ativação; elegível para POST /api/patients/{userId}/archive-expired.
+        - ARCHIVED: conta nunca ativada arquivada logicamente (archivedAt
+          preenchido). Não autentica nem ativa código antigo; ao emitir novo
+          convite (recadastro em POST /api/studies/{studyId}/candidates ou
+          reemissão em POST /api/studies/{studyId}/candidates/{candidateId}/invitation),
+          archivedAt é limpo e a conta retorna para PENDING_ACTIVATION.
+        - DEACTIVATED: conta desativada pelo coordenador (active=false,
+          activationPending=false, archivedAt ausente), preservando todo o
+          histórico de candidaturas e participações.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          description: Filtra pela situação derivada da conta PARTICIPANT
+          schema:
+            $ref: '#/components/schemas/PatientAccountStatus'
+        - name: search
+          in: query
+          required: false
+          description: Busca textual parcial (case-insensitive) por nome ou e-mail da conta
+          schema:
+            type: string
+            maxLength: 120
+      responses:
+        '200':
+          description: Contas de pacientes/candidatos encontradas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PatientAccount'
+              example:
+                - userId: 9
+                  name: Ana Souza
+                  email: ana.souza@exemplo.test
+                  accountStatus: ACTIVE
+                  hasActiveParticipation: true
+                  studies:
+                    - studyId: 1
+                      studyTitle: Acompanhamento de hipertensão
+                      studyStatus: EXECUTION
+                      candidateId: 14
+                      candidateStatus: INCLUDED
+                      participantId: 4
+                      participationStatus: ACTIVE
+                - userId: 15
+                  name: Bruno Costa
+                  email: bruno.costa@exemplo.test
+                  accountStatus: EXPIRED
+                  hasActiveParticipation: false
+                  activationExpiresAt: '2026-11-20T12:00:00Z'
+                  studies:
+                    - studyId: 1
+                      studyTitle: Acompanhamento de hipertensão
+                      studyStatus: RECRUITMENT
+                      candidateId: 21
+                      candidateStatus: INVITED
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /api/patients/{userId}/deactivate:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    post:
+      tags: [Pacientes]
+      summary: Desativa com segurança uma conta de paciente (Backlog 2.3, T32.1)
+      description: |
+        Somente COORDINATOR; ADMINISTRATOR, RESEARCHER e PARTICIPANT recebem 403.
+        Desativa uma conta PARTICIPANT em transação com bloqueio pessimista da
+        conta sem apagar usuários, candidaturas, participações ou histórico, e
+        invalida eventual convite de ativação ainda não utilizado. Quando a
+        conta estiver em ARCHIVED, a desativação limpa archivedAt e transita a
+        conta para DEACTIVATED (200 OK). Após desativada, a conta não autentica
+        em /api/auth/login (401) nem ativa código antigo em /api/auth/activation
+        (400 ACTIVATION_INVALID).
+
+        Regras e erros:
+        - 404: usuário inexistente ou cujo perfil não é PARTICIPANT (contas da
+          equipe continuam em /api/users).
+        - 409 PATIENT_ALREADY_DEACTIVATED: a conta já está em DEACTIVATED.
+        - 409 PATIENT_HAS_ACTIVE_PARTICIPATION: a conta possui participação com
+          status ACTIVE em ao menos um estudo; é necessário registrar a retirada
+          do participante via RF16 antes de desativar a conta.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Conta do paciente desativada com histórico preservado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientAccount'
+              example:
+                userId: 9
+                name: Ana Souza
+                email: ana.souza@exemplo.test
+                accountStatus: DEACTIVATED
+                hasActiveParticipation: false
+                studies:
+                  - studyId: 1
+                    studyTitle: Acompanhamento de hipertensão
+                    studyStatus: EXECUTION
+                    candidateId: 14
+                    candidateStatus: INCLUDED
+                    participantId: 4
+                    participationStatus: WITHDRAWN
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /api/patients/{userId}/archive-expired:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    post:
+      tags: [Pacientes]
+      summary: Arquiva conta de paciente nunca ativada com convite expirado (Backlog 2.4, T32.1)
+      description: |
+        Somente COORDINATOR; ADMINISTRATOR, RESEARCHER e PARTICIPANT recebem 403.
+        Marca logicamente (archivedAt) uma conta PARTICIPANT em estado EXPIRED
+        (nunca ativada e com convite vencido ou ausente), sem excluir
+        candidaturas nem registros históricos, e invalida o convite pendente.
+        Conta arquivada não autentica nem ativa código antigo; ao emitir novo
+        convite (recadastro em POST /api/studies/{studyId}/candidates ou
+        reemissão em POST /api/studies/{studyId}/candidates/{candidateId}/invitation),
+        archivedAt é limpo e a conta retorna para PENDING_ACTIVATION.
+
+        Regras e erros:
+        - 404: usuário inexistente ou cujo perfil não é PARTICIPANT.
+        - 409 PATIENT_NOT_EXPIRED: a conta não está em EXPIRED (inclui contas
+          em ACTIVE, PENDING_ACTIVATION com convite vigente, DEACTIVATED ou já
+          em ARCHIVED).
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Conta expirada arquivada logicamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientAccount'
+              example:
+                userId: 15
+                name: Bruno Costa
+                email: bruno.costa@exemplo.test
+                accountStatus: ARCHIVED
+                hasActiveParticipation: false
+                archivedAt: '2026-11-26T15:30:00Z'
+                studies:
+                  - studyId: 1
+                    studyTitle: Acompanhamento de hipertensão
+                    studyStatus: RECRUITMENT
+                    candidateId: 21
+                    candidateStatus: INVITED
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
 components:
   securitySchemes:
     bearerAuth:
@@ -4766,6 +4965,86 @@ components:
           $ref: '#/components/schemas/ParticipantMetrics'
         visits:
           $ref: '#/components/schemas/VisitMetrics'
+    PatientAccountStatus:
+      type: string
+      description: |
+        Situação derivada da conta PARTICIPANT (Backlog 2.2 a 2.4):
+        ACTIVE=Conta ativada;
+        PENDING_ACTIVATION=Nunca ativada, com convite ainda válido;
+        EXPIRED=Nunca ativada, com convite vencido ou ausente (elegível ao arquivamento);
+        ARCHIVED=Conta nunca ativada arquivada logicamente;
+        DEACTIVATED=Conta desativada pelo coordenador.
+      enum: [ACTIVE, PENDING_ACTIVATION, EXPIRED, ARCHIVED, DEACTIVATED]
+    PatientStudySummary:
+      type: object
+      description: |
+        Resumo de candidatura e eventual participação da conta em um estudo
+        clínico; participantId e participationStatus estão presentes quando
+        houve inclusão (candidateStatus=INCLUDED).
+      required: [studyId, studyTitle, studyStatus, candidateId, candidateStatus]
+      properties:
+        studyId:
+          type: integer
+          format: int64
+          readOnly: true
+        studyTitle:
+          type: string
+          readOnly: true
+        studyStatus:
+          $ref: '#/components/schemas/StudyStatus'
+        candidateId:
+          type: integer
+          format: int64
+          readOnly: true
+        candidateStatus:
+          $ref: '#/components/schemas/CandidateStatus'
+        participantId:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Identificador da participação quando já incluído no estudo
+        participationStatus:
+          $ref: '#/components/schemas/ParticipantStatus'
+    PatientAccount:
+      type: object
+      description: |
+        Conta de paciente/candidato exibida ao coordenador em /api/patients
+        (Backlog 2.2 a 2.4), com situação derivada e histórico por estudo.
+      required: [userId, name, email, accountStatus, hasActiveParticipation, studies]
+      properties:
+        userId:
+          type: integer
+          format: int64
+          readOnly: true
+        name:
+          type: string
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        accountStatus:
+          $ref: '#/components/schemas/PatientAccountStatus'
+        hasActiveParticipation:
+          type: boolean
+          readOnly: true
+          description: Indica se possui participação ACTIVE em ao menos um estudo (impede desativação direta)
+        activationExpiresAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Expiração do último convite pendente; presente em PENDING_ACTIVATION ou EXPIRED
+        archivedAt:
+          type: string
+          format: date-time
+          readOnly: true
+          description: Instante do arquivamento lógico; presente só quando accountStatus=ARCHIVED
+        studies:
+          type: array
+          readOnly: true
+          description: Histórico completo de candidaturas/participações por estudo (inclui CANCELLED), ordenado por studyId e candidateId crescentes; [] quando não houver
+          items:
+            $ref: '#/components/schemas/PatientStudySummary'
     ApiError:
       type: object
       required: [code, message]
